@@ -507,3 +507,52 @@ canvas.dio { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 .furn .fi { background: linear-gradient(180deg, #241b14, #1a140f); }
 .ledger li { border-radius: 8px; }
 @media (max-width: 600px) { .nav .tabs .seg .ico { display: none; } }   /* the top bar's words alone on a phone: room for all four */
+
+/* ---------- the dwarven look: carved stone in riveted iron, cut corners, bevelled metal buttons, carved capitals ---------- */
+:root { --carve: 'Cinzel', var(--display); --iron: #5b5550; --iron-hi: #8a8078; --bronze: #c9923e; --stone: #1f1c1a; }
+h1, .tname, .screenbar .t { font-family: var(--carve); font-weight: 900; letter-spacing: .02em; }
+.tname { letter-spacing: .04em; }
+/* panels: an iron frame (the card), the stone inside it (::before), a rivet at each corner (::after) */
+.card, .tslot { position: relative; isolation: isolate; border: 0; border-radius: 0; background: var(--iron); box-shadow: none;
+  clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px); }
+.card::before, .tslot::before { content: ''; position: absolute; inset: 2px; z-index: -2;
+  background: radial-gradient(ellipse at 18% 0%, rgba(255,226,180,.06), transparent 55%), linear-gradient(180deg, #23201d, #171412);
+  clip-path: polygon(11px 0, calc(100% - 11px) 0, 100% 11px, 100% calc(100% - 11px), calc(100% - 11px) 100%, 11px 100%, 0 calc(100% - 11px), 0 11px); }
+.card::after, .tslot::after { content: ''; position: absolute; inset: 7px; z-index: -1; pointer-events: none;
+  --rv: radial-gradient(circle, #b3a99e 0 1px, var(--iron-hi) 1.6px 2.2px, #24201d 2.9px, transparent 3.6px);
+  background: var(--rv) 0 0 / 9px 9px no-repeat, var(--rv) 100% 0 / 9px 9px no-repeat, var(--rv) 0 100% / 9px 9px no-repeat, var(--rv) 100% 100% / 9px 9px no-repeat; }
+.tslot.empty { background: #45403b; }
+.tslot.on { background: var(--bronze); }
+.card h2 { color: var(--bronze); border-bottom: 0; padding-bottom: 9px;
+  background: linear-gradient(var(--bronze), var(--bronze)) left bottom / 100% 1px no-repeat, linear-gradient(rgba(201,146,62,.35), rgba(201,146,62,.35)) left calc(100% - 3px) / 100% 1px no-repeat; }
+.card h2 > span { font: 800 14px var(--carve); letter-spacing: .14em; color: #e8c464; }
+.card h2 > span::before { content: ''; display: inline-block; width: 6px; height: 6px; transform: rotate(45deg); background: var(--ember-hot); margin-right: 9px; vertical-align: 2px; }
+.furn .fi, .fi { border-radius: 0; border: 0; border-left: 3px solid var(--bronze); background: rgba(42,37,34,.85); }
+/* buttons: cut corners, a lit top edge and a shadowed foot, struck from iron (or bronze for the one to press) */
+.seg, .hbtn, .act { border-radius: 0; clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+  box-shadow: inset 0 2px 0 rgba(255,236,210,.16), inset 0 -3px 0 rgba(0,0,0,.5); }
+.seg, .hbtn { background: linear-gradient(180deg, #46413c, #2d2926); border: 1px solid #0d0b0a; color: #e6dccb; }
+.seg:hover:not(:disabled), .hbtn:hover:not(:disabled) { background: linear-gradient(180deg, #55504a, #36312d); border-color: #0d0b0a; color: #fff4e0; }
+.seg.go, .seg[aria-pressed="true"], .hbtn.go, .act.strike { background: linear-gradient(180deg, #e7b25c, #b77b2c); color: #1d1206; border-color: #3a2408;
+  box-shadow: inset 0 2px 0 rgba(255,240,200,.55), inset 0 -3px 0 rgba(70,40,8,.6); }
+.seg.go:hover:not(:disabled), .hbtn.go:hover:not(:disabled) { background: linear-gradient(180deg, #f2c470, #c4883a); color: #1d1206; }
+.nav .seg[aria-current="page"] { background: linear-gradient(180deg, #f4d785, #c99a3e); border-color: #3a2408; color: #1d1206; box-shadow: inset 0 2px 0 rgba(255,250,220,.6), inset 0 -3px 0 rgba(70,40,8,.55); }
+.seg.mute.exitbtn { color: #e8c464; }
+.act.fire { background: linear-gradient(180deg, #4a2a18, #2e180c); }
+.act.fire[aria-pressed="true"] { background: linear-gradient(180deg, #9a4718, #6a2c0c); }
+.act.quench { background: linear-gradient(180deg, #24343f, #141e26); }
+/* the clip cuts off an outline, so focus shows inside the edge */
+.seg:focus-visible, .hbtn:focus-visible, .act:focus-visible { outline: none; box-shadow: inset 0 0 0 2px #e8c464, inset 0 -3px 0 rgba(0,0,0,.5); }
+.hbtn .ico { color: #e8c464; }
+.hbtn.go .ico, .seg.go .ico { color: #1d1206; }
+/* tabs: cut at the top like a carved lintel */
+.tab { border-radius: 0; clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%, 0 6px); }
+.tab[aria-selected="true"] { background: linear-gradient(180deg, #2c2724, #1f1c1a); border-color: var(--iron); color: #e8c464; }
+.tabbar { border-bottom-color: var(--iron); }
+.card.orderbox { background: #4f6574; }
+.opt { border-radius: 0; border: 1px solid #0d0b0a; background: linear-gradient(180deg, #3a3531, #24201d);
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+  box-shadow: inset 0 2px 0 rgba(255,236,210,.16), inset 0 -3px 0 rgba(0,0,0,.5); }
+.opt b { font-family: var(--carve); letter-spacing: .06em; }
+.opt.go { background: linear-gradient(180deg, #e7b25c, #b77b2c); color: #1d1206; border-color: #3a2408; box-shadow: inset 0 2px 0 rgba(255,240,200,.55), inset 0 -3px 0 rgba(70,40,8,.6); }
+.opt:focus-visible { outline: none; box-shadow: inset 0 0 0 2px #e8c464; }

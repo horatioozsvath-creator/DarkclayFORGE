@@ -22,4 +22,5 @@ Third-party parts, under their own licences (kept with them):
   Alegreya (fonts/Alegreya-*)   Copyright 2011 The Alegreya Project Authors (https://github.com/huertatipografica/Alegreya).
   Alegreya Sans (fonts/AlegreyaSans-*)
                                 Copyright 2013 The Alegreya Sans Project Authors (https://github.com/huertatipografica/Alegreya-Sans).
-                                Both fonts: SIL Open Font License 1.1, see fonts/OFL.txt.
+  Cinzel (fonts/Cinzel-*)       Copyright 2020 The Cinzel Project Authors (https://github.com/NDISCOVER/Cinzel).
+                                All three fonts: SIL Open Font License 1.1, see fonts/OFL.txt.

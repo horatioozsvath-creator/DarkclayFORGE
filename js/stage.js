@@ -1,6 +1,6 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The stage: the fire, the anvil, the piece taking shape, the hammer and the heat meter, drawn on a 1280 × 720 canvas.
-import { FORGE, KC } from './data.js?v=34';
+import { FORGE, KC } from './data.js?v=35';
 
 // two layouts: wide (a desktop, a phone on its side) and tall (a phone held upright), the same drawing moved and scaled
 export const LAYOUTS = {
@@ -99,11 +99,33 @@ function drawForge(g, S, view, L, heat, now, c) {
     const hy = top - (1 - f) * 150, tilt = -0.04 - (1 - f) * 0.18;
     g.save(); onAnvil(); g.translate(ax - 20, hy); g.rotate(tilt);
     if (f > 0.5) { g.strokeStyle = 'rgba(255,240,220,.5)'; g.lineWidth = 5; g.lineCap = 'round'; [-30, 0, 30].forEach(x => { g.beginPath(); g.moveTo(x, -80); g.lineTo(x, -20); g.stroke(); }); }
-    g.fillStyle = '#5a4030'; g.strokeStyle = '#000'; g.lineWidth = 3; g.fillRect(30, 20, 240, 18); g.strokeRect(30, 20, 240, 18);
-    g.fillStyle = '#4a4a50'; g.fillRect(-50, 0, 100, 60); g.strokeRect(-50, 0, 100, 60);
-    g.fillStyle = 'rgba(255,255,255,.15)'; g.fillRect(-47, 48, 94, 10);
+    drawHammer(g);
     g.restore();
   }
+}
+
+// a dwarven forging hammer, its striking face down at y 60: a flared iron head with a gold band of runes and two bosses,
+// an iron collar, a haft wrapped in leather between brass bands, an iron cap at its end
+let HEAD, CAP, RUNES;   // made on the first draw (a page has Path2D; the tests don't)
+function drawHammer(g) {
+  if (!HEAD) {
+    HEAD = new Path2D('M-54 -10 H54 L46 0 V50 L54 60 H-54 L-46 50 V0 Z'); CAP = new Path2D('M254 12 H270 L278 20 V30 L270 38 H254 Z');
+    RUNES = new Path2D('M-34 18 v16 M-34 18 l6 6 M-18 18 v16 M-18 26 l6 -8 M-18 26 l6 8 M-2 34 l6 -16 l6 16 M20 18 v16 M20 22 l8 -4 M20 28 l8 -4 M34 18 l-4 8 l4 8');
+  }
+  g.lineJoin = 'round'; g.strokeStyle = '#0a0807';
+  g.fillStyle = '#6b4a2e'; g.lineWidth = 3; g.fillRect(40, 18, 220, 14); g.strokeRect(40, 18, 220, 14);
+  g.fillStyle = '#3b2516'; [92, 124, 156, 188, 220].forEach(x => g.fillRect(x, 17, 12, 16));          // the leather wrap
+  g.fillStyle = '#c9923e'; g.lineWidth = 2; [[70, 12], [240, 10]].forEach(([x, w]) => { g.fillRect(x, 14, w, 22); g.strokeRect(x, 14, w, 22); });   // brass bands
+  g.fillStyle = '#4a4642'; g.lineWidth = 3; g.fill(CAP); g.stroke(CAP);
+  g.fillStyle = '#5a5552'; g.fillRect(46, 8, 16, 34); g.strokeRect(46, 8, 16, 34);                  // the collar
+  g.fillStyle = '#55514d'; g.lineWidth = 3.5; g.fill(HEAD); g.stroke(HEAD);
+  g.strokeStyle = '#9a948c'; g.lineWidth = 3; g.beginPath(); g.moveTo(-50, 57); g.lineTo(50, 57); g.stroke();   // the bright striking face
+  g.strokeStyle = 'rgba(255,255,255,.12)'; g.beginPath(); g.moveTo(-48, -6); g.lineTo(48, -6); g.stroke();
+  g.strokeStyle = '#0a0807'; g.fillStyle = '#c9923e'; g.lineWidth = 3; g.fillRect(-46, 12, 92, 26); g.strokeRect(-46, 12, 92, 26);
+  g.strokeStyle = '#3a2408'; g.lineWidth = 2.4; g.lineCap = 'square'; g.stroke(RUNES); g.lineCap = 'butt';
+  g.strokeStyle = '#0a0807'; g.fillStyle = '#46423e'; g.lineWidth = 2.5;
+  [1, 41].forEach(y => { g.fillRect(-14, y, 28, 9); g.strokeRect(-14, y, 28, 9); });               // the bosses
+  g.fillStyle = '#9a948c'; [5.5, 45.5].forEach(y => { g.beginPath(); g.arc(0, y, 2.4, 0, Math.PI * 2); g.fill(); });
 }
 
 // the stretcher: the soak tub where the fire was, a laced frame where the anvil was, the hide drawn into its cut
