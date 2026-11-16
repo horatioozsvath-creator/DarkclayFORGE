@@ -1,5 +1,23 @@
+// Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The save: kept in this browser only. Works without storage (private windows), it just won't last.
-const KEY = 'darkclayforge.save';
+// three save slots: the first is the old single save's key, so a game from before slots is slot 1
+const SLOT_KEY = 'darkclayforge.slot';
+export const SLOTS = 3;
+const keyOf = n => n === 1 ? 'darkclayforge.save' : 'darkclayforge.save.' + n;
+export function activeSlot() { try { const n = +localStorage.getItem(SLOT_KEY); return n >= 1 && n <= SLOTS ? n : 1; } catch (e) { return 1; } }
+export function setActiveSlot(n) { try { localStorage.setItem(SLOT_KEY, String(n)); } catch (e) { /* no storage */ } }
+// what each slot holds, for the title screen: null for an empty one
+export function peekSlots() {
+  return Array.from({ length: SLOTS }, (_, i) => {
+    try {
+      const raw = localStorage.getItem(keyOf(i + 1)); if (!raw) return null;
+      const s = JSON.parse(raw); if (!s || s.v !== 1) return null;
+      return { maker: s.maker || 'the Maker', coins: s.coins || 0, made: s.made || 0, sold: s.sold || 0, renown: s.renown || 0, cards: (s.cards || []).length, lastSeen: s.lastSeen || 0 };
+    } catch (e) { return null; }
+  });
+}
+export function clearSlot(n) { try { localStorage.removeItem(keyOf(n)); return true; } catch (e) { return false; } }
+const KEY = () => keyOf(activeSlot());
 // v1 still: a milestone 1 save reads as it is, the shop's fields filled in from here (its pieces go in the back)
 const fresh = () => ({ v: 1, maker: 'the Maker', trades: {}, found: ['ember'], chosen: [], picks: {}, cards: [], made: 0,
   coins: 60, mats: { iron: 5, bronze: 2, cord: 3, wrap: 1, ash: 1, wool: 1, strap: 1 }, slots: 4, shelf: [], ledger: [], sold: 0, earned: 0, shopNext: 6, curve: 2 });
@@ -12,13 +30,13 @@ export function load() {
 }
 function loadRaw() {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(KEY());
     if (raw) { const s = JSON.parse(raw); if (s && s.v === 1) return { ...fresh(), curve: 1, ...s }; }
   } catch (e) { /* no storage, or a save that won't read: start fresh */ }
   return fresh();
 }
 export function store(s) {
-  try { localStorage.setItem(KEY, JSON.stringify(s)); return true; } catch (e) { return false; }
+  try { localStorage.setItem(KEY(), JSON.stringify(s)); return true; } catch (e) { return false; }
 }
 
 // ---------- the save as a code: a backup to copy somewhere or keep as a file, loaded on any browser ----------

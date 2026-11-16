@@ -1,8 +1,9 @@
+// Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE TRAIL OF THE NINE, with no page access: the shards of Veric, one for each Mythic. The trail opens OF THE REACH; a Mythic's
 // shard can be found once its Relic is made, from its source: below the deep doors (staff.js), a Court order (shop.js), or the
 // fallen star (a rare town event, claimed from the notice board).
-import { MYTHICS, RELICS, TRAIL } from './data.js?v=28';
-import { rung } from './growth.js?v=28';
+import { MYTHICS, RELICS, TRAIL } from './data.js?v=29';
+import { rung } from './growth.js?v=29';
 
 export const open = save => rung(save) >= TRAIL.rung;
 export const hasShard = (save, id) => (save.shards || []).includes(id);

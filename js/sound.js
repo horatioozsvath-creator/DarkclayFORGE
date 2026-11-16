@@ -1,3 +1,4 @@
+// Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The forge's sounds, made on the spot with WebAudio: no sound files. Silent until the first tap or key (browsers ask for that),
 // and the mute setting kept apart from the save so a new save or another tab doesn't change it.
 const KEY = 'darkclayforge.mute';

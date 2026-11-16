@@ -1,22 +1,27 @@
+// Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=28';
-import * as R from './rules.js?v=28';
-import * as Sh from './shop.js?v=28';
-import * as St from './staff.js?v=28';
-import * as Rm from './room.js?v=28';
-import * as G from './growth.js?v=28';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=28';
-import * as Snd from './sound.js?v=28';
-import * as Town from './town.js?v=28';
-import * as V from './visit.js?v=28';
-import * as Br from './branch.js?v=28';
-import * as Hl from './hall.js?v=28';
-import * as Trail from './trail.js?v=28';
-import { drawFlyer, flyerBlob } from './flyer.js?v=28';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=28';
-import { card, ART } from './card.js?v=28';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=28';
-import { load, store as storeRaw, toCode, fromCode } from './save.js?v=28';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=29';
+import * as R from './rules.js?v=29';
+import * as Sh from './shop.js?v=29';
+import * as St from './staff.js?v=29';
+import * as Rm from './room.js?v=29';
+import * as G from './growth.js?v=29';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=29';
+import * as Snd from './sound.js?v=29';
+import * as Town from './town.js?v=29';
+import * as V from './visit.js?v=29';
+import * as Br from './branch.js?v=29';
+import * as Hl from './hall.js?v=29';
+import * as Trail from './trail.js?v=29';
+import { drawFlyer, flyerBlob } from './flyer.js?v=29';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=29';
+import { card, ART } from './card.js?v=29';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=29';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=29';
+// the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
+const VERSION = 29;
+// where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
+const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayFORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
 let replacing = false;
 const store = s => replacing ? false : storeRaw(s);
@@ -290,7 +295,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=28').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=29').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -1385,7 +1390,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=28').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=29').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -1462,7 +1467,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=28').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=29').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }
@@ -1550,6 +1555,72 @@ if (shared) {
     else { toast('<b>This shop link won\'t open</b><br>It may be cut short. Ask for it again.'); showAway(away); }
   });
 } else if (location.hash) history.replaceState(null, '', location.pathname + location.search);
-if (!shared && !visitLink) showAway(awaySum);
+// ---------- THE TITLE: three slots, the version, the licence ----------
+let titleAway = null, newest = null;
+const ago = ms => { const d = (Date.now() - ms) / 1000; return d < 120 ? 'just now' : d < 7200 ? Math.round(d / 60) + ' min ago' : d < 172800 ? Math.round(d / 3600) + ' hours ago' : Math.round(d / 86400) + ' days ago'; };
+function showTitle(away) {
+  titleAway = away || titleAway;
+  save.lastSeen = Date.now(); store(save);
+  const slots = peekSlots(), on = activeSlot();
+  $('tSlots').innerHTML = slots.map((p, i) => {
+    const n = i + 1, here = n === on;
+    if (!p) return '<div class="tslot' + (here ? ' on' : '') + '"><div class="n">SLOT ' + n + (here ? ' · THIS ONE' : '') + '</div><b>Empty</b><span>A cold forge and sixty coins.</span><div class="rbtns left"><button class="seg go" data-tplay="' + n + '">NEW GAME</button></div></div>';
+    const rung = RENOWN.reduce((a, r, k) => p.renown >= r.at ? k : a, 0);
+    return '<div class="tslot' + (here ? ' on' : '') + '"><div class="n">SLOT ' + n + (here ? ' · PLAYING' : '') + '</div><b>' + esc(p.maker) + '</b><span>' + p.coins + ' coins · ' + p.made + ' made · ' + p.sold + ' sold<br>Renown ' + RENOWN[rung].word + (p.lastSeen ? ' · ' + ago(p.lastSeen) : '') + '</span>'
+      + '<div class="rbtns left"><button class="seg go" data-tplay="' + n + '">' + (here ? 'CONTINUE' : 'PLAY') + '</button><button class="seg del" data-tdel="' + n + '">DELETE</button></div></div>';
+  }).join('');
+  $('tSlots').querySelectorAll('[data-tplay]').forEach(b => b.onclick = () => playSlot(+b.dataset.tplay));
+  $('tSlots').querySelectorAll('[data-tdel]').forEach(b => b.onclick = () => deleteSlot(+b.dataset.tdel));
+  $('tVersion').textContent = 'VERSION ' + VERSION;
+  renderUpdate();
+  $('title').hidden = false; document.body.style.overflow = 'hidden';
+  const first = $('tSlots').querySelector('.tslot.on [data-tplay]'); if (first) first.focus({ preventScroll: true });
+  checkUpdate();
+}
+function closeTitle() { $('title').hidden = true; document.body.style.overflow = ''; const a = titleAway; titleAway = null; if (a) showAway(a); }
+// another slot: this one written down, then the page opens again on that one (straight in, no title)
+function playSlot(n) {
+  if (n === activeSlot()) { Snd.unlock(); closeTitle(); return; }
+  save.lastSeen = Date.now(); store(save); replacing = true;
+  setActiveSlot(n); try { sessionStorage.setItem('darkclayforge.skipTitle', '1'); } catch (e) { /* none */ }
+  location.reload();
+}
+function deleteSlot(n) {
+  const p = peekSlots()[n - 1]; if (!p) return;
+  if (!confirm('Delete slot ' + n + ' (' + p.maker + ': ' + p.coins + ' coins, ' + p.made + ' made)? It can\'t be undone. Copy a save code first if you might want it back.')) return;
+  if (n === activeSlot()) { replacing = true; clearSlot(n); location.reload(); return; }
+  clearSlot(n); showTitle();
+}
+function renderUpdate() {
+  $('tUpdate').innerHTML = newest && newest > VERSION ? '<span class="new">VERSION ' + newest + ' IS OUT</span> <button class="seg go" id="tRefresh">REFRESH</button>' : newest ? 'UP TO DATE' : '';
+  if ($('tRefresh')) $('tRefresh').onclick = refreshGame;
+}
+// the newest release, from the site itself (never cached); a newer one than this page: offer the refresh
+async function checkUpdate() {
+  try {
+    const j = await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json();
+    if (Number.isFinite(j.v)) { const was = newest; newest = j.v; renderUpdate(); if (newest > VERSION && was !== newest && $('title').hidden) toast('<b>Version ' + newest + ' is out</b><br>Open ☰ and refresh to get it.'); }
+  } catch (e) { /* offline: no news */ }
+}
+async function refreshGame() {
+  save.lastSeen = Date.now(); store(save); replacing = true;
+  try { await fetch('./', { cache: 'reload' }); } catch (e) { /* the reload still comes */ }
+  location.reload();
+}
+setInterval(checkUpdate, 15 * 60 * 1000);
+$('tLicense').onclick = () => openLook('<div class="licence"><div class="sharedhead"><div class="k">THE LICENCE</div></div>'
+  + '<p><b>Darkclay Forge</b> · © 2026 the author of Darkclay Forge (github.com/horatioozsvath-creator). All rights reserved.</p>'
+  + '<p>The game, its code, art, 3D models, music and sounds, writing, names and look are the author\'s own work (with art and models from the author\'s game Darkclay Zero). Play it at its official address, <b>' + OFFICIAL.url + '</b>, and share links to it and to the cards and shops made in it.</p>'
+  + '<p>Without the author\'s written permission, you may not copy, host or mirror it anywhere else; rename, rebrand, reskin or sell it, or present it as your own; or take its code, art, models, sounds or writing for another work. Copies found elsewhere are reported to their hosts for removal.</p>'
+  + '<h3>MADE WITH</h3><p><b>three.js</b> · © 2010–2024 three.js authors · MIT License.<br><b>Alegreya</b> · © 2011 The Alegreya Project Authors · <b>Alegreya Sans</b> · © 2013 The Alegreya Sans Project Authors · SIL Open Font License 1.1.</p>'
+  + '<p>The full text is in the LICENSE file at the game\'s address.</p></div>', '');
+$('titleBtn').onclick = () => showTitle();
+// a copy on someone else's site: say so, and where the real game is
+if (!OFFICIAL.hosts.includes(location.hostname)) {
+  $('copyBanner').hidden = false;
+  $('copyBanner').innerHTML = 'This is an unofficial copy of Darkclay Forge. The real game, by its author, is at <a href="' + OFFICIAL.url + '">' + OFFICIAL.url + '</a>.';
+}
+let skipTitle = false; try { skipTitle = sessionStorage.getItem('darkclayforge.skipTitle') === '1'; sessionStorage.removeItem('darkclayforge.skipTitle'); } catch (e) { /* none */ }
+if (!shared && !visitLink) { if (skipTitle) showAway(awaySum); else showTitle(awaySum); }
 awaySum = null;
 requestAnimationFrame(frame);

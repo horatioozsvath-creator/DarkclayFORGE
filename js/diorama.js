@@ -1,10 +1,11 @@
+// Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The shop in 3D: a cut-away room seen from the front corner, the furniture where the room rules put it, customers walking
 // in to the counter. Loaded only when the shop is opened. Three.js comes through the page's import map as 'three'.
 import * as THREE from 'three';
 import { GLTFLoader } from '../vendor/three/loaders/GLTFLoader.js';
-import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=28';
-import { ART } from './card.js?v=28';
-import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=28';
+import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=29';
+import { ART } from './card.js?v=29';
+import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=29';
 
 const MODELS = 'assets/models/', M = '?m=10';   // bump m when tools/models.sh rebuilds them
 const FIGURES = { folk: 'folk', guard: 'dwarf', traveller: 'carter', delver: 'bard', factor: 'chandler', collector: 'herbalist', steward: 'chandler', master: 'herbalist', seller: 'carter', maker: 'smith', clerk: 'chandler' };

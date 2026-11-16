@@ -414,3 +414,31 @@ canvas.dio { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 .result.relic .box { border-color: var(--t-relic); box-shadow: 0 0 70px rgba(232,145,58,.5); }
 .result.relic .oldword { color: var(--t-relic); }
 .blueprints .fi.unknown b { color: var(--bone-faint); }
+
+/* the title screen */
+.titlescreen { position: fixed; inset: 0; z-index: 90; overflow: auto; display: grid; place-items: center; padding: 20px 14px;
+  background: radial-gradient(ellipse at 50% 30%, #3a1d10 0%, #1a100a 55%, #0b0807 95%); }
+.tin { width: min(100%, 720px); display: grid; gap: 14px; text-align: center; }
+.tk { font: 800 12px var(--sans); letter-spacing: .3em; color: var(--ember-hot); }
+.tname { font: 800 clamp(40px, 10vw, 76px)/1 var(--display); margin: 0; color: var(--bone); text-shadow: 0 0 40px rgba(255,140,60,.35); }
+.tline { margin: 0 auto; max-width: 520px; color: var(--bone-dim); font: 500 16px/1.4 var(--display); font-style: italic; }
+.tslots { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 10px; text-align: left; margin-top: 6px; }
+.tslot { background: var(--panel); border: 1px solid var(--line); padding: 12px; display: grid; gap: 6px; align-content: start; }
+.tslot.on { border-color: var(--gold); box-shadow: 0 0 24px rgba(232,196,100,.18); }
+.tslot .n { font: 800 11px var(--sans); letter-spacing: .2em; color: var(--bone-faint); }
+.tslot.on .n { color: var(--gold); }
+.tslot b { font: 800 22px/1.1 var(--display); color: var(--bone); }
+.tslot span { font: 600 12px/1.4 var(--sans); color: var(--bone-dim); }
+.tslot .rbtns { margin: 4px 0 0; gap: 6px; }
+.tslot .del { color: var(--bone-faint); }
+.tfoot { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; font: 700 12px var(--sans); letter-spacing: .1em; color: var(--bone-faint); }
+.tfoot .new { color: var(--gold); }
+.tcopy { margin: 0; font: 600 11px var(--sans); color: var(--bone-faint); letter-spacing: .06em; }
+.licence { text-align: left; font: 500 13px/1.5 var(--sans); color: var(--bone-dim); }
+.licence h3 { font: 800 12px var(--sans); letter-spacing: .2em; color: var(--gold); margin: 12px 0 4px; }
+/* an unofficial copy */
+.copybanner { position: sticky; top: 0; z-index: 95; background: #8a2a10; color: #fff3e0; padding: 8px 12px; font: 700 13px/1.4 var(--sans); text-align: center; }
+.copybanner a { color: #ffe6a0; }
+
+/* the look dialog opens over the title screen too (the licence, a slot's card) */
+#look { z-index: 100; }

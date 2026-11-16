@@ -1,0 +1,25 @@
+Darkclay Forge
+Copyright (c) 2026 the author of Darkclay Forge (https://github.com/horatioozsvath-creator). All rights reserved.
+
+This game, its code, its art, its 3D models, its music and sounds, its writing, its names and its look are the author's own work
+(together with art and models from the author's game Darkclay Zero). You may play it at its official address:
+
+    https://horatioozsvath-creator.github.io/DarkclayFORGE/
+
+and share links to it, and to the cards and shops made in it.
+
+You may NOT, without the author's written permission:
+  - copy, host, mirror or publish the game, or any part of it, anywhere else;
+  - rename, rebrand, reskin or sell it, or present it as your own;
+  - take its code, art, models, sounds or writing for another work.
+
+Reading the code here to learn from it is fine. Copies found elsewhere will be reported to their hosts for removal.
+
+-------------------------------------------------------------------------------------------------------------------------------------
+Third-party parts, under their own licences (kept with them):
+
+  three.js (vendor/three)       Copyright 2010-2024 Three.js Authors. MIT License: see vendor/three/LICENSE.
+  Alegreya (fonts/Alegreya-*)   Copyright 2011 The Alegreya Project Authors (https://github.com/huertatipografica/Alegreya).
+  Alegreya Sans (fonts/AlegreyaSans-*)
+                                Copyright 2013 The Alegreya Sans Project Authors (https://github.com/huertatipografica/Alegreya-Sans).
+                                Both fonts: SIL Open Font License 1.1, see fonts/OFL.txt.

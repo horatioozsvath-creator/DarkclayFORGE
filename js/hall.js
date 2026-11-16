@@ -1,10 +1,11 @@
+// Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE HALL, with no page access: a gallery room for the best pieces (Old-Blood, Relics, Mythics). Bought once from RENOWNED; its
 // plinths and cases are its places (room.js hallSpots); a piece shown there is off the shelves and the wall, adds renown and charm
 // (growth.js hallRenown, hallCharm), and shows in shop links and flyers.
-import { HALL, RENOWN } from './data.js?v=28';
-import { defaultHall, hallSpots } from './room.js?v=28';
-import { rung, onHall, onWall } from './growth.js?v=28';
-import { onShelf, onOtherShelf } from './shop.js?v=28';
+import { HALL, RENOWN } from './data.js?v=29';
+import { defaultHall, hallSpots } from './room.js?v=29';
+import { rung, onHall, onWall } from './growth.js?v=29';
+import { onShelf, onOtherShelf } from './shop.js?v=29';
 
 export const canBuy = save => save.hall ? { why: 'yours already' } : rung(save) < HALL.rung ? { why: 'a shop ' + RENOWN[HALL.rung].word.toLowerCase() + ' first' } : save.coins < HALL.cost ? { why: 'not enough coin' } : { ok: true };
 export function buy(save) {

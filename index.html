@@ -23,10 +23,23 @@
 <meta property="og:url" content="https://horatioozsvath-creator.github.io/DarkclayFORGE/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="css/fonts.css">
-<link rel="stylesheet" href="css/working.css?v=28">
-<link rel="stylesheet" href="css/game.css?v=28">
+<link rel="stylesheet" href="css/working.css?v=29">
+<link rel="stylesheet" href="css/game.css?v=29">
 </head>
 <body>
+<!-- an unofficial copy: says where the real game is (js/main.js OFFICIAL) -->
+<div class="copybanner" id="copyBanner" hidden></div>
+<!-- THE TITLE: the game's name, its three save slots, its version and licence -->
+<div class="titlescreen" id="title" hidden role="dialog" aria-modal="true" aria-label="Darkclay Forge">
+  <div class="tin">
+    <div class="tk">A GAME OF THE FORGE AND THE SHOP</div>
+    <h1 class="tname">Darkclay Forge</h1>
+    <p class="tline">Work the metal tile by tile. Keep every piece as a card. Run the shop that sells them.</p>
+    <div class="tslots" id="tSlots"></div>
+    <div class="tfoot"><span id="tVersion"></span><span id="tUpdate"></span><button class="seg" id="tLicense">LICENCE</button></div>
+    <p class="tcopy">© 2026 the author of Darkclay Forge · all rights reserved</p>
+  </div>
+</div>
 <div class="wrap">
 
   <!-- the way between the forge, the shop and the suppliers; the purse -->
@@ -38,7 +51,7 @@
       <button class="seg" data-go="staff">STAFF</button>
       <button class="seg" data-go="branch" id="navBranch" hidden>THE LANDING</button>
     </div>
-    <div class="purse"><span aria-live="polite"><span>PURSE</span> <b id="coins">0</b> <span>COINS</span></span><button class="seg mute" id="musicBtn" aria-label="Music"></button><button class="seg mute" id="muteBtn" aria-label="Sound"></button></div>
+    <div class="purse"><span aria-live="polite"><span>PURSE</span> <b id="coins">0</b> <span>COINS</span></span><button class="seg mute" id="titleBtn" aria-label="The title screen: save slots, version, licence">☰</button><button class="seg mute" id="musicBtn" aria-label="Music"></button><button class="seg mute" id="muteBtn" aria-label="Sound"></button></div>
   </nav>
 
   <!-- THE FORGE: the patterns, the found tiles, the store room -->
@@ -376,6 +389,6 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js" } }</script>
-<script type="module" src="js/main.js?v=28"></script>
+<script type="module" src="js/main.js?v=29"></script>
 </body>
 </html>
