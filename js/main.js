@@ -1,16 +1,16 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=12';
-import * as R from './rules.js?v=12';
-import * as Sh from './shop.js?v=12';
-import * as St from './staff.js?v=12';
-import * as Rm from './room.js?v=12';
-import * as G from './growth.js?v=12';
-import { decodeCard, linkFor } from './share.js?v=12';
-import * as Snd from './sound.js?v=12';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=12';
-import { card, ART } from './card.js?v=12';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=12';
-import { load, store } from './save.js?v=12';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=13';
+import * as R from './rules.js?v=13';
+import * as Sh from './shop.js?v=13';
+import * as St from './staff.js?v=13';
+import * as Rm from './room.js?v=13';
+import * as G from './growth.js?v=13';
+import { decodeCard, linkFor } from './share.js?v=13';
+import * as Snd from './sound.js?v=13';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=13';
+import { card, ART } from './card.js?v=13';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=13';
+import { load, store } from './save.js?v=13';
 
 const $ = id => document.getElementById(id);
 const rng = Math.random;
@@ -98,6 +98,7 @@ document.querySelectorAll('[data-tabs]').forEach(bar => {
 });
 // the tab bars stick just under the bar at the top, however tall it wraps
 new ResizeObserver(() => document.documentElement.style.setProperty('--navh', $('nav').offsetHeight + 'px')).observe($('nav'));
+const tabNow = group => (document.querySelector('[data-tabs="' + group + '"] [aria-selected="true"]') || {}).dataset?.tabbtn;
 // bring a section into view: its tab first
 function reveal(el) {
   const sec = el.closest('[data-tab]');
@@ -111,6 +112,8 @@ function tabBadges() {
   const onLedger = !$('vShop').hidden && $('tabLedger').closest('[data-tabbtn]').getAttribute('aria-selected') === 'true';
   if (onLedger) seenLedger = (save.ledger[0] || {}).at || seenLedger;
   $('tabLedger').hidden = !fresh || onLedger; $('tabLedger').textContent = fresh;
+  const r = St.runnerOf(save), ready = r && !r.trip && !save.unpaid;   // a runner home and waiting to be sent out
+  $('tabBooks').hidden = !ready; $('tabBooks').textContent = '1';
 }
 
 // ---------- first-time hints: each shown once, in place; all can be turned off ----------
@@ -237,7 +240,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=12').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=13').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -541,7 +544,7 @@ function renderStaff() {
     else status = '<div class="status">Ready to go out. Send them on a road:</div><div class="routes">' + Object.entries(ROUTES).map(([id, r]) =>
       '<button class="seg" data-send="' + id + '"' + (save.coins < r.fee ? ' disabled' : '') + '><span>' + r.name + '</span><small>' + hm(St.tripHours(p, id) * 3600) + ' · ' + r.fee + ' c' + (r.rare ? ' · rare things' : '') + (r.tile ? ' · a found tile, maybe' : '') + '</small></button>').join('') + '</div>';
     return '<div class="person">' + personHtml(p, true) + status + '<div class="rbtns left"><button class="seg" data-letgo="' + p.id + '">LET THEM GO</button></div></div>';
-  }).join('') : '<div class="empty">No one works here but you. A clerk keeps the shop while you\'re away; a runner goes out for materials.</div>';
+  }).join('') : '<div class="empty">No one works here but you. A clerk keeps the shop while you\'re away; a runner goes out for materials. See who\'s <button class="linkish" data-tabjump="hire">looking for work</button>.</div>';
   const cands = St.candidates(save, hour()), mins = 60 - new Date().getMinutes();
   $('candsWord').textContent = 'NEW FACES IN ' + mins + ' MIN';
   $('cands').innerHTML = cands.length ? cands.map(c => {
@@ -549,6 +552,8 @@ function renderStaff() {
     return '<div class="person">' + personHtml(c, false) + '<div class="tr">' + ROLES[c.role].line + '</div><div class="rbtns left"><button class="seg go" data-hire="' + c.id + '"' + (has || save.coins < fee ? ' disabled' : '') + '>HIRE · ' + fee + ' c</button></div>'
       + (has ? '<div class="status">You have a ' + ROLES[c.role].word.toLowerCase() + ' already.</div>' : '') + '</div>';
   }).join('') : '<div class="empty">No one else this hour.</div>';
+  $('vStaff').querySelectorAll('[data-tabjump]').forEach(b => b.onclick = () => openTab('staff', b.dataset.tabjump));
+  tabBadges();
   $('vStaff').querySelectorAll('[data-hire]').forEach(b => b.onclick = () => { const c = cands.find(x => x.id === b.dataset.hire); if (St.hire(save, c)) { store(save); coins(); renderStaff(); } });
   $('vStaff').querySelectorAll('[data-send]').forEach(b => b.onclick = () => { if (St.sendRunner(save, b.dataset.send, Date.now())) { store(save); coins(); renderStaff(); } });
   $('vStaff').querySelectorAll('[data-letgo]').forEach(b => b.onclick = () => {
@@ -609,7 +614,7 @@ function renderSupp() {
   const h = hour(); suppHour = h;
   const mins = 60 - new Date().getMinutes();
   $('hourWord').innerHTML = 'Prices change on the hour · next in <b>' + mins + ' min</b>';
-  $('supps').innerHTML = SUPPLIERS.map(sp => '<section class="card supp"><h2><span>' + sp.kind + '</span><b>' + sp.name.toUpperCase() + '</b></h2><p class="line">' + sp.line + '</p>'
+  $('supps').innerHTML = SUPPLIERS.map(sp => '<section data-group="supp" data-tab="' + sp.id + '" class="card supp"><h2><span>' + sp.kind + '</span><b>' + sp.name.toUpperCase() + '</b></h2><p class="line">' + sp.line + '</p>'
     + Sh.linesOf(sp, h).map(id => {
       const m = MATS[id], pr = Sh.priceOf(id, h), was = Sh.priceOf(id, h - 1);
       const tr = pr > was ? '<i class="up">▲</i>' : pr < was ? '<i class="down">▼</i>' : '';
@@ -618,6 +623,7 @@ function renderSupp() {
         + '<button class="seg" data-buy="' + id + '" data-n="1"' + (save.coins < pr ? ' disabled' : '') + '>BUY 1</button>'
         + '<button class="seg b5" data-buy="' + id + '" data-n="5"' + (save.coins < pr * 5 ? ' disabled' : '') + '>BUY 5</button></div>';
     }).join('') + '</section>').join('');
+  openTab('supp', tabNow('supp') || 'yard');   // the sections are new: show the chosen one again
   $('supps').querySelectorAll('[data-buy]').forEach(b => b.onclick = () => {
     if (Sh.buy(save, b.dataset.buy, +b.dataset.n, hour())) { store(save); coins(); renderSupp(); const nb = $('supps').querySelector('[data-buy="' + b.dataset.buy + '"][data-n="' + b.dataset.n + '"]'); if (nb && !nb.disabled) nb.focus(); }
   });

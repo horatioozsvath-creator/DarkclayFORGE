@@ -13,8 +13,8 @@
 <title>Darkclay Forge</title>
 <meta name="description" content="Work iron at the forge, tile by tile, and keep every piece you make as a card.">
 <link rel="stylesheet" href="css/fonts.css">
-<link rel="stylesheet" href="css/working.css?v=12">
-<link rel="stylesheet" href="css/game.css?v=12">
+<link rel="stylesheet" href="css/working.css?v=13">
+<link rel="stylesheet" href="css/game.css?v=13">
 </head>
 <body>
 <div class="wrap">
@@ -147,11 +147,15 @@
   <!-- STAFF: who works for the shop, and who's looking for work -->
   <main id="vStaff" hidden>
     <header class="top"><div><div class="kicker">THE SHOP'S PEOPLE</div><h1>Staff</h1></div><div class="tally" id="staffTally"></div></header>
-    <section class="card">
+    <nav class="tabbar" data-tabs="staff" aria-label="The staff's pages">
+      <button class="tab" data-tabbtn="books">ON THE BOOKS <span class="badge" id="tabBooks" hidden></span></button>
+      <button class="tab" data-tabbtn="hire">LOOKING FOR WORK</button>
+    </nav>
+    <section data-group="staff" data-tab="books" class="card">
       <h2><span>ON THE BOOKS</span><b id="booksWord"></b></h2>
       <div class="people" id="staffList"></div>
     </section>
-    <section class="card">
+    <section data-group="staff" data-tab="hire" class="card">
       <h2><span>LOOKING FOR WORK</span><b id="candsWord"></b></h2>
       <div class="people" id="cands"></div>
     </section>
@@ -160,7 +164,15 @@
   <!-- SUPPLIERS: bars, hides and the pedlar's pack, priced by the hour -->
   <main id="vSupp" hidden>
     <header class="top"><div><div class="kicker">THE ROAD AND THE YARD</div><h1>Suppliers</h1></div><div class="tally" id="hourWord"></div></header>
-    <div class="supps" id="supps"></div>
+    <nav class="tabbar" data-tabs="supp" aria-label="The suppliers">
+      <button class="tab" data-tabbtn="yard">THE YARD</button>
+      <button class="tab" data-tabbtn="tannery">TANNERY</button>
+      <button class="tab" data-tabbtn="timber">TIMBER</button>
+      <button class="tab" data-tabbtn="sandpit">SANDPIT</button>
+      <button class="tab" data-tabbtn="herbs">HERBS</button>
+      <button class="tab" data-tabbtn="pack">PEDLAR</button>
+    </nav>
+    <div class="supps tabbed" id="supps"></div>
   </main>
 
   <div class="screen" id="screen" hidden>
@@ -277,6 +289,6 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js" } }</script>
-<script type="module" src="js/main.js?v=12"></script>
+<script type="module" src="js/main.js?v=13"></script>
 </body>
 </html>

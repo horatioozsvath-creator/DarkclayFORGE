@@ -52,7 +52,7 @@ npm test
 Browsers and GitHub Pages cache files for a few minutes. Each release bumps the `?v=` number on every script import and stylesheet link (in `index.html` and `js/*.js`), so a player never runs a new file against an old one:
 
 ```bash
-sed -i '' -E 's/\?v=[0-9]+/?v=13/g' index.html js/*.js
+sed -i '' -E 's/\?v=[0-9]+/?v=14/g' index.html js/*.js
 ```
 
 ## Status
