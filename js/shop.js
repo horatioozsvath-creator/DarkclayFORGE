@@ -2,9 +2,10 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_SHELVES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS } from './data.js?v=5';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf } from './rules.js?v=5';
-import { charmGap } from './room.js?v=5';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS } from './data.js?v=6';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf } from './rules.js?v=6';
+import { charmGap } from './room.js?v=6';
+import { fame, purseMult, patienceOf, haggleMult, onWall } from './growth.js?v=6';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -60,10 +61,10 @@ export function fixShelf(save) {
 }
 export const priceAt = (card, tag) => Math.max(1, Math.round(card.worth * TAGS[tag].mult));
 export const onShelf = (save, id) => save.shelf.findIndex(e => e && e.id === id);
-export const inBack = save => save.cards.filter(c => onShelf(save, c.id) < 0);
+export const inBack = save => save.cards.filter(c => onShelf(save, c.id) < 0 && !onWall(save, c.id));
 export function place(save, id, slot, tag = 'fair') {
   if (slot == null) slot = save.shelf.findIndex(e => !e);
-  if (slot < 0 || slot >= save.slots || save.shelf[slot] || onShelf(save, id) >= 0 || !save.cards.some(c => c.id === id)) return -1;
+  if (slot < 0 || slot >= save.slots || save.shelf[slot] || onShelf(save, id) >= 0 || onWall(save, id) || !save.cards.some(c => c.id === id)) return -1;
   save.shelf[slot] = { id, tag };
   return slot;
 }
@@ -80,6 +81,7 @@ export function buySlot(save) {
 // ---------- customers ----------
 const pick = (list, rng) => list[Math.floor(rng() * list.length)];
 function weighted(items, w, rng) { let r = rng() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < items.length; i++) { r -= w[i]; if (r < 0) return items[i]; } return items[items.length - 1]; }
+export const richer = (save, c) => ({ ...c, purse: Math.round(c.purse * purseMult(save)) });
 export function newCustomer(rng) {
   const t = weighted(CUSTOMERS, CUSTOMERS.map(c => c.weight), rng);
   return { type: t.id, who: pick(t.names, rng), want: pick(t.wants, rng), purse: Math.round(t.purse[0] + rng() * (t.purse[1] - t.purse[0])),
@@ -99,7 +101,7 @@ const LINES = {
 // One customer comes in, looks at the shelf and buys or goes. Returns the ledger entry.
 // o: { rate: the share of the price that reaches the till (a clerk's cut taken, away), boost: on the odds they take it (a clerk minding
 // the shop), by: who sold it, quiet: a visit with no sale goes uncounted in the ledger (away: only sales are written down) }
-export function visit(save, rng, now, c = newCustomer(rng), o = {}) {
+export function visit(save, rng, now, c = richer(save, newCustomer(rng)), o = {}) {
   const shown = save.shelf.map((e, slot) => e && { slot, tag: e.tag, card: save.cards.find(x => x.id === e.id) }).filter(Boolean)
     .filter(e => wants(c.want, e.card) && TIER_N[e.card.tier] >= c.least);
   const afford = shown.filter(e => priceAt(e.card, e.tag) <= c.purse)
@@ -113,6 +115,7 @@ export function visit(save, rng, now, c = newCustomer(rng), o = {}) {
       save.coins += price; save.sold = (save.sold || 0) + 1; save.earned = (save.earned || 0) + price;
       save.cards = save.cards.filter(x => x.id !== e.card.id); save.shelf[e.slot] = null;
       entry.sold = { name: e.card.name, tier: e.card.tier, price, full: priceAt(e.card, e.tag), tag: e.tag, id: e.card.id };
+      if (e.tag !== 'cheap') fame(save, 1);
       entry.line = '"' + LINES.sold[c.mood] + '"' + (o.by ? ' Sold by ' + o.by + (o.rate && o.rate < 1 ? ', who kept ' + (priceAt(e.card, e.tag) - price) + ' c.' : '.') : '');
       if (o.by) entry.by = o.by;
     } else { entry.line = 'Weighed the ' + e.card.name + ' at ' + priceAt(e.card, e.tag) + ' c. "' + LINES.passed[c.mood] + '"'; entry.near = e.card.id; }
@@ -169,9 +172,9 @@ export function awayStep(save, dt, rng, at, clerk) {
 export function arrive(save, rng, now, present, clerk = null) {
   if (!save.order && (save.clock || 0) >= (save.orderNext ?? 180) && rng() < 0.2) return [postOrder(save, rng, now)];
   if (present && save.queue.length < QUEUE_MAX) {
-    const c = rng() < SELLER_ODDS ? newSeller(rng, Math.floor(now / 3600000), now) : { ...newCustomer(rng), kind: 'buyer' };
+    const c = rng() < SELLER_ODDS ? newSeller(rng, Math.floor(now / 3600000), now) : { ...richer(save, newCustomer(rng)), kind: 'buyer' };
     c.tell = c.kind === 'buyer' ? TELLS[c.mood][Math.floor(rng() * TELLS[c.mood].length)] : '';
-    c.wait = PATIENCE; c.shows = 0; c.id = 'v' + Math.floor(rng() * 1e9).toString(36);
+    c.wait = patienceOf(save, PATIENCE); c.shows = 0; c.id = 'v' + Math.floor(rng() * 1e9).toString(36);
     save.queue.push(c);
     return [];
   }
@@ -185,11 +188,11 @@ function flushQueue(save, rng, now, clerk) {
 // waited long enough: a buyer looks at the shelf for themselves, a seller goes
 function walkAway(save, rng, now) {
   const c = save.queue.shift();
-  if (save.queue[0]) save.queue[0].wait = PATIENCE;
+  if (save.queue[0]) save.queue[0].wait = patienceOf(save, PATIENCE);
   if (c.kind === 'buyer') return visit(save, rng, now, c);
   return log(save, { at: now, who: c.who, fig: c.fig, mood: 'WARY', want: 'any', sold: null, line: 'Didn\'t wait to sell. Went on up the road.' });
 }
-function next(save) { save.queue.shift(); if (save.queue[0]) save.queue[0].wait = PATIENCE; }
+function next(save) { save.queue.shift(); if (save.queue[0]) save.queue[0].wait = patienceOf(save, PATIENCE); }
 
 // ---------- the haggle (Zero's §5.3) ----------
 export const haggleLevel = save => levelOf((save.haggle || {}).xp || 0).level;
@@ -201,7 +204,7 @@ export function showable(save, c = save.queue[0]) {
     .filter(e => wants(c.want, e.card) && TIER_N[e.card.tier] >= c.least)
     .sort((a, b) => TIER_N[b.card.tier] - TIER_N[a.card.tier] || priceAt(b.card, b.tag) - priceAt(a.card, a.tag));
 }
-export const hagglePrice = (card, tag, choice) => Math.max(1, Math.round(priceAt(card, tag) * HAGGLE[choice].mult));
+export const hagglePrice = (card, tag, choice, mult = 1) => Math.max(1, Math.round(priceAt(card, tag) * HAGGLE[choice].mult * mult));
 // a want met exactly (they asked for a falchion, it's a falchion) lifts their mood a step
 export const moodFor = (c, card) => c.want === card.pattern ? LIFT[c.mood] : c.mood;
 function sellAt(save, c, card, price, how, now) {
@@ -217,12 +220,12 @@ function practise(save, n) { save.haggle = save.haggle || { xp: 0 }; save.haggle
 export function haggle(save, cardId, choice, now) {
   const c = save.queue[0], e = showable(save).find(x => x.card.id === cardId);
   if (!c || !e || !HAGGLE[choice]) return null;
-  const price = hagglePrice(e.card, e.tag, choice);
+  const price = hagglePrice(e.card, e.tag, choice, haggleMult(save));
   if (price > c.purse) return { outcome: 'over', price };   // turned down with a line; they stay to see another
   const [what, at] = HAGGLE_TABLE[moodFor(c, e.card)][choice].split(':');
-  if (what === 'sold') { practise(save, choice === 'ask' ? 2 : 1); const entry = sellAt(save, c, e.card, price, choice, now); next(save); return { outcome: 'sold', price, entry }; }
+  if (what === 'sold') { practise(save, choice === 'ask' ? 2 : 1); if (choice !== 'meet') fame(save, 1); const entry = sellAt(save, c, e.card, price, choice, now); next(save); return { outcome: 'sold', price, entry }; }
   if (what === 'counter') {
-    const offer = hagglePrice(e.card, e.tag, at);
+    const offer = hagglePrice(e.card, e.tag, at, haggleMult(save));
     if (offer > c.purse) return gone(save, c, now, 'Shook their head at ' + price + ' c and went.');
     c.counter = { id: e.card.id, price: offer, asked: price };
     return { outcome: 'counter', price: offer };
@@ -310,11 +313,11 @@ export function orderWord(o) {
 export const fills = (o, card) => !!o && card.pattern === o.pattern && TIER_N[card.tier] >= o.least && (!o.metal || card.metal === o.metal) && !card.flawed;
 export function deliver(save, cardId, now) {
   const o = save.order, card = save.cards.find(c => c.id === cardId);
-  if (!o || !card || !fills(o, card)) return null;
+  if (!o || !card || !fills(o, card) || onWall(save, cardId)) return null;
   const slot = onShelf(save, card.id); if (slot >= 0) save.shelf[slot] = null;
   save.cards = save.cards.filter(c => c.id !== cardId);
   save.coins += o.pays; save.earned = (save.earned || 0) + o.pays; save.sold = (save.sold || 0) + 1;
-  save.order = null; save.orderNext = (save.clock || 0) + 240;
+  save.order = null; save.orderNext = (save.clock || 0) + 240; fame(save, 3);
   return log(save, { at: now, who: o.who, fig: o.fig, mood: 'EAGER', want: o.pattern, sold: { name: card.name, tier: card.tier, price: o.pays, tag: 'order', id: card.id },
     order: 'filled', served: true, line: '"Just as I asked. Thank you."' });
 }
@@ -331,7 +334,7 @@ export function salvageOf(card) {
 export const salvageWorth = card => salvageOf(card).reduce((c, r) => c + MATS[r.mat].price * r.n, 0);
 export function salvage(save, cardId) {
   const card = save.cards.find(c => c.id === cardId);
-  if (!card || onShelf(save, cardId) >= 0) return null;
+  if (!card || onShelf(save, cardId) >= 0 || onWall(save, cardId)) return null;
   const got = salvageOf(card);
   got.forEach(r => { save.mats[r.mat] = (save.mats[r.mat] || 0) + r.n; });
   save.cards = save.cards.filter(c => c.id !== cardId);
@@ -339,7 +342,7 @@ export function salvage(save, cardId) {
 }
 // back in the fire: half the bars (rounded up) of its own metal; Common to Fine, Fine to Rare
 export const reworkCost = card => [{ mat: card.metal, n: Math.ceil(PATTERNS[card.pattern].bars / 2) }];
-export const canRework = (save, card) => TIER_N[card.tier] < TIERS.length - 1 && onShelf(save, card.id) < 0;
+export const canRework = (save, card) => TIER_N[card.tier] < TIERS.length - 1 && onShelf(save, card.id) < 0 && !onWall(save, card.id);
 
 // ---------- never stuck ----------
 // No coin for a bar and a cord, nothing made and nothing to make one from: the yard's scrap bin gives a dagger's worth.

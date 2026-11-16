@@ -1,6 +1,6 @@
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { KINDS, KC, TIERS, FORGE, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS } from './data.js?v=5';
+import { KINDS, KC, TIERS, FORGE, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS } from './data.js?v=6';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -49,6 +49,7 @@ export function buildStrip({ parts, level, found = [], kit = {} }) {
     if (tr > 0) turn('CRACK', 'GOOD', tr, 'TRADE', 'Trade ' + level + ' · every 3 levels');
     if (kit.gloves && cracks() > 1) turn('CRACK', 'GOOD', 1, 'GLOVES', 'Gloves worn');
   }
+  if (kit.good) { add('GOOD', kit.good); t.slice(-kit.good).forEach(x => x.src = 'KIT'); lines.push({ what: 'A good anvil, a steady hand', how: '+' + kit.good + ' GOOD', col: KC.GOOD }); }
   if (kit.hammer) turn('GOOD', 'GREAT', kit.hammer, 'HAMMER', kit.hammer === 1 ? 'A Fine hammer' : 'An Old-Blood hammer');
   const rare = parts.filter(o => o.rare);
   if (rare.length) turn('GOOD', 'TRUE', rare.length, 'RARE', rare.map(o => o.name).join(', ') + ' (rare)');
@@ -69,8 +70,11 @@ export const left = S => S.rack.filter(x => !x.up);
 // cfg: { patternId, picks, level, found, kit }
 export function newWorking(cfg, rng) {
   const parts = chosenParts(cfg.patternId, cfg.picks), metal = parts[0];
+  const kit = cfg.kit || {}, b0 = bandFor(metal);
+  let band = b0;
+  if (kit.widen && kit.widen !== 1) { const mid = (b0[0] + b0[1]) / 2, half = (b0[1] - b0[0]) / 2 * kit.widen; band = [Math.max(0, Math.round(mid - half)), Math.min(100, Math.round(mid + half))]; }
   const S = { cfg, parts, metal, level: cfg.level, rng,
-    band: bandFor(metal), cool: FORGE.cool * (metal.coolX || 1), drain: FORGE.drain, rise: FORGE.rise, over: FORGE.over,
+    band, cool: FORGE.cool * (metal.coolX || 1) * (kit.coolX || 1), drain: FORGE.drain, rise: FORGE.rise, over: FORGE.over,
     phase: 'prepare', meter: 30, inFire: false, shape: 0, worked: 0, cracks: 0, notches: [], crackMarks: [],
     streak: 0, white: 0, whiteHeat: false, earned: false, scaled: 0, overT: 0, strikes: 0, heats: 1, done: false, dropped: false,
     twin: false, warden: false, frost: false, rack: [], lines: [], heatLines: [], slipN: 0 };
@@ -177,7 +181,7 @@ export function tick(S, dt) {
 export function odds(S) {
   if (S.cfg.rework) { const t = reworkTo(S.cfg.rework.from); return { c: t === 0 ? 100 : 0, f: t === 1 ? 100 : 0, r: t === 2 ? 100 : 0 }; }
   const w = S.worked, l = S.level;
-  let r = Math.max(0, Math.min(40, 5 + w * 0.35 + (l - 3))), f = Math.max(0, Math.min(70, 20 + w * 0.9 + (l - 3) * 2));
+  let r = Math.max(0, Math.min(40, 5 + w * 0.35 + (l - 3))), f = Math.max(0, Math.min(70, 20 + w * 0.9 + (l - 3) * 2 + ((S.cfg.kit || {}).fine || 0)));
   if (S.cracks >= 1 && S.shape >= 100) { f *= 0.85; r *= 0.85; }
   return { c: Math.max(0, 100 - f - r), f, r };
 }

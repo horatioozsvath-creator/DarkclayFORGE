@@ -244,3 +244,39 @@ export const SHELF_COSTS = [200, 450, 900, 1600, 2500, 3600];   // the 3rd shelf
 export const MAX_SHELVES = 8;
 export const CHARM_MAX = 20;          // charm counted, at most
 export const CHARM_STEP = 0.025;      // each point of charm: customers come that much sooner (20 points: half as many again)
+
+// ---------- growth (milestone 6) ----------
+// tools for the forge: each changes the strip or the heat. needs: the tool it replaces.
+export const TOOLS = {
+  hammer1: { name: 'A Fine hammer', cost: 150, line: 'one GOOD in the strip becomes a GREAT', kit: { hammer: 1 } },
+  hammer2: { name: 'An Old-Blood hammer', cost: 600, needs: 'hammer1', line: 'two GOODs become GREATs', kit: { hammer: 2 } },
+  gloves: { name: 'Worn gloves', cost: 120, line: 'from trade 3, one CRACK becomes a GOOD', kit: { gloves: 1 } },
+  anvil: { name: 'A good anvil', cost: 250, line: 'one more GOOD in the strip', kit: { good: 1 } },
+  bellows: { name: 'Bellows', cost: 300, line: 'the heat band a seventh wider', kit: { widen: 1.15 } },
+  firebrick: { name: 'A firebrick hearth', cost: 200, line: 'the work cools a fifth slower', kit: { coolX: 0.8 } },
+};
+// the maker's renown: earned by selling at a fair price and filling orders; the wall adds to it. Each rung brings richer purses.
+export const RENOWN = [
+  { at: 0, word: 'UNKNOWN' }, { at: 15, word: 'NOTED' }, { at: 50, word: 'KNOWN' }, { at: 150, word: 'SOUGHT' }, { at: 400, word: 'FAMED' },
+];
+export const PURSE_STEP = 0.1;   // purses grow this much a rung
+export const WALL_RENOWN = { common: 2, fine: 5, rare: 12 };
+export const WALL_SLOTS = 3;     // +1 for each bigger room
+// the maker's skills: a point each maker level; each branch's perks in order
+export const PERKS = {
+  craft: { word: 'THE CRAFT', perks: [
+    { id: 'steady', word: 'Steady hand', line: 'one more GOOD in every strip', kit: { good: 1 } },
+    { id: 'heat', word: 'Heat sense', line: 'the heat band a tenth wider', kit: { widen: 1.1 } },
+    { id: 'eye', word: 'An eye for quality', line: 'Fine odds +5 % before the cap', kit: { fine: 5 } },
+  ] },
+  counter: { word: 'THE COUNTER', perks: [
+    { id: 'read', word: 'Read the room', line: 'their mood shows from the start, their purse from Haggling 3' },
+    { id: 'patient', word: 'A patient counter', line: 'customers wait 20 s longer to be served' },
+    { id: 'tongue', word: 'Silver tongue', line: 'haggled prices 5 % higher (never past the purse)' },
+  ] },
+  house: { word: 'THE HOUSE', perks: [
+    { id: 'wages', word: 'Fair dealing', line: 'wages a fifth lower' },
+    { id: 'word', word: 'Good word', line: 'renown comes half as fast again' },
+    { id: 'hours', word: 'Long hours', line: 'the shop kept two hours longer while you\'re away' },
+  ] },
+};

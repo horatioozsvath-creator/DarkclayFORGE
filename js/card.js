@@ -1,5 +1,5 @@
 // THE CARD: a piece of gear drawn as a collector's card framed by its tier (Darkclay Zero, docs/THE-CARD.md).
-import { TIERS } from './data.js?v=5';
+import { TIERS } from './data.js?v=6';
 
 const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
 // the picture of each kind of piece; m is the metal's tint
@@ -14,18 +14,18 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 
 // card(piece, { short: the top only, price: show the worth on a corner })
 export function card(p, o = {}) {
-  const t = TIER[p.tier];
-  const bar = v => '<span class="cd-bar"><i style="width:' + Math.round(v * 100) + '%;background:' + t.c + '"></i></span>';
-  const stats = p.stats.map(r => '<div class="cd-st"><span>' + r[0] + '</span><b>' + esc(r[1]) + '</b>' + (r[2] != null ? bar(r[2]) : '<span></span>') + '</div>').join('');
-  const aff = p.affixes.map(a => '<div class="cd-af"><b style="color:' + t.c + '">' + esc(a[0]) + '</b> ' + esc(a[1]) + '</div>').join('');
-  const made = '<div class="cd-sec">THE MAKING</div><div class="cd-made">' + p.made.map(m => '<span>' + esc(m) + '</span>').join('') + '</div>';
+  const t = TIER[p.tier] || TIER.common, art = ART[p.art] || ART.falchion, tint = /^#[0-9a-f]{6}$/i.test(p.tint || '') ? p.tint : '#c9c5be';
+  const bar = v => '<span class="cd-bar"><i style="width:' + Math.round(Math.max(0, Math.min(1, +v || 0)) * 100) + '%;background:' + t.c + '"></i></span>';
+  const stats = (p.stats || []).map(r => '<div class="cd-st"><span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b>' + (r[2] != null ? bar(r[2]) : '<span></span>') + '</div>').join('');
+  const aff = (p.affixes || []).map(a => '<div class="cd-af"><b style="color:' + t.c + '">' + esc(a[0]) + '</b> ' + esc(a[1]) + '</div>').join('');
+  const made = '<div class="cd-sec">THE MAKING</div><div class="cd-made">' + (p.made || []).map(m => '<span>' + esc(m) + '</span>').join('') + '</div>';
   return '<div class="cd' + (o.short ? ' cd-short' : '') + '" style="--tc:' + t.c + ';--tg:' + t.glow + '">' +
     '<div class="cd-in">' +
-    '<div class="cd-top"><span class="cd-tier">' + t.name.toUpperCase() + '</span><span class="cd-kind">' + p.kind + '</span></div>' +
+    '<div class="cd-top"><span class="cd-tier">' + t.name.toUpperCase() + '</span><span class="cd-kind">' + esc(p.kind) + '</span></div>' +
     '<div class="cd-name">' + esc(p.name) + '</div>' +
-    '<div class="cd-art">' + ART[p.art](p.tint) + (p.dice ? '<span class="cd-dice">' + p.dice + '</span>' : '') + '</div>' +
-    (o.short ? '<div class="cd-price">' + (o.price || p.worth + ' c') + '</div>'
+    '<div class="cd-art">' + art(tint) + (p.dice ? '<span class="cd-dice">' + esc(p.dice) + '</span>' : '') + '</div>' +
+    (o.short ? '<div class="cd-price">' + (o.price || esc(p.worth) + ' c') + '</div>'
       : '<div class="cd-body">' + stats + (aff ? '<div class="cd-sec">AFFIXES</div>' + aff : '') + made +
-        '<div class="cd-lore">' + esc(p.lore) + '</div><div class="cd-worth"><span>WORTH</span><b>' + p.worth + ' coins</b></div></div>') +
+        '<div class="cd-lore">' + esc(p.lore) + '</div><div class="cd-worth"><span>WORTH</span><b>' + esc(p.worth) + ' coins</b></div></div>') +
     '</div></div>';
 }

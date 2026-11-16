@@ -1,5 +1,6 @@
 // The shop's room, with no page access: the grid, what stands on it, buying, moving, selling back, and making the room bigger.
-import { FURNITURE, ROOM_SIZES, DOOR_Z, SHELF_COSTS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS } from './data.js?v=5';
+import { FURNITURE, ROOM_SIZES, DOOR_Z, SHELF_COSTS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS } from './data.js?v=6';
+import { wallCharm } from './growth.js?v=6';
 
 export const sizeOf = room => ROOM_SIZES[room.size || 0];
 // the footprint, turned: rot 0 or 2 as authored, 1 or 3 swapped
@@ -55,9 +56,10 @@ export function defaultRoom(shelves = 2, size = 0) {
   return room;
 }
 export const shelvesOf = room => room.items.filter(i => i.kind === 'shelf').length;
-export function charm(room) { return Math.min(CHARM_MAX, room.items.reduce((c, i) => c + (FURNITURE[i.kind].charm || 0), 0)); }
+// the room's charm, and the wall's pieces with it, under the one cap
+export function charm(room, save) { return Math.min(CHARM_MAX, room.items.reduce((c, i) => c + (FURNITURE[i.kind].charm || 0), 0) + (save ? wallCharm(save) : 0)); }
 // how much sooner customers come for the room's charm (a multiplier on the gap between them)
-export const charmGap = save => save.room ? 1 / (1 + charm(save.room) * CHARM_STEP) : 1;
+export const charmGap = save => save.room ? 1 / (1 + charm(save.room, save) * CHARM_STEP) : 1;
 
 // a room that won't read (an older save, or a broken one) is rebuilt; shelf places always match the shelves
 export function valid(room) {

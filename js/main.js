@@ -1,13 +1,13 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES } from './data.js?v=5';
-import * as R from './rules.js?v=5';
-import * as Sh from './shop.js?v=5';
-import * as St from './staff.js?v=5';
-import * as Rm from './room.js?v=5';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=5';
-import { card, ART } from './card.js?v=5';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=5';
-import { load, store } from './save.js?v=5';
+import { KINDS, KC, TIERS, FORGE, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES } from './data.js?v=6';
+import * as R from './rules.js?v=6';
+import * as Sh from './shop.js?v=6';
+import * as St from './staff.js?v=6';
+import * as Rm from './room.js?v=6';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=6';
+import { card, ART } from './card.js?v=6';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=6';
+import { load, store } from './save.js?v=6';
 
 const $ = id => document.getElementById(id);
 const rng = Math.random;
@@ -107,7 +107,7 @@ $('lookClose').onclick = () => { $('look').hidden = true; };
 let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
-  if (!dioP) dioP = import('./diorama.js?v=5').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) dioP = import('./diorama.js?v=6').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d;
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(save.room, save); d.setQueue(save.queue); renderDioBar(); }
     return d;
