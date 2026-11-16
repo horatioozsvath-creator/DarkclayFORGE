@@ -13,7 +13,32 @@ export const TIERS = [
   { id: 'oldblood', name: 'Old-Blood', c: '#b48cf0', glow: .55, mult: 1.36, worth: 8, affixes: 3, foil: true },
   // Zero's Relic (amber, foil, ×1.52): a named piece, one of a kind in a save, worked from an Old-Blood one with a blueprint (RELICS)
   { id: 'relic', name: 'Relic', c: '#e8913a', glow: .7, mult: 1.52, worth: 20, affixes: 3, foil: true },
+  // Zero's Mythic (red, foil, ×1.70): one of the Nine, a Relic reforged (milestones 16–17)
+  { id: 'mythic', name: 'Mythic', c: '#e4505e', glow: .85, mult: 1.7, worth: 50, affixes: 3, foil: true },
 ];
+// THE NINE (docs/RARITY-PLAN.md): each a Relic reforged with its shard of Veric and parts from three other stations. shard: where its
+// shard is found once the trail is open (OF THE REACH) and its Relic is made: below the deep doors, a Court order, or a fallen star.
+export const MYTHICS = {
+  vericsedge: { name: 'Veric\'s Edge', relic: 'gatewarden', shard: 'court', parts: [['glass', 'a starglass edge'], ['kettle', 'a moonwell quench'], ['stretcher', 'a wyrm-hide grip']],
+    powers: [['Holds the line', 'a parry breaks a charge'], ['Cuts the dark', 'it shines where there is no light'], ['Never dulls', 'it has never needed a stone']], lore: 'The first of the Nine, carried by Veric at the gate of the world.' },
+  ironcrown: { name: 'The Iron Crown', relic: 'hollowhelm', shard: 'deep', parts: [['glass', 'a crown of panes'], ['stretcher', 'a lining'], ['bowbench', 'a bentwood band']],
+    powers: [['No fear', 'the wearer stands when others run'], ['The king\'s word', 'what the wearer says, the hall hears'], ['Hollow no more', 'the dead do not trouble the one who wears it']], lore: 'The Hollow King\'s helm, made whole and crowned.' },
+  ringofnine: { name: 'The Ring of the Nine', relic: 'widowsband', shard: 'star', parts: [['glass', 'a stone of starglass'], ['kettle', 'a vow-oil'], ['bowbench', 'a ring-box']],
+    powers: [['A vow kept', 'the wearer can\'t be turned from their path'], ['Nine in one', 'it finds the others of the Nine'], ['Remembered', 'the wearer is never forgotten']], lore: 'Every one of the Nine was sworn on it.' },
+  mantle: { name: 'The Mantle of the Reach', relic: 'wolfmantle', shard: 'deep', parts: [['forge', 'clasps'], ['kettle', 'a proofing'], ['glass', 'a mirror-brooch']],
+    powers: [['The pack\'s warmth', 'cold and wet don\'t touch it'], ['The high road', 'the Reach opens its passes'], ['Unseen', 'the snow forgets the one who wears it']], lore: 'Worn by the first who crossed the Reach, and the last who came back.' },
+  longsong: { name: 'The Long Song', relic: 'oskbow', shard: 'court', parts: [['forge', 'starmetal nocks'], ['stretcher', 'a wyrm-sinew string'], ['glass', 'a sighting lens']],
+    powers: [['The river\'s reach', 'half again the range'], ['It sings', 'the string\'s note turns a charge'], ['Never misses twice', 'a second arrow goes where the first was meant']], lore: 'Its string hums a song Osk\'s people still sing.' },
+  staffofosk: { name: 'The Staff of Osk', relic: 'abbeystaff', shard: 'star', parts: [['forge', 'a ferrule'], ['glass', 'a heart of starglass'], ['kettle', 'a binding oil']],
+    powers: [['It remembers', 'a working comes easier the second time'], ['The river\'s voice', 'water answers it'], ['A long walk', 'the one who carries it does not tire']], lore: 'Osk walked the river\'s length with it, and the river followed.' },
+  vericsdraught: { name: 'Veric\'s Draught', relic: 'wennasdraught', shard: 'deep', parts: [['glass', 'a Mythic flask'], ['forge', 'a silver stopper'], ['bowbench', 'a yew cup']],
+    powers: [['A night\'s sleep in a swallow', 'one sip and the rest is had'], ['Mended', 'any hurt closes'], ['Another year', 'it buys a year of life']], lore: 'One bottle, and Veric drank it the night before the last battle.' },
+  farsight: { name: 'The Lens of Far Seeing', relic: 'abbeylens', shard: 'court', parts: [['forge', 'a frame'], ['bowbench', 'a staff mount'], ['kettle', 'a clearing oil']],
+    powers: [['Sees the lie', 'a lie written down shows through it'], ['Far off', 'it sees what is a day\'s ride away'], ['What was', 'it shows a place as it once stood']], lore: 'The abbey\'s scholars ground it for a hundred years.' },
+  morning: { name: 'The Window of Morning', relic: 'corrowgoblet', shard: 'star', parts: [['forge', 'a leading'], ['stretcher', 'a hanging'], ['kettle', 'a staining']],
+    powers: [['Poison shows', 'what would harm clouds in its light'], ['First light', 'the room it hangs in wakes rested'], ['The long view', 'through it, the town as it will be']], lore: 'The Corrows\' cup, melted and blown into the window of a hall.' },
+};
+export const TRAIL = { rung: 6, deep: 0.1, court: 0.15 };   // the trail opens OF THE REACH; a trip below finds a shard 10 %; Court orders, 15 % of orders
 // the Relic working: a master of the trade (trade 9), the blueprint, an Old-Blood piece of its kind, the bars of a last rework and its
 // relic material. Narrower than Old-Blood's, WHITE HEAT twice, not one crack; short of that, the piece stays Old-Blood, untouched.
 export const RELIC_WORK = { tier: 4, level: 9, band: 0.7, whiteStreak: 12, whites: 2, costX: 3 };
@@ -379,6 +404,7 @@ export const TOWN_EVENTS = [
   { id: 'feast', name: 'Saint Brannoc\'s feast', line: 'Bells, bread and an open hand: it\'s a day for spending.', effect: 'Every buyer a step keener, purses fuller.', purse: 1.2, keen: true },
   { id: 'caravan', name: 'A spice caravan', line: 'A caravan from the south camps by the river for the night.', effect: 'Factors and travellers with deep purses.', gap: 0.85, weights: { factor: 3, traveller: 2, steward: 2 }, purse: 1.1 },
   { id: 'siege', name: 'Raiders on the high road', line: 'The gates are shut at noon. Fewer come in, and those who do want steel.', effect: 'Half the customers, but they carry a third more.', gap: 1.8, weights: { guard: 3 }, purse: 1.35 },
+  { id: 'starfall', name: 'A star falls on the Reach', line: 'Something burned across the sky last night and came down past the high pasture.', effect: 'Fewer customers: half the town has gone to look. A shard of Veric may lie there.', gap: 1.3, weight: 1.5 },
   { id: 'storm', name: 'A three-day storm', line: 'Rain off the Reach. Only the desperate are out.', effect: 'Fewer customers.', gap: 1.4 },
 ];
 export const TOWN_COLD = [
@@ -617,7 +643,7 @@ export const RENOWN = [
 ];
 export const FAMED_RUNG = 4, RENOWNED_RUNG = 5, REACH_RUNG = 6;   // purses grow with renown up to FAMED; the rungs above open things instead
 export const PURSE_STEP = 0.2;   // purses grow this much a rung
-export const WALL_RENOWN = { common: 2, fine: 5, rare: 12, oldblood: 30, relic: 80 };
+export const WALL_RENOWN = { common: 2, fine: 5, rare: 12, oldblood: 30, relic: 80, mythic: 200 };
 export const WALL_SLOTS = 3;     // +1 for each bigger room
 // the maker's skills: a point each maker level; each branch's perks in order
 export const PERKS = {

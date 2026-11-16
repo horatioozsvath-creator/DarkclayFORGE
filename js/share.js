@@ -1,9 +1,9 @@
 // A card as a link: the piece's own data packed into the address after #card=. Nothing is sent anywhere.
 // A link comes from someone else's browser: everything in it is checked and rebuilt before it's shown.
-import { TIERS, PATTERNS } from './data.js?v=27';
-import { ART } from './card.js?v=27';
+import { TIERS, PATTERNS } from './data.js?v=28';
+import { ART } from './card.js?v=28';
 
-const FIELDS = ['tier', 'name', 'kind', 'art', 'tint', 'dice', 'stats', 'affixes', 'made', 'lore', 'worth', 'pattern', 'maker', 'power'];
+const FIELDS = ['tier', 'name', 'kind', 'art', 'tint', 'dice', 'stats', 'affixes', 'made', 'lore', 'worth', 'pattern', 'maker', 'power', 'powers'];
 function toB64url(bytes) { let s = ''; bytes.forEach(b => { s += String.fromCharCode(b); }); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
 function fromB64url(t) { const s = atob(t.replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(s, c => c.charCodeAt(0)); }
 // the fields a card carries off this browser (no ids, no making record)
@@ -49,6 +49,8 @@ export function checkCard(o) {
   if (!stats || !affixes || !made) return null;
   const power = o.power == null ? undefined : pair(o.power) ? [o.power[0], o.power[1]] : null;
   if (power === null) return null;
-  return { id: 'shared', tier: o.tier, name, kind, art: o.art, tint, dice, stats, affixes, made, lore, worth, pattern: o.pattern, maker: str(o.maker, 40) || '', shared: true, ...(power ? { power } : {}) };
+  const powers = o.powers == null ? undefined : Array.isArray(o.powers) && o.powers.length <= 3 && o.powers.every(pair) ? o.powers.map(w => [w[0], w[1]]) : null;
+  if (powers === null) return null;
+  return { id: 'shared', tier: o.tier, name, kind, art: o.art, tint, dice, stats, affixes, made, lore, worth, pattern: o.pattern, maker: str(o.maker, 40) || '', shared: true, ...(power ? { power } : {}), ...(powers ? { powers } : {}) };
 }
 export const linkFor = (card, base) => base.split('#')[0] + '#card=' + encodeCard(card);

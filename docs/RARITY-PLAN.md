@@ -1,6 +1,6 @@
 # Rarity to Mythic: the full ladder for every station
 
-Status: milestones 11–15 built (releases 22–26); 16–18 planned. All eleven Relics and the Hall are in. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
+Status: milestones 11–16 built (releases 22–28); 17–18 planned. All eleven Relics, the Hall and the trail of the Nine are in. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
 This plan takes every station up the last two: **Relic** (named, one of a kind) and **Mythic** (the Nine).
 
 ## The ladder
@@ -183,3 +183,19 @@ Each milestone ends in a release, as before: rules and tests first, then the scr
 - **In links and flyers:** a visit shows **THEIR HALL**; a flyer can feature a Hall piece.
 - **Sim (75 days, seeds 1–4):** the Hall built on day 21–25, 8–16 pieces shown by day 75 (renown +120 to +370); **OF THE REACH 3–5
   days sooner** (day 60–65 against 64–68 without it).
+
+## Milestone 16, as built (release 28)
+
+- **The Mythic tier** (red, foil, ×1.70, worth ×50), and **the Nine** as data: each from its Relic, its three powers, its lore, and its
+  three parts from three other stations (milestone 17 makes them).
+- **The trail of the Nine** opens OF THE REACH: under THE FORGE › WORKSHOP, each Mythic's clue opens once its Relic is made, and says
+  where its **shard of Veric** lies:
+  - **below the deep doors** (three of the Nine): a runner's trip finds one 10 % of the time;
+  - **the Court** (three): an order for an Old-Blood piece of the Relic's kind, about 15 % of orders while one is waiting, paying twice
+    the worth and the shard;
+  - **the fallen star** (three): a new town event, about one day in three weeks; GO OUT TO THE FALLEN STAR on the notice board, once.
+- Mythic cards show their three powers, and links carry them.
+- **Sim (120 days, seeds 1–4):** OF THE REACH on day 59–66; Relics 1–3 by day 120 (the first on day 44–96); **one shard by day 69–100**.
+  **All Nine in three months is far off:** each Relic needs trade 9 in its own pattern, and the bot masters only the falchion. This is
+  milestone 18's work: likely a lower trade for later Relics (or trade 9 in the station rather than the pattern), and more blueprints
+  and shards once the trail is open.

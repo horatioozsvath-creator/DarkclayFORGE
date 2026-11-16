@@ -6,7 +6,7 @@
   --line: rgba(232,196,100,.34); --line-soft: rgba(233,220,195,.12);
   --bone: #ece0c6; --bone-dim: #b9aa8c; --bone-faint: #7d725e;
   --ember-hot: #f0a35c; --gold: #e8c464; --blood: #c4483a; --frost: #8fb8d8;
-  --t-common: #b8b0a2; --t-fine: #8fc46a; --t-rare: #6aa6e8; --t-oldblood: #b48cf0; --t-relic: #e8913a;
+  --t-common: #b8b0a2; --t-fine: #8fc46a; --t-rare: #6aa6e8; --t-oldblood: #b48cf0; --t-relic: #e8913a; --t-mythic: #e4505e;
   --k-good: #8fc46a; --k-great: #f0a35c; --k-hold: #8e9bb0; --k-crack: #c4483a; --k-true: #fff2c4; --k-found: #e8c464;
   --display: 'Alegreya', Georgia, serif; --sans: 'Alegreya Sans', 'Trebuchet MS', system-ui, sans-serif;
   color-scheme: dark;

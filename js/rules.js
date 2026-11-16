@@ -1,6 +1,6 @@
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS } from './data.js?v=27';
+import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS } from './data.js?v=28';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;

@@ -1,6 +1,6 @@
 // The town's wants, with no page access: what's in demand today and what's out of favour. It follows the real calendar day (UTC), so
 // every player sees the same notice board on the same day. The day's pick is kept on the save (save.town) for the shop's rules.
-import { TOWN_HOT, TOWN_COLD, DEMAND, TOWN_EVENTS, EVENT_ODDS } from './data.js?v=27';
+import { TOWN_HOT, TOWN_COLD, DEMAND, TOWN_EVENTS, EVENT_ODDS } from './data.js?v=28';
 
 export const dayOf = ms => Math.floor(ms / 86400000);
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -10,7 +10,9 @@ export function townOn(day, salt = 0) {
   while (hot.length < 2) { const h = TOWN_HOT[Math.floor(rng() * TOWN_HOT.length)]; if (!hot.includes(h)) hot.push(h); }
   const want = new Set(hot.flatMap(h => h.patterns)), cold = TOWN_COLD.filter(c => !c.patterns.some(p => want.has(p)));
   const c = cold.length ? cold[Math.floor(rng() * cold.length)].id : null;
-  const event = rng() < EVENT_ODDS ? TOWN_EVENTS[Math.floor(rng() * TOWN_EVENTS.length)].id : null;
+  // a day's event, by its weight (the fallen star a little more often than the rest: about one day in three weeks)
+  let event = null;
+  if (rng() < EVENT_ODDS) { const w = TOWN_EVENTS.map(e => e.weight || 1), r = rng() * w.reduce((a, b) => a + b, 0); let acc = 0; event = TOWN_EVENTS.find((e, i) => (acc += w[i]) > r).id; }
   return { day, hot: hot.map(h => h.id), cold: c, event };
 }
 // salt: another town's board (the second shop's), drawn the same way

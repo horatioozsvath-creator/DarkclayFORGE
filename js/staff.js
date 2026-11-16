@@ -1,9 +1,11 @@
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=27';
-import { levelOf, makePiece, partOptions } from './rules.js?v=27';
-import { awayStep } from './shop.js?v=27';
-import { wageMult, capBonus, rung } from './growth.js?v=27';
+import { ROLES, TRAITS, NAMES, ROUTES, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=28';
+import { levelOf, makePiece, partOptions } from './rules.js?v=28';
+import { awayStep } from './shop.js?v=28';
+import { wageMult, capBonus, rung } from './growth.js?v=28';
+import * as Trail from './trail.js?v=28';
+import { TRAIL } from './data.js?v=28';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -100,7 +102,10 @@ export function haul(save, p, route, rng, now) {
   }
   const missing = Object.keys(FOUND).filter(id => !save.found.includes(id));
   if (r.tile && missing.length && rng() < r.tile * (p.trait === 'lucky' ? 2 : 1)) tile = pick(missing, rng);
-  return { mats, piece, tile, blueprint };
+  // on the trail of the Nine: a shard that lies below, now and then
+  let shard = null; const below = r.relic ? Trail.pending(save, 'deep') : [];
+  if (below.length && rng() < TRAIL.deep) shard = pick(below, rng);
+  return { mats, piece, tile, blueprint, shard };
 }
 // trips that have come home by `now`: their hauls put away. Returns what each brought.
 export function resolveTrips(save, now, rng) {
@@ -112,6 +117,7 @@ export function resolveTrips(save, now, rng) {
     if (h.piece) save.cards.unshift(h.piece);
     if (h.tile) save.found.push(h.tile);
     if (h.blueprint) save.blueprints = [...new Set((save.blueprints || []).concat(h.blueprint))];
+    if (h.shard) Trail.give(save, h.shard);
     gain(p, 1 + Math.ceil(ROUTES[route].h));
     p.trip = null;
     out.push({ who: p.name, route, at, ...h });

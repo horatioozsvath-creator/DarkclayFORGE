@@ -107,7 +107,7 @@ test('a hand-made card link can\'t carry script', () => {
   const enc = o => Buffer.from(JSON.stringify(o)).toString('base64url');
   assert.equal(decodeCard(enc({ ...c, tint: '"><script>alert(1)</script>' })), null);
   assert.equal(decodeCard(enc({ ...c, art: 'nope' })), null);
-  assert.equal(decodeCard(enc({ ...c, tier: 'mythic' })), null);
+  assert.equal(decodeCard(enc({ ...c, tier: 'godlike' })), null);
   assert.equal(decodeCard('!!!not base64'), null);
   const k = decodeCard(enc({ ...c, kind: '<img src=x onerror=alert(1)>', stats: [['<b>x</b>', '<i>', 0.5]] }));
   const html = card(k);

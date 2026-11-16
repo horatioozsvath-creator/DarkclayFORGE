@@ -2,11 +2,12 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS } from './data.js?v=27';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf } from './town.js?v=27';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=27';
-import { charmGap, placeGift } from './room.js?v=27';
-import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=27';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS } from './data.js?v=28';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf } from './town.js?v=28';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=28';
+import { charmGap, placeGift } from './room.js?v=28';
+import * as Trail from './trail.js?v=28';
+import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=28';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -411,6 +412,14 @@ export function postOrder(save, rng, now) {
   // a regular with a story to go on, more often than not
   const ready = storiesReady(save, now || 0);
   if (ready.length && rng() < STORY_ODDS) return postStory(save, ready[Math.floor(rng() * ready.length)], rng, now);
+  // the Court, on the trail of the Nine: an Old-Blood piece of a Relic's kind, and a shard of Veric with the pay
+  const court = Trail.pending(save, 'court').filter(id => ownsPattern(save, RELICS[MYTHICS[id].relic].pattern));
+  if (court.length && rng() < TRAIL.court) {
+    const id = court[Math.floor(rng() * court.length)], pattern = RELICS[MYTHICS[id].relic].pattern;
+    save.order = { who: 'The Court', fig: '#e4505e', pattern, least: OLD_BLOOD.tier, metal: null, line: 'The Court would see the best you make. It has something of Veric\'s to give in return.', posted: save.clock || 0, shard: id,
+      due: (save.clock || 0) + ORDER_TIME[1] * 4, pays: orderPays(pattern, null, OLD_BLOOD.tier) };
+    return log(save, { at: now, who: 'The Court', fig: '#e4505e', mood: 'EAGER', want: pattern, sold: null, order: 'posted', line: 'The Court left an order, and a promise.' });
+  }
   // a RENOWNED shop with a blueprint not yet made: now and then a regular orders that Relic (filled only by it)
   const bps = rung(save) >= 5 ? (save.blueprints || []).filter(id => !(save.relicsMade || []).includes(id) && ownsPattern(save, RELICS[id].pattern)) : [];
   if (bps.length && rng() < 0.12) {
@@ -446,9 +455,11 @@ export function deliver(save, cardId, now) {
   save.coins += o.pays; save.earned = (save.earned || 0) + o.pays; save.sold = (save.sold || 0) + 1;
   save.order = null; save.orderNext = (save.clock || 0) + 240; fame(save, 3);
   const story = o.story ? storyFilled(save, o, now) : null;
+  const shard = o.shard && Trail.give(save, o.shard) ? o.shard : null;
   const e = log(save, { at: now, who: o.who, fig: o.fig, mood: 'EAGER', want: o.pattern, sold: { name: card.name, tier: card.tier, price: o.pays, tag: 'order', id: card.id },
     order: 'filled', served: true, line: '"' + (story ? story.thanks : 'Just as I asked. Thank you.') + '"' });
   if (story) e.story = story;
+  if (shard) { e.shard = shard; e.line = '"The Court thanks you. Take this: it was Veric\'s."'; }
   return e;
 }
 
