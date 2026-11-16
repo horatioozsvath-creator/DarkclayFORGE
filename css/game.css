@@ -390,3 +390,7 @@ canvas.dio { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 .cust .wealthy { font: 800 11px var(--sans); letter-spacing: .16em; color: #1a0e06; background: var(--gold); padding: 1px 6px; border-radius: 3px; }
 
 .linkbox { width: 100%; box-sizing: border-box; background: var(--panel-2); color: var(--bone); border: 1px solid var(--line-soft); padding: 8px; font: 500 12px/1.4 ui-monospace, Menlo, monospace; }
+
+.flyer { display: block; width: min(100%, 320px); margin: 10px auto 0; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,.6); }
+.flyerbox { display: grid; grid-template-columns: minmax(0, 220px) 1fr; gap: 14px; align-items: center; margin-bottom: 12px; }
+@media (max-width: 520px) { .flyerbox { grid-template-columns: 1fr; } }

@@ -1,18 +1,19 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=19';
-import * as R from './rules.js?v=19';
-import * as Sh from './shop.js?v=19';
-import * as St from './staff.js?v=19';
-import * as Rm from './room.js?v=19';
-import * as G from './growth.js?v=19';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=19';
-import * as Snd from './sound.js?v=19';
-import * as Town from './town.js?v=19';
-import * as V from './visit.js?v=19';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=19';
-import { card, ART } from './card.js?v=19';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=19';
-import { load, store as storeRaw, toCode, fromCode } from './save.js?v=19';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=20';
+import * as R from './rules.js?v=20';
+import * as Sh from './shop.js?v=20';
+import * as St from './staff.js?v=20';
+import * as Rm from './room.js?v=20';
+import * as G from './growth.js?v=20';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=20';
+import * as Snd from './sound.js?v=20';
+import * as Town from './town.js?v=20';
+import * as V from './visit.js?v=20';
+import { drawFlyer, flyerBlob } from './flyer.js?v=20';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=20';
+import { card, ART } from './card.js?v=20';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=20';
+import { load, store as storeRaw, toCode, fromCode } from './save.js?v=20';
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
 let replacing = false;
 const store = s => replacing ? false : storeRaw(s);
@@ -250,7 +251,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=19').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=20').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(shelfShown()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -554,8 +555,19 @@ function oldBloodNeeds(c) {
   if (g.ok || /^brews/.test(g.why[0] || '')) return '';
   return '<p class="note"><b style="color:var(--t-oldblood)">TOWARD OLD-BLOOD</b> · a master\'s last working. It needs ' + g.why.join(', ') + '.</p>';
 }
+// a copy kept from a friend's flyer: it can go on a shelf (once your first piece is made) and sell, nothing more
+function sampleOpen(c) {
+  const free = save.shelf.findIndex(e => !e), id = c.id;
+  const acts = '<p>A copy from ' + esc(c.flyer || 'a friend') + '\'s flyer. It sells as a plain one of its kind would; it can\'t be reworked, broken down or hung.</p>'
+    + (!save.made ? '<p>It waits here until you make your first piece at the forge.</p>'
+      : free >= 0 ? '<button class="seg go" id="putUp">PUT IT ON THE SHELF · FAIR ' + Sh.priceAt(c, 'fair') + ' c</button>' : '<p>The shelf is full. Take something down, or buy another shelf.</p>');
+  openLook(card(c), acts, false, null);
+  if ($('putUp')) $('putUp').onclick = () => { Sh.place(save, id, free); store(save); $('look').hidden = true; renderShop(); };
+}
 function backOpen(id) {
-  const c = save.cards.find(x => x.id === id), free = save.shelf.findIndex(e => !e);
+  const c0 = save.cards.find(x => x.id === id);
+  if (c0 && c0.sample) { sampleOpen(c0); return; }
+  const c = c0, free = save.shelf.findIndex(e => !e);
   const sv = Sh.salvageOf(c), cost = Sh.reworkCost(c), canRw = Sh.canRework(save, c) && Rm.owns(save, R.stationOf(c.pattern).id), haveRw = Sh.canMake(save.mats, cost);
   const toTier = TIERS[R.reworkTo(TIERS.findIndex(t => t.id === c.tier))];
   let acts = free >= 0 ? '<button class="seg go" id="putUp">PUT IT ON THE SHELF · FAIR ' + Sh.priceAt(c, 'fair') + ' c</button>' : '<p>The shelf is full. Take something down, or buy another shelf.</p>';
@@ -1202,13 +1214,38 @@ function toVisit(shop, away) {
   $('visitWall').innerHTML = shop.wall.length ? shop.wall.map((c, i) => '<button data-vw="' + i + '" aria-label="' + esc(c.name) + '">' + card(c, { short: true, price: 'ON THE WALL' }) + '</button>').join('')
     : '<div class="empty">Their wall is bare: pieces they keep would hang here.</div>';
   $('visitWall').querySelectorAll('[data-vw]').forEach(b => b.onclick = () => openLook(card(shop.wall[+b.dataset.vw]), ''));
+  renderVisitFlyer(shop);
   const mine = save.made > 0 || save.cards.length > 0;
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=19').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=20').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
+}
+// the flyer's piece, and keeping a copy of it
+function renderVisitFlyer(shop) {
+  const box = $('visitFlyer'); box.hidden = !shop.featured;
+  if (!shop.featured) return;
+  const owner = esc(shop.maker), state = shop.uid && shop.uid === save.uid ? 'own' : !shop.uid ? 'old' : (save.kept || []).includes(shop.uid) ? 'kept' : 'new';
+  const words = {
+    own: 'This is your own flyer: send it to someone, and they can keep a copy.',
+    old: 'This link is from before flyers carried a copy.',
+    kept: 'You have ' + owner + '\'s copy already. It\'s in your back room' + (save.made ? '.' : ', waiting for your first piece.'),
+    new: 'Pinned to it, a copy of their ' + esc(shop.featured.name) + '. Keep it: it goes in your back room, ready for your own shelf. It sells as a plain one of its kind would.',
+  };
+  box.innerHTML = '<div>' + card(shop.featured, { short: true, price: 'ON THE FLYER' }) + '</div><div><div class="kicker">A FLYER FROM ' + owner.toUpperCase() + '\'S SHOP</div>'
+    + '<p>' + words[state] + '</p><div class="rbtns left">' + (state === 'new' ? '<button class="seg go" id="keepCopy">KEEP THE COPY</button>' : '')
+    + '<button class="seg" id="walkIn">WALK IN</button></div><p class="note" id="keepNote"></p></div>';
+  box.querySelector('.cd').onclick = () => openLook(card(shop.featured), '');
+  $('walkIn').onclick = () => $('visitFloor').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if ($('keepCopy')) $('keepCopy').onclick = () => {
+    const r = V.keepCopy(save, shop);
+    if (!r.card) { renderVisitFlyer(shop); return; }
+    store(save); Snd.play('chime');
+    $('keepCopy').remove();
+    $('keepNote').textContent = save.made ? 'Kept: it\'s in your back room. Put it on a shelf from THE SHOP.' : 'Kept: it waits in your back room. Make your first piece at the forge and your shelf opens.';
+  };
 }
 function visitTap(t) {
   if (!visiting || t.slot == null) return;
@@ -1221,17 +1258,32 @@ function visitTick() {
   visitNext = performance.now() + 6000 + Math.random() * 8000;
   visitDio.walkIn({ at: Date.now(), type: ['folk', 'guard', 'traveller', 'delver'][Math.floor(Math.random() * 4)] });
 }
+// sharing your shop: the flyer (a card with your best piece pinned to it) and the link with it
 async function shareShop() {
   const url = location.origin + location.pathname + '#shop=' + await packLink(V.packShop(save));
-  if (navigator.share) {
-    try { await navigator.share({ title: save.maker + '\'s shop', text: 'Come and see my shop in Darkclay Forge.', url }); return; }
-    catch (e) { if (e && e.name === 'AbortError') return; }
-  }
-  try { await navigator.clipboard.writeText(url); toast('<b>Link copied</b><br>Send it to a friend: it opens your shop front as it stands now.'); }
-  catch (e) {
-    openLook('<div class="sharedhead"><div class="k">A LINK TO YOUR SHOP</div><p>Copy it and send it. It shows your shop front as it stands now.</p></div><textarea class="linkbox" readonly rows="4"></textarea>', '');
-    const box = $('lookCard').querySelector('textarea'); box.value = url; box.select();
-  }
+  const choices = V.showable(save), shown = save.shelf.filter(Boolean).length;
+  let cv = null;
+  const draw = async () => { cv = await drawFlyer({ maker: save.maker, renown: RENOWN[G.rung(save)].word, shown, charm: Rm.charm(save.room, save) }, V.featuredOf(save)); $('flyerImg').src = cv.toDataURL('image/png'); };
+  openLook('<div class="sharedhead"><div class="k">YOUR FLYER</div><p>Send it with the link. Whoever opens it walks into your shop front as it stands now, and can keep a copy of the piece pinned to it.</p></div>'
+    + '<img id="flyerImg" class="flyer" alt="Your shop\'s flyer">',
+    '<button class="seg go" id="flyerShare">SHARE IT</button>' + (choices.length > 1 ? '<button class="seg" id="flyerNext">ANOTHER PIECE ON IT</button>' : '') + '<button class="seg" id="flyerSave">SAVE THE FLYER</button><p class="note" id="flyerNote"></p>');
+  await draw();
+  if ($('flyerNext')) $('flyerNext').onclick = async () => { const i = choices.findIndex(c => c.id === (V.featuredOf(save) || {}).id); save.flyerPick = choices[(i + 1) % choices.length].id; store(save); await draw(); };
+  const name = 'darkclay-forge-' + (save.maker || 'shop').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.png';
+  $('flyerSave').onclick = () => { const a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = name; document.body.appendChild(a); a.click(); a.remove(); };
+  $('flyerShare').onclick = async () => {
+    const text = 'Come and see my shop in Darkclay Forge: ' + url, note = t => { $('flyerNote').textContent = t; };
+    try {
+      const file = new File([await flyerBlob(cv)], name, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text, title: save.maker + '\'s shop' }); return; }
+      if (navigator.share) { await navigator.share({ title: save.maker + '\'s shop', text: 'Come and see my shop in Darkclay Forge.', url }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    try { await navigator.clipboard.writeText(url); note('Link copied. Save the flyer too, and send them together.'); }
+    catch (e) {
+      $('lookActs').insertAdjacentHTML('beforeend', '<textarea class="linkbox" readonly rows="4"></textarea>');
+      const box = $('lookActs').querySelector('.linkbox'); box.value = url; box.select(); note('Copy the link from the box. Save the flyer too, and send them together.');
+    }
+  };
 }
 $('visitMine').onclick = shareShop; $('visitMine2').onclick = shareShop;
 // a shop or card link opened with the game already open in this tab: open it as a fresh page does (the game saves as it goes)

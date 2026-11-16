@@ -4,7 +4,13 @@ const KEY = 'darkclayforge.save';
 const fresh = () => ({ v: 1, maker: 'the Maker', trades: {}, found: ['ember'], chosen: [], picks: {}, cards: [], made: 0,
   coins: 60, mats: { iron: 5, bronze: 2, cord: 3, wrap: 1, ash: 1, wool: 1, strap: 1 }, slots: 4, shelf: [], ledger: [], sold: 0, earned: 0, shopNext: 6, curve: 2 });
 
+// a random id for this shop: a visit link carries it, so a flyer's copy can't be taken from your own shop (nothing personal in it)
+const newUid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 export function load() {
+  const s = loadRaw(); if (!s.uid) s.uid = newUid(); if (!Array.isArray(s.kept)) s.kept = [];
+  return s;
+}
+function loadRaw() {
   try {
     const raw = localStorage.getItem(KEY);
     if (raw) { const s = JSON.parse(raw); if (s && s.v === 1) return { ...fresh(), curve: 1, ...s }; }

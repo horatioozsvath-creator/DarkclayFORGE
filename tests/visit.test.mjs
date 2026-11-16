@@ -68,3 +68,38 @@ test('a damaged, cut-short or hostile link opens nothing', async () => {
   assert.equal(bad(o => { o.v = 2; }), null);
   assert.equal(bad(o => { o.w = [{ tier: 'rare', name: 'x' }]; }), null, 'a wall card that won\'t check');
 });
+
+// ---------- the flyer's piece, and keeping a copy of it ----------
+test('the flyer features the chosen piece, else the best on show; the link carries it and the shop\'s id', async () => {
+  const s = shopSave(true); s.uid = 'abc123xy';
+  const best = V.showable(s)[0];
+  assert.equal(V.featuredOf(s).id, best.id);
+  const other = V.showable(s)[3]; s.flyerPick = other.id; assert.equal(V.featuredOf(s).id, other.id);
+  const back = V.unpackShop(await unpackLink(await packLink(V.packShop(s, 5))));
+  assert.equal(back.uid, 'abc123xy'); assert.equal(back.featured.name, other.name); assert.equal(back.featured.tier, other.tier);
+  const bad = o => V.unpackShop({ ...V.packShop(s, 5), ...o });
+  assert.equal(bad({ u: 'A B<script>' }), null); assert.equal(bad({ f: { tier: 'rare' } }), null);
+  assert.ok(bad({ u: '', f: null }), 'an older link without them still opens');
+});
+
+test('keeping a copy: one a shop, never your own; a sample that sells as a plain Common and can\'t be reworked, broken or hung', () => {
+  const owner = shopSave(true); owner.uid = 'owner001';
+  const shop = V.unpackShop(JSON.parse(JSON.stringify(V.packShop(owner, 5))));
+  const me = { uid: 'visitor1', kept: [], cards: [], shelf: [], slots: 4, wall: [], mats: {}, trades: {}, made: 0 }; Sh.fixShelf(me);
+  assert.equal(V.keepCopy({ ...me, uid: 'owner001' }, shop).why, 'own');
+  const r = V.keepCopy(me, shop, 99); assert.ok(r.card);
+  assert.equal(V.keepCopy(me, shop, 100).why, 'already'); assert.equal(me.cards.length, 1);
+  assert.equal(V.keepCopy(me, { ...shop, uid: '' }).why, 'an old link');
+  const c = r.card;
+  assert.equal(c.name, shop.featured.name); assert.equal(c.tier, shop.featured.tier); assert.ok(c.sample); assert.match(c.made.at(-1), /flyer/);
+  const plain = R.makePiece({ patternId: c.pattern, picks: [0, 0, 0], result: { tier: 0, flawed: false, worked: 0, strikes: 0, heats: 0, cracks: 0 }, maker: '', rng: () => 0, now: 1 });
+  assert.equal(c.worth, plain.worth); assert.ok(c.worth < shop.featured.worth);
+  assert.ok(!Sh.canRework({ ...me, trades: { [c.pattern]: { xp: 1e6 } } }, c)); assert.deepEqual(Sh.salvageOf(c), []); assert.equal(Sh.salvage(me, c.id), null);
+  assert.equal(G.hang(me, c.id), false);
+  assert.ok(!Sh.fills({ pattern: c.pattern, least: 0, metal: null }, c), 'a copy never fills a special order');
+  // it waits in the back until the first piece is made
+  assert.equal(Sh.place(me, c.id), -1); me.made = 1; assert.equal(Sh.place(me, c.id), 0);
+  // and it sells, at a sample's price
+  me.queue = [{ kind: 'buyer', who: 'x', want: 'any', purse: 9999, mood: 'EAGER', least: 0, wait: 45, shows: 0 }]; me.ledger = []; me.coins = 0;
+  assert.equal(Sh.haggle(me, c.id, 'hold', 1).outcome, 'sold'); assert.equal(me.coins, Sh.priceAt(c, 'fair'));
+});

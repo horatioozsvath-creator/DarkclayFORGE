@@ -1,12 +1,13 @@
 // A shop front as a link, with no page access: what a friend sees when they visit (the room as it's arranged, the cards on its
 // shelves with their prices, the wall's pieces in full, a sign). Packed small here; js/share.js compresses it into the address after
 // #shop=. A link comes from someone else's browser: unpack checks and rebuilds every part, and the room must pass the room rules.
-import { FURNITURE, TIERS, RENOWN, ROOM_SIZES, STATIONS, CHARM_MAX, SHELF_LEVELS, MAX_PLACES } from './data.js?v=19';
-import { ART } from './card.js?v=19';
-import { valid, shelfSpots, charm, levelOf, homeOf } from './room.js?v=19';
-import { priceAt } from './shop.js?v=19';
-import { rung } from './growth.js?v=19';
-import { cardFields, checkCard } from './share.js?v=19';
+import { FURNITURE, TIERS, RENOWN, ROOM_SIZES, STATIONS, CHARM_MAX, SHELF_LEVELS, MAX_PLACES } from './data.js?v=20';
+import { ART } from './card.js?v=20';
+import { valid, shelfSpots, charm, levelOf, homeOf } from './room.js?v=20';
+import { priceAt } from './shop.js?v=20';
+import { makePiece } from './rules.js?v=20';
+import { rung } from './growth.js?v=20';
+import { cardFields, checkCard } from './share.js?v=20';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 const str = (v, n) => typeof v === 'string' && v.length <= n ? v : null;
@@ -27,7 +28,17 @@ export function packShop(save, now = Date.now()) {
     md: save.made || 0, sd: save.sold || 0, st: ['forge'].concat(save.stations || []).filter(id => STATIONS[id]),
     it: room.items.map(i => [i.kind, i.x, i.z, i.rot, i.kind === 'shelf' ? levelOf(i) : 0]),
     sh, w: (save.wall || []).map(id => cards.get(id)).filter(Boolean).slice(0, MAX_WALL).map(cardFields),
+    u: save.uid || '', f: (c => c ? cardFields(c) : null)(featuredOf(save)),
   };
+}
+// the piece on the flyer: the one chosen, else the shop's best on show (the wall and the shelves), else its best anywhere
+export function showable(save) {
+  const ids = new Set([...(save.wall || []), ...(save.shelf || []).filter(Boolean).map(e => e.id)]);
+  return save.cards.filter(c => ids.has(c.id) && !c.sample).sort((a, b) => b.worth - a.worth);
+}
+export function featuredOf(save) {
+  const pick = save.cards.find(c => c.id === save.flyerPick && !c.sample);
+  return pick || showable(save)[0] || save.cards.filter(c => !c.sample).sort((a, b) => b.worth - a.worth)[0] || null;
 }
 
 // someone else's shop, checked and rebuilt for the look-only view, or null when any part won't read
@@ -63,5 +74,28 @@ export function unpackShop(o) {
   }
   const wall = [];
   for (const [i, c] of o.w.entries()) { const k = checkCard(c); if (!k) return null; wall.push({ ...k, id: 'wall' + i }); }
-  return { maker, at, renown: RENOWN[o.rw].word, rung: o.rw, size: ROOM_SIZES[o.sz], charm: Math.round(o.ch), made: o.md, sold: o.sd, stations: o.st, room, stands, wall };
+  const uid = o.u == null || o.u === '' ? '' : typeof o.u === 'string' && /^[a-z0-9]{4,24}$/.test(o.u) ? o.u : null;
+  if (uid == null) return null;
+  let featured = null;
+  if (o.f != null) { featured = checkCard(o.f); if (!featured) return null; featured.id = 'flyer'; }
+  return { uid, featured, maker, at, renown: RENOWN[o.rw].word, rung: o.rw, size: ROOM_SIZES[o.sz], charm: Math.round(o.ch), made: o.md, sold: o.sd, stations: o.st, room, stands, wall };
+}
+
+// ---------- a copy from a flyer: a sample of the featured piece, kept by a visitor ----------
+// It looks just like the piece; it sells for what a plain Common one of its kind fetches, and it can't be reworked, broken down or
+// hung. One a shop, never from your own; a new player's waits in the back until their first piece is made (shop.js place).
+export function sampleOf(card, maker, now) {
+  const plain = makePiece({ patternId: card.pattern, picks: [0, 0, 0], result: { tier: 0, flawed: false, worked: 0, strikes: 0, heats: 0, cracks: 0 }, maker: '', rng: () => 0, now });
+  return { ...card, id: 'fly' + now.toString(36) + Math.floor(Math.random() * 1e6).toString(36), at: now, metal: null, worth: plain.worth, sample: true, flyer: maker,
+    count: plain.count, made: (card.made || []).concat('a copy, from ' + maker + '\'s flyer') };
+}
+export function keepCopy(save, shop, now = Date.now()) {
+  if (!shop || !shop.featured) return { why: 'nothing on this flyer' };
+  if (shop.uid && shop.uid === save.uid) return { why: 'own' };
+  if (!shop.uid) return { why: 'an old link' };
+  save.kept = save.kept || [];
+  if (save.kept.includes(shop.uid)) return { why: 'already' };
+  const card = sampleOf(shop.featured, shop.maker, now);
+  save.cards.unshift(card); save.kept.push(shop.uid);
+  return { card };
 }

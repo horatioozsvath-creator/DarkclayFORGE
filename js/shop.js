@@ -2,11 +2,11 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RENOWN, OPENING, DEMAND } from './data.js?v=19';
-import { refreshTown, hotPatterns, demandOf, purseMultFor } from './town.js?v=19';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=19';
-import { charmGap } from './room.js?v=19';
-import { fame, purseMult, patienceOf, haggleMult, onWall, rung } from './growth.js?v=19';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RENOWN, OPENING, DEMAND } from './data.js?v=20';
+import { refreshTown, hotPatterns, demandOf, purseMultFor } from './town.js?v=20';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=20';
+import { charmGap } from './room.js?v=20';
+import { fame, purseMult, patienceOf, haggleMult, onWall, rung } from './growth.js?v=20';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -74,7 +74,9 @@ export const onShelf = (save, id) => save.shelf.findIndex(e => e && e.id === id)
 export const inBack = save => save.cards.filter(c => onShelf(save, c.id) < 0 && !onWall(save, c.id));
 export function place(save, id, slot, tag = 'fair') {
   if (slot == null) slot = save.shelf.findIndex(e => !e);
-  if (slot < 0 || slot >= save.slots || save.shelf[slot] || onShelf(save, id) >= 0 || onWall(save, id) || !save.cards.some(c => c.id === id)) return -1;
+  const card = save.cards.find(c => c.id === id);
+  if (slot < 0 || slot >= save.slots || save.shelf[slot] || onShelf(save, id) >= 0 || onWall(save, id) || !card) return -1;
+  if (card.sample && !save.made) return -1;   // a flyer's copy waits in the back until the shop's own first piece is made
   save.shelf[slot] = { id, tag };
   return slot;
 }
@@ -385,7 +387,7 @@ export function orderWord(o) {
   const rest = (o.metal ? MATS[o.metal].name.replace(' bar', '').toLowerCase() + ' ' : '') + PATTERNS[o.pattern].name.toLowerCase();
   return o.least ? TIERS[o.least].name + ' or better ' + rest : SHEAVES.includes(o.pattern) ? 'a sheaf of ' + rest : PAIRS.includes(o.pattern) ? 'a pair of ' + rest : (/^[aeiou]/.test(rest) ? 'an ' : 'a ') + rest;
 }
-export const fills = (o, card) => !!o && card.pattern === o.pattern && TIER_N[card.tier] >= o.least && (!o.metal || card.metal === o.metal) && !card.flawed;
+export const fills = (o, card) => !!o && !card.sample && card.pattern === o.pattern && TIER_N[card.tier] >= o.least && (!o.metal || card.metal === o.metal) && !card.flawed;
 export function deliver(save, cardId, now) {
   const o = save.order, card = save.cards.find(c => c.id === cardId);
   if (!o || !card || !fills(o, card) || onWall(save, cardId)) return null;
@@ -399,7 +401,7 @@ export function deliver(save, cardId, now) {
 // ---------- the back room: break a piece down, or send it back in the fire ----------
 // breaking down gives back half its bars, rounded down (a one-bar piece gives no bar back), and any rare part it carried
 export function salvageOf(card) {
-  if (PATTERNS[card.pattern].batch || PATTERNS[card.pattern].makes) return [];   // a brew can't be unbrewed
+  if (card.sample || PATTERNS[card.pattern].batch || PATTERNS[card.pattern].makes) return [];   // a brew can't be unbrewed, nor a flyer's copy broken
   const src = srcOf(card), parts = chosenParts(card.pattern, src.picks), out = {};
   const bars = Math.floor(PATTERNS[card.pattern].bars / 2);
   if (bars) out[card.metal] = bars;
@@ -409,7 +411,7 @@ export function salvageOf(card) {
 export const salvageWorth = card => salvageOf(card).reduce((c, r) => c + MATS[r.mat].price * r.n, 0);
 export function salvage(save, cardId) {
   const card = save.cards.find(c => c.id === cardId);
-  if (!card || onShelf(save, cardId) >= 0 || onWall(save, cardId)) return null;
+  if (!card || card.sample || onShelf(save, cardId) >= 0 || onWall(save, cardId)) return null;
   const got = salvageOf(card);
   got.forEach(r => { save.mats[r.mat] = (save.mats[r.mat] || 0) + r.n; });
   save.cards = save.cards.filter(c => c.id !== cardId);
@@ -425,7 +427,7 @@ export const reworkCost = card => {
 };
 export const tradeLevel = (save, pattern) => levelOf(((save.trades || {})[pattern] || {}).xp || 0).level;
 // Common and Fine go up a tier; Rare only toward Old-Blood, for a master with the right piece (rules.js oldBloodGate)
-export const canRework = (save, card) => !PATTERNS[card.pattern].batch && !PATTERNS[card.pattern].makes && TIER_N[card.tier] < TIERS.length - 1
+export const canRework = (save, card) => !card.sample && !PATTERNS[card.pattern].batch && !PATTERNS[card.pattern].makes && TIER_N[card.tier] < TIERS.length - 1
   && onShelf(save, card.id) < 0 && !onWall(save, card.id) && (TIER_N[card.tier] < OLD_BLOOD.tier - 1 || oldBloodGate(card, tradeLevel(save, card.pattern)).ok);
 
 // ---------- parts for other stations, forged at once ----------
