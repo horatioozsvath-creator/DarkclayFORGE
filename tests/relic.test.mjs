@@ -108,3 +108,25 @@ test('the Relic working at the stretcher and the bench: the same rule, at their 
     assert.equal(piece.name, RELICS[relic].name); assert.equal(piece.tier, 'relic');
   }
 });
+
+test('a relic brew is worked from an Old-Blood batch and boils down to one bottle; the glass\'s Relics at its own meter', () => {
+  const xp9 = xpTo(9);
+  const batch = R.makePiece({ patternId: 'tonic', picks: [0, 2, 0], result: { tier: 3, flawed: false, worked: 20, strikes: 20, heats: 2, cracks: 0, whiteHeat: true }, maker: 'T', rng: seeded(2), now: 1 });
+  assert.equal(batch.count, 3);
+  const s = shop({ cards: [batch], trades: { tonic: { xp: xp9 } }, blueprints: ['wennasdraught'], stations: ['kettle'] });
+  const g = Sh.relicFor(s, batch); assert.ok(g.ok); assert.equal(g.relic, 'wennasdraught');
+  assert.deepEqual(Sh.relicCost(batch, g.relic).map(x => x.mat), [batch.metal, 'moonmead']);
+  const S = R.newWorking({ patternId: 'tonic', picks: [0, 2, 0], level: 9, found: [], kit: {}, rework: { from: 3, relic: g.relic } }, seeded(1));
+  assert.equal(S.relic, 'wennasdraught'); S.shape = 100; S.whites = 2; S.whiteHeat = true;
+  const res = R.finish(S, 'quench'); assert.equal(res.tier, 4);
+  const piece = R.relicPiece(R.remakePiece({ card: batch, res, picked: null, rng: seeded(3), now: 2 }), g.relic);
+  assert.equal(piece.count, 1); assert.equal(piece.name, 'Wenna\'s Last Draught');
+  // it sells once, and it's gone
+  const shopS = { ...shop({ cards: [piece], trades: {} }), made: 1 }; Sh.fixShelf(shopS); Sh.place(shopS, piece.id);
+  shopS.queue = [{ kind: 'buyer', who: 'x', want: 'any', purse: 1e7, mood: 'EAGER', least: 0, wait: 45, shows: 0 }];
+  assert.equal(Sh.haggle(shopS, piece.id, 'hold', 1).outcome, 'sold'); assert.equal(shopS.cards.length, 0);
+  // the glass: the lens, at the gather's meter
+  const L = R.newWorking({ patternId: 'lens', picks: [0, 0, 2], level: 9, found: [], kit: {}, rework: { from: 3, relic: 'abbeylens' } }, seeded(1));
+  const Lp = R.newWorking({ patternId: 'lens', picks: [0, 0, 2], level: 9, found: [], kit: {}, rework: { from: 2 } }, seeded(1));
+  assert.ok(L.band[1] - L.band[0] < Lp.band[1] - Lp.band[0]);
+});

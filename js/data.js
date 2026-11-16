@@ -34,6 +34,15 @@ export const RELICS = {
     lore: 'Bent from a yew that grew below the deep doors, where no sun has ever been.' },
   abbeystaff: { name: 'The Abbey Staff', pattern: 'staff', mat: 'starcore', power: ['It remembers', 'a working done once comes easier the second time'], source: 'deep',
     lore: 'The abbey\'s first abbess walked with one. The scholars say this is its twin.' },
+  // the kettle's and the glass's (milestone 14). A relic brew is worked from an Old-Blood batch and boils down to one bottle
+  wennasdraught: { name: 'Wenna\'s Last Draught', pattern: 'tonic', mat: 'moonmead', power: ['A night\'s sleep in a swallow', 'one sip, and the night\'s rest is had'], source: 'deep',
+    lore: 'Old Wenna\'s own recipe, written on the inside of her coffin lid. Only one bottle was ever right.' },
+  brannocsalve: { name: 'Brannoc\'s Salve', pattern: 'salve', mat: 'moonmead', power: ['By morning', 'any wound dressed with it is closed by morning'], source: 'marrow',
+    lore: 'The saint\'s own salve, they say, and the saint never lost a soul to a wound.' },
+  abbeylens: { name: 'The Abbey Lens', pattern: 'lens', mat: 'starcore', power: ['Sees the lie', 'a lie written down shows through it'], source: 'deep',
+    lore: 'Ground for the abbey\'s first scriptorium, where no false word was ever copied twice.' },
+  corrowgoblet: { name: 'The Corrow Goblet', pattern: 'goblet', mat: 'moonsilver', power: ['Poison shows', 'what\'s poured in it clouds if it would harm'], source: 'corrow',
+    lore: 'The Corrows have drunk from one like it for three hundred years, and buried no one before their time.' },
 };
 export const BLUEPRINT_DEEP = 0.12;   // the odds a trip below the deep doors brings back a blueprint (any still to be found, one for a trade you're good at first)
 // the last rework, Rare to Old-Blood: a master of the trade, a piece with a rare part or WHITE HEAT in its making, three times the
@@ -447,10 +456,22 @@ export const STORIES = [
     { patterns: ['jerkin', 'gloves', 'axe'], least: 2, line: 'The high pass in winter. Keep my lads warm.', thanks: 'They came down singing.' },
     { patterns: ['dagger', 'axe'], least: 3, line: 'My son takes the first herd out alone. Give him your best.', thanks: 'He came back taller than he went.' },
     { patterns: ['boots', 'axe'], least: 3, line: 'The longest drive there is: to the sea. I\'m going myself, one last time.', thanks: 'My grandfather\'s boot-pattern. Make them, and they\'ll go anywhere.' } ] },
+  { id: 'corrow2', after: 'corrow', rung: 5, who: 'Lady Ysmay Corrow, dowager', fig: '#a07ab8', blueprint: 'corrowgoblet', renown: 40, steps: [
+    { patterns: ['goblet', 'ring'], least: 2, line: 'My granddaughter\'s christening. Something to drink her health from.', thanks: 'The duke\'s wife asked who made it. I lied, to keep you to myself.' },
+    { patterns: ['lens', 'ring'], least: 2, line: 'My eyes are going. Something fine to read by.', thanks: 'I read my husband\'s letters again.' },
+    { patterns: ['falchion', 'staff', 'longbow'], least: 3, line: 'My grandson is to be knighted. He must carry your work.', thanks: 'He knelt with it. The whole hall looked.' },
+    { patterns: ['ring'], least: 3, line: 'The Corrow ring was lost at sea. Make it again, better.', thanks: 'It\'s on the head of the family\'s hand, where it belongs.' },
+    { patterns: ['goblet', 'ring'], least: 3, line: 'The house\'s cup cracked. It has never cracked in three hundred years.', thanks: 'The pattern of the old cup. Make the true one, and the house is yours to drink in.' } ] },
   { id: 'marrow', who: 'Marrow, the herbalist', fig: '#8a9a6a', gift: 'marrowrail', renown: 10, steps: [
     { patterns: ['draught'], least: 0, line: 'My own kettle\'s cracked. Brew for me this once.', thanks: 'The lane\'s fever broke on it.' },
     { patterns: ['salve'], least: 1, line: 'The tannery boys burn their hands. Something kind.', thanks: 'They come to me singing now. Unheard of.' },
     { patterns: ['tonic'], least: 2, line: 'Old Wenna can\'t sleep. A tonic worth her last nights.', thanks: 'Hang my herbs in your shop. They\'ll do better with you.' } ] },
+  { id: 'marrow2', after: 'marrow', rung: 5, who: 'Marrow, healer of the lanes', fig: '#8a9a6a', blueprint: 'brannocsalve', renown: 40, steps: [
+    { patterns: ['draught'], least: 2, line: 'The fever\'s back, and worse. I can\'t brew fast enough.', thanks: 'The lanes are quiet again. Good quiet.' },
+    { patterns: ['salve'], least: 2, line: 'A fire at the tannery. Burns on half the street.', thanks: 'Every one of them healed clean.' },
+    { patterns: ['oil', 'salve'], least: 2, line: 'The watch\'s blades are rusting in the wet. And their hands are worse.', thanks: 'Vance says the gate smells of my garden now.' },
+    { patterns: ['tonic'], least: 3, line: 'I\'m old, and I sleep badly. Brew me something worth sleeping for.', thanks: 'I dreamed of my mother. First time in fifty years.' },
+    { patterns: ['salve'], least: 3, line: 'The abbey wants a salve for the saint\'s feast. Your very best.', thanks: 'The saint\'s own recipe, from the abbey\'s cellars. They said to give it to the one who can make it.' } ] },
 ];
 // a second shop, in another town: bought once the shop is SOUGHT. A keeper runs it (open or away, up to the away cap), paid by the
 // hour and keeping a share of each sale; its own shop front, shelves and customers (more delvers, travellers and hunters off the river), its own notice board.

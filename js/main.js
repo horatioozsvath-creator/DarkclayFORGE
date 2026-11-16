@@ -1,20 +1,20 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=24';
-import * as R from './rules.js?v=24';
-import * as Sh from './shop.js?v=24';
-import * as St from './staff.js?v=24';
-import * as Rm from './room.js?v=24';
-import * as G from './growth.js?v=24';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=24';
-import * as Snd from './sound.js?v=24';
-import * as Town from './town.js?v=24';
-import * as V from './visit.js?v=24';
-import * as Br from './branch.js?v=24';
-import { drawFlyer, flyerBlob } from './flyer.js?v=24';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=24';
-import { card, ART } from './card.js?v=24';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=24';
-import { load, store as storeRaw, toCode, fromCode } from './save.js?v=24';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=25';
+import * as R from './rules.js?v=25';
+import * as Sh from './shop.js?v=25';
+import * as St from './staff.js?v=25';
+import * as Rm from './room.js?v=25';
+import * as G from './growth.js?v=25';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=25';
+import * as Snd from './sound.js?v=25';
+import * as Town from './town.js?v=25';
+import * as V from './visit.js?v=25';
+import * as Br from './branch.js?v=25';
+import { drawFlyer, flyerBlob } from './flyer.js?v=25';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=25';
+import { card, ART } from './card.js?v=25';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=25';
+import { load, store as storeRaw, toCode, fromCode } from './save.js?v=25';
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
 let replacing = false;
 const store = s => replacing ? false : storeRaw(s);
@@ -229,7 +229,7 @@ function renderMaker() {
   });
 }
 // the Relics' blueprints: the ones found, what each needs; the rest, where to look
-const BP_WHERE = { bram: 'Bram Oakes\'s great story (after his first, when the shop is RENOWNED)', vance: 'Captain Vance\'s great story (after his first, when the shop is RENOWNED)', ketty: 'Ketty Moss\'s great story (after her first, when the shop is RENOWNED)', deep: 'below the deep doors, now and then (a runner\'s road from RENOWNED)' };
+const BP_WHERE = { corrow: 'Lady Corrow\'s great story (after her first, when the shop is RENOWNED)', marrow: 'Marrow\'s great story (after the first, when the shop is RENOWNED; a kettle)', bram: 'Bram Oakes\'s great story (after his first, when the shop is RENOWNED)', vance: 'Captain Vance\'s great story (after his first, when the shop is RENOWNED)', ketty: 'Ketty Moss\'s great story (after her first, when the shop is RENOWNED)', deep: 'below the deep doors, now and then (a runner\'s road from RENOWNED)' };
 function renderBlueprints() {
   const have = save.blueprints || [], made = save.relicsMade || [];
   $('blueprints').innerHTML = Object.entries(RELICS).map(([id, r]) => {
@@ -275,7 +275,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=24').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=25').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(shelfShown()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -1310,7 +1310,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=24').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=25').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -1383,7 +1383,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=24').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=25').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }

@@ -1,6 +1,6 @@
 # Rarity to Mythic: the full ladder for every station
 
-Status: milestones 11–13 built (releases 22–24); 14–18 planned. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
+Status: milestones 11–14 built (releases 22–25); 15–18 planned. All eleven Relics are in. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
 This plan takes every station up the last two: **Relic** (named, one of a kind) and **Mythic** (the Nine).
 
 ## The ladder
@@ -159,3 +159,13 @@ Each milestone ends in a release, as before: rules and tests first, then the scr
 - **Sim (75 days, seeds 1–6):** the first Relic on day 31–63, as before (the bot works the forge's falchion far more than anything
   else); now a second and third follow on day 51–73 in half the runs (the Oskbow, the Hollow King's Helm). A player who spreads their
   trades reaches a Relic sooner than the bot does.
+
+## Milestone 14, as built (release 25)
+
+- **Four more Relics:** Wenna's Last Draught (tonic, moon-mead) and Brannoc's Salve (salve, moon-mead) at the kettle; The Abbey Lens
+  (lens, starglass core) and The Corrow Goblet (goblet, moonsilver) at the glass.
+- **A relic brew** is worked from an Old-Blood batch (a master's brew) and **boils down to one bottle**: it sells once.
+- **Lady Corrow's and Marrow's great stories** end in The Corrow Goblet's and Brannoc's Salve's blueprints; the other two come from the
+  Deep.
+- **Sim (75 days, seeds 1–6):** the first Relic on day 31–63; a second in half the runs by day 40–74; renown 4,000–4,400 by day 75
+  (OF THE REACH reached, ready for the trail of the Nine).

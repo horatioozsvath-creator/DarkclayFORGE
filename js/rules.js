@@ -1,6 +1,6 @@
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS } from './data.js?v=24';
+import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS } from './data.js?v=25';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -396,7 +396,9 @@ export const makerOf = card => card.maker || ((card.made || [])[0] || '').replac
 // a Relic: the piece out of its Relic working, named, with its own lore and power (its three affixes kept)
 export function relicPiece(piece, id) {
   const r = RELICS[id];
-  return { ...piece, name: r.name, relic: id, power: r.power.slice(), lore: r.lore, made: (piece.made || []).concat('the Relic working · ' + r.name) };
+  const out = { ...piece, name: r.name, relic: id, power: r.power.slice(), lore: r.lore, made: (piece.made || []).concat('the Relic working · ' + r.name) };
+  if (PATTERNS[piece.pattern].batch) out.count = 1;   // a relic brew: the batch boiled down to one bottle
+  return out;
 }
 // a working that yields materials, not a piece (the glass's bottles): how many, by the tier it came out
 export const yieldOf = (patternId, tier) => { const m = PATTERNS[patternId].makes; return m ? { mat: m.mat, n: m.n[Math.min(tier, m.n.length - 1)] } : null; };
