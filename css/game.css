@@ -471,3 +471,39 @@ canvas.dio { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 /* the way back to the title */
 .seg.mute.exitbtn, .exitbtn { display: inline-flex; align-items: center; color: var(--gold); border-color: rgba(232,196,100,.45); }
 .exitbtn .ico { margin-right: .35em; }
+
+/* ---------- the polish: buttons with weight, cards with a forged edge, tabs and headings with a little ornament ---------- */
+.seg, .hbtn, .act { border-radius: 7px; transition: background .15s, border-color .15s, color .15s, box-shadow .15s, transform .08s; }
+.seg { display: inline-flex; align-items: center; justify-content: center; gap: 0; background: linear-gradient(180deg, #2a2019, #1d1611); border-color: rgba(233,220,195,.16);
+  box-shadow: inset 0 1px 0 rgba(255,236,200,.06), 0 1px 0 rgba(0,0,0,.4); }
+.seg:hover:not(:disabled), .seg:focus-visible { color: var(--bone); border-color: rgba(232,196,100,.55); background: linear-gradient(180deg, #33261c, #221a13); }
+.seg:active:not(:disabled), .hbtn:active:not(:disabled), .act:active:not(:disabled) { transform: translateY(1px); }
+.seg.go, .seg[aria-pressed="true"], .hbtn.go { background: linear-gradient(180deg, #f6b874, #e48f45); color: #1a0e06; border-color: #ffe0b0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 2px 10px rgba(240,140,60,.28); }
+.seg.go:hover:not(:disabled) { background: linear-gradient(180deg, #ffc98a, #ec9a52); color: #1a0e06; }
+.seg:focus-visible, .hbtn:focus-visible, .act:focus-visible, .tab:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.hbtn { border-radius: 9px; background: linear-gradient(180deg, #2a2019, #1d1611); }
+.hbtn .ico { width: 1.3em; height: 1.3em; margin: 0 0 2px; color: var(--gold); }
+.hbtn.go .ico { color: #1a0e06; }
+.act { border-radius: 10px; }
+.act .ico { width: 1.25em; height: 1.25em; margin: 0 0 3px; }
+.act.strike .ico { width: 1.1em; height: 1.1em; }
+.seg .ico { opacity: .92; }
+.seg.go .ico { opacity: 1; }
+.has-ico { gap: 0; }
+.card { border-radius: 12px; background: linear-gradient(180deg, rgba(30,23,17,.94), rgba(16,12,9,.94)); border-color: rgba(233,220,195,.1);
+  box-shadow: inset 0 1px 0 rgba(255,236,200,.05), 0 8px 24px rgba(0,0,0,.35); }
+.card h2 { color: var(--gold); opacity: .92; padding-bottom: 8px; border-bottom: 1px solid rgba(232,196,100,.14); margin-bottom: 10px; }
+.card h2 > span::before { content: '◆'; font-size: 8px; vertical-align: 2px; margin-right: 8px; color: var(--ember-hot); }
+.card h2 b { color: var(--bone-dim); }
+.tab { border-radius: 8px 8px 0 0; }
+.tab .ico { width: 1.05em; height: 1.05em; margin-right: .1em; }
+.tab[aria-selected="true"] .ico { color: var(--ember-hot); }
+.nav { backdrop-filter: blur(6px); }
+.nav .seg[aria-current="page"] { background: linear-gradient(180deg, #f2d27a, #d9ae4c); border-color: #fff0c0; box-shadow: 0 0 14px rgba(232,196,100,.3); }
+.nav .seg .ico { margin-right: .35em; }
+.nav .seg.mute .ico { margin-right: .3em; width: 1.05em; height: 1.05em; }
+.fi { border-radius: 9px; }
+.furn .fi { background: linear-gradient(180deg, #241b14, #1a140f); }
+.ledger li { border-radius: 8px; }
+@media (max-width: 600px) { .nav .tabs .seg .ico { display: none; } }   /* the top bar's words alone on a phone: room for all four */

@@ -1,26 +1,26 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=32';
-import * as R from './rules.js?v=32';
-import * as Sh from './shop.js?v=32';
-import * as St from './staff.js?v=32';
-import * as Rm from './room.js?v=32';
-import * as G from './growth.js?v=32';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=32';
-import * as Snd from './sound.js?v=32';
-import * as Town from './town.js?v=32';
-import * as V from './visit.js?v=32';
-import * as Br from './branch.js?v=32';
-import * as Hl from './hall.js?v=32';
-import * as Trail from './trail.js?v=32';
-import { ICONS, emblem } from './icons.js?v=32';
-import { drawFlyer, flyerBlob } from './flyer.js?v=32';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=32';
-import { card, ART } from './card.js?v=32';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=32';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=32';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=33';
+import * as R from './rules.js?v=33';
+import * as Sh from './shop.js?v=33';
+import * as St from './staff.js?v=33';
+import * as Rm from './room.js?v=33';
+import * as G from './growth.js?v=33';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=33';
+import * as Snd from './sound.js?v=33';
+import * as Town from './town.js?v=33';
+import * as V from './visit.js?v=33';
+import * as Br from './branch.js?v=33';
+import * as Hl from './hall.js?v=33';
+import * as Trail from './trail.js?v=33';
+import { ICONS, emblem, watch } from './icons.js?v=33';
+import { drawFlyer, flyerBlob } from './flyer.js?v=33';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=33';
+import { card, ART } from './card.js?v=33';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=33';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=33';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 32;
+const VERSION = 33;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayFORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -99,9 +99,9 @@ function toast(html) {
 // sound: woken by the first tap or key; the mute switch kept apart from the save
 ['pointerdown', 'keydown'].forEach(t => document.addEventListener(t, Snd.unlock, { capture: true }));
 const MUSIC_OF = { home: 'forge', prepare: 'forge', work: 'forge', shop: 'shop', supp: 'shop', staff: 'shop', visit: 'shop', branch: 'shop' };
-function musicLabel() { $('musicBtn').textContent = Snd.isMusicOn() ? '♫ ON' : '♫ OFF'; $('musicBtn').setAttribute('aria-pressed', String(Snd.isMusicOn())); }
+function musicLabel() { $('musicBtn').innerHTML = ICONS.music + (Snd.isMusicOn() ? 'ON' : 'OFF'); $('musicBtn').setAttribute('aria-pressed', String(Snd.isMusicOn())); }
 $('musicBtn').onclick = () => { Snd.setMusicOn(!Snd.isMusicOn()); musicLabel(); };
-function muteLabel() { $('muteBtn').textContent = Snd.isMuted() ? '♪ OFF' : '♪ ON'; $('muteBtn').setAttribute('aria-pressed', String(!Snd.isMuted())); }
+function muteLabel() { $('muteBtn').innerHTML = ICONS.sound + (Snd.isMuted() ? 'OFF' : 'ON'); $('muteBtn').setAttribute('aria-pressed', String(!Snd.isMuted())); }
 $('muteBtn').onclick = () => { Snd.setMuted(!Snd.isMuted()); muteLabel(); Snd.play('coin'); };
 muteLabel(); musicLabel();
 const go = where => where === 'home' ? toHome() : where === 'shop' ? toShop() : where === 'staff' ? toStaff() : where === 'branch' ? toBranch() : toSupp();
@@ -306,7 +306,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=32').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=33').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -1443,7 +1443,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=32').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=33').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -1520,7 +1520,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=32').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=33').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }
@@ -1674,6 +1674,7 @@ $('tLicense').onclick = () => openLook('<div class="licence"><div class="sharedh
   + '<h3>MADE WITH</h3><p><b>three.js</b> · © 2010–2024 three.js authors · MIT License.<br><b>Alegreya</b> · © 2011 The Alegreya Project Authors · <b>Alegreya Sans</b> · © 2013 The Alegreya Sans Project Authors · SIL Open Font License 1.1.</p>'
   + '<p>The full text is in the LICENSE file at the game\'s address.</p></div>', '');
 $('titleBtn').onclick = () => showTitle();
+watch(document.body);   // every button its icon, as it's drawn
 $('titleBtn').innerHTML = ICONS.exit + 'EXIT';
 $('tLicense').innerHTML = ICONS.scroll + 'LICENCE';
 // a copy on someone else's site: say so, and where the real game is
