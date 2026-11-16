@@ -183,3 +183,34 @@ export const SELLERS = [
   { who: 'Hask of Dunmere', fig: '#7a6a5a', kind: 'piece' },
   { who: 'a widow clearing a forge', fig: '#a08a6a', kind: 'piece' },
 ];
+
+// ---------- the staff and the clock (milestone 4) ----------
+export const AWAY_CAP_H = 8;   // hours of away time the staff keep the shop for
+// roles: wage in coins an hour at level 1 (+1 a level); clerk: the share of the tag price that reaches the till away (the rest is
+// their cut, shrinking as they learn), and how much more readily walk-ins buy while they mind the shop and you're at the forge
+export const ROLES = {
+  clerk: { word: 'COUNTER CLERK', wage: 4, line: 'Minds the shop while you work and while you\'re away.' },
+  runner: { word: 'RUNNER', wage: 3, line: 'Goes out on the roads for materials, old pieces and now and then a found tile.' },
+};
+export const TRAITS = {
+  clerk: [
+    { id: 'silver', word: 'Silver-tongued', line: 'keeps a smaller cut' },
+    { id: 'early', word: 'Early riser', line: 'keeps the shop two hours longer while you\'re away' },
+    { id: 'quick', word: 'Quick learner', line: 'learns half as fast again' },
+  ],
+  runner: [
+    { id: 'surefoot', word: 'Sure-footed', line: 'trips take a fifth less time' },
+    { id: 'keen', word: 'Keen-eyed', line: 'brings back a little more' },
+    { id: 'lucky', word: 'Lucky', line: 'twice the chance of a found tile' },
+    { id: 'quick', word: 'Quick learner', line: 'learns half as fast again' },
+  ],
+};
+export const NAMES = ['Wenna Tolley', 'Pell', 'Pip', 'Corwen Ashe', 'Hollin', 'Mira Fenn', 'Oswy Brack', 'Tamsin Reed', 'Garrow', 'Effa Lind', 'Duncy Holt', 'Brisa Coombe'];
+// the runner's roads: hours, provisions (paid when they set out), what they bring (n commons, rare materials, the odds of an old
+// piece and of a found tile)
+export const ROUTES = {
+  yard: { name: 'Down to the yard', h: 0.25, fee: 4, commons: [3, 5], rare: 0, piece: 0, tile: 0 },
+  ford: { name: 'The ford villages', h: 1, fee: 12, commons: [6, 9], rare: 0, gem: 0.5, piece: 0.15, tile: 0 },
+  reach: { name: 'Out to the Reach', h: 3, fee: 35, commons: [5, 8], rare: 1, piece: 0.25, tile: 0.12 },
+  deep: { name: 'Into the deep doors', h: 8, fee: 80, commons: [6, 10], rare: 2, piece: 0.5, tile: 0.3 },
+};

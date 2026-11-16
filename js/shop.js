@@ -2,8 +2,8 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS } from './data.js?v=3';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf } from './rules.js?v=3';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS } from './data.js?v=4';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf } from './rules.js?v=4';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -96,7 +96,9 @@ const LINES = {
 };
 
 // One customer comes in, looks at the shelf and buys or goes. Returns the ledger entry.
-export function visit(save, rng, now, c = newCustomer(rng)) {
+// o: { rate: the share of the price that reaches the till (a clerk's cut taken, away), boost: on the odds they take it (a clerk minding
+// the shop), by: who sold it, quiet: a visit with no sale goes uncounted in the ledger (away: only sales are written down) }
+export function visit(save, rng, now, c = newCustomer(rng), o = {}) {
   const shown = save.shelf.map((e, slot) => e && { slot, tag: e.tag, card: save.cards.find(x => x.id === e.id) }).filter(Boolean)
     .filter(e => wants(c.want, e.card) && TIER_N[e.card.tier] >= c.least);
   const afford = shown.filter(e => priceAt(e.card, e.tag) <= c.purse)
@@ -105,14 +107,16 @@ export function visit(save, rng, now, c = newCustomer(rng)) {
   if (!shown.length) entry.line = 'Nothing on the shelf for them' + (c.least ? ' (Fine or better only).' : '.');
   else if (!afford.length) { const e = shown.sort((a, b) => priceAt(a.card, a.tag) - priceAt(b.card, b.tag))[0]; entry.line = 'Looked at the ' + e.card.name + ' at ' + priceAt(e.card, e.tag) + ' c, but carried ' + c.purse + '.'; entry.near = e.card.id; }
   else {
-    const e = afford[0], price = priceAt(e.card, e.tag);
-    if (rng() < takeOdds(c.mood, e.tag)) {
+    const e = afford[0], price = Math.max(1, Math.round(priceAt(e.card, e.tag) * (o.rate || 1)));
+    if (rng() < Math.min(0.95, takeOdds(c.mood, e.tag) * (o.boost || 1))) {
       save.coins += price; save.sold = (save.sold || 0) + 1; save.earned = (save.earned || 0) + price;
       save.cards = save.cards.filter(x => x.id !== e.card.id); save.shelf[e.slot] = null;
-      entry.sold = { name: e.card.name, tier: e.card.tier, price, tag: e.tag, id: e.card.id };
-      entry.line = '"' + LINES.sold[c.mood] + '"';
-    } else { entry.line = 'Weighed the ' + e.card.name + ' at ' + price + ' c. "' + LINES.passed[c.mood] + '"'; entry.near = e.card.id; }
+      entry.sold = { name: e.card.name, tier: e.card.tier, price, full: priceAt(e.card, e.tag), tag: e.tag, id: e.card.id };
+      entry.line = '"' + LINES.sold[c.mood] + '"' + (o.by ? ' Sold by ' + o.by + (o.rate && o.rate < 1 ? ', who kept ' + (priceAt(e.card, e.tag) - price) + ' c.' : '.') : '');
+      if (o.by) entry.by = o.by;
+    } else { entry.line = 'Weighed the ' + e.card.name + ' at ' + priceAt(e.card, e.tag) + ' c. "' + LINES.passed[c.mood] + '"'; entry.near = e.card.id; }
   }
+  if (o.quiet && !entry.sold) return entry;
   return log(save, entry);
 }
 export const gap = rng => 18 + rng() * 22;   // seconds between customers
@@ -122,11 +126,12 @@ function log(save, entry) { save.ledger = [entry].concat(save.ledger || []).slic
 // dt seconds of open shop pass. present: the maker is at the counter (the shop screen, in front): customers queue to be served,
 // sellers come in. Away from it, the shelf sells itself as in milestone 2 and the queue looks for itself.
 // Returns the ledger entries made, oldest first.
-export function shopStep(save, dt, rng, now, present = false) {
+// clerk: { name, boost } minding the shop while the maker is elsewhere (it sells a little more readily), or null
+export function shopStep(save, dt, rng, now, present = false, clerk = null) {
   const out = [];
   save.clock = (save.clock || 0) + dt;
   if (!save.queue) save.queue = [];
-  if (!present && save.queue.length) out.push(...flushQueue(save, rng, now));
+  if (!present && save.queue.length) out.push(...flushQueue(save, rng, now, clerk));
   if (present && save.queue[0] && !save.queue[0].counter) {
     save.queue[0].wait -= dt;
     if (save.queue[0].wait <= 0) out.push(walkAway(save, rng, now));
@@ -138,11 +143,29 @@ export function shopStep(save, dt, rng, now, present = false) {
   }
   if (save.shopNext == null) save.shopNext = gap(rng);
   save.shopNext -= dt;
-  while (save.shopNext <= 0) { out.push(...arrive(save, rng, now, present)); save.shopNext += gap(rng); }
+  while (save.shopNext <= 0) { out.push(...arrive(save, rng, now, present, clerk)); save.shopNext += gap(rng); }
+  return out;
+}
+
+// ---------- away: the shop while the page is closed ----------
+// Customers come more slowly than while the maker is about (the shop's a quiet place without its maker), and only a clerk sells.
+// Away time doesn't run the open-shop clock, so special orders wait. Returns { sold: [entries], missed, cut }.
+export const awayGap = rng => 480 + rng() * 480;   // 8 to 16 minutes between customers
+export function awayStep(save, dt, rng, at, clerk) {
+  const out = { sold: [], missed: 0, cut: 0 };
+  if (save.awayNext == null) save.awayNext = awayGap(rng);
+  save.awayNext -= dt;
+  while (save.awayNext <= 0) {
+    const when = at + save.awayNext * 1000;   // when they came in, so the ledger keeps the night's times
+    save.awayNext += awayGap(rng);
+    if (!clerk) { out.missed++; continue; }
+    const e = visit(save, rng, when, undefined, { rate: clerk.rate, by: clerk.name, quiet: true });
+    if (e.sold) { out.sold.push(e); out.cut += e.sold.full - e.sold.price; } else out.missed++;
+  }
   return out;
 }
 // someone comes in: a regular with an order, a seller (only with the maker there), or a customer to the counter or the shelf
-export function arrive(save, rng, now, present) {
+export function arrive(save, rng, now, present, clerk = null) {
   if (!save.order && (save.clock || 0) >= (save.orderNext ?? 180) && rng() < 0.2) return [postOrder(save, rng, now)];
   if (present && save.queue.length < QUEUE_MAX) {
     const c = rng() < SELLER_ODDS ? newSeller(rng, Math.floor(now / 3600000), now) : { ...newCustomer(rng), kind: 'buyer' };
@@ -151,10 +174,10 @@ export function arrive(save, rng, now, present) {
     save.queue.push(c);
     return [];
   }
-  return [visit(save, rng, now)];
+  return [visit(save, rng, now, undefined, clerk ? { boost: clerk.boost, by: clerk.name } : {})];
 }
-function flushQueue(save, rng, now) {
-  const out = save.queue.filter(c => c.kind === 'buyer').map(c => visit(save, rng, now, c));
+function flushQueue(save, rng, now, clerk) {
+  const out = save.queue.filter(c => c.kind === 'buyer').map(c => visit(save, rng, now, c, clerk ? { boost: clerk.boost, by: clerk.name } : {}));
   save.queue = [];
   return out;
 }

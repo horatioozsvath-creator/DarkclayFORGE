@@ -1,11 +1,11 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE } from './data.js?v=3';
-import * as R from './rules.js?v=3';
-import * as Sh from './shop.js?v=3';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=3';
-import { card, ART } from './card.js?v=3';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=3';
-import { load, store } from './save.js?v=3';
+import { KINDS, KC, TIERS, FORGE, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE } from './data.js?v=4';
+import * as R from './rules.js?v=4';
+import * as Sh from './shop.js?v=4';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=4';
+import { card, ART } from './card.js?v=4';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=4';
+import { load, store } from './save.js?v=4';
 
 const $ = id => document.getElementById(id);
 const save = load();
