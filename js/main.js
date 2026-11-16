@@ -1,20 +1,20 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=21';
-import * as R from './rules.js?v=21';
-import * as Sh from './shop.js?v=21';
-import * as St from './staff.js?v=21';
-import * as Rm from './room.js?v=21';
-import * as G from './growth.js?v=21';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=21';
-import * as Snd from './sound.js?v=21';
-import * as Town from './town.js?v=21';
-import * as V from './visit.js?v=21';
-import * as Br from './branch.js?v=21';
-import { drawFlyer, flyerBlob } from './flyer.js?v=21';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=21';
-import { card, ART } from './card.js?v=21';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=21';
-import { load, store as storeRaw, toCode, fromCode } from './save.js?v=21';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=22';
+import * as R from './rules.js?v=22';
+import * as Sh from './shop.js?v=22';
+import * as St from './staff.js?v=22';
+import * as Rm from './room.js?v=22';
+import * as G from './growth.js?v=22';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=22';
+import * as Snd from './sound.js?v=22';
+import * as Town from './town.js?v=22';
+import * as V from './visit.js?v=22';
+import * as Br from './branch.js?v=22';
+import { drawFlyer, flyerBlob } from './flyer.js?v=22';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=22';
+import { card, ART } from './card.js?v=22';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=22';
+import { load, store as storeRaw, toCode, fromCode } from './save.js?v=22';
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
 let replacing = false;
 const store = s => replacing ? false : storeRaw(s);
@@ -263,7 +263,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=21').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=22').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(shelfShown()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -656,7 +656,7 @@ function renderStaff() {
     else if (p.role === 'clerk') status = '<div class="status">Minds the shop while you\'re at the forge (customers buy more readily) and keeps it while you\'re away.</div>';
     else if (p.trip) status = '<div class="status">' + ROUTES[p.trip.route].name + ' · back in <b data-back="' + p.trip.back + '">' + hm((p.trip.back - now) / 1000) + '</b></div>';
     else status = '<div class="status">Ready to go out. Send them on a road:</div><div class="routes">' + Object.entries(ROUTES).map(([id, r]) =>
-      '<button class="seg" data-send="' + id + '"' + (save.coins < r.fee ? ' disabled' : '') + '><span>' + r.name + '</span><small>' + hm(St.tripHours(p, id) * 3600) + ' · ' + r.fee + ' c' + (r.rare ? ' · rare things' : '') + (r.tile ? ' · a found tile, maybe' : '') + '</small></button>').join('') + '</div>';
+      '<button class="seg" data-send="' + id + '"' + (save.coins < r.fee || (r.rung && G.rung(save) < r.rung) ? ' disabled' : '') + '><span>' + r.name + '</span><small>' + (r.rung && G.rung(save) < r.rung ? 'opens when the shop is ' + RENOWN[r.rung].word + ' · ' : '') + hm(St.tripHours(p, id) * 3600) + ' · ' + r.fee + ' c' + (r.relic ? ' · relic materials, maybe · it can come back empty' : r.rare ? ' · rare things' : '') + (r.tile ? ' · a found tile, maybe' : '') + '</small></button>').join('') + '</div>';
     return '<div class="person">' + personHtml(p, true) + status + '<div class="rbtns left"><button class="seg" data-letgo="' + p.id + '">LET THEM GO</button></div></div>';
   }).join('') : '<div class="empty">No one works here but you. A clerk keeps the shop while you\'re away; a runner goes out for materials. See who\'s <button class="linkish" data-tabjump="hire">looking for work</button>.</div>';
   const cands = St.candidates(save, hour()), mins = 60 - new Date().getMinutes();
@@ -682,7 +682,7 @@ function haulWords(t) {
   const parts = Object.entries(t.mats).map(([m, n]) => MATS[m].name + ' × ' + n);
   if (t.piece) parts.push('an old ' + t.piece.name);
   if (t.tile) parts.push('a found tile: ' + FOUND[t.tile].name);
-  return parts.join(', ');
+  return (t.empty ? 'little: the road below went badly. ' : '') + parts.join(', ');
 }
 function awayHtml(a) {
   let h = '<div class="away"><div class="k">WHILE YOU WERE AWAY</div><h3>' + hm(a.elapsed) + '</h3>';
@@ -1258,7 +1258,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=21').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=22').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -1331,7 +1331,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=21').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=22').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }

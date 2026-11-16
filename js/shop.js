@@ -2,11 +2,11 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS } from './data.js?v=21';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf } from './town.js?v=21';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=21';
-import { charmGap, placeGift } from './room.js?v=21';
-import { fame, purseMult, patienceOf, haggleMult, onWall, rung } from './growth.js?v=21';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS } from './data.js?v=22';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf } from './town.js?v=22';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=22';
+import { charmGap, placeGift } from './room.js?v=22';
+import { fame, purseMult, patienceOf, haggleMult, onWall, rung } from './growth.js?v=22';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -126,7 +126,8 @@ export function customerWeights(save) {
   const ev = save ? eventOf(save.town) : null, tw = (save && save.townWeights) || {}, em = id => ((ev && ev.weights && ev.weights[id]) || 1) * (tw[id] || 1);
   return CUSTOMERS.map(c => {
     if (!c.rich) return c.weight * em(c.id);
-    let w = r >= c.rich.from ? c.rich.step * (r - c.rich.from + 1) : 0;
+    const rr = c.rich.cap ? Math.min(r, c.rich.cap) : r;
+    let w = rr >= c.rich.from ? c.rich.step * (rr - c.rich.from + 1) : 0;
     if (c.rich.oldBlood && r >= c.rich.from - 1) w += c.rich.oldBlood * ob;
     return w * em(c.id);
   });
@@ -411,7 +412,7 @@ export function postOrder(save, rng, now) {
   const pattern = hot.length && rng() < 0.5 ? hot[Math.floor(rng() * hot.length)] : can[Math.floor(rng() * can.length)];
   let least = r.least != null ? r.least : (rng() < 0.35 ? 1 : 0);
   // a famed shop: now and then a regular asks for Old-Blood (only a piece that can be reworked that far)
-  if (rung(save) === RENOWN.length - 1 && !PATTERNS[pattern].makes && rng() < 0.2) least = OLD_BLOOD.tier;   // a brew too: a master's brew fills it
+  if (rung(save) >= 4 && !PATTERNS[pattern].makes && rng() < 0.2) least = OLD_BLOOD.tier;   // a brew too: a master's brew fills it
   let metal = r.metal && metalIndex(pattern, r.metal) >= 0 ? r.metal : null;
   if (!metal && rng() < 0.3) { const ok = ['iron', 'bronze', 'steel'].filter(m => metalIndex(pattern, m) >= 0); metal = ok[Math.floor(rng() * ok.length)]; }
   save.order = { who: r.who, fig: r.fig, pattern, least, metal, line: r.line, posted: save.clock || 0,

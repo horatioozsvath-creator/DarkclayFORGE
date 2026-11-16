@@ -1,6 +1,6 @@
 // Growth, with no page access: tools, the maker's level and perks, renown, the display wall.
-import { TOOLS, PERKS, RENOWN, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS } from './data.js?v=21';
-import { levelOf, MAX_LEVEL } from './rules.js?v=21';
+import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS } from './data.js?v=22';
+import { levelOf, MAX_LEVEL } from './rules.js?v=22';
 
 // ---------- tools ----------
 export const has = (save, id) => (save.tools || []).includes(id);
@@ -50,7 +50,7 @@ export const wallRenown = save => (save.wall || []).reduce((a, id) => { const c 
 export const renownOf = save => Math.floor(save.renown || 0) + wallRenown(save);
 export function rung(save) { const r = renownOf(save); let i = 0; RENOWN.forEach((x, k) => { if (r >= x.at) i = k; }); return i; }
 export const nextRung = save => RENOWN[rung(save) + 1] || null;
-export const purseMult = save => 1 + PURSE_STEP * rung(save);
+export const purseMult = save => 1 + PURSE_STEP * Math.min(FAMED_RUNG, rung(save));   // above FAMED, new buyers instead of fuller purses
 // renown earned: a sale at a fair price or better, an order filled
 export function fame(save, n) { save.renown = (save.renown || 0) + n * (perked(save, 'word') ? 1.5 : 1); }
 

@@ -1,6 +1,6 @@
 # Rarity to Mythic: the full ladder for every station
 
-Status: plan only. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
+Status: milestone 11 built in release 22; 12–18 planned. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
 This plan takes every station up the last two: **Relic** (named, one of a kind) and **Mythic** (the Nine).
 
 ## The ladder
@@ -112,10 +112,22 @@ every shop link carries the Nine.
 
 Each milestone ends in a release, as before: rules and tests first, then the screens, then a sim run and a check on a phone.
 
-## To decide (before milestone 11)
+## Decided (2026-11-16)
 
-1. **Unique pieces:** one of each Relic and Mythic in a save (recommended), or remakeable once sold.
-2. **Powers:** words on the card only, as affixes are (recommended: the Forge has no combat), or effects in the shop (a Relic on show
-   draws a kind of buyer).
-3. **The Nine's names and lore:** Zero's own Nine of Veric if they fit, or the names above.
-4. **Pace:** first Relic in about four weeks of steady play and all Nine in about three months (recommended), or faster.
+1. **Unique pieces:** one of each Relic and Mythic in a save.
+2. **Powers:** words on the card, as affixes are.
+3. **The Nine's names and lore:** the names above.
+4. **Pace:** the first Relic in about four weeks of steady play, all Nine in about three months.
+
+## Milestone 11, as built (release 22)
+
+- **RENOWNED** (1,200) and **OF THE REACH** (3,500) above FAMED. Purses stop growing at FAMED, and stewards and master collectors
+  level off there: the rungs above bring new things instead of fuller purses.
+- **The Crown's agent** comes to a RENOWNED shop (more often OF THE REACH): purse 8,000–25,000 c, Old-Blood or better only.
+- **Below the deep doors**, a runner's road from RENOWNED: 12 hours, 400 c, three rare things, a found tile or an old piece maybe,
+  and **relic materials** (one about 60 % of the time, a second 15 %), but about one trip in seven comes back with little.
+- **Six relic materials**, found only there: heartstone, moonsilver, wyrm-hide, ghost-yew, starglass core, moon-mead. They keep in the
+  store room until milestone 12 gives them a use.
+- **Sim, 60 days, seeds 1–4:** FAMED on day 9–10, **RENOWNED on day 29–32**, renown about 2,500 by day 60 (OF THE REACH not yet:
+  Relics on the wall and in the Hall will add to it). The Crown's agent bought 1–3 pieces over 1,000 c by day 60.
+

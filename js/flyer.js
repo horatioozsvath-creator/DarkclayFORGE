@@ -1,6 +1,6 @@
 // THE FLYER: a shop's invitation drawn as a card (600 × 840), shared as an image with the shop's link. Page only (a canvas).
-import { TIERS } from './data.js?v=21';
-import { ART } from './card.js?v=21';
+import { TIERS } from './data.js?v=22';
+import { ART } from './card.js?v=22';
 
 const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
 const W = 600, H = 840;

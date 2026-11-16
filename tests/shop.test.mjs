@@ -22,8 +22,8 @@ test('making takes the materials, and only when there are enough', () => {
   assert.deepEqual(Sh.short({ iron: 1 }, rec), [{ mat: 'iron', n: 4, have: 1 }, { mat: 'wrap', n: 1, have: 0 }]);
 });
 
-test('every material is sold somewhere, and prices drift within bounds', () => {
-  for (const id of Object.keys(MATS)) {
+test('every material is sold somewhere (but relic materials, found only below the deep doors), and prices drift within bounds', () => {
+  for (const id of Object.keys(MATS).filter(id => !MATS[id].relic)) {
     const where = [];
     for (let h = 0; h < 48; h++) if (Sh.sells(id, h)) where.push(h);
     assert.ok(where.length > 0, id + ' is sold within two days');

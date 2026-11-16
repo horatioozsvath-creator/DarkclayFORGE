@@ -270,6 +270,10 @@ export const MATS = {
   gem: { name: 'Rough gem', price: 14 },
   blackwater: { name: 'Blackwater iron', price: 45, rare: true }, bogoak: { name: 'Bog oak', price: 35, rare: true },
   winterfox: { name: 'Winter fox pelt', price: 55, rare: true }, starglass: { name: 'Starglass', price: 70, rare: true },
+  // relic materials: only from below the deep doors (a runner's longest road, from RENOWNED); what a Relic is worked with (milestone 12)
+  heartstone: { name: 'Heartstone', price: 3000, relic: true }, moonsilver: { name: 'Moonsilver', price: 3500, relic: true },
+  wyrmhide: { name: 'Wyrm-hide', price: 3000, relic: true }, ghostyew: { name: 'Ghost-yew', price: 2800, relic: true },
+  starcore: { name: 'Starglass core', price: 4000, relic: true }, moonmead: { name: 'Moon-mead', price: 2500, relic: true },
 };
 // pick: how many of its rare lines a pack carries in an hour (0: all of them, always)
 export const SUPPLIERS = [
@@ -305,10 +309,13 @@ export const CUSTOMERS = [
     names: ['a collector of maker\'s marks', 'Lady Ysmay Corrow\'s man'] },
   // the wealthy: none come to an unknown shop. rich: { from: the renown rung they start at, step: weight added a rung from there,
   // oldBlood: weight added for each Old-Blood piece on the shelf or the wall (two at most), counted from the rung before `from` }
-  { id: 'steward', weight: 0, rich: { from: 2, step: 3 }, purse: [1500, 4000], wants: ['any', 'falchion', 'helm', 'ring', 'longbow', 'goblet', 'lens', 'staff', 'jerkin'],
+  { id: 'steward', weight: 0, rich: { from: 2, step: 3, cap: 4 }, purse: [1500, 4000], wants: ['any', 'falchion', 'helm', 'ring', 'longbow', 'goblet', 'lens', 'staff', 'jerkin'],
     least: 1, moods: [35, 50, 15], fig: '#c9a24a', names: ['a lord\'s steward', 'a merchant prince', 'a guildmaster', 'a bishop\'s chamberlain'] },
-  { id: 'master', weight: 0, rich: { from: 3, step: 1, oldBlood: 1.5 }, purse: [3000, 8000], wants: ['any'], least: 2, moods: [50, 45, 5], fig: '#b48cf0',
+  { id: 'master', weight: 0, rich: { from: 3, step: 1, oldBlood: 1.5, cap: 4 }, purse: [3000, 8000], wants: ['any'], least: 2, moods: [50, 45, 5], fig: '#b48cf0',
     names: ['a master collector', 'a duke\'s cabinet-keeper', 'a collector from over the sea'] },
+  // the Crown's agent, from RENOWNED: buys only Old-Blood and better (Relics, from milestone 12), with a purse to match
+  { id: 'crown', weight: 0, rich: { from: 5, step: 2 }, purse: [8000, 25000], wants: ['any'], least: 3, moods: [40, 55, 5], fig: '#e8913a',
+    names: ['the Crown\'s agent', 'a royal purveyor', 'the Queen\'s own buyer'] },
 ];
 export const MOODS = ['EAGER', 'WARY', 'PINCHED'];
 export const MOOD_ODDS = { EAGER: 0.9, WARY: 0.6, PINCHED: 0.45 };
@@ -446,6 +453,8 @@ export const ROUTES = {
   ford: { name: 'The ford villages', from: 'the ford villages', h: 1, fee: 12, commons: [6, 9], rare: 0, gem: 0.5, piece: 0.15, tile: 0 },
   reach: { name: 'Out to the Reach', from: 'the Reach', h: 3, fee: 35, commons: [5, 8], rare: 1, piece: 0.25, tile: 0.12 },
   deep: { name: 'Into the deep doors', from: 'the deep doors', h: 8, fee: 80, commons: [6, 10], rare: 2, piece: 0.5, tile: 0.3 },
+  // the Deep: from RENOWNED. Long, dear, and it can come back with nothing much; relic: [the odds of one relic material, of a second]
+  below: { name: 'Below the deep doors', from: 'below the deep doors', h: 12, fee: 400, commons: [4, 8], rare: 3, piece: 0.4, tile: 0.2, relic: [0.6, 0.15], empty: 0.15, rung: 5 },
 };
 
 // ---------- the diorama (milestone 5) ----------
@@ -529,7 +538,10 @@ export const TOOLS = {
 // the maker's renown: earned by selling at a fair price and filling orders; the wall adds to it. Each rung brings richer purses.
 export const RENOWN = [
   { at: 0, word: 'UNKNOWN' }, { at: 15, word: 'NOTED' }, { at: 50, word: 'KNOWN' }, { at: 150, word: 'SOUGHT' }, { at: 400, word: 'FAMED' },
+  // above FAMED (docs/RARITY-PLAN.md): RENOWNED opens the Deep's lowest road and the Crown's agent; OF THE REACH, the trail of the Nine
+  { at: 1200, word: 'RENOWNED' }, { at: 3500, word: 'OF THE REACH' },
 ];
+export const FAMED_RUNG = 4, RENOWNED_RUNG = 5, REACH_RUNG = 6;   // purses grow with renown up to FAMED; the rungs above open things instead
 export const PURSE_STEP = 0.2;   // purses grow this much a rung
 export const WALL_RENOWN = { common: 2, fine: 5, rare: 12, oldblood: 30 };
 export const WALL_SLOTS = 3;     // +1 for each bigger room

@@ -1,9 +1,9 @@
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES } from './data.js?v=21';
-import { levelOf, makePiece, partOptions } from './rules.js?v=21';
-import { awayStep } from './shop.js?v=21';
-import { wageMult, capBonus } from './growth.js?v=21';
+import { ROLES, TRAITS, NAMES, ROUTES, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES } from './data.js?v=22';
+import { levelOf, makePiece, partOptions } from './rules.js?v=22';
+import { awayStep } from './shop.js?v=22';
+import { wageMult, capBonus, rung } from './growth.js?v=22';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -67,15 +67,19 @@ export const working = save => !save.unpaid;
 export const tripHours = (p, route) => ROUTES[route].h * (p.trait === 'surefoot' ? 0.8 : 1);
 export function sendRunner(save, route, now) {
   const p = runnerOf(save), r = ROUTES[route];
-  if (!p || p.trip || !r || save.unpaid || save.coins < r.fee) return false;
+  if (!p || p.trip || !r || save.unpaid || save.coins < r.fee || (r.rung && rung(save) < r.rung)) return false;
   save.coins -= r.fee;
   p.trip = { route, left: now, back: now + tripHours(p, route) * H };
   return true;
 }
 const COMMONS = ['iron', 'iron', 'iron', 'bronze', 'bronze', 'steel', 'wrap', 'cord', 'ash', 'wool', 'strap', 'horn', 'rowan', 'silk', 'sharkhide', 'deer', 'deer', 'goat', 'gut', 'linen', 'yew', 'birch', 'goose', 'bone'];
 const RARES = Object.keys(MATS).filter(id => MATS[id].rare);
+export const RELICS = Object.keys(MATS).filter(id => MATS[id].relic);
 export function haul(save, p, route, rng, now) {
   const r = ROUTES[route], l = levelOfP(p), mats = {};
+  // the Deep can come back with nothing much: a few common things, no more
+  if (r.empty && rng() < r.empty) { for (let i = 0; i < 2; i++) { const m = pick(COMMONS, rng); mats[m] = (mats[m] || 0) + 1; } return { mats, piece: null, tile: null, empty: true }; }
+  if (r.relic) { for (const odds of r.relic) if (rng() < odds) { const m = pick(RELICS, rng); mats[m] = (mats[m] || 0) + 1; } }
   const n = Math.round((r.commons[0] + rng() * (r.commons[1] - r.commons[0])) * (1 + 0.08 * (l - 1)) * (p.trait === 'keen' ? 1.2 : 1));
   for (let i = 0; i < n; i++) { const m = pick(COMMONS, rng); mats[m] = (mats[m] || 0) + 1; }
   for (let i = 0; i < r.rare; i++) { const m = pick(RARES, rng); mats[m] = (mats[m] || 0) + 1; }
