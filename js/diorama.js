@@ -2,10 +2,11 @@
 // in to the counter. Loaded only when the shop is opened. Three.js comes through the page's import map as 'three'.
 import * as THREE from 'three';
 import { GLTFLoader } from '../vendor/three/loaders/GLTFLoader.js';
-import { FURNITURE, DOOR_Z, WORK_DOOR_X } from './data.js?v=13';
-import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=13';
+import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=14';
+import { ART } from './card.js?v=14';
+import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=14';
 
-const MODELS = 'assets/models/', M = '?m=7';   // bump m when tools/models.sh rebuilds them
+const MODELS = 'assets/models/', M = '?m=9';   // bump m when tools/models.sh rebuilds them
 const FIGURES = { folk: 'folk', guard: 'dwarf', traveller: 'carter', delver: 'bard', factor: 'chandler', collector: 'herbalist', seller: 'carter', maker: 'smith', clerk: 'chandler' };
 const WALK = 1.5;   // metres a second
 
@@ -44,6 +45,93 @@ function placed(src, fp) {
   return wrap;
 }
 
+// ---------- the card stands: each shelf place shows its piece as a small upright card, drawn onto a canvas ----------
+const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
+const CW = 256, CH = 360, CARD_W = 0.56, CARD_H = CARD_W * CH / CW;
+// the card shelf's baize slope (tools/station_props.py SLOPE_FRONT, SLOPE_BACK, BOARD): a card rests on it against the front lip
+const SLOPE = (() => {
+  const [fz, fy] = [0.38, 0.76], [bz, by] = [-0.32, 1.22], B = 0.04, L = Math.hypot(fz - bz, by - fy);
+  const n = [(by - fy) / L, (fz - bz) / L], u = [(bz - fz) / L, (by - fy) / L];   // up off the cloth; up the slope
+  const z = 0.365, t = (fz + n[0] * B - z) / -u[0], y = fy + n[1] * B + u[1] * t;
+  return { z: z + n[0] * 0.008, y: y + n[1] * 0.008 + 0.017, lean: Math.asin(-u[0]) };   // 0.017: the model is lifted by its ink below the floor
+})();
+// each shelf level's places: where a card rests (x across, its bottom's z and y), how far it leans back, how wide it is. The
+// display case's rows: tools/station_props.py CASE_ROWS and CASE_LEAN (its baize sits 0.008 behind the card; 0.017 the ink lift)
+const ROW = (z, y, lean, w, xs) => xs.map(x => ({ x, z, y, lean, w }));
+const CASE = Math.PI / 6, cz = (z, y) => [z, y + 0.017];
+const LAYOUTS = [
+  ROW(SLOPE.z, SLOPE.y, SLOPE.lean, 0.56, [-0.46, 0.46]),
+  ROW(SLOPE.z, SLOPE.y, SLOPE.lean, 0.54, [-0.6, 0, 0.6]),
+  [...ROW(...cz(0.36, 0.55), CASE, 0.5, [-0.6, 0, 0.6]), ...ROW(...cz(-0.02, 1.24), CASE, 0.5, [-0.6, 0, 0.6])],
+];
+const placeOf = e => (LAYOUTS[e.lv] || LAYOUTS[0])[e.spot] || LAYOUTS[0][0];
+const modelOf = it => it.kind === 'shelf' ? (SHELF_LEVELS[it.lv | 0] || SHELF_LEVELS[0]).model : FURNITURE[it.kind].model;
+const arts = {};
+const LONG = new Set(['falchion', 'dagger', 'axe', 'shortbow', 'longbow', 'staff', 'arrows']);
+const CROP = { ring: 0.36, helm: 0.4, goblet: 0.32, pane: 0.45, salve: 0.42, lens: 0.72 };   // how much of a wide picture's middle the piece fills
+function artImage(p) {
+  const tint = /^#[0-9a-f]{6}$/i.test(p.tint || '') ? p.tint : '#c9c5be', key = (p.art || 'falchion') + tint;
+  if (arts[key]) return arts[key];
+  const svg = (ART[p.art] || ART.falchion)(tint).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+  return arts[key] = new Promise(ok => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => ok(null); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); });
+}
+function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function fitText(g, text, max, size, weight) {
+  let s = size; do { g.font = weight + ' ' + s + 'px Alegreya, Georgia, serif'; s -= 1; } while (g.measureText(text).width > max && s > 12);
+}
+// a canvas texture of the card's front: the tier's frame, its picture, its name, the price on the shelf
+export async function cardFace(c, price) {
+  const t = TIER[c.tier] || TIER.common, cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
+  const g = cv.getContext('2d'), tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const draw = im => {
+    g.clearRect(0, 0, CW, CH);
+    roundRect(g, 0, 0, CW, CH, 22); g.fillStyle = '#0e0b09'; g.fill();
+    roundRect(g, 6, 6, CW - 12, CH - 12, 18); g.fillStyle = t.c; g.fill();
+    roundRect(g, 16, 16, CW - 32, CH - 32, 12); g.fillStyle = '#140e0a'; g.fill();
+    g.fillStyle = t.c; g.textAlign = 'center'; g.textBaseline = 'middle';
+    fitText(g, t.name.toUpperCase(), CW - 50, 24, 800); g.fillText(t.name.toUpperCase(), CW / 2, 40);
+    // the picture, large: a long piece (a blade, a bow) set corner to corner, as it would hang on a display
+    const ax = 26, ay = 60, aw = CW - 52, ah = 196;
+    g.fillStyle = '#2a1c12'; g.fillRect(ax, ay, aw, ah);
+    if (im) {
+      const ar = im.width / im.height || 3; g.save(); g.beginPath(); g.rect(ax, ay, aw, ah); g.clip(); g.translate(ax + aw / 2, ay + ah / 2);
+      if (LONG.has(c.art)) { g.rotate(-Math.atan2(ah, aw)); const w = Math.hypot(aw, ah) * 0.98; g.drawImage(im, -w / 2, -w / ar / 2, w, w / ar); }
+      else {   // the rest sit in the middle of a wide picture: only that middle is drawn, as large as it goes
+        const f = CROP[c.art] || 0.62, sw = im.width * f, sar = sw / im.height, w = Math.min(aw * 0.92, ah * 0.92 * sar);
+        g.drawImage(im, (im.width - sw) / 2, 0, sw, im.height, -w / 2, -w / sar / 2, w, w / sar);
+      }
+      g.restore();
+    }
+    if (c.count > 0) { g.fillStyle = '#0e0b09'; g.fillRect(CW - 86, ay + 4, 56, 38); g.fillStyle = '#ece0c6'; g.font = '800 30px Alegreya, Georgia, serif'; g.fillText('×' + c.count, CW - 58, ay + 24); }
+    g.fillStyle = '#e8c464'; fitText(g, price + ' c', CW - 44, 62, 800); g.fillText(price + ' c', CW / 2, 302);
+    tex.needsUpdate = true;
+  };
+  draw(null);
+  draw(await artImage(c));
+  return tex;
+}
+// the "+N c" that rises over the counter when a piece sells
+function coinText(n) {
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 96;
+  const g = cv.getContext('2d'); g.font = '800 64px Alegreya, Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.lineWidth = 10; g.strokeStyle = '#0e0b09'; g.strokeText('+' + n + ' c', 128, 50); g.fillStyle = '#e8c464'; g.fillText('+' + n + ' c', 128, 50);
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false })); sp.scale.set(1.6, 0.6, 1); sp.renderOrder = 10;
+  return sp;
+}
+const standGeo = { face: new THREE.PlaneGeometry(CARD_W, CARD_H) };
+function makeStand(slot, shelfId, tex, at) {
+  const s = new THREE.Group(), lean = new THREE.Group();
+  const face = new THREE.Mesh(standGeo.face, new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: 0.05 }));
+  const back = new THREE.Mesh(standGeo.face, new THREE.MeshBasicMaterial({ color: 0x2a1c12 })); back.rotation.y = Math.PI; back.position.z = -0.003;
+  face.position.y = back.position.y = CARD_H / 2;
+  lean.add(face, back); lean.rotation.x = -at.lean; lean.position.set(0, at.y, at.z); lean.scale.setScalar(at.w / CARD_W);
+  s.add(lean);
+  s.traverse(m => { m.userData.slot = slot; m.userData.item = shelfId; });
+  return s;
+}
+
 export async function create(host, { onTap } = {}) {
   let renderer;
   try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { return null; }
@@ -56,11 +144,15 @@ export async function create(host, { onTap } = {}) {
   const sun = new THREE.DirectionalLight(0xffd9a8, 2.2); sun.position.set(-3, 8, 6); scene.add(sun);
   const ember = new THREE.PointLight(0xff8a3a, 6, 7, 1.6); scene.add(ember);
   const camera = new THREE.OrthographicCamera(-5, 5, 3, -3, 0.1, 100);
-  const roomG = new THREE.Group(), itemsG = new THREE.Group(), peopleG = new THREE.Group(), markG = new THREE.Group();
-  scene.add(roomG, itemsG, peopleG, markG);
+  const roomG = new THREE.Group(), itemsG = new THREE.Group(), peopleG = new THREE.Group(), markG = new THREE.Group(), flyG = new THREE.Group();
+  scene.add(roomG, itemsG, peopleG, markG, flyG);
   let room = null, dirty = true, arranging = false, selected = null, size = { w: 6, d: 5 }, view = 'shop';
   const itemObjs = new Map();   // item id → its group
   const people = new Map();     // customer id → { obj, path, at, gone }
+  let shown = [];               // the shelf's pieces: [{ slot, shelf, side, card, price }]
+  const stands = new Map();     // slot → { key, id, obj, tex }
+  const lately = new Map();     // card id → a stand just taken off its shelf, kept a few seconds for a sale to carry away
+  const flights = [];           // pieces on their way to the counter, and the coins over it
 
   function fitCamera() {
     const w = host.clientWidth || 600, h = host.clientHeight || 300;
@@ -134,17 +226,102 @@ export async function create(host, { onTap } = {}) {
     for (const [id, o] of itemObjs) if (!want.has(id)) { itemsG.remove(o); itemObjs.delete(id); }
     for (const it of room.items) {
       let o = itemObjs.get(it.id);
-      if (!o) {
-        o = new THREE.Group(); o.userData.item = it.id; itemObjs.set(it.id, o); itemsG.add(o);
-        model(FURNITURE[it.kind].model).then(src => { const p = placed(src, FURNITURE[it.kind].fp); if (FURNITURE[it.kind].scale) p.scale.setScalar(FURNITURE[it.kind].scale); p.traverse(m => { m.userData.item = it.id; }); o.add(p); dirty = true; }).catch(() => {});
+      if (!o) { o = new THREE.Group(); o.userData.item = it.id; itemObjs.set(it.id, o); itemsG.add(o); }
+      const name = modelOf(it);
+      if (o.userData.model !== name) {   // new, or a shelf made better: its model (not its card stands) swapped
+        o.userData.model = name;
+        o.children.filter(c => c.userData.isModel).forEach(c => o.remove(c));
+        model(name).then(src => {
+          if (o.userData.model !== name) return;
+          const p = placed(src, FURNITURE[it.kind].fp); p.userData.isModel = true;
+          if (FURNITURE[it.kind].scale) p.scale.setScalar(FURNITURE[it.kind].scale);
+          p.traverse(m => { m.userData.item = it.id; }); o.add(p); dirty = true;
+        }).catch(() => {});
       }
       const [fx, fz] = fpOf(it);
       o.position.set(it.x + fx / 2, 0, it.z + fz / 2);
       o.rotation.y = -it.rot * Math.PI / 2;
     }
     const forge = room.items.find(i => i.kind === 'forge'); if (forge) { const [fx, fz] = fpOf(forge); ember.position.set(forge.x + fx / 2, 1.0, forge.z + fz + 0.3); }
+    drawStands();
     dirty = true;
   }
+  // the card stands: one per filled shelf place, sat on its shelf (a child of the shelf, so it moves and turns with it)
+  const standKey = e => [e.shelf, e.lv, e.spot, e.card.id, e.card.tier, e.card.count || 0, e.price, e.card.name].join('|');
+  function dropStand(slot) {
+    const s = stands.get(slot); if (!s) return;
+    stands.delete(slot);
+    if (s.obj.parent) { s.obj.updateMatrixWorld(true); s.world = s.obj.matrixWorld.clone(); s.obj.parent.remove(s.obj); }
+    s.at = performance.now(); lately.set(s.id, s);
+  }
+  function drawStands() {
+    const want = new Map(view === 'shop' && room ? shown.map(e => [e.slot, e]) : []);
+    for (const [slot, s] of [...stands]) { const e = want.get(slot); if (!e || standKey(e) !== s.key || !itemObjs.has(e.shelf) || s.obj.parent !== itemObjs.get(e.shelf)) dropStand(slot); }
+    for (const [slot, e] of want) {
+      if (stands.has(slot)) continue;
+      const host = itemObjs.get(e.shelf); if (!host) continue;
+      const s = { key: standKey(e), id: e.card.id, obj: new THREE.Group(), tex: null };
+      const at = placeOf(e); s.obj.position.set(at.x, 0, 0);
+      host.add(s.obj); stands.set(slot, s);
+      cardFace(e.card, e.price).then(tex => { s.tex = tex; s.obj.add(makeStand(slot, e.shelf, tex, at)); dirty = true; });
+    }
+    dirty = true;
+  }
+  function forget(s) { if (s.tex) s.tex.dispose(); s.obj.traverse(m => { if (m.material) m.material.dispose(); }); }
+  // a piece sold: the customer walks to its shelf (a walk-in), it lifts off, flies to the counter and turns into coins
+  function sold(entry) {
+    if (view !== 'shop' || !entry.sold || !room) return;
+    const id = entry.sold.id, live = [...stands.values()].find(s => s.id === id), was = lately.get(id);
+    let piece, world;
+    if (was && !was.flying) { lately.delete(id); was.flying = true; piece = was.obj; world = was.world; }
+    else if (live && live.obj.children.length) { live.obj.updateMatrixWorld(true); world = live.obj.matrixWorld.clone(); piece = live.obj.clone(true); piece.traverse(m => { if (m.material) m.material = m.material.clone(); }); piece.userData.keepMap = true; }
+    const counter = room.items.find(i => i.kind === 'counter');
+    const top = new THREE.Vector3(size.w / 2, 1.2, 1.5);
+    if (counter) { const o = itemObjs.get(counter.id), b = o && new THREE.Box3().setFromObject(o); if (b && !b.isEmpty()) b.getCenter(top).setY(b.max.y + 0.05); else { const [fx, fz] = fpOf(counter); top.set(counter.x + fx / 2, 1.2, counter.z + fz / 2); } }
+    let wait = 0, walker = null;
+    if (piece) {
+      piece.matrixAutoUpdate = true; world.decompose(piece.position, piece.quaternion, piece.scale);
+      piece.position.add(new THREE.Vector3(0, 0, 0.03).applyQuaternion(piece.quaternion));
+      piece.traverse(m => { delete m.userData.slot; delete m.userData.item; });
+      flyG.add(piece);
+      if (!entry.served && !entry.by) {   // a walk-in: to the front of that shelf, and the piece goes when they get there
+        const front = new THREE.Vector3(0, 0, 0.75).applyQuaternion(piece.quaternion);
+        const to = [Math.min(size.w - 0.4, Math.max(0.4, piece.position.x + front.x)), Math.min(size.d - 0.4, Math.max(0.4, piece.position.z + front.z))];
+        walker = 'walk:' + entry.at + Math.random();
+        spawn(walker, entry.type || 'folk', to, false);
+        const path = doorIn().concat([to]); for (let i = 1; i < path.length; i++) wait += Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]) / WALK;
+        wait += 0.4;
+      }
+    }
+    flights.push({ piece, from: piece ? piece.position.clone() : null, q: piece ? piece.quaternion.clone() : null, to: top, t: -wait, price: entry.sold.price, coins: null, walker });
+    dirty = true;
+  }
+  function stepFlights(dt) {
+    for (let i = flights.length - 1; i >= 0; i--) {
+      const f = flights[i]; f.t += dt;
+      if (f.t < 0) continue;
+      const LIFT = 0.35, FLY = 0.75;
+      if (f.piece) {
+        if (f.t < LIFT) { const k = f.t / LIFT; f.piece.position.copy(f.from).y += 0.3 * Math.sin(k * Math.PI / 2); }
+        else if (f.t < LIFT + FLY) {
+          const k = (f.t - LIFT) / FLY, e = k * k * (3 - 2 * k), a = f.from.clone().setY(f.from.y + 0.3);
+          f.piece.position.lerpVectors(a, f.to, e); f.piece.position.y += Math.sin(e * Math.PI) * 0.6;
+          f.piece.scale.setScalar(1 - 0.55 * e); f.piece.rotation.y += dt * 6;
+        } else if (f.piece.parent) { flyG.remove(f.piece); forgetPiece(f.piece); f.piece = null; }
+      }
+      const tc = f.from ? LIFT + FLY : 0;
+      if (f.t >= tc && !f.coins) { f.coins = coinText(f.price); f.coins.position.copy(f.to); flyG.add(f.coins); if (f.walker) setTimeout(() => leave(f.walker), 500); }
+      if (f.coins) {
+        const k = (f.t - tc) / 1.4; f.coins.position.y = f.to.y + 0.2 + k * 0.7; f.coins.material.opacity = Math.min(1, 3 * (1 - k));
+        if (k >= 1) { flyG.remove(f.coins); f.coins.material.map.dispose(); f.coins.material.dispose(); flights.splice(i, 1); }
+      }
+    }
+    // stands taken off a shelf and never sold (taken down, moved): let them go
+    const now = performance.now();
+    for (const [id, s] of [...lately]) if (now - s.at > 4000) { lately.delete(id); forget(s); }
+    return flights.length > 0;
+  }
+  function forgetPiece(p) { const keep = p.userData.keepMap; p.traverse(m => { if (m.material) { if (m.material.map && !keep) m.material.map.dispose(); m.material.dispose(); } }); }
 
   // ---------- people ----------
   // where a customer stands: the kept tiles before the counter (not the doorways)
@@ -225,13 +402,13 @@ export async function create(host, { onTap } = {}) {
     ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
     ray.setFromCamera(ndc, camera);
     const hits = ray.intersectObjects([itemsG, peopleG, roomG], true);
-    const item = hits.find(h => h.object.userData.item);
+    const item = hits.find(h => h.object.userData.item), stand = hits.find(h => h.object.userData.slot != null);
     const person = hits.find(h => { let o = h.object; while (o && !o.parent?.isScene) { if (peopleG.children.includes(o)) return true; o = o.parent; } return false; });
     // the floor tile under the tap: where the ray meets y = 0
     const t = ray.ray.origin.y / -ray.ray.direction.y, fx = ray.ray.origin.x + ray.ray.direction.x * t, fz = ray.ray.origin.z + ray.ray.direction.z * t;
     const tile = fx >= 0 && fz >= 0 && fx < size.w && fz < size.d ? [Math.floor(fx), Math.floor(fz)] : null;
     const door = hits.find(h => h.object.userData.door);
-    if (onTap) onTap({ door: door && !item ? door.object.userData.door : null, item: item && item.object.userData.item, kind: item && room.items.find(i => i.id === item.object.userData.item)?.kind, person: !!person && !item, tile });
+    if (onTap) onTap({ slot: stand ? stand.object.userData.slot : null, door: door && !item ? door.object.userData.door : null, item: item && item.object.userData.item, kind: item && room.items.find(i => i.id === item.object.userData.item)?.kind, person: !!person && !item, tile });
   });
 
   let last = performance.now();
@@ -239,18 +416,19 @@ export async function create(host, { onTap } = {}) {
     // show the shop front or the workshop: everything in view rebuilt for that room
     setRoom(r, save) {
       const v = r.kind === 'work' ? 'work' : 'shop', changed = v !== view || r !== room;
-      if (changed) { for (const o of itemObjs.values()) itemsG.remove(o); itemObjs.clear(); for (const [id, p] of [...people]) { peopleG.remove(p.obj); people.delete(id); } }
+      if (changed) { for (const slot of [...stands.keys()]) dropStand(slot); for (const o of itemObjs.values()) itemsG.remove(o); itemObjs.clear(); for (const [id, p] of [...people]) { peopleG.remove(p.obj); people.delete(id); } }
       view = v; room = r; const s = sizeOf(r);
       if (changed || s.w !== size.w || s.d !== size.d || !roomG.children.length) { size = { w: s.w, d: s.d }; buildRoom(); fitCamera(); }
       syncItems(); setStaff(save); drawMarks(); setQueue(lastQueue);
     },
     get view() { return view; },
-    setQueue, walkIn,
+    setQueue, walkIn, sold,
+    setShelf(list) { shown = list; drawStands(); },
     arrange(on, sel = null) { arranging = on; selected = sel; drawMarks(); dirty = true; },
     canPlace(it) { return fits(room, it, it.id); },
     tick() {
       const now = performance.now(), dt = Math.min(0.05, (now - last) / 1000); last = now;
-      const moving = stepPeople(dt);
+      const moving = stepPeople(dt) | stepFlights(dt);
       if (moving || dirty) { renderer.render(scene, camera); dirty = false; }
     },
     redraw() { dirty = true; },

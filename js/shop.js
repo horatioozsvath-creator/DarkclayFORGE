@@ -1,11 +1,11 @@
 // The shop's rules, with no page access: materials and suppliers, the shelf and its tags, customers and sales.
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
-import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_SHELVES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS } from './data.js?v=13';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf } from './rules.js?v=13';
-import { charmGap } from './room.js?v=13';
-import { fame, purseMult, patienceOf, haggleMult, onWall } from './growth.js?v=13';
+import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS } from './data.js?v=14';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf } from './rules.js?v=14';
+import { charmGap } from './room.js?v=14';
+import { fame, purseMult, patienceOf, haggleMult, onWall } from './growth.js?v=14';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -54,7 +54,7 @@ export function buy(save, id, n, hour) {
 
 // ---------- the shelf ----------
 export function fixShelf(save) {
-  save.slots = Math.max(START_SLOTS, Math.min(MAX_SHELVES * 2, save.slots || START_SLOTS));
+  save.slots = Math.max(START_SLOTS, Math.min(MAX_PLACES, save.slots || START_SLOTS));
   const ids = new Set(save.cards.map(c => c.id));
   const shelf = (save.shelf || []).slice(0, save.slots).map(e => e && ids.has(e.id) && TAGS[e.tag] ? e : null);
   while (shelf.length < save.slots) shelf.push(null);

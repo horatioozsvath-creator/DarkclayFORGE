@@ -14,7 +14,7 @@ KIT, OUT = args[0], args[1]
 sys.path.insert(0, KIT)
 import celkit as K
 from props import Prop, done, ball, rod, flame, plank_row
-from world import gbox, beam, cyl, blob, tbox
+from world import gbox, beam, cyl, blob, tbox, extrude_x
 from hearth import mats
 
 
@@ -99,8 +99,75 @@ def glassfurnace():
     return done(P)
 
 
+# the card shelf's display slope, in kit space (z toward the front, y up); js/diorama.js seats the cards on it with the same numbers
+SLOPE_FRONT, SLOPE_BACK, BOARD = (0.38, 0.76), (-0.32, 1.22), 0.04
+
+
+def cardshelf():
+    """2 x 1: the shop's display shelf. A low cabinet whose top is a slope covered in red baize, a lip along its front for the
+    pieces' cards to rest on, cheeks at the ends, a back board with a little shelf of jars and a crown. Symmetric front to back
+    (z -0.42 .. 0.42) so the page can place it by its middle."""
+    m = mats()
+    with Prop('Prop_forge_cardshelf', 0.03) as P:
+        (fz, fy), (bz, by) = SLOPE_FRONT, SLOPE_BACK
+        L = math.hypot(fz - bz, by - fy); nz, ny = (by - fy) / L, (fz - bz) / L   # the slope's normal, up and toward the front
+        gbox('plinth', -0.97, 0.97, 0.0, 0.08, -0.4, 0.42, m['timberdark'])
+        extrude_x('body', [(0.36, 0.06), (0.36, fy - 0.02), (bz + 0.02, by - 0.04), (-0.36, by - 0.04), (-0.36, 0.06)], -0.92, 0.92, m['timberdark'])
+        plank_row('front', -0.9, 0.9, 0.12, fy - 0.06, 0.36, 0.385, 6, m['timber'], gap=0.025, axis='x')
+        extrude_x('baize', [(fz, fy), (bz, by), (bz + nz * BOARD, by + ny * BOARD), (fz + nz * BOARD, fy + ny * BOARD)], -0.92, 0.92, m['cloth'])
+        extrude_x('lip', [(0.42, fy - 0.06), (0.42, fy + 0.09), (0.37, fy + 0.09), (0.37, fy - 0.06)], -0.92, 0.92, m['timber'])
+        for sx in (-1, 1):
+            x0, x1 = (-0.97, -0.92) if sx < 0 else (0.92, 0.97)
+            extrude_x('cheek', [(0.42, 0.0), (0.42, fy + 0.12), (bz + 0.1, by + 0.1), (-0.4, by + 0.1), (-0.4, 0.0)], x0, x1, m['timberdark'])
+            gbox('cheektop', x0, x1, by + 0.1, 1.82, -0.4, bz + 0.1, m['timberdark'])
+        # the back board, its shelf of jars and a box, the crown
+        gbox('back', -0.92, 0.92, by - 0.04, 1.82, -0.4, -0.34, m['timber'])
+        plank_row('backplanks', -0.92, 0.92, by, 1.8, -0.34, -0.33, 5, m['heartwood'], gap=0.02, axis='x')
+        gbox('ledge', -0.92, 0.92, 1.5, 1.54, -0.34, -0.2, m['timberdark'])
+        for i, (x, h, g) in enumerate(((-0.7, 0.16, m['ice']), (-0.52, 0.12, m['clay']), (-0.36, 0.18, m['ice']), (0.5, 0.14, m['clay']), (0.7, 0.17, m['ice']))):
+            cyl('jar%d' % i, x, -0.27, 1.54, 1.54 + h, 0.05, 0.045, g, seg=8)
+        gbox('box', -0.12, 0.14, 1.54, 1.64, -0.32, -0.22, m['hide'])
+        gbox('crown', -1.0, 1.0, 1.82, 1.9, -0.42, -0.16, m['timberdark'])
+    return done(P)
+
+
+# the display case's two rows: where each row's cards rest (the bottom of the card, against its lip) and how far back they lean;
+# js/diorama.js LAYOUTS has the same numbers
+CASE_ROWS, CASE_LEAN = ((0.36, 0.55), (-0.02, 1.24)), math.radians(30)
+
+
+def cardcase():
+    """2 x 1: the shelf made a display case. Two rows of baize, the back row raised on a step so it shows over the front one,
+    a lip before each, tall cheeks, a planked back and a crown with a little plaque. Symmetric front to back (z -0.42 .. 0.42)."""
+    m = mats()
+    with Prop('Prop_forge_cardcase', 0.03) as P:
+        uz, uy = -math.sin(CASE_LEAN), math.cos(CASE_LEAN)       # up the baize
+        nz, ny = math.cos(CASE_LEAN), math.sin(CASE_LEAN)        # off the baize, toward the front
+        B, BACK = 0.04, -0.42
+        gbox('plinth', -0.97, 0.97, 0.0, 0.08, BACK, 0.42, m['timberdark'])
+        prev = 0.06
+        for r, ((pz, py), L) in enumerate(zip(CASE_ROWS, (0.74, 0.7))):
+            az, ay = pz - nz * 0.008 - uz * 0.03, py - ny * 0.008 - uy * 0.03          # the baize's top face, just behind the card
+            ez, ey = az + uz * L - nz * B, ay + uy * L - ny * B                        # its top end, underneath
+            front = 0.34 if r == 0 else pz
+            extrude_x('body%d' % r, [(front, prev), (front, py - 0.06), (ez, ey), (BACK, ey), (BACK, prev)], -0.92, 0.92, m['timberdark'])
+            extrude_x('baize%d' % r, [(az, ay), (az + uz * L, ay + uy * L), (ez, ey), (az - nz * B, ay - ny * B)], -0.92, 0.92, m['cloth'])
+            extrude_x('lip%d' % r, [(pz + 0.06, py - 0.1), (pz + 0.06, py + 0.07), (pz, py + 0.07), (pz, py - 0.1)], -0.92, 0.92, m['timber'])
+            prev = ey - 0.02
+        plank_row('front', -0.9, 0.9, 0.12, CASE_ROWS[0][1] - 0.12, 0.34, 0.365, 6, m['timber'], gap=0.025, axis='x')
+        for sx in (-1, 1):
+            x0, x1 = (-0.97, -0.92) if sx < 0 else (0.92, 0.97)
+            extrude_x('cheek', [(0.42, 0.0), (0.42, 0.66), (-0.36, 2.0), (BACK, 2.0), (BACK, 0.0)], x0, x1, m['timberdark'])
+        gbox('back', -0.92, 0.92, 1.0, 2.0, BACK, -0.37, m['timber'])
+        plank_row('backplanks', -0.92, 0.92, 1.6, 1.98, -0.37, -0.36, 5, m['heartwood'], gap=0.02, axis='x')
+        gbox('crown', -1.0, 1.0, 2.0, 2.08, BACK, -0.2, m['timberdark'])
+        gbox('plaque', -0.24, 0.24, 1.9, 2.0, -0.22, -0.19, m['heartwood'])
+        for x in (-0.16, 0.16): cyl('stud', x, -0.185, 1.94, 1.96, 0.012, 0.012, m['bronze'], seg=6)
+    return done(P)
+
+
 os.makedirs(OUT, exist_ok=True)
-for name, build in (('Prop_forge_bowbench', bowbench), ('Prop_forge_glass', glassfurnace)):
+for name, build in (('Prop_forge_bowbench', bowbench), ('Prop_forge_glass', glassfurnace), ('Prop_forge_cardshelf', cardshelf), ('Prop_forge_cardcase', cardcase)):
     K.fresh()
     root, rig = build()
     size = K.export_fbx(root, os.path.join(OUT, name + '.fbx'))

@@ -7,7 +7,7 @@ import * as Sh from '../js/shop.js';
 import * as St from '../js/staff.js';
 import * as Rm from '../js/room.js';
 import * as G from '../js/growth.js';
-import { PATTERNS, TOOLS, TIERS } from '../js/data.js';
+import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS } from '../js/data.js';
 
 const days = +process.argv[2] || 7, seed0 = +process.argv[3] || 1, SESSION_MIN = +process.argv[4] || 45;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -57,6 +57,13 @@ function spend(hour) {
   const reserve = 80;
   const cost = Rm.shelfCost(save.room);
   if (cost != null && save.coins - cost > reserve && Sh.inBack(save).length >= 2) { const r = Rm.buy(save, 'shelf'); if (r.item) { spent.room += cost; note('a shelf (' + save.slots + ' places), ' + cost + ' c'); } }
+  // a shelf made better when the back fills up and a new shelf costs more than the upgrade (or there's no room for one)
+  for (const it of save.room.items.filter(i => i.kind === 'shelf')) {
+    const next = SHELF_LEVELS[Rm.levelOf(it) + 1], shelf = Rm.shelfCost(save.room);
+    if (next && Sh.inBack(save).length >= 2 && save.coins - next.cost > reserve + 100 && (shelf == null || next.cost / (next.places - Rm.placesOf(it)) < shelf / 2)) {
+      if (!Rm.upgradeShelf(save, it.id).why) { spent.room += next.cost; note('a ' + next.name.toLowerCase() + ' (' + save.slots + ' places), ' + next.cost + ' c'); }
+    }
+  }
   if (!St.clerkOf(save)) { const c = St.candidates(save, Math.floor(t / H)).find(x => x.role === 'clerk'); if (c && save.coins - St.hireFee(c) > reserve + 60) { St.hire(save, c); spent.staff += St.hireFee(c); note('hired ' + c.name + ' (clerk), ' + St.hireFee(c) + ' c'); } }
   for (const id of ['anvil', 'hammer1', 'bellows', 'gloves', 'firebrick', 'hammer2']) if (G.canBuyTool(save, id).ok && save.coins - TOOLS[id].cost > reserve + 100) { G.buyTool(save, id); spent.tools += TOOLS[id].cost; note('tool: ' + TOOLS[id].name); }
   if (!Rm.owns(save, 'stretcher') && save.coins > 1200 + reserve + 300) { if (Rm.buyStation(save, 'stretcher').item) { spent.room += 1200; note('set up the stretcher'); } }

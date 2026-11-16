@@ -1,16 +1,16 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=13';
-import * as R from './rules.js?v=13';
-import * as Sh from './shop.js?v=13';
-import * as St from './staff.js?v=13';
-import * as Rm from './room.js?v=13';
-import * as G from './growth.js?v=13';
-import { decodeCard, linkFor } from './share.js?v=13';
-import * as Snd from './sound.js?v=13';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=13';
-import { card, ART } from './card.js?v=13';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=13';
-import { load, store } from './save.js?v=13';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=14';
+import * as R from './rules.js?v=14';
+import * as Sh from './shop.js?v=14';
+import * as St from './staff.js?v=14';
+import * as Rm from './room.js?v=14';
+import * as G from './growth.js?v=14';
+import { decodeCard, linkFor } from './share.js?v=14';
+import * as Snd from './sound.js?v=14';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=14';
+import { card, ART } from './card.js?v=14';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=14';
+import { load, store } from './save.js?v=14';
 
 const $ = id => document.getElementById(id);
 const rng = Math.random;
@@ -240,21 +240,24 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=13').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=14').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
-    if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setQueue(save.queue); renderDioBar(); }
+    if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(shelfShown()); d.setQueue(save.queue); renderDioBar(); }
     return d;
   }); }
   else if (dio) { dio.setRoom(viewRoom(), save); dio.setQueue(save.queue); dio.redraw(); }
 }
 
 // ---------- THE SHOP IN 3D ----------
+// the shelf's pieces where they stand in the room, for the card stands
+const shelfShown = () => Rm.shelfSpots(save.room).map((p, i) => { const e = save.shelf[i], c = e && save.cards.find(x => x.id === e.id); return c && { slot: i, shelf: p.shelf, spot: p.spot, lv: p.lv, card: c, price: Sh.priceAt(c, e.tag) }; }).filter(Boolean);
 let dioP = null, dio = null, arranging = false, picked = null, dioMsg = '', dioView = 'shop';
 const viewRoom = () => dioView === 'work' ? save.workshop : save.room;
 function setView(v) { if (v === dioView) return; dioView = v; picked = null; dioMsg = ''; if (dio) { dio.setRoom(viewRoom(), save); dio.setQueue(save.queue); } renderDioBar(); renderFurnish(); }
 document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => setView(b.dataset.view));
 function dioTap(t) {
   if (t.door && !arranging) { setView(t.door); return; }
+  if (t.slot != null && !arranging) { slotOpen(t.slot); return; }
   if (arranging) {
     if (t.item && t.item !== picked) { picked = t.item; dioMsg = ''; }
     else if (picked && t.tile) {
@@ -279,8 +282,9 @@ function renderDioBar() {
   $('arrangeBtn').textContent = arranging ? 'DONE' : 'ARRANGE';
   $('arrangeBtn').classList.toggle('go', arranging);
   const it = picked && save.room.items.find(i => i.id === picked), f = it && FURNITURE[it.kind];
-  $('dioHint').textContent = !arranging ? (dioView === 'work' ? 'The forge and every station. Tap one to work; the doorway leads back to the shop.' : 'Tap the counter or a shelf; the doorway at the back leads to the workshop.') : dioMsg || (it ? f.name + ': tap a free tile to move it there.' : 'Tap a piece to pick it up. Blue tiles stay clear for customers.');
-  $('dioActs').innerHTML = arranging && it ? '<button class="seg" id="dioTurn">TURN</button>' + (f.fixed ? '' : '<button class="seg" id="dioSell">SELL BACK</button>') : '';
+  $('dioHint').textContent = !arranging ? (dioView === 'work' ? 'The forge and every station. Tap one to work; the doorway leads back to the shop.' : 'Tap a card on a shelf to see it, or the counter; the doorway at the back leads to the workshop.') : dioMsg || (it ? f.name + ': tap a free tile to move it there.' : 'Tap a piece to pick it up. Blue tiles stay clear for customers.');
+  $('dioActs').innerHTML = arranging && it ? '<button class="seg" id="dioTurn">TURN</button>' + (it.kind === 'shelf' && upgradeWord(it) ? '<button class="seg" id="dioUp"' + (save.coins < SHELF_LEVELS[Rm.levelOf(it) + 1].cost ? ' disabled' : '') + '>' + upgradeWord(it) + '</button>' : '') + (f.fixed ? '' : '<button class="seg" id="dioSell">SELL BACK</button>') : '';
+  if ($('dioUp')) $('dioUp').onclick = () => { const r = doUpgrade(picked); dioMsg = shelfNote; renderDioBar(); };
   if ($('dioTurn')) $('dioTurn').onclick = () => { if (!Rm.turn(save, picked)) dioMsg = 'No room to turn it there.'; else { dioMsg = ''; store(save); dio.setRoom(viewRoom(), save); } renderDioBar(); };
   if ($('dioSell')) $('dioSell').onclick = () => {
     const r = Rm.sellBack(save, picked);
@@ -311,7 +315,7 @@ function renderFurnish() {
   $('charmWord').textContent = size.word + ' · ' + size.w + ' × ' + size.d + ' · CHARM ' + Rm.charm(room, save) + ' · ' + ws.word + ' ' + ws.w + ' × ' + ws.d;
   $('furnList').innerHTML = Object.entries(FURNITURE).filter(([, f]) => !f.fixed).map(([k, f]) => {
     const cost = Rm.costOf(room, k), n = room.items.filter(i => i.kind === k).length;
-    return '<div class="fi"><b>' + f.name + (n ? ' · ' + n : '') + '</b><span>' + (f.slots ? 'Two places on the shelf.' : f.line || '') + (f.charm ? ' Charm ' + f.charm + '.' : '') + '</span>'
+    return '<div class="fi"><b>' + f.name + (n ? ' · ' + n : '') + '</b><span>' + (f.slots ? 'Two places, made better in THE SHELF: three, then six.' : f.line || '') + (f.charm ? ' Charm ' + f.charm + '.' : '') + '</span>'
       + (cost == null ? '<span>As many as a shop can use.</span>' : '<button class="seg" data-buyf="' + k + '"' + (save.coins < cost ? ' disabled' : '') + '>BUY · ' + cost + ' c</button>') + '</div>';
   }).join('');
   $('furnNote').textContent = furnNote || 'New decor goes in the room in view (' + (dioView === 'work' ? 'the workshop' : 'the shop front') + '). Charm in the shop front brings customers in sooner; the workshop\'s is for you. Arrange to move things.';
@@ -405,11 +409,11 @@ $('counterBody').onclick = ev => {
   if (a === 'buy') { const e = Sh.buyOffer(save, now); if (e) { counterNote = 'Bought: ' + esc(e.bought.what) + '.'; Snd.play('coin'); } }
   else if (a === 'away') Sh.sendAway(save, now);
   else if (a === 'another') c.shows++;
-  else if (a === 'take' || a === 'refuse') { const r = Sh.answerCounter(save, a === 'take', now); if (r) { counterNote = r.outcome === 'sold' ? 'Sold for ' + r.price + ' c.' : 'They went.'; counterNoteBad = r.outcome !== 'sold'; if (r.outcome === 'sold') Snd.play('coin'); } }
+  else if (a === 'take' || a === 'refuse') { const r = Sh.answerCounter(save, a === 'take', now); if (r) { counterNote = r.outcome === 'sold' ? 'Sold for ' + r.price + ' c.' : 'They went.'; counterNoteBad = r.outcome !== 'sold'; if (r.outcome === 'sold') { Snd.play('coin'); if (dio) dio.sold(r.entry); } } }
   else if (a.startsWith('h:')) {
     const r = Sh.haggle(save, b.dataset.id, a.slice(2), now);
     if (r) {
-      if (r.outcome === 'sold') { counterNote = 'Sold for ' + r.price + ' c.'; Snd.play('coin'); }
+      if (r.outcome === 'sold') { counterNote = 'Sold for ' + r.price + ' c.'; Snd.play('coin'); if (dio) dio.sold(r.entry); }
       else if (r.outcome === 'over') { counterNote = '"' + r.price + ' c? That\'s more than I carry." Show another, or meet them.'; counterNoteBad = true; }
       else if (r.outcome === 'gone') { counterNote = 'They went.'; counterNoteBad = true; }
     }
@@ -455,10 +459,12 @@ function renderShop() {
       + card(c, { short: true, price: Sh.priceAt(c, e.tag) + ' c<span class="tagword">' + TAGS[e.tag].word + '</span>' }) + '</button>';
   }).join('');
   $('slots2').querySelectorAll('button').forEach(b => b.onclick = () => slotOpen(+b.dataset.slot));
+  renderShelfUps();
   const cost = Rm.shelfCost(save.room);
   $('buySlot').hidden = cost == null;
   if (cost != null) { $('buySlot').textContent = 'ANOTHER SHELF · TWO PLACES · ' + cost + ' COINS'; $('buySlot').disabled = save.coins < cost; }
   renderFurnish(); renderWall(); tabBadges();
+  if (dio) dio.setShelf(shelfShown());
   const back = Sh.inBack(save);
   $('backWord').textContent = back.length + (back.length === 1 ? ' PIECE' : ' PIECES') + ' · NOT FOR SALE YET';
   $('back').innerHTML = back.length ? back.map(c => '<button data-id="' + c.id + '" aria-label="' + esc(c.name) + '">' + card(c, { short: true }) + '</button>').join('')
@@ -468,6 +474,27 @@ function renderShop() {
     + (e.sold ? '<span class="amt">+' + e.sold.price + ' c</span>' : e.bought ? '<span class="amt no">−' + e.bought.price + ' c</span>' : '<span class="amt no">' + (e.order === 'posted' ? 'ORDER' : 'NO SALE') + '</span>') + '<span class="ln">' + (e.sold ? 'Bought the ' + esc(e.sold.name) + ' (' + howWord(e.sold.tag) + '). ' : '') + esc(e.line) + '</span></li>').join('')
     : '<li class="empty">No one yet. Customers come in every half a minute or so while the game is open.</li>';
   renderFloor();
+}
+// each shelf, and what making it better gives
+function upgradeWord(it) {
+  const next = SHELF_LEVELS[Rm.levelOf(it) + 1];
+  return next && 'MAKE IT A ' + next.name.toUpperCase() + ' · ' + next.places + ' PLACES · ' + next.cost + ' c';
+}
+let shelfNote = '';
+function doUpgrade(id) {
+  const r = Rm.upgradeShelf(save, id);
+  shelfNote = r.why ? 'Not made better: ' + r.why + '.' : 'It\'s a ' + SHELF_LEVELS[r.level].name.toLowerCase() + ' now: ' + r.places + ' places.';
+  if (!r.why) { store(save); coins(); Snd.play('level'); if (dio) dio.setRoom(viewRoom(), save); }
+  renderShop(); return r;
+}
+function renderShelfUps() {
+  const shelves = save.room.items.filter(i => i.kind === 'shelf');
+  $('shelfUps').innerHTML = shelves.map((it, n) => {
+    const lv = SHELF_LEVELS[Rm.levelOf(it)], next = SHELF_LEVELS[Rm.levelOf(it) + 1];
+    return '<div class="fi"><b>' + lv.name + ' ' + (n + 1) + ' · ' + lv.places + ' places</b><span>' + (next ? next.line : 'As fine as a shelf gets.') + '</span>'
+      + (next ? '<button class="seg" data-upshelf="' + it.id + '"' + (save.coins < next.cost ? ' disabled' : '') + '>' + upgradeWord(it) + '</button>' : '') + '</div>';
+  }).join('') + (shelfNote ? '<p class="note">' + esc(shelfNote) + '</p>' : '');
+  $('shelfUps').querySelectorAll('[data-upshelf]').forEach(b => b.onclick = () => doUpgrade(b.dataset.upshelf));
 }
 $('buySlot').onclick = () => { const r = Rm.buy(save, 'shelf'); furnNote = r.why ? 'No shelf: ' + r.why + '.' : 'A new shelf: two more places.'; if (r.item) { store(save); coins(); if (dio) dio.setRoom(viewRoom(), save); } renderShop(); };
 function tagSegs(slot) {
@@ -1007,14 +1034,14 @@ function frame(now) {
   if (visits.length || sig !== lastSig) {
     if (visits.length || save.queue.length) store(save);
     visits.forEach(e => {
-      if (e.sold) { coins(); Snd.play('coin'); if (screen !== 'shop') { toast('<b>Sold: ' + esc(e.sold.name) + ' · +' + e.sold.price + ' c</b><br>to ' + esc(e.who)); $('navSold').hidden = false; } }
+      if (e.sold) { coins(); Snd.play('coin'); if (dio && screen === 'shop') dio.sold(e); if (screen !== 'shop') { toast('<b>Sold: ' + esc(e.sold.name) + ' · +' + e.sold.price + ' c</b><br>to ' + esc(e.who)); $('navSold').hidden = false; } }
       if (e.order === 'posted' && screen !== 'shop') { toast('<b>A special order</b><br>' + esc(e.who) + ': ' + esc(Sh.orderWord(save.order)) + '.'); $('navSold').hidden = false; }
     });
     if (screen === 'shop') renderShop(); else tabBadges();
   } else if (screen === 'shop' && floorShown && save.ledger[0] && Date.now() - save.ledger[0].at > 30000) renderFloor();
   if (screen === 'shop' && save.queue.length > lastQ) Snd.play('bell');
   lastQ = save.queue.length;
-  if (screen === 'shop') { tickCounter(); if (dio) { if (sig !== dioSig) { dioSig = sig; dio.setQueue(save.queue); } visits.forEach(e => { if (!e.served && !e.by) dio.walkIn(e); }); dio.tick(); } }
+  if (screen === 'shop') { tickCounter(); if (dio) { if (sig !== dioSig) { dioSig = sig; dio.setQueue(save.queue); } visits.forEach(e => { if (!e.served && !e.by && !e.sold) dio.walkIn(e); }); dio.tick(); } }
   if (screen === 'supp' && suppHour !== hour()) renderSupp();
   if (S && screen === 'work') {
     if (!paused && !S.done) {

@@ -394,7 +394,7 @@ export const FURNITURE = {
   bowbench: { name: 'Bending bench', fp: [2, 1], fixed: true, model: 'bowbench', station: 'bowbench', room: 'work' },
   kettle: { name: 'Kettle', fp: [2, 1], fixed: true, model: 'kettle', station: 'kettle', room: 'work' },
   glass: { name: 'Glass furnace', fp: [2, 2], fixed: true, model: 'glass', station: 'glass', room: 'work' },
-  shelf: { name: 'Shelf', fp: [2, 1], slots: 2, model: 'shelf', room: 'shop', line: 'Two places for pieces to sell.' },
+  shelf: { name: 'Shelf', fp: [2, 1], slots: 2, model: 'cardshelf', room: 'shop', line: 'Two places for pieces to sell.' },
   rug: { name: 'Rug', fp: [2, 2], charm: 2, cost: 180, model: 'rug', line: 'Warm underfoot.' },
   barrels: { name: 'Barrels', fp: [1, 1], charm: 1, cost: 90, model: 'barrels' },
   crates: { name: 'Crates', fp: [2, 1], charm: 1, cost: 105, model: 'crates' },
@@ -420,6 +420,14 @@ export const FURNITURE = {
 };
 export const SHELF_COSTS = [800, 1800, 3600, 6400, 10000, 14400];   // the 3rd shelf to the 8th
 export const MAX_SHELVES = 8;
+// a shelf made better where it stands: more places on the same floor. Each level's model and how its cards are laid out
+// (js/diorama.js LAYOUTS); cost: to reach that level from the one before
+export const SHELF_LEVELS = [
+  { name: 'Shelf', places: 2, model: 'cardshelf' },
+  { name: 'Display shelf', places: 3, cost: 700, model: 'cardshelf', line: 'Three cards across the baize.' },
+  { name: 'Display case', places: 6, cost: 2600, charm: 1, model: 'cardcase', line: 'A second row on a raised step: six places, and a little charm.' },
+];
+export const MAX_PLACES = MAX_SHELVES * SHELF_LEVELS[SHELF_LEVELS.length - 1].places;
 export const CHARM_MAX = 20;          // charm counted, at most
 export const CHARM_STEP = 0.025;      // each point of charm: customers come that much sooner (20 points: half as many again)
 

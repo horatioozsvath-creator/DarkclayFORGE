@@ -138,3 +138,48 @@ test('the workshop grows on its own, and stations go there', () => {
   assert.ok(Rm.buy(s, 'lamp', 'work').item); assert.ok(s.workshop.items.some(i => i.kind === 'lamp'));
   const c = Rm.charm(s.room, s); assert.equal(c, 0, 'workshop decor brings no customers');
 });
+
+test('every shelf place has a spot on a shelf in the room, two to a shelf, and selling a shelf back keeps them matched', () => {
+  const s = oldSave(4, 3); Rm.fixRoom(s); Sh.fixShelf(s); s.coins = 99999;
+  const check = () => {
+    const spots = Rm.shelfSpots(s.room), ids = new Set(s.room.items.filter(i => i.kind === 'shelf').map(i => i.id));
+    assert.equal(spots.length, s.slots);
+    spots.forEach((p, i) => { assert.ok(ids.has(p.shelf)); assert.equal(p.spot, i % 2); });
+    for (const id of ids) assert.equal(spots.filter(p => p.shelf === id).length, 2);
+  };
+  check();
+  const r = Rm.buy(s, 'shelf'); assert.ok(r.item); check();
+  assert.equal(Rm.shelfSpots(s.room)[4].shelf, r.item.id);
+  Sh.takeDown(s, 0); Sh.takeDown(s, 1); assert.ok(Rm.sellBack(s, 'shelf-0').refund > 0); check();
+});
+
+test('the starting side shelf faces the view, and an older save\'s untouched one is turned round once', () => {
+  assert.equal(Rm.defaultShop().items.find(i => i.id === 'shelf-1').rot, 3);
+  const s = oldSave(4, 2); Rm.fixRoom(s);
+  const it = s.room.items.find(i => i.id === 'shelf-1'); it.rot = 1; delete s.faced;
+  Rm.fixRoom(s); assert.equal(it.rot, 3); assert.ok(Rm.valid(s.room));
+  it.rot = 1; Rm.fixRoom(s); assert.equal(it.rot, 1, 'turned back by the player: left alone');
+});
+
+test('a shelf made better keeps every piece on the shelf it was on, and selling it back takes only its own places', () => {
+  const s = oldSave(4, 4); Rm.fixRoom(s); Sh.fixShelf(s); s.coins = 99999;
+  const shelfOf = id => Rm.shelfSpots(s.room)[Sh.onShelf(s, id)].shelf;
+  const before = Object.fromEntries(['p0', 'p1', 'p2', 'p3'].map(id => [id, shelfOf(id)]));
+  assert.equal(Rm.upgradeShelf(s, 'shelf-0').places, 3);
+  assert.equal(s.slots, 5); assert.equal(s.shelf.length, 5); assert.equal(s.slots, Rm.placesIn(s.room));
+  assert.deepEqual(Object.fromEntries(Object.keys(before).map(id => [id, shelfOf(id)])), before);
+  assert.equal(Rm.upgradeShelf(s, 'shelf-0').places, 6);
+  assert.equal(s.slots, 8); assert.deepEqual(Object.fromEntries(Object.keys(before).map(id => [id, shelfOf(id)])), before);
+  assert.ok(Rm.upgradeShelf(s, 'shelf-0').why, 'no level past the case');
+  assert.equal(Rm.charm(s.room), 1, 'the case has a little charm');
+  // a third shelf, upgraded once, then sold back: half of all it cost, and the other shelves' pieces stay put
+  const third = Rm.buy(s, 'shelf').item; Rm.upgradeShelf(s, third.id);
+  const c = s.coins, r = Rm.sellBack(s, third.id);
+  assert.equal(r.refund, Math.floor((SHELF_COSTS[0] + 700) / 2)); assert.equal(s.coins, c + r.refund);
+  assert.equal(s.slots, 8); assert.deepEqual(Object.fromEntries(Object.keys(before).map(id => [id, shelfOf(id)])), before);
+  // a shelf with a piece on it can't go; once emptied it can, and its places go with it
+  s.coins = 99999; const t = Rm.buy(s, 'shelf').item; s.cards.push(piece('q')); Sh.place(s, 'q', 8);
+  assert.ok(Rm.sellBack(s, t.id).why); Sh.takeDown(s, 8); assert.ok(Rm.sellBack(s, t.id).refund);
+  // an older save's shelves keep their levels through fixRoom
+  Rm.fixRoom(s); Sh.fixShelf(s); assert.equal(s.slots, 8); assert.equal(Rm.levelOf(s.room.items.find(i => i.id === 'shelf-0')), 2);
+});

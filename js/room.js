@@ -1,7 +1,7 @@
 // The shop's two rooms, with no page access: the shop front (counter, shelves, decor; where customers come) and the workshop
 // behind it (the forge, the anvil and every station). A grid each, what stands on it, buying, moving, selling back, growing.
-import { FURNITURE, ROOM_SIZES, WORK_SIZES, DOOR_Z, WORK_DOOR_X, SHELF_COSTS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=13';
-import { wallCharm } from './growth.js?v=13';
+import { FURNITURE, ROOM_SIZES, WORK_SIZES, DOOR_Z, WORK_DOOR_X, SHELF_COSTS, SHELF_LEVELS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=14';
+import { wallCharm } from './growth.js?v=14';
 
 export const SIZES = { shop: ROOM_SIZES, work: WORK_SIZES };
 export const sizeOf = room => SIZES[room.kind || 'shop'][room.size || 0];
@@ -51,7 +51,7 @@ const place = (room, it) => { const p = fits(room, it) ? it : firstFree(room, it
 // the starting shop front: the counter near the front, two shelves where they fit
 export function defaultShop(shelves = 2, size = 0) {
   const room = { kind: 'shop', size, items: [{ id: 'counter', kind: 'counter', x: 3, z: 2, rot: 0 }] };
-  const spots = [{ x: 3, z: 0, rot: 0 }, { x: 5, z: 1, rot: 1 }];
+  const spots = [{ x: 3, z: 0, rot: 0 }, { x: 5, z: 1, rot: 3 }];   // both facing the way the shop is seen from, so their cards show
   for (let i = 0; i < shelves; i++) if (!place(room, { id: 'shelf-' + i, kind: 'shelf', ...(spots[i] || { x: 0, z: 0, rot: 0 }) })) break;
   return room;
 }
@@ -63,8 +63,27 @@ export function defaultWorkshop(stations = [], size = 0) {
 }
 export const defaultRoom = defaultShop;   // the shop front is "the room" everywhere the customers are
 export const shelvesOf = room => room.items.filter(i => i.kind === 'shelf').length;
+// a shelf's level (0: a plain shelf), its places, and all the shelf places in a room
+export const levelOf = it => Math.min(SHELF_LEVELS.length - 1, Math.max(0, it.lv | 0));
+export const placesOf = it => SHELF_LEVELS[levelOf(it)].places;
+export const placesIn = room => room.items.filter(i => i.kind === 'shelf').reduce((n, s) => n + placesOf(s), 0);
+// where each shelf place stands: the shelves in the room's order, each one's places in turn (spot: which place on that shelf)
+export const shelfSpots = room => room.items.filter(i => i.kind === 'shelf').flatMap(s => Array.from({ length: placesOf(s) }, (_, k) => ({ shelf: s.id, spot: k, lv: levelOf(s) })));
+const spotsOfShelf = (room, id) => shelfSpots(room).map((p, i) => p.shelf === id ? i : -1).filter(i => i >= 0);
+// make a shelf better where it stands: its new places go in after its own, so every piece stays on the shelf it was on
+export function upgradeShelf(save, id) {
+  const it = save.room.items.find(i => i.id === id && i.kind === 'shelf');
+  if (!it) return { why: 'no such shelf' };
+  const next = SHELF_LEVELS[levelOf(it) + 1];
+  if (!next) return { why: 'as fine as a shelf gets' };
+  if (save.coins < next.cost) return { why: 'not enough coin' };
+  const at = spotsOfShelf(save.room, id).pop() + 1, more = next.places - placesOf(it);
+  save.coins -= next.cost; it.lv = levelOf(it) + 1;
+  save.shelf.splice(at, 0, ...Array(more).fill(null)); save.slots += more;
+  return { level: it.lv, places: next.places };
+}
 // the shop front's charm, and the wall's pieces with it, under the one cap (the workshop's decor is for the maker's eyes only)
-export function charm(room, save) { return Math.min(CHARM_MAX, room.items.reduce((c, i) => c + (FURNITURE[i.kind].charm || 0), 0) + (save ? wallCharm(save) : 0)); }
+export function charm(room, save) { return Math.min(CHARM_MAX, room.items.reduce((c, i) => c + (FURNITURE[i.kind].charm || 0) + (i.kind === 'shelf' ? SHELF_LEVELS[levelOf(i)].charm || 0 : 0), 0) + (save ? wallCharm(save) : 0)); }
 // how much sooner customers come for the room's charm (a multiplier on the gap between them)
 export const charmGap = save => save.room ? 1 / (1 + charm(save.room, save) * CHARM_STEP) : 1;
 
@@ -91,7 +110,9 @@ export function fixRoom(save) {
     keep.forEach(i => place(room, { ...i }));   // the decor goes back where it fits
     save.room = room;
   }
-  save.slots = Math.max(START_SLOTS, shelvesOf(save.room) * 2);
+  // once: the starting side shelf stood with its back to the view, hiding its cards; turned round where it was never moved
+  if (!save.faced) { const s1 = save.room.items.find(i => i.id === 'shelf-1' && i.x === 5 && i.z === 1 && i.rot === 1); if (s1 && fits(save.room, { ...s1, rot: 3 }, s1.id)) s1.rot = 3; save.faced = 1; }
+  save.slots = Math.max(START_SLOTS, placesIn(save.room));
   const stations = (save.stations || []).filter(id => STATIONS[id]);
   if (!valid(save.workshop) || stations.some(id => !save.workshop.items.some(i => i.kind === id))) {
     // keep what stands where it stands; put back what's missing; if it won't do, lay the workshop out afresh, bigger if need be
@@ -144,18 +165,20 @@ export function move(save, id, x, z, rot) {
   return true;
 }
 export const turn = (save, id) => { const r = roomWith(save, id), it = r && r.items.find(i => i.id === id); return !!it && move(save, id, it.x, it.z, (it.rot + 1) % 4); };
-// sell back for half: never the forge, anvil, counter or a station; a shelf only while it's the last shelf's places that are empty
+// sell back for half: never the forge, anvil, counter or a station; a shelf only once its own places are empty (its upgrades
+// come back at half too)
 export function sellBack(save, id) {
   const room = roomWith(save, id), it = room && room.items.find(i => i.id === id), f = it && FURNITURE[it.kind];
   if (!it || f.fixed) return { why: 'it stays' };
   if (it.kind === 'shelf') {
     if (shelvesOf(save.room) <= 2) return { why: 'a shop keeps two shelves' };
-    if (save.shelf.slice(-2).some(Boolean)) return { why: 'take the pieces off the last shelf first' };
+    if (spotsOfShelf(save.room, id).some(i => save.shelf[i])) return { why: 'take the pieces off it first' };
   }
-  const paid = it.kind === 'shelf' ? SHELF_COSTS[shelvesOf(save.room) - 3] : f.cost;
+  const paid = it.kind === 'shelf' ? SHELF_COSTS[shelvesOf(save.room) - 3] + SHELF_LEVELS.slice(1, levelOf(it) + 1).reduce((c, l) => c + l.cost, 0) : f.cost;
+  const gone = it.kind === 'shelf' ? new Set(spotsOfShelf(save.room, id)) : null;
   room.items = room.items.filter(i => i !== it);
   save.coins += Math.floor(paid / 2);
-  if (it.kind === 'shelf') { save.slots -= 2; save.shelf = save.shelf.slice(0, save.slots); }
+  if (gone) { save.shelf = save.shelf.filter((_, i) => !gone.has(i)); save.slots = save.shelf.length; }
   return { refund: Math.floor(paid / 2) };
 }
 export const nextSize = room => SIZES[room.kind || 'shop'][(room.size || 0) + 1];
