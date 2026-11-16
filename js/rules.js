@@ -1,6 +1,6 @@
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS } from './data.js?v=8';
+import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS } from './data.js?v=9';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -299,7 +299,8 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now, k
     stats.push(['Armour', String(ar), Math.min(1, ar / BARS.armour)]);
     stats.push(['Weight', p.weight <= 3 ? 'light' : 'middling', Math.min(1, p.weight / BARS.weight)]);
   }
-  stats.push(['Wear', result.flawed ? 'FLAWED' : result.cracks ? 'NOTCHED' : 'KEEN', result.flawed ? .2 : result.cracks ? .6 : 1]);
+  if (p.potency) stats.push(['Keeps', result.flawed ? 'a week' : result.cracks ? 'a month' : 'a season', result.flawed ? .2 : result.cracks ? .6 : 1]);
+  else stats.push(['Wear', result.flawed ? 'FLAWED' : result.cracks ? 'NOTCHED' : 'KEEN', result.flawed ? .2 : result.cracks ? .6 : 1]);
   const bonus = Math.round((tier.mult * wk - 1) * 100 / 12);
   const dice = p.dice ? p.dice[0] + 'd' + p.dice[1] + (bonus > 0 ? '+' + bonus : '') : '';
   const rareN = parts.filter(o => o.rare).length, partsVal = parts.slice(1).reduce((v, o) => v * (o.val || 1), 1);

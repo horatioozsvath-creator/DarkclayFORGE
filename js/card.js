@@ -1,5 +1,5 @@
 // THE CARD: a piece of gear drawn as a collector's card framed by its tier (Darkclay Zero, docs/THE-CARD.md).
-import { TIERS } from './data.js?v=8';
+import { TIERS } from './data.js?v=9';
 
 const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
 // the picture of each kind of piece; m is the metal's tint
@@ -8,6 +8,10 @@ export const ART = {
   dagger: m => '<svg viewBox="-330 -70 650 140"><path d="M-120,-16 L250,-6 L300,0 L250,6 L-120,16 Z" fill="' + m + '" stroke="#000" stroke-width="7"/><rect x="-250" y="-13" width="110" height="26" rx="6" fill="#6a4a2a" stroke="#000" stroke-width="5"/><path d="M-140,-46 L-112,-46 L-112,46 L-140,46 Z" fill="#9a96a0" stroke="#000" stroke-width="5"/></svg>',
   axe: m => '<svg viewBox="-330 -90 650 180"><rect x="-300" y="-10" width="470" height="20" fill="#6a4a2a" stroke="#000" stroke-width="6"/><path d="M120,-12 L150,-80 Q230,-60 250,0 Q230,60 150,80 L120,12 Z" fill="' + m + '" stroke="#000" stroke-width="7"/></svg>',
   helm: m => '<svg viewBox="-420 -140 840 220"><path d="M-120,40 Q-130,-110 0,-120 Q130,-110 120,40 L90,60 L-90,60 Z" fill="' + m + '" stroke="#000" stroke-width="8"/><rect x="-14" y="-30" width="28" height="90" fill="rgba(0,0,0,.28)" stroke="#000" stroke-width="5"/></svg>',
+  draught: m => bottleArt(m, 'M-44,90 L-44,-10 Q-44,-50 -14,-64 L-14,-110 L14,-110 L14,-64 Q44,-50 44,-10 L44,90 Z'),
+  salve: m => '<svg viewBox="-420 -120 840 240"><ellipse cx="0" cy="60" rx="150" ry="34" fill="#4a3424" stroke="#000" stroke-width="8"/><path d="M-150,60 L-150,0 L150,0 L150,60" fill="#6a5040" stroke="#000" stroke-width="8"/><ellipse cx="0" cy="0" rx="150" ry="34" fill="' + m + '" stroke="#000" stroke-width="8"/><ellipse cx="-40" cy="-6" rx="40" ry="8" fill="rgba(255,255,255,.3)"/></svg>',
+  oil: m => bottleArt(m, 'M-30,90 L-60,20 L-24,-60 L-24,-110 L24,-110 L24,-60 L60,20 L30,90 Z'),
+  tonic: m => bottleArt(m, 'M-60,90 Q-80,0 -20,-40 L-20,-110 L20,-110 L20,-40 Q80,0 60,90 Z'),
   shortbow: m => '<svg viewBox="-420 -150 840 300"><path d="M-260,40 Q0,-210 260,40" fill="none" stroke="#000" stroke-width="30" stroke-linecap="round"/><path d="M-260,40 Q0,-210 260,40" fill="none" stroke="' + m + '" stroke-width="20" stroke-linecap="round"/><path d="M-260,40 L260,40" stroke="#ece0c6" stroke-width="4"/><rect x="-22" y="-92" width="44" height="34" fill="#4a3020" stroke="#000" stroke-width="5"/></svg>',
   longbow: m => '<svg viewBox="-420 -150 840 300"><path d="M-380,30 Q0,-170 380,30" fill="none" stroke="#000" stroke-width="28" stroke-linecap="round"/><path d="M-380,30 Q0,-170 380,30" fill="none" stroke="' + m + '" stroke-width="18" stroke-linecap="round"/><path d="M-380,30 L380,30" stroke="#ece0c6" stroke-width="4"/><rect x="-22" y="-82" width="44" height="34" fill="#4a3020" stroke="#000" stroke-width="5"/></svg>',
   staff: m => '<svg viewBox="-420 -110 840 220"><path d="M-370,8 L340,-8" stroke="#000" stroke-width="34" stroke-linecap="round"/><path d="M-370,8 L340,-8" stroke="' + m + '" stroke-width="24" stroke-linecap="round"/><rect x="-395" y="-6" width="40" height="28" fill="#6e6b70" stroke="#000" stroke-width="5"/><circle cx="352" cy="-8" r="24" fill="#cfe8ff" stroke="#000" stroke-width="6"/></svg>',
@@ -18,6 +22,11 @@ export const ART = {
   boots: m => '<svg viewBox="-420 -150 840 300"><g stroke="#000" stroke-width="8" stroke-linejoin="round" fill="' + m + '"><path d="M-200,-120 L-110,-120 L-110,60 L-30,80 L-30,120 L-210,120 Z"/><path d="M40,-120 L130,-120 L130,60 L210,80 L210,120 L30,120 Z"/></g><path d="M-210,108 L-30,108 M30,108 L210,108" stroke="#2a1c12" stroke-width="16"/></svg>',
   ring: m => '<svg viewBox="-420 -110 840 220"><ellipse cx="0" cy="14" rx="78" ry="70" fill="none" stroke="#000" stroke-width="34"/><ellipse cx="0" cy="14" rx="78" ry="70" fill="none" stroke="' + m + '" stroke-width="22"/><path d="M-22,-62 L0,-92 L22,-62 L0,-44 Z" fill="#cfe8ff" stroke="#000" stroke-width="6"/></svg>',
 };
+// a bottle with its brew in it, three of them for a batch
+function bottleArt(m, d) {
+  const one = x => '<g transform="translate(' + x + ',0)"><path d="' + d + '" fill="rgba(200,230,220,.22)" stroke="#000" stroke-width="8" stroke-linejoin="round"/><clipPath id="bt' + x + '_' + d.length + '"><path d="' + d + '"/></clipPath><rect x="-90" y="-10" width="180" height="110" fill="' + m + '" clip-path="url(#bt' + x + '_' + d.length + ')" opacity=".9"/><rect x="-16" y="-128" width="32" height="22" fill="#6a4a2a" stroke="#000" stroke-width="5"/></g>';
+  return '<svg viewBox="-420 -140 840 250">' + one(-150) + one(0) + one(150) + '</svg>';
+}
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // card(piece, { short: the top only, price: show the worth on a corner })
@@ -31,7 +40,7 @@ export function card(p, o = {}) {
     '<div class="cd-in">' +
     '<div class="cd-top"><span class="cd-tier">' + t.name.toUpperCase() + '</span><span class="cd-kind">' + esc(p.kind) + '</span></div>' +
     '<div class="cd-name">' + esc(p.name) + '</div>' +
-    '<div class="cd-art">' + art(tint) + (p.dice ? '<span class="cd-dice">' + esc(p.dice) + '</span>' : '') + '</div>' +
+    '<div class="cd-art">' + art(tint) + (p.dice ? '<span class="cd-dice">' + esc(p.dice) + '</span>' : '') + (p.count > 0 ? '<span class="cd-dice cd-count">×' + esc(p.count) + '</span>' : '') + '</div>' +
     (o.short ? '<div class="cd-price">' + (o.price || esc(p.worth) + ' c') + '</div>'
       : '<div class="cd-body">' + stats + (aff ? '<div class="cd-sec">AFFIXES</div>' + aff : '') + made +
         '<div class="cd-lore">' + esc(p.lore) + '</div><div class="cd-worth"><span>WORTH</span><b>' + esc(p.worth) + ' coins</b></div></div>') +

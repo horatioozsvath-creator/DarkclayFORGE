@@ -1,11 +1,19 @@
 {
  "slots": {
+  "Bronze": {
+   "hex": "#9a7238",
+   "kind": "toon"
+  },
   "Clay": {
    "hex": "#a8643e",
    "kind": "toon"
   },
   "Cloth": {
    "hex": "#c9bc9c",
+   "kind": "toon"
+  },
+  "ClothBlue": {
+   "hex": "#3d5577",
    "kind": "toon"
   },
   "Coals": {
@@ -32,6 +40,18 @@
    "hex": "#ffd9a0",
    "kind": "glow"
   },
+  "GlowGold": {
+   "hex": "#ffd060",
+   "kind": "glow"
+  },
+  "GlowGreen": {
+   "hex": "#c8ff7a",
+   "kind": "glow"
+  },
+  "GlowIce": {
+   "hex": "#a8e4ff",
+   "kind": "glow"
+  },
   "Gold": {
    "hex": "#d0a63e",
    "kind": "toon"
@@ -52,6 +72,10 @@
    "hex": "#5a5244",
    "kind": "toon"
   },
+  "Ice": {
+   "hex": "#9fbccb",
+   "kind": "toon"
+  },
   "Ink": {
    "hex": "#0e0b09",
    "kind": "ink"
@@ -62,6 +86,14 @@
   },
   "Leather": {
    "hex": "#5c4b33",
+   "kind": "toon"
+  },
+  "Marble": {
+   "hex": "#bdb6a6",
+   "kind": "toon"
+  },
+  "Moss": {
+   "hex": "#5b6b3a",
    "kind": "toon"
   },
   "Paper": {
@@ -104,6 +136,10 @@
    "hex": "#77706a",
    "kind": "toon"
   },
+  "StoneLight": {
+   "hex": "#a39b8c",
+   "kind": "toon"
+  },
   "Tent": {
    "hex": "#a8946c",
    "kind": "toon"
@@ -122,6 +158,10 @@
   },
   "Trousers": {
    "hex": "#4a3f33",
+   "kind": "toon"
+  },
+  "Water": {
+   "hex": "#3d6680",
    "kind": "toon"
   },
   "Wax": {

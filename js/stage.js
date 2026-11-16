@@ -1,5 +1,5 @@
 // The stage: the fire, the anvil, the piece taking shape, the hammer and the heat meter, drawn on a 1280 × 720 canvas.
-import { FORGE, KC } from './data.js?v=8';
+import { FORGE, KC } from './data.js?v=9';
 
 // two layouts: wide (a desktop, a phone on its side) and tall (a phone held upright), the same drawing moved and scaled
 export const LAYOUTS = {
@@ -31,6 +31,7 @@ export function paint(g, S, view, dt, L = LAYOUTS.wide) {
   const heat = S.meter / 100, now = performance.now();
   if (c.id === 'stretcher') drawStretcher(g, S, view, L, heat, now, c);
   else if (c.id === 'bowbench') drawBench(g, S, view, L, heat, now, c);
+  else if (c.id === 'kettle') drawKettle(g, S, view, L, heat, now, c);
   else drawForge(g, S, view, L, heat, now, c);
   for (const s of view.sparks) { if (!s.init) { s.x = L.ax; s.y = L.ay - (c.id === 'stretcher' ? 200 : 80) * L.sc; s.init = 1; } s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 900 * dt; s.t -= dt; }
   view.sparks = view.sparks.filter(s => s.t > 0);
@@ -249,6 +250,60 @@ function drawBench(g, S, view, L, heat, now, c) {
   }
 }
 
+// the kettle: the pot over its fire where the anvil was, the brew coloured by the boil, three bottles filling as it takes shape
+function drawKettle(g, S, view, L, heat, now, c) {
+  const t = Math.min(1, S.shape / 100), herb = S.metal.tint || '#7ac46a';
+  const fx = 150, fy = 470;
+  g.save(); g.translate(L.fx - fx, L.fy - fy);   // the bottles, filling
+  g.fillStyle = '#3b2414'; g.fillRect(40, 560, 240, 20);
+  for (let i = 0; i < 3; i++) {
+    const x = 80 + i * 80, fill = Math.max(0, Math.min(1, t * 3 - i));
+    g.fillStyle = 'rgba(200,230,220,.18)'; g.strokeStyle = '#0e0b09'; g.lineWidth = 4;
+    g.beginPath(); g.moveTo(x - 22, 560); g.lineTo(x - 22, 500); g.quadraticCurveTo(x - 22, 480, x - 8, 470); g.lineTo(x - 8, 450); g.lineTo(x + 8, 450); g.lineTo(x + 8, 470); g.quadraticCurveTo(x + 22, 480, x + 22, 500); g.lineTo(x + 22, 560); g.closePath(); g.fill(); g.stroke();
+    if (fill > 0) { g.fillStyle = herb; g.globalAlpha = 0.85; g.fillRect(x - 19, 558 - fill * 70, 38, fill * 70); g.globalAlpha = 1; }
+    g.fillStyle = '#6a4a2a'; g.fillRect(x - 9, 442, 18, 10);
+  }
+  g.fillStyle = 'rgba(236,224,198,.6)'; g.font = '800 22px "Alegreya Sans", sans-serif'; g.textAlign = 'center';
+  g.fillText('THE BATCH', 160, 620);
+  g.restore();
+
+  const ax = 680, ay = 520;
+  g.save(); g.translate(L.ax, L.ay); g.scale(L.sc, L.sc); g.translate(-ax, -ay);
+  // the fire under the pot
+  const glow = g.createRadialGradient(ax, ay + 40, 10, ax, ay + 40, 260);
+  glow.addColorStop(0, 'rgba(255,120,40,' + (0.15 + heat * 0.5) + ')'); glow.addColorStop(1, 'rgba(255,120,40,0)');
+  g.fillStyle = glow; g.fillRect(ax - 300, ay - 200, 600, 400);
+  g.fillStyle = '#ff8a2a';
+  for (let i = 0; i < 7; i++) { const f = Math.sin(now / 160 + i) * 6; g.globalAlpha = 0.3 + heat * 0.6; g.beginPath(); g.ellipse(ax - 120 + i * 40, ay + 50 - f, 14, 22 + f + heat * 14, 0, 0, 7); g.fill(); }
+  g.globalAlpha = 1;
+  g.fillStyle = '#2a2420'; g.strokeStyle = '#0e0b09'; g.lineWidth = 6;
+  g.beginPath(); g.ellipse(ax, ay + 80, 200, 30, 0, 0, 7); g.fill(); g.stroke();
+  // the pot
+  if (view.flash > 0) g.translate((Math.random() - .5) * 4 * view.flash, 0);
+  g.fillStyle = '#1e1a18';
+  g.beginPath(); g.moveTo(ax - 210, ay - 140); g.quadraticCurveTo(ax - 240, ay + 40, ax, ay + 50); g.quadraticCurveTo(ax + 240, ay + 40, ax + 210, ay - 140); g.closePath(); g.fill(); g.stroke();
+  // the brew: the herb's colour turning to the boil's as it takes, bubbles with the heat
+  const brew = mix([herb, mix(c.colours, heat)], 0.35 + t * 0.4);
+  if (view.ring > 0) { g.save(); g.strokeStyle = view.ringC; g.globalAlpha = view.ring; g.lineWidth = 10 * view.ring; g.beginPath(); g.arc(ax, ay - 140, 120 + (1 - view.ring) * 380, 0, 7); g.stroke(); g.restore(); }
+  g.fillStyle = S.white > 0 ? '#f4e6c0' : brew;
+  g.beginPath(); g.ellipse(ax, ay - 140, 205, 46, 0, 0, 7); g.fill(); g.stroke();
+  const nb = Math.floor(heat * 16);
+  g.fillStyle = 'rgba(255,240,220,.55)';
+  for (let i = 0; i < nb; i++) { const bx = ax + Math.sin(i * 7.1 + now / (320 - heat * 160)) * 170, by = ay - 140 + Math.cos(i * 3.3 + now / 210) * 30; g.beginPath(); g.arc(bx, by, 5 + heat * 7, 0, 7); g.fill(); }
+  if (S.meter > S.band[1]) {   // rolling: it's about to boil over
+    g.fillStyle = brew; for (let i = 0; i < 5; i++) { const x = ax - 200 + i * 100, d = (now / 6 + i * 37) % 60; g.beginPath(); g.ellipse(x, ay - 130 + d, 10, 16, 0, 0, 7); g.fill(); }
+  }
+  g.strokeStyle = '#2a0e08'; g.lineWidth = 4;
+  S.crackMarks.forEach(r => { const x = ax - 160 + r * 320; g.beginPath(); g.moveTo(x, ay - 100); g.lineTo(x + 8, ay - 70); g.lineTo(x - 4, ay - 40); g.stroke(); });
+  // the spoon, round on a stir
+  if (S.phase === 'work') {
+    const a = now / 300 + view.flash * 3, x = ax + Math.cos(a) * 120, y = ay - 150 + Math.sin(a) * 26;
+    g.strokeStyle = '#000'; g.lineWidth = 16; g.lineCap = 'round'; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 70, y - 220); g.stroke();
+    g.strokeStyle = '#8a6a42'; g.lineWidth = 10; g.stroke();
+  }
+  g.restore();
+}
+
 function drawMeter(g, S, L, heat, now, c) {
   // the meter, with the band to strike in
   const mx = L.mx, my = L.my, mh = 470, mw = 44;
@@ -264,7 +319,7 @@ function drawMeter(g, S, L, heat, now, c) {
   g.fillText(c.meter, mx + mw / 2, my - 18);
   g.textAlign = 'right'; g.font = '700 15px "Alegreya Sans", sans-serif'; g.fillStyle = 'rgba(185,170,140,.9)';
   c.labels.forEach(([v, l]) => g.fillText(l, mx - 24, my + mh - v / 100 * mh - 4));
-  g.save(); g.translate(mx + mw + 20, (by0 + by1) / 2); g.rotate(Math.PI / 2); g.textAlign = 'center'; g.fillStyle = '#e8c464'; g.font = '800 14px "Alegreya Sans", sans-serif'; g.fillText(c.id === 'stretcher' ? 'STITCH HERE' : c.id === 'bowbench' ? 'BEND HERE' : 'STRIKE HERE', 0, 0); g.restore();
+  g.save(); g.translate(mx + mw + 20, (by0 + by1) / 2); g.rotate(Math.PI / 2); g.textAlign = 'center'; g.fillStyle = '#e8c464'; g.font = '800 14px "Alegreya Sans", sans-serif'; g.fillText(c.id === 'stretcher' ? 'STITCH HERE' : c.id === 'bowbench' ? 'BEND HERE' : c.id === 'kettle' ? 'STIR HERE' : 'STRIKE HERE', 0, 0); g.restore();
   if (S.white > 0) { g.fillStyle = 'rgba(255,242,196,' + (0.1 + 0.06 * Math.sin(now / 90)) + ')'; g.fillRect(0, 0, L.W, L.H); }
 }
 
