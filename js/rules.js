@@ -1,6 +1,6 @@
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS } from './data.js?v=6';
+import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS } from './data.js?v=7';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -283,10 +283,11 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now, k
   const rareN = parts.filter(o => o.rare).length, partsVal = parts.slice(1).reduce((v, o) => v * (o.val || 1), 1);
   const worth = Math.max(1, Math.round(p.value * metal.val * tier.worth * (1 + w / 200) * (1 + 0.25 * rareN) * partsVal
     * Math.pow(0.9, result.cracks) * (result.flawed ? 0.5 : 1)));
-  const made = ['Forged by ' + maker];
+  const leather = stationOf(patternId).id === 'stretcher';
+  const made = [(leather ? 'Stitched by ' : 'Forged by ') + maker];
   if (result.instant) made.push('made at once, at the plain odds');
   else {
-    made.push('WORKED +' + worked + ' %', result.strikes + ' strikes · ' + result.heats + ' heat' + (result.heats > 1 ? 's' : ''),
+    made.push('WORKED +' + worked + ' %', result.strikes + (leather ? ' stitches · ' : ' strikes · ') + result.heats + (leather ? ' soak' : ' heat') + (result.heats > 1 ? 's' : ''),
       result.cracks ? result.cracks + ' crack' + (result.cracks > 1 ? 's' : '') : 'no crack');
     if (result.whiteHeat) made.push('WHITE HEAT');
   }
@@ -307,7 +308,7 @@ export function srcOf(card) {
   const cr = (card.made || []).find(x => /^\d+ crack/.test(x)), cracks = cr ? +cr.match(/\d+/)[0] : 0;
   return { picks: [m, 0, 0], worked, strikes: 0, heats: 0, cracks, whiteHeat: (card.made || []).includes('WHITE HEAT'), frost: card.affixes.some(a => a[0] === 'Frost-kissed'), instant: false, reworked: 0 };
 }
-export const makerOf = card => card.maker || ((card.made || [])[0] || '').replace(/^Forged by /, '') || 'an old maker';
+export const makerOf = card => card.maker || ((card.made || [])[0] || '').replace(/^(Forged|Stitched) by /, '') || 'an old maker';
 // A piece out of the fire again: the same piece (its id, its maker, the affixes it carried), its tier and its making moved on.
 export function remakePiece({ card, res, picked, rng, now }) {
   const src = srcOf(card);

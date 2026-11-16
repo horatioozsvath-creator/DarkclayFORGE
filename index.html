@@ -13,8 +13,8 @@
 <title>Darkclay Forge</title>
 <meta name="description" content="Work iron at the forge, tile by tile, and keep every piece you make as a card.">
 <link rel="stylesheet" href="css/fonts.css">
-<link rel="stylesheet" href="css/working.css?v=6">
-<link rel="stylesheet" href="css/game.css?v=6">
+<link rel="stylesheet" href="css/working.css?v=7">
+<link rel="stylesheet" href="css/game.css?v=7">
 </head>
 <body>
 <div class="wrap">
@@ -195,7 +195,7 @@
 
     <!-- THE WORKING -->
     <div id="vWork" hidden>
-      <div class="screenbar"><button class="seg leave" id="bLeave" aria-label="Leave the working, back to PREPARE">✕</button><div><div class="k">THE FORGE · WORK IT</div><div class="t" id="workT"></div></div><div class="chips"><span id="cShape" class="on">1 · SHAPE</span><span id="cPush">2 · PUSH</span><span id="cDone">3 · QUENCH</span></div></div>
+      <div class="screenbar"><button class="seg leave" id="bLeave" aria-label="Leave the working, back to PREPARE">✕</button><div><div class="k" id="workK">THE FORGE · WORK IT</div><div class="t" id="workT"></div></div><div class="chips"><span id="cShape" class="on">1 · SHAPE</span><span id="cPush">2 · PUSH</span><span id="cDone">3 · QUENCH</span></div></div>
       <div class="stage">
         <canvas id="cv" width="1280" height="720" aria-label="The stage: the piece, the fire and the heat. Tap to strike."></canvas>
         <button class="seg stripbtn" id="bStrip">THE STRIP</button>
@@ -265,6 +265,6 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js" } }</script>
-<script type="module" src="js/main.js?v=6"></script>
+<script type="module" src="js/main.js?v=7"></script>
 </body>
 </html>

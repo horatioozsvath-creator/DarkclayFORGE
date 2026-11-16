@@ -1,5 +1,5 @@
 // The stage: the fire, the anvil, the piece taking shape, the hammer and the heat meter, drawn on a 1280 × 720 canvas.
-import { FORGE, KC } from './data.js?v=6';
+import { FORGE, KC } from './data.js?v=7';
 
 // two layouts: wide (a desktop, a phone on its side) and tall (a phone held upright), the same drawing moved and scaled
 export const LAYOUTS = {
@@ -26,9 +26,20 @@ const SHAPES = {
 
 // view: { flash, ring, ringC, sparks } — the moment-to-moment effects the page keeps
 export function paint(g, S, view, dt, L = LAYOUTS.wide) {
-  const c = FORGE, shape = SHAPES[S.cfg.patternId], W = L.W, H = L.H;
+  const c = S.station || FORGE, W = L.W, H = L.H;
   g.clearRect(0, 0, W, H);
   const heat = S.meter / 100, now = performance.now();
+  if (c.id === 'stretcher') drawStretcher(g, S, view, L, heat, now, c);
+  else drawForge(g, S, view, L, heat, now, c);
+  for (const s of view.sparks) { if (!s.init) { s.x = L.ax; s.y = L.ay - (c.id === 'stretcher' ? 200 : 80) * L.sc; s.init = 1; } s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 900 * dt; s.t -= dt; }
+  view.sparks = view.sparks.filter(s => s.t > 0);
+  for (const s of view.sparks) { g.fillStyle = s.c; g.globalAlpha = Math.min(1, s.t * 2); if (c.id === 'stretcher') { g.beginPath(); g.arc(s.x, s.y, 3, 0, 7); g.fill(); } else g.fillRect(s.x, s.y, 6, 6); }
+  g.globalAlpha = 1;
+  drawMeter(g, S, L, heat, now, c);
+}
+
+function drawForge(g, S, view, L, heat, now, c) {
+  const shape = SHAPES[S.cfg.patternId];
   const fx = 150, fy = 470;
   g.save(); g.translate(L.fx - fx, L.fy - fy);   // the fire
   const glow = g.createRadialGradient(fx, fy, 10, fx, fy, 260);
@@ -89,12 +100,79 @@ export function paint(g, S, view, dt, L = LAYOUTS.wide) {
     g.fillStyle = 'rgba(255,255,255,.15)'; g.fillRect(-47, 48, 94, 10);
     g.restore();
   }
-  for (const s of view.sparks) { if (!s.init) { s.x = L.ax; s.y = L.ay - 80 * L.sc; s.init = 1; } s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 900 * dt; s.t -= dt; }
-  view.sparks = view.sparks.filter(s => s.t > 0);
-  for (const s of view.sparks) { g.fillStyle = s.c; g.globalAlpha = Math.min(1, s.t * 2); g.fillRect(s.x, s.y, 6, 6); }
-  g.globalAlpha = 1;
+}
 
-  // the heat meter, with the gold band to strike in
+// the stretcher: the soak tub where the fire was, a laced frame where the anvil was, the hide drawn into its cut
+const HIDE = [[-200, -150], [-100, -158], [0, -150], [100, -158], [200, -150], [206, 150], [100, 158], [0, 150], [-100, 158], [-206, 150]];
+const CUTS = {
+  jerkin: [[-150, -130], [-60, -150], [0, -112], [60, -150], [150, -130], [122, 150], [60, 150], [0, 150], [-60, 150], [-122, 150]],
+  hood: [[-112, 140], [-122, -40], [0, -150], [122, -40], [112, 140], [60, 118], [30, 108], [0, 104], [-30, 108], [-60, 118]],
+  gloves: [[-140, -140], [-60, -152], [0, -140], [60, -152], [140, -140], [152, 40], [120, 150], [0, 150], [-120, 150], [-152, 40]],
+  boots: [[-110, -150], [0, -150], [20, -150], [40, -150], [62, -150], [62, 60], [182, 92], [182, 150], [0, 150], [-110, 150]],
+};
+function drawStretcher(g, S, view, L, heat, now, c) {
+  const cut = CUTS[S.cfg.patternId] || CUTS.jerkin, t = Math.min(1, S.shape / 100), inSoak = S.inFire;
+  const fx = 150, fy = 470;
+  g.save(); g.translate(L.fx - fx, L.fy - fy);   // the soak
+  const glow = g.createRadialGradient(fx, fy, 10, fx, fy, 240);
+  glow.addColorStop(0, 'rgba(90,150,210,' + (inSoak ? 0.45 : 0.12) + ')'); glow.addColorStop(1, 'rgba(90,150,210,0)');
+  g.fillStyle = glow; g.fillRect(0, 200, 420, 520);
+  g.fillStyle = '#4a3020'; g.strokeStyle = '#0e0b09'; g.lineWidth = 6;
+  g.beginPath(); g.moveTo(50, 500); g.lineTo(270, 500); g.lineTo(250, 640); g.lineTo(70, 640); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle = '#2a4a6a'; g.beginPath(); g.ellipse(160, 500, 110, 22, 0, 0, 7); g.fill(); g.stroke();
+  g.strokeStyle = 'rgba(200,230,255,.35)'; g.lineWidth = 2;
+  for (let i = 0; i < 3; i++) { const r = ((now / 900 + i / 3) % 1); g.globalAlpha = 1 - r; g.beginPath(); g.ellipse(160, 500, 20 + r * 80, 4 + r * 16, 0, 0, 7); g.stroke(); }
+  g.globalAlpha = 1;
+  g.fillStyle = 'rgba(236,224,198,.6)'; g.font = '800 22px "Alegreya Sans", sans-serif'; g.textAlign = 'center';
+  g.fillText('THE SOAK', 160, 680);
+  g.restore();
+
+  const ax = 680, ay = 520, cy = ay - 200;
+  const onFrame = () => { g.translate(L.ax, L.ay); g.scale(L.sc, L.sc); g.translate(-ax, -ay); };
+  g.save(); onFrame();   // the frame
+  g.fillStyle = '#3b2414'; g.strokeStyle = '#0e0b09'; g.lineWidth = 5;
+  for (const x of [ax - 290, ax + 270]) { g.fillRect(x, cy - 230, 22, 470); g.strokeRect(x, cy - 230, 22, 470); }
+  g.fillRect(ax - 300, cy - 230, 600, 22); g.strokeRect(ax - 300, cy - 230, 600, 22);
+  g.fillRect(ax - 300, cy + 200, 600, 20); g.strokeRect(ax - 300, cy + 200, 600, 20);
+  g.restore();
+
+  // the hide: pale dry, dark and blue soaked; drawn into its cut as SHAPE fills
+  const col = mix(c.colours, heat);
+  g.save();
+  if (inSoak) { g.translate(L.fx - fx, L.fy - fy); g.translate(160, 470); g.scale(0.32, 0.18); }
+  else { onFrame(); g.translate(ax, cy); if (view.flash > 0) g.translate((Math.random() - .5) * 4 * view.flash, (Math.random() - .5) * 4 * view.flash); }
+  if (view.ring > 0) { g.save(); g.strokeStyle = view.ringC; g.globalAlpha = view.ring; g.lineWidth = 10 * view.ring; g.beginPath(); g.arc(0, 0, 120 + (1 - view.ring) * 380, 0, 7); g.stroke(); g.restore(); }
+  if (!inSoak) {   // the laces to the frame, and the cut it's going to
+    g.strokeStyle = '#5c4b33'; g.lineWidth = 4;
+    for (const [hx, hy, fx2, fy2] of [[-200, -150, -280, -220], [200, -150, 280, -220], [-206, 150, -280, 210], [206, 150, 280, 210], [0, -150, 0, -220], [0, 150, 0, 210]]) { g.beginPath(); g.moveTo(hx, hy); g.lineTo(fx2, fy2); g.stroke(); }
+    if (t < 1) { g.save(); g.setLineDash([10, 8]); g.strokeStyle = 'rgba(232,196,100,.55)'; g.lineWidth = 3; g.beginPath(); cut.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath(); g.stroke(); g.restore(); }
+  }
+  g.fillStyle = S.white > 0 ? '#f4e6c0' : col; g.strokeStyle = '#0e0b09'; g.lineWidth = 6;
+  if (S.white > 0) { g.shadowColor = '#fff2c4'; g.shadowBlur = 50; }
+  g.beginPath(); HIDE.forEach((p, i) => { const x = lerp(p[0], cut[i][0], t), y = lerp(p[1], cut[i][1], t); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+  g.closePath(); g.fill(); g.stroke(); g.shadowBlur = 0;
+  // stitches along the seams as it takes shape; tears where it tore
+  const n = Math.floor(t * 18);
+  g.fillStyle = '#e8c464';
+  for (let i = 0; i < n; i++) { const k = i / 18, x = lerp(-120, 120, k), y = 120 - Math.abs(Math.sin(k * 3.1)) * 10; g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill(); }
+  if (S.frost) { g.strokeStyle = 'rgba(207,232,255,.9)'; g.lineWidth = 2; for (let i = 0; i < 5; i++) { const x = -100 + i * 50; g.beginPath(); g.moveTo(x - 8, -40); g.lineTo(x + 8, -24); g.moveTo(x + 8, -40); g.lineTo(x - 8, -24); g.stroke(); } }
+  g.strokeStyle = '#2a0e08'; g.lineWidth = 5;
+  S.crackMarks.forEach(r => { const x = -120 + r * 240; g.beginPath(); g.moveTo(x, -60); g.lineTo(x + 10, -30); g.lineTo(x - 6, 0); g.lineTo(x + 8, 30); g.stroke(); });
+  g.restore();
+
+  // the awl: down through the hide on a stitch, up again
+  if (S.phase === 'work' && !inSoak) {
+    const f = view.flash, y = cy - 40 - (1 - f) * 120;
+    g.save(); onFrame(); g.translate(ax + 60, y); g.rotate(0.25);
+    g.fillStyle = '#5a4030'; g.strokeStyle = '#000'; g.lineWidth = 3;
+    g.beginPath(); g.ellipse(0, -70, 18, 34, 0, 0, 7); g.fill(); g.stroke();
+    g.fillStyle = '#c9c5be'; g.beginPath(); g.moveTo(-5, -38); g.lineTo(5, -38); g.lineTo(1, 60); g.lineTo(-1, 60); g.closePath(); g.fill(); g.stroke();
+    g.restore();
+  }
+}
+
+function drawMeter(g, S, L, heat, now, c) {
+  // the meter, with the band to strike in
   const mx = L.mx, my = L.my, mh = 470, mw = 44;
   g.fillStyle = '#0b0807'; g.fillRect(mx, my, mw, mh);
   for (let i = 0; i < 40; i++) { g.fillStyle = mix(c.colours, i / 40); g.globalAlpha = 0.35; g.fillRect(mx, my + mh - (i + 1) * mh / 40, mw, mh / 40 + 1); }
@@ -108,8 +186,8 @@ export function paint(g, S, view, dt, L = LAYOUTS.wide) {
   g.fillText(c.meter, mx + mw / 2, my - 18);
   g.textAlign = 'right'; g.font = '700 15px "Alegreya Sans", sans-serif'; g.fillStyle = 'rgba(185,170,140,.9)';
   c.labels.forEach(([v, l]) => g.fillText(l, mx - 24, my + mh - v / 100 * mh - 4));
-  g.save(); g.translate(mx + mw + 20, (by0 + by1) / 2); g.rotate(Math.PI / 2); g.textAlign = 'center'; g.fillStyle = '#e8c464'; g.font = '800 14px "Alegreya Sans", sans-serif'; g.fillText('STRIKE HERE', 0, 0); g.restore();
-  if (S.white > 0) { g.fillStyle = 'rgba(255,242,196,' + (0.1 + 0.06 * Math.sin(now / 90)) + ')'; g.fillRect(0, 0, W, H); }
+  g.save(); g.translate(mx + mw + 20, (by0 + by1) / 2); g.rotate(Math.PI / 2); g.textAlign = 'center'; g.fillStyle = '#e8c464'; g.font = '800 14px "Alegreya Sans", sans-serif'; g.fillText(c.id === 'stretcher' ? 'STITCH HERE' : 'STRIKE HERE', 0, 0); g.restore();
+  if (S.white > 0) { g.fillStyle = 'rgba(255,242,196,' + (0.1 + 0.06 * Math.sin(now / 90)) + ')'; g.fillRect(0, 0, L.W, L.H); }
 }
 
 export function sparksFor(k, dead) {

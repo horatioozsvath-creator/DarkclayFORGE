@@ -36,6 +36,8 @@ npm test
 - `js/diorama.js` — the shop in 3D (Three.js, loaded when the shop opens)
 - `assets/models/` — Darkclay Zero's props and townsfolk as GLB, rebuilt by `tools/models.sh` (needs Blender and the DarkclayZERO folder)
 - `vendor/three/` — Three.js 0.170 (MIT)
+- `tools/sim.mjs` — the economy played by a bot (`node tools/sim.mjs 14 1 45`: 14 days, seed 1, 45-minute sessions)
+- `manifest.webmanifest`, `assets/icons/` — so the game can be added to a phone's home screen
 - `js/main.js` — the screens and the controls
 - `js/stage.js` — the canvas: fire, anvil, piece, hammer, heat meter
 - `js/tiles.js`, `js/card.js`, `js/save.js` — clay tiles, collector cards, the browser save
@@ -49,12 +51,12 @@ npm test
 Browsers and GitHub Pages cache files for a few minutes. Each release bumps the `?v=` number on every script import and stylesheet link (in `index.html` and `js/*.js`), so a player never runs a new file against an old one:
 
 ```bash
-sed -i '' -E 's/\?v=[0-9]+/?v=7/g' index.html js/*.js
+sed -i '' -E 's/\?v=[0-9]+/?v=8/g' index.html js/*.js
 ```
 
 ## Status
 
-Milestones 1 to 6 of 7: the forge; the shelf and the till; the counter; the staff and the clock; the diorama; growth. See `docs/PLAN.md`.
+All seven milestones: the forge; the shelf and the till; the counter; the staff and the clock; the diorama; growth; balance, hints and the stretcher. See `docs/PLAN.md`.
 
 Open the game with `?debug` on the address to reach the save from the browser console as `forge.save`; `forge.wipe()` starts a fresh save.
 

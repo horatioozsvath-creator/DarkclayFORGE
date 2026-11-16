@@ -1,5 +1,5 @@
 // THE CARD: a piece of gear drawn as a collector's card framed by its tier (Darkclay Zero, docs/THE-CARD.md).
-import { TIERS } from './data.js?v=6';
+import { TIERS } from './data.js?v=7';
 
 const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
 // the picture of each kind of piece; m is the metal's tint
@@ -8,6 +8,10 @@ export const ART = {
   dagger: m => '<svg viewBox="-330 -70 650 140"><path d="M-120,-16 L250,-6 L300,0 L250,6 L-120,16 Z" fill="' + m + '" stroke="#000" stroke-width="7"/><rect x="-250" y="-13" width="110" height="26" rx="6" fill="#6a4a2a" stroke="#000" stroke-width="5"/><path d="M-140,-46 L-112,-46 L-112,46 L-140,46 Z" fill="#9a96a0" stroke="#000" stroke-width="5"/></svg>',
   axe: m => '<svg viewBox="-330 -90 650 180"><rect x="-300" y="-10" width="470" height="20" fill="#6a4a2a" stroke="#000" stroke-width="6"/><path d="M120,-12 L150,-80 Q230,-60 250,0 Q230,60 150,80 L120,12 Z" fill="' + m + '" stroke="#000" stroke-width="7"/></svg>',
   helm: m => '<svg viewBox="-420 -140 840 220"><path d="M-120,40 Q-130,-110 0,-120 Q130,-110 120,40 L90,60 L-90,60 Z" fill="' + m + '" stroke="#000" stroke-width="8"/><rect x="-14" y="-30" width="28" height="90" fill="rgba(0,0,0,.28)" stroke="#000" stroke-width="5"/></svg>',
+  jerkin: m => '<svg viewBox="-420 -150 840 300"><path d="M-70,-120 L-150,-100 L-230,20 L-180,50 L-120,-20 L-120,120 L120,120 L120,-20 L180,50 L230,20 L150,-100 L70,-120 Q0,-70 -70,-120 Z" fill="' + m + '" stroke="#000" stroke-width="9" stroke-linejoin="round"/><path d="M0,-80 L0,115" stroke="rgba(0,0,0,.45)" stroke-width="5" stroke-dasharray="12 10"/><path d="M-120,60 L120,60" stroke="#3b2414" stroke-width="16"/></svg>',
+  hood: m => '<svg viewBox="-420 -150 840 300"><path d="M-130,110 Q-150,-40 -40,-120 Q60,-150 120,-60 Q160,10 140,110 Q60,80 0,90 Q-70,80 -130,110 Z" fill="' + m + '" stroke="#000" stroke-width="9" stroke-linejoin="round"/><path d="M-80,100 Q-90,0 0,-30 Q80,0 80,100" fill="#1a120c" stroke="#000" stroke-width="6"/></svg>',
+  gloves: m => '<svg viewBox="-420 -150 840 300"><g stroke="#000" stroke-width="8" stroke-linejoin="round" fill="' + m + '"><path d="M-190,120 L-190,10 L-215,-60 L-185,-70 L-165,-10 L-165,-110 L-140,-110 L-135,-20 L-125,-120 L-100,-118 L-100,-15 L-85,-100 L-62,-96 L-70,20 L-60,120 Z"/><path d="M60,120 L50,20 L42,-96 L65,-100 L80,-15 L80,-118 L105,-120 L115,-20 L120,-110 L145,-110 L145,-10 L165,-70 L195,-60 L170,10 L170,120 Z"/></g><path d="M-190,95 L-60,95 M60,95 L170,95" stroke="#3b2414" stroke-width="14"/></svg>',
+  boots: m => '<svg viewBox="-420 -150 840 300"><g stroke="#000" stroke-width="8" stroke-linejoin="round" fill="' + m + '"><path d="M-200,-120 L-110,-120 L-110,60 L-30,80 L-30,120 L-210,120 Z"/><path d="M40,-120 L130,-120 L130,60 L210,80 L210,120 L30,120 Z"/></g><path d="M-210,108 L-30,108 M30,108 L210,108" stroke="#2a1c12" stroke-width="16"/></svg>',
   ring: m => '<svg viewBox="-420 -110 840 220"><ellipse cx="0" cy="14" rx="78" ry="70" fill="none" stroke="#000" stroke-width="34"/><ellipse cx="0" cy="14" rx="78" ry="70" fill="none" stroke="' + m + '" stroke-width="22"/><path d="M-22,-62 L0,-92 L22,-62 L0,-44 Z" fill="#cfe8ff" stroke="#000" stroke-width="6"/></svg>',
 };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

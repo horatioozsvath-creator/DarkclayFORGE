@@ -1,16 +1,16 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=6';
-import * as R from './rules.js?v=6';
-import * as Sh from './shop.js?v=6';
-import * as St from './staff.js?v=6';
-import * as Rm from './room.js?v=6';
-import * as G from './growth.js?v=6';
-import { decodeCard, linkFor } from './share.js?v=6';
-import * as Snd from './sound.js?v=6';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=6';
-import { card, ART } from './card.js?v=6';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=6';
-import { load, store } from './save.js?v=6';
+import { KINDS, KC, TIERS, FORGE, STATIONS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=7';
+import * as R from './rules.js?v=7';
+import * as Sh from './shop.js?v=7';
+import * as St from './staff.js?v=7';
+import * as Rm from './room.js?v=7';
+import * as G from './growth.js?v=7';
+import { decodeCard, linkFor } from './share.js?v=7';
+import * as Snd from './sound.js?v=7';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=7';
+import { card, ART } from './card.js?v=7';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=7';
+import { load, store } from './save.js?v=7';
 
 const $ = id => document.getElementById(id);
 const rng = Math.random;
@@ -36,8 +36,9 @@ const levelFor = id => R.levelOf((save.trades[id] || {}).xp || 0);
 const lvl = () => levelFor(pat).level;
 const picks = () => save.picks[pat] || (save.picks[pat] = PATTERNS[pat].parts.map(() => 0));
 const rwCard = () => rw && save.cards.find(c => c.id === rw.id);
+const stn = () => S ? S.station : R.stationOf(pat);
 const benchPicks = () => rw ? R.srcOf(rwCard()).picks : picks();
-const benchName = () => rw ? TIERS[rw.from].name + ' ' + rwCard().name : S.metal.name + ' ' + PATTERNS[pat].name;
+const benchName = () => rw ? TIERS[rw.from].name + ' ' + rwCard().name : (S.metal.adj || S.metal.name) + ' ' + PATTERNS[pat].name;
 const HUBS = ['home', 'shop', 'supp', 'staff'];
 const hour = () => Sh.hourOf(Date.now());
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -105,14 +106,26 @@ function tip(key, before, parent) {
 function toHome() {
   clearTimers(); S = null; rescueCheck(); show('home'); coins();
   $('maker').value = save.maker;
-  $('patterns').innerHTML = Object.entries(PATTERNS).map(([id, p]) => {
+  const patBtn = ([id, p]) => {
     const l = levelFor(id), n = save.cards.filter(c => c.pattern === id).length;
-    return '<button class="pat" data-p="' + id + '"><div class="art">' + ART[p.art]('#c9c5be') + '</div><b>' + p.name + '</b>'
+    return '<button class="pat" data-p="' + id + '"><div class="art">' + ART[p.art](p.station ? '#a07850' : '#c9c5be') + '</div><b>' + p.name + '</b>'
       + '<div class="lv">TRADE ' + l.level + '<span>' + (l.need ? l.into + ' / ' + l.need : 'MASTERED') + '</span></div>'
       + '<div class="xp"><i style="width:' + (l.need ? Math.round(l.into / l.need * 100) : 100) + '%"></i></div>'
       + '<div class="lv"><span>' + n + ' MADE</span></div></button>';
+  };
+  $('patterns').innerHTML = Object.values(STATIONS).map(st => {
+    const pats = Object.entries(PATTERNS).filter(([, p]) => (p.station || 'forge') === st.id);
+    const head = '<h3 class="stationhead">' + st.word + '</h3>';
+    if (Rm.owns(save, st.id)) return head + pats.map(patBtn).join('');
+    return head + '<div class="setup"><b>Set up a ' + st.name.toLowerCase() + '</b><span>' + pats.map(([, p]) => p.trade.toLowerCase()).join(', ').replace(/^./, x => x.toUpperCase()) + ', from hides. ' + st.twist + '</span>'
+      + '<button class="seg go" data-station="' + st.id + '"' + (save.coins < st.cost ? ' disabled' : '') + '>SET IT UP · ' + st.cost + ' c</button><span id="stNote-' + st.id + '"></span></div>';
   }).join('');
-  $('patterns').querySelectorAll('button').forEach(b => b.onclick = () => { rw = null; pat = b.dataset.p; toPrepare(); });
+  $('patterns').querySelectorAll('.pat').forEach(b => b.onclick = () => { rw = null; pat = b.dataset.p; toPrepare(); });
+  $('patterns').querySelectorAll('[data-station]').forEach(b => b.onclick = () => {
+    const r = Rm.buyStation(save, b.dataset.station);
+    if (r.item) { store(save); coins(); Snd.play('level'); if (dio) dio.setRoom(save.room, save); toHome(); }
+    else $('stNote-' + b.dataset.station).textContent = 'Not yet: ' + r.why + '.';
+  });
   $('homeFound').textContent = save.found.length + ' OF ' + Object.keys(FOUND).length + ' FOUND';
   $('homeBag').innerHTML = Object.entries(FOUND).map(([id, f]) => save.found.includes(id)
     ? '<button tabindex="-1" title="' + f.name + ': ' + f.line + '"><div style="aspect-ratio:3/4">' + bagLook(id).face + '</div>' + f.short + '</button>'
@@ -185,7 +198,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=6').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=7').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(save.room, save); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -207,7 +220,7 @@ function dioTap(t) {
     } else if (t.item === picked) picked = null;
     renderDioBar(); return;
   }
-  if (t.kind === 'forge' || t.kind === 'anvil') toHome();
+  if (t.kind === 'forge' || t.kind === 'anvil' || t.kind === 'stretcher') toHome();
   else if (t.kind === 'shelf') $('slots2').scrollIntoView({ behavior: 'smooth', block: 'center' });
   else if (t.kind === 'counter' || t.person) (save.queue.length ? $('counterBox') : $('ledger')).scrollIntoView({ behavior: 'smooth', block: 'center' });
   else if (t.item) $('furnish').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -363,7 +376,7 @@ function renderOrder() {
     + '<div class="ask">' + esc(Sh.orderWord(o)).replace(/^./, x => x.toUpperCase()) + '</div>'
     + '<div class="note">Pays <span class="pays">' + o.pays + ' c</span>, twice what such a piece is worth, whatever you hand in.</div>'
     + (fit.length ? '<div class="pickgrid" style="margin-top:10px">' + fit.map(c => '<button data-deliver="' + c.id + '" aria-label="Deliver ' + esc(c.name) + '">' + card(c, { short: true, price: 'DELIVER' }) + '</button>').join('') + '</div>'
-      : '<div class="rbtns left"><button class="seg go" id="orderMake">MAKE ONE AT THE FORGE</button></div>');
+      : '<div class="rbtns left"><button class="seg go" id="orderMake">MAKE ONE AT ' + R.stationOf(o.pattern).word + '</button></div>');
   $('orderBody').querySelectorAll('[data-deliver]').forEach(b => b.onclick = () => {
     const c = save.cards.find(x => x.id === b.dataset.deliver);
     if (c.worth * 2 > o.pays * 1.5 && !confirm('The ' + c.name + ' is worth ' + c.worth + ' c. The order pays ' + o.pays + ' c. Hand it over?')) return;
@@ -436,13 +449,13 @@ function slotOpen(slot) {
 }
 function backOpen(id) {
   const c = save.cards.find(x => x.id === id), free = save.shelf.findIndex(e => !e);
-  const sv = Sh.salvageOf(c), cost = Sh.reworkCost(c), canRw = Sh.canRework(save, c), haveRw = Sh.canMake(save.mats, cost);
+  const sv = Sh.salvageOf(c), cost = Sh.reworkCost(c), canRw = Sh.canRework(save, c) && Rm.owns(save, R.stationOf(c.pattern).id), haveRw = Sh.canMake(save.mats, cost);
   const toTier = TIERS[R.reworkTo(TIERS.findIndex(t => t.id === c.tier))];
   let acts = free >= 0 ? '<button class="seg go" id="putUp">PUT IT ON THE SHELF · FAIR ' + Sh.priceAt(c, 'fair') + ' c</button>' : '<p>The shelf is full. Take something down, or buy another shelf.</p>';
   acts += (save.wall || []).length < G.wallSlots(save) ? '<button class="seg" id="hangIt">HANG IT ON THE WALL</button>' : '';
   if (save.order && Sh.fills(save.order, c)) acts += '<button class="seg go" id="deliverIt">DELIVER TO ' + esc(save.order.who.toUpperCase()) + ' · ' + save.order.pays + ' c</button>';
   acts += '<div class="row2">'
-    + (canRw ? '<button class="seg" id="reworkIt"' + (haveRw ? '' : ' disabled') + '>BACK IN THE FIRE · TO ' + toTier.name.toUpperCase() + ' · ' + cost.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') + '</button>' : '')
+    + (canRw ? '<button class="seg" id="reworkIt"' + (haveRw ? '' : ' disabled') + '>' + (R.stationOf(c.pattern).id === 'forge' ? 'BACK IN THE FIRE' : 'BACK ON THE FRAME') + ' · TO ' + toTier.name.toUpperCase() + ' · ' + cost.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') + '</button>' : '')
     + '<button class="seg" id="breakIt">BREAK IT DOWN · ' + (sv.length ? sv.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') : 'nothing worth keeping') + '</button></div>'
     + (canRw && !haveRw ? '<p>Back in the fire takes ' + cost.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') + '. You have ' + (save.mats[cost[0].mat] || 0) + '.</p>' : '');
   openLook(card(c), acts, false, c);
@@ -576,7 +589,7 @@ function toPrepare() {
   // a part that the trade hasn't opened yet falls back to the first
   if (!rw) save.picks[pat] = picks().map((k, i) => (opts[i].opts[k] && (opts[i].opts[k].level || 1) <= l.level) ? k : 0);
   newWorking(); show('prepare');
-  $('prepK').textContent = rw ? 'THE FORGE · BACK IN THE FIRE' : 'THE FORGE · PREPARE';
+  $('prepK').textContent = stn().word + (rw ? (stn().id === 'forge' ? ' · BACK IN THE FIRE' : ' · BACK ON THE FRAME') : ' · PREPARE');
   $('prepT').textContent = benchName();
   $('tradeWord').textContent = p.trade.toUpperCase() + ' · TRADE ' + l.level + (l.need ? ' · ' + l.into + ' / ' + l.need : '');
   $('makeIt').innerHTML = rw ? '<b>LEAVE IT</b>Keep it ' + TIERS[rw.from].name + '. Back to the shop.' : '<b>MAKE IT</b>At once, at the plain odds. It teaches nothing.';
@@ -597,13 +610,13 @@ function pieceKv() {
     $('pieceKv').innerHTML = '<span>Now</span><b style="color:' + TIERC[rw.from] + '">' + TIERS[rw.from].name + '</b>'
       + '<span>To ' + to + '</span><b>fill the bar and quench: it goes up to ' + to + ', no roll. It keeps what it carries and takes one more.</b>'
       + '<span>The risk</span><b>a second crack after it takes drops it a tier' + (rw.from === 0 ? ' (a Common piece comes out flawed)' : '') + '</b>'
-      + '<span>Heat</span><b>' + FORGE.twist + ' The band now ' + S.band[0] + '–' + S.band[1] + '.</b>'
+      + '<span>' + stn().meter.replace('THE ', '').replace(/^./, x => x) + '</span><b>' + stn().twist + ' The band now ' + S.band[0] + '–' + S.band[1] + '.</b>'
       + '<span>Walk away</span><b>the piece comes out as it was; the bars are spent</b>';
     return;
   }
   $('pieceKv').innerHTML = '<span>Plain odds</span><b><span style="color:var(--t-fine)">Fine ' + Math.round(o.f) + ' %</span> · <span style="color:var(--t-rare)">Rare ' + Math.round(o.r) + ' %</span></b>'
     + '<span>Worked</span><b>up to Fine 70 % · Rare 40 %</b>'
-    + '<span>Heat</span><b>' + FORGE.twist + ' The band now ' + S.band[0] + '–' + S.band[1] + '.</b>'
+    + '<span>' + stn().meter.charAt(0) + stn().meter.slice(1).toLowerCase() + '</span><b>' + stn().twist + ' The band now ' + S.band[0] + '–' + S.band[1] + '.</b>'
     + '<span>The pick</span><b>' + (l >= 5 ? 'WHITE HEAT (8 in a row with no crack) or a TRUE' : 'WHITE HEAT or a TRUE · both open at trade 5') + '</b>'
     + '<span>A new tile</span><b>a Fine or better working with no crack, or WHITE HEAT</b>'
     + (l < 3 ? '<span>Learning</span><b>no cracks until trade 3; struck cold, a strike does nothing</b>' : '');
@@ -626,7 +639,7 @@ function partSegs() {
       const b = document.createElement('button'), locked = (o.level || 1) > l;
       b.className = 'seg'; b.textContent = o.name + (o.rare ? ' ✶' : '') + (locked ? ' · TRADE ' + o.level : '');
       b.disabled = locked; b.setAttribute('aria-pressed', String(k === ch[i]));
-      b.onclick = () => { ch[i] = k; store(save); newWorking(); $('prepT').textContent = S.metal.name + ' ' + PATTERNS[pat].name; partSegs(); renderPrep(); };
+      b.onclick = () => { ch[i] = k; store(save); newWorking(); $('prepT').textContent = (S.metal.adj || S.metal.name) + ' ' + PATTERNS[pat].name; partSegs(); renderPrep(); };
       row.querySelector('.group').appendChild(b);
     });
   });
@@ -700,12 +713,16 @@ function toWork() {
   $('workT').textContent = benchName();
   $('cShape').textContent = rw ? '1 · TO ' + TIERS[R.reworkTo(rw.from)].name.toUpperCase() : '1 · SHAPE';
   setFireBtn();
-  popLabel({ label: 'HEAT IT', gain: FORGE.fire, why: 'then strike in the gold band', colour: '#e8c464' });
+  const st = stn();
+  $('workK').textContent = st.word + ' · WORK IT';
+  $('cDone').textContent = '3 · ' + st.close;
+  $('bStrike').innerHTML = st.strike + '<small>SPACE · TAP THE STAGE</small>';
+  popLabel({ label: st.heatIt, gain: st.fire, why: 'then ' + st.strike.toLowerCase() + ' in the ' + st.band_, colour: '#e8c464' });
   render();
   tip('work', null, $('vWork'));
 }
 function setFireBtn() {
-  $('bFire').innerHTML = (S.inFire ? FORGE.out : FORGE.fire) + '<small>' + (S.inFire ? 'R' : 'R · RESHUFFLES THE STRIP') + '</small>';
+  $('bFire').innerHTML = (S.inFire ? S.station.out : S.station.fire) + '<small>' + (S.inFire ? 'R' : 'R · RESHUFFLES THE STRIP') + '</small>';
   $('bFire').setAttribute('aria-pressed', S.inFire ? 'true' : 'false');
 }
 function showPop(html, size) {
@@ -739,7 +756,7 @@ function strike() {
   lastStrike = now;
   const ev = R.strike(S);
   if (!ev) return;
-  Snd.play(ev.dead ? 'dead' : ev.k);
+  Snd.play(S.station.id === 'stretcher' ? (ev.dead ? 'dead' : ev.k === 'CRACK' ? 'tear' : ev.k === 'TRUE' || ev.k === 'FOUND' ? ev.k : 'stitch') : ev.dead ? 'dead' : ev.k);
   setFireBtn(); playPops(ev.pops);
   view.flash = 1; view.sparks.push(...sparksFor(ev.k, ev.dead));
   render();
@@ -748,14 +765,14 @@ function strike() {
 function toggleFire() {
   if (screen !== 'work' || !S || S.done || paused) return;
   const r = R.toggleFire(S);
-  if (S.inFire) Snd.play('fire');
+  if (S.inFire) Snd.play(S.station.id === 'stretcher' ? 'soak' : 'fire');
   if (r && r.shuffled) popLabel({ label: 'SHUFFLED', gain: 'BACK IN THE FIRE · EVERY TILE RETURNS', size: 'bigpop', colour: '#e8c464' });
   setFireBtn(); render();
 }
 function quench() {
   if (screen !== 'work' || !S || S.done || paused) return;
   if (S.shape < 100) { popLabel({ label: 'NOT YET', gain: 'FILL THE SHAPE FIRST', size: 'bad', colour: '#8e9bb0' }); return; }
-  Snd.play('quench'); finish('quench');
+  Snd.play(S.station.id === 'stretcher' ? 'set' : 'quench'); finish('quench');
 }
 function toggleSheet(on) {
   if (screen !== 'work' || !S || S.done) return;
@@ -783,7 +800,7 @@ function render() {
   $('oCommon').textContent = Math.round(o.c); $('oFine').textContent = Math.round(o.f); $('oRare').textContent = Math.round(o.r); $('oCracks').textContent = S.cracks;
   $('flags').textContent = [S.twin ? 'TWIN READY' : '', S.warden ? 'WARDEN READY' : '', S.frost ? 'FROST SIDE' : ''].filter(Boolean).join(' · ');
   $('bQuench').disabled = shaping || S.done;
-  $('bQuench').innerHTML = FORGE.close + '<small>' + (shaping ? (rw ? 'ONCE IT TAKES' : 'ONCE IT\'S SHAPED') : 'Q · WHENEVER YOU CHOOSE') + '</small>';
+  $('bQuench').innerHTML = S.station.close + '<small>' + (shaping ? (rw ? 'ONCE IT TAKES' : 'ONCE IT\'S SHAPED') : 'Q · WHENEVER YOU CHOOSE') + '</small>';
   const L = R.left(S), cn = R.counts(L), tot = L.length;
   $('leftWord').textContent = tot + ' OF ' + S.rack.length + ' FACE DOWN';
   const nowOdds = {}; KINDS.forEach(k => nowOdds[k] = tot ? Math.round(cn[k] / tot * 100) : 0);
@@ -809,9 +826,11 @@ function renderSheet() {
 function hint() {
   let h = '';
   if (!S.done) {
-    if (S.inFire) h = S.meter >= S.over ? '<i>Past white.</i> Take it out before it scales.' : S.meter >= S.band[0] ? '<i>In the band.</i> Strike: it comes out on the first strike.' : 'Heating… wait for the gold band.';
-    else if (S.meter < S.band[0]) h = 'Below the band: <i>' + FORGE.fire + '</i> (every tile returns).';
-    else h = S.shape < 100 ? '<i>In the band.</i> Strike. It cools while you wait.' : '<i>It\'s made.</i> Each strike pushes it. Read what\'s left face down, then QUENCH.';
+    const st = S.station, wet = st.wetTear;
+    if (S.inFire) h = S.meter >= S.over ? '<i>Past white.</i> Take it out before it scales.' : wet && S.meter > S.band[1] ? '<i>Soaked.</i> Take it out and let it dry back into the band, or a stitch will tear.' : S.meter >= S.band[0] ? '<i>In the band.</i> ' + (wet ? 'Stitch' : 'Strike') + ': it comes out on the first ' + (wet ? 'stitch' : 'strike') + '.' : (wet ? 'Soaking…' : 'Heating…') + ' wait for the ' + st.band_ + '.';
+    else if (S.meter < S.band[0]) h = (wet ? 'Too dry: <i>' : 'Below the band: <i>') + st.fire + '</i> (every tile returns).';
+    else if (wet && S.meter > S.band[1]) h = '<i>Too wet.</i> Let it dry a moment: a stitch now will tear.';
+    else h = S.shape < 100 ? '<i>In the band.</i> ' + (wet ? 'Stitch. It dries as you work.' : 'Strike. It cools while you wait.') : '<i>It\'s made.</i> Each ' + (wet ? 'stitch' : 'strike') + ' pushes it. Read what\'s left face down, then ' + st.close + '.';
   }
   if ($('hint').innerHTML !== h) $('hint').innerHTML = h;
 }
@@ -853,7 +872,7 @@ function complete(res, picked) {
     : res.dropped ? (res.flawed ? 'A second crack after it was made. It holds together, flawed, and is worth less.' : 'A second crack after it was made dropped it a tier.')
     : 'WORKED +' + res.worked + ' % · it had Fine ' + Math.round(res.odds.f) + ' % · Rare ' + Math.round(res.odds.r) + ' %';
   $('rWhy').textContent = res.instant ? 'No working, no pick, no found tile, no practice.'
-    : (res.cracks ? res.cracks + ' crack' + (res.cracks > 1 ? 's' : '') : 'No cracks') + ' · ' + res.strikes + ' strikes · ' + res.heats + ' heat' + (res.heats > 1 ? 's' : '');
+    : (res.cracks ? res.cracks + ' crack' + (res.cracks > 1 ? 's' : '') : 'No cracks') + ' · ' + res.strikes + (R.stationOf(pat).id === 'stretcher' ? ' stitches · ' + res.heats + ' soak' : ' strikes · ' + res.heats + ' heat') + (res.heats > 1 ? 's' : '');
   // practice
   const tEl = $('rTrade'); tEl.hidden = xp === 0; tEl.className = 'gift plain';
   if (xp) {
