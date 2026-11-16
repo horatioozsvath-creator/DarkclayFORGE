@@ -22,7 +22,7 @@ const H = 3600000, lvl = id => R.levelOf((save.trades[id] || {}).xp || 0).level,
 function choose(hour) {
   let best = null;
   for (const id of Object.keys(PATTERNS)) {
-    if (!Rm.owns(save, PATTERNS[id].station || 'forge')) continue;
+    if (!Rm.owns(save, PATTERNS[id].station || 'forge') || PATTERNS[id].makes) continue;
     const metals = R.partOptions(id)[0].opts;
     metals.forEach((m, mi) => {
       if ((m.level || 1) > lvl(id)) return;
@@ -60,6 +60,7 @@ function spend(hour) {
   if (!St.clerkOf(save)) { const c = St.candidates(save, Math.floor(t / H)).find(x => x.role === 'clerk'); if (c && save.coins - St.hireFee(c) > reserve + 60) { St.hire(save, c); spent.staff += St.hireFee(c); note('hired ' + c.name + ' (clerk), ' + St.hireFee(c) + ' c'); } }
   for (const id of ['anvil', 'hammer1', 'bellows', 'gloves', 'firebrick', 'hammer2']) if (G.canBuyTool(save, id).ok && save.coins - TOOLS[id].cost > reserve + 100) { G.buyTool(save, id); spent.tools += TOOLS[id].cost; note('tool: ' + TOOLS[id].name); }
   if (!Rm.owns(save, 'stretcher') && save.coins > 1200 + reserve + 300) { if (Rm.buyStation(save, 'stretcher').item) { spent.room += 1200; note('set up the stretcher'); } }
+  if (Rm.owns(save, 'kettle') && !Rm.owns(save, 'glass') && save.coins > 3500 + reserve + 300) { if (Rm.buyStation(save, 'glass').item) { spent.room += 3500; note('set up the glass'); } }
   if (Rm.owns(save, 'bowbench') && !Rm.owns(save, 'kettle') && save.coins > 1500 + reserve + 300) { if (Rm.buyStation(save, 'kettle').item) { spent.room += 1500; note('set up the kettle'); } }
   if (Rm.owns(save, 'stretcher') && !Rm.owns(save, 'bowbench') && save.coins > 2000 + reserve + 300) { if (Rm.buyStation(save, 'bowbench').item) { spent.room += 2000; note('set up the bench'); } }
   const next = Rm.nextSize(save.room); if (next && save.coins - next.cost > reserve + 200) { Rm.expand(save); spent.room += next.cost; note('a bigger shop: ' + next.w + '×' + next.d); }

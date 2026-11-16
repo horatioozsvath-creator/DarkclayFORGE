@@ -1,16 +1,16 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=9';
-import * as R from './rules.js?v=9';
-import * as Sh from './shop.js?v=9';
-import * as St from './staff.js?v=9';
-import * as Rm from './room.js?v=9';
-import * as G from './growth.js?v=9';
-import { decodeCard, linkFor } from './share.js?v=9';
-import * as Snd from './sound.js?v=9';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=9';
-import { card, ART } from './card.js?v=9';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=9';
-import { load, store } from './save.js?v=9';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=10';
+import * as R from './rules.js?v=10';
+import * as Sh from './shop.js?v=10';
+import * as St from './staff.js?v=10';
+import * as Rm from './room.js?v=10';
+import * as G from './growth.js?v=10';
+import { decodeCard, linkFor } from './share.js?v=10';
+import * as Snd from './sound.js?v=10';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=10';
+import { card, ART } from './card.js?v=10';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=10';
+import { load, store } from './save.js?v=10';
 
 const $ = id => document.getElementById(id);
 const rng = Math.random;
@@ -87,6 +87,7 @@ const HINTS = {
   prepare: 'This is your <i>strip</i>: the clay tiles you\'ll turn over as you strike. GOOD and GREAT shape the piece, a CRACK marks it. When you\'re ready, <i>WORK IT</i>.',
   work: 'Put it <i>INTO THE FIRE</i> (R), wait for the <i>gold band</i>, then <i>STRIKE</i> (Space, or tap). Fill SHAPE, then <i>QUENCH</i> (Q).',
   'work-bowbench': 'Put the stave <i>INTO THE STEAM</i> (R) until it\'s <i>pliant</i>, then <i>BEND</i> (Space, or tap) <i>with the grain</i>: watch the arrows under the bench, and wait while it runs across. Fill SHAPE, then <i>STRING</i> it (Q).',
+  'work-glass': 'Take a gather from the <i>GLORY HOLE</i> (R) until it\'s <i>soft</i>, then <i>BLOW</i> (Space, or tap). Too stiff, it shatters; too soft, it sags. It cools fastest of all. Fill SHAPE, then <i>SET</i> (Q).',
   'work-kettle': 'Hold it at a <i>simmer</i>. A stir doesn\'t cool it: it settles by itself, and <i>STOKE</i> (R) raises it. <i>STIR</i> (Space, or tap) in the band; too hot, it boils over. Fill SHAPE, then <i>STOP</i> (Q). It makes a batch of three.',
   'work-stretcher': 'Put the hide <i>IN THE SOAK</i> (R) until it\'s <i>supple</i>, then <i>STITCH</i> (Space, or tap). Too dry does nothing, too wet tears; it dries as you work. Fill SHAPE, then <i>SET</i> (Q).',
   result: 'Every piece becomes a card. Put it <i>ON THE SHELF</i> and customers will buy it.',
@@ -204,7 +205,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=9').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=10').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(save.room, save); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -762,7 +763,7 @@ function strike() {
   lastStrike = now;
   const ev = R.strike(S);
   if (!ev) return;
-  const sid = S.station.id, soft = { stretcher: ['stitch', 'tear'], bowbench: ['bend', 'split'], kettle: ['stir', 'boil'] }[sid];
+  const sid = S.station.id, soft = { stretcher: ['stitch', 'tear'], bowbench: ['bend', 'split'], kettle: ['stir', 'boil'], glass: ['blow', 'shatter'] }[sid];
   Snd.play(soft ? (ev.dead ? 'dead' : ev.k === 'CRACK' ? soft[1] : ev.k === 'TRUE' || ev.k === 'FOUND' ? ev.k : soft[0]) : ev.dead ? 'dead' : ev.k);
   setFireBtn(); playPops(ev.pops);
   view.flash = 1; view.sparks.push(...sparksFor(ev.k, ev.dead));
@@ -780,7 +781,7 @@ function toggleFire() {
 function quench() {
   if (screen !== 'work' || !S || S.done || paused) return;
   if (S.shape < 100) { popLabel({ label: 'NOT YET', gain: 'FILL THE SHAPE FIRST', size: 'bad', colour: '#8e9bb0' }); return; }
-  Snd.play({ stretcher: 'set', bowbench: 'twang', kettle: 'set' }[S.station.id] || 'quench'); finish('quench');
+  Snd.play({ stretcher: 'set', bowbench: 'twang', kettle: 'set', glass: 'ring' }[S.station.id] || 'quench'); finish('quench');
 }
 function toggleSheet(on) {
   if (screen !== 'work' || !S || S.done) return;
@@ -836,8 +837,9 @@ function hint() {
   if (!S.done) {
     const st = S.station, wet = st.wetTear, Verb = st.strike.charAt(0) + st.strike.slice(1).toLowerCase(), verb = st.strike.toLowerCase();
     if (S.inFire) h = S.meter >= S.over ? '<i>Past white.</i> Take it out before it scales.' : wet && S.meter > S.band[1] ? '<i>Soaked.</i> Take it out and let it dry back into the band, or a stitch will tear.' : S.meter >= S.band[0] ? '<i>In the band.</i> ' + Verb + ': it comes out on the first ' + verb + '.' : (wet ? 'Soaking…' : 'Heating…') + ' wait for the ' + st.band_ + '.';
-    else if (S.meter < S.band[0]) h = (wet ? 'Too dry: <i>' : st.noTake ? 'Too cool: <i>' : 'Below the band: <i>') + st.fire + '</i> (every tile returns).';
+    else if (S.meter < S.band[0]) h = (wet ? 'Too dry: <i>' : st.noTake ? 'Too cool: <i>' : st.shatter ? 'Too stiff: <i>' : 'Below the band: <i>') + st.fire + '</i> (every tile returns).';
     else if (st.boilOver && S.meter > S.band[1]) h = '<i>Rolling.</i> Let it settle: a stir now boils over.';
+    else if (st.sag && S.meter > S.band[1]) h = '<i>Running.</i> Too soft: a blow now sags. Let it cool a moment.';
     else if (wet && S.meter > S.band[1]) h = '<i>Too wet.</i> Let it dry a moment: a stitch now will tear.';
     else if (R.acrossGrain(S)) h = '<i>Across the grain.</i> Wait for it to turn: a bend now does nothing.';
     else h = S.shape < 100 ? '<i>In the band.</i> ' + Verb + (wet ? '. It dries as you work.' : st.stoke ? '. It settles by itself: STOKE when it cools.' : '. It cools while you wait.') : '<i>It\'s made.</i> Each ' + verb + ' pushes it. Read what\'s left face down, then ' + st.close + '.';
@@ -864,7 +866,11 @@ function finish(how) {
 function complete(res, picked) {
   const before = levelFor(pat);
   let piece;
-  if (res.rework) {   // the same piece, out of the fire: in the back where it was
+  const yields = R.yieldOf(pat, res.tier);
+  if (yields) {   // the glass's bottles: into the store room, no card
+    save.mats[yields.mat] = (save.mats[yields.mat] || 0) + yields.n; save.made++;
+    piece = { name: yields.n + ' ' + MATS[yields.mat].name.toLowerCase() + 's', tier: TIERS[res.tier].id, worth: 0, id: null };
+  } else if (res.rework) {   // the same piece, out of the fire: in the back where it was
     const old = rwCard(), i = save.cards.indexOf(old);
     piece = R.remakePiece({ card: old, res, picked, rng, now: Date.now() });
     save.cards[i] = piece; rw = null;
@@ -876,7 +882,7 @@ function complete(res, picked) {
   const tr = save.trades[pat] || (save.trades[pat] = { xp: 0 }); tr.xp += xp;
   const after = levelFor(pat), p = PATTERNS[pat];
   $('rPick').hidden = true; $('rDone').hidden = false;
-  $('rCard').innerHTML = card(piece);
+  $('rCard').innerHTML = yields ? '<div class="yield"><div class="tier" style="color:' + TIERC[res.tier] + '">' + TIERS[res.tier].name.toUpperCase() + ' BLOWING</div><div class="cd-art">' + ART.draught('#cfe8e8') + '</div><h3>' + yields.n + ' bottles</h3><p>Into the store room for the kettle. You have ' + save.mats[yields.mat] + '.</p></div>' : card(piece);
   $('rLine').innerHTML = res.rework ? (res.dropped ? 'A second crack after it took. It came out ' + TIERS[res.tier].name + (res.flawed ? ', flawed.' : '.') : 'It took. ' + TIERS[res.from].name + ' to ' + TIERS[res.tier].name + '.')
     : res.instant ? 'Made at once at the plain odds: Fine ' + res.odds.f + ' % · Rare ' + res.odds.r + ' %.'
     : res.dropped ? (res.flawed ? 'A second crack after it was made. It holds together, flawed, and is worth less.' : 'A second crack after it was made dropped it a tier.')
@@ -910,13 +916,13 @@ function complete(res, picked) {
       + FOUND[id].line + '. In your bag now (' + save.found.length + ' of ' + Object.keys(FOUND).length + ').</span></div>';
     gEl.hidden = false;
   }
-  const free = save.shelf.findIndex(e => !e);
+  const free = yields ? -1 : save.shelf.findIndex(e => !e);
   $('rShelf').hidden = free < 0;
   $('rShelf').textContent = 'ON THE SHELF · ' + Sh.priceAt(piece, 'fair') + ' c';
   $('rShelf').onclick = () => { Sh.place(save, piece.id, free); store(save); toShop(); };
   if (!store(save)) $('rWhy').textContent += ' · This browser would not save it.';
   const sb = $('rDone').querySelector('.rbtns'); sb.querySelectorAll('.sharebtn').forEach(x => x.remove());
-  const shb = shareBtn(piece, $('rDone')); shb.classList.add('sharebtn'); sb.appendChild(shb);
+  if (!yields) { const shb = shareBtn(piece, $('rDone')); shb.classList.add('sharebtn'); sb.appendChild(shb); }
   $('rAgain').focus({ preventScroll: true }); $('result').scrollTop = 0;
   if (!res.rework) tip('result', $('rDone').querySelector('.rbtns'));
 }

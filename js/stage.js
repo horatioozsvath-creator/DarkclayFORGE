@@ -1,5 +1,5 @@
 // The stage: the fire, the anvil, the piece taking shape, the hammer and the heat meter, drawn on a 1280 × 720 canvas.
-import { FORGE, KC } from './data.js?v=9';
+import { FORGE, KC } from './data.js?v=10';
 
 // two layouts: wide (a desktop, a phone on its side) and tall (a phone held upright), the same drawing moved and scaled
 export const LAYOUTS = {
@@ -32,6 +32,7 @@ export function paint(g, S, view, dt, L = LAYOUTS.wide) {
   if (c.id === 'stretcher') drawStretcher(g, S, view, L, heat, now, c);
   else if (c.id === 'bowbench') drawBench(g, S, view, L, heat, now, c);
   else if (c.id === 'kettle') drawKettle(g, S, view, L, heat, now, c);
+  else if (c.id === 'glass') drawGlass(g, S, view, L, heat, now, c);
   else drawForge(g, S, view, L, heat, now, c);
   for (const s of view.sparks) { if (!s.init) { s.x = L.ax; s.y = L.ay - (c.id === 'stretcher' ? 200 : 80) * L.sc; s.init = 1; } s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 900 * dt; s.t -= dt; }
   view.sparks = view.sparks.filter(s => s.t > 0);
@@ -304,6 +305,62 @@ function drawKettle(g, S, view, L, heat, now, c) {
   g.restore();
 }
 
+// the glass: the glory hole where the fire was, the marver where the anvil was, the gather on its pipe blown into its shape
+// the gather: each point of the shape, pulled in to a round blob along its own direction, so the blowing swells outward
+const blobOf = to => to.map(([x, y]) => { const a = Math.atan2(y, x); return [Math.cos(a) * 70, Math.sin(a) * 60]; });
+const GLASSES = {
+  lens: Array.from({ length: 12 }, (_, i) => { const a = i / 12 * Math.PI * 2; return [Math.cos(a) * 30, Math.sin(a) * 110]; }),
+  goblet: [[-90, -110], [-40, -110], [40, -110], [90, -110], [80, -20], [20, 20], [16, 90], [70, 110], [-70, 110], [-16, 90], [-20, 20], [-80, -20]],
+  pane: [[-150, -100], [-50, -100], [50, -100], [150, -100], [150, 0], [150, 100], [50, 100], [-50, 100], [-150, 100], [-150, 0], [-150, -60], [-150, -80]],
+  bottles: [[-20, -120], [20, -120], [20, -70], [60, -40], [70, 20], [70, 110], [0, 115], [-70, 110], [-70, 20], [-60, -40], [-20, -70], [-20, -100]],
+};
+function drawGlass(g, S, view, L, heat, now, c) {
+  const t = Math.min(1, S.shape / 100), inHole = S.inFire, to = GLASSES[S.cfg.patternId] || GLASSES.lens;
+  const fx = 150, fy = 470;
+  g.save(); g.translate(L.fx - fx, L.fy - fy);   // the glory hole
+  const glow = g.createRadialGradient(160, 480, 10, 160, 480, 240);
+  glow.addColorStop(0, 'rgba(255,150,60,' + (inHole ? 0.65 : 0.3) + ')'); glow.addColorStop(1, 'rgba(255,150,60,0)');
+  g.fillStyle = glow; g.fillRect(0, 220, 420, 500);
+  g.fillStyle = '#4a3a34'; g.strokeStyle = '#0e0b09'; g.lineWidth = 6;
+  g.beginPath(); g.moveTo(40, 640); g.lineTo(40, 420); g.quadraticCurveTo(160, 330, 280, 420); g.lineTo(280, 640); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle = inHole ? '#ffd27a' : '#f08a2a'; g.beginPath(); g.ellipse(160, 480, 52, 44, 0, 0, 7); g.fill(); g.stroke();
+  g.fillStyle = 'rgba(236,224,198,.6)'; g.font = '800 22px "Alegreya Sans", sans-serif'; g.textAlign = 'center';
+  g.fillText('THE GLORY HOLE', 160, 680);
+  g.restore();
+
+  const ax = 680, ay = 520;
+  const onMarver = () => { g.translate(L.ax, L.ay); g.scale(L.sc, L.sc); g.translate(-ax, -ay); };
+  g.save(); onMarver();   // the marver: a flat iron slab on a stand
+  g.fillStyle = '#2a2420'; g.strokeStyle = '#0e0b09'; g.lineWidth = 5;
+  g.fillRect(ax - 260, ay - 30, 520, 34); g.strokeRect(ax - 260, ay - 30, 520, 34);
+  g.fillStyle = '#6e6b70'; g.fillRect(ax - 250, ay - 40, 500, 12);
+  for (const x of [ax - 220, ax + 190]) { g.fillStyle = '#2a2420'; g.fillRect(x, ay + 4, 30, 120); g.strokeRect(x, ay + 4, 30, 120); }
+  g.restore();
+
+  // the gather, blown toward its shape; it glows with the heat and sags when it runs
+  const col = mix(c.colours, heat), cobalt = S.parts && S.parts[2] && S.parts[2].name === 'Cobalt';
+  g.save();
+  if (inHole) { g.translate(L.fx - fx, L.fy - fy); g.translate(160, 480); g.scale(0.4, 0.4); }
+  else { onMarver(); g.translate(ax - 40, ay - 170); if (view.flash > 0) g.scale(1 + view.flash * 0.06, 1 - view.flash * 0.04); }
+  if (view.ring > 0) { g.save(); g.strokeStyle = view.ringC; g.globalAlpha = view.ring; g.lineWidth = 10 * view.ring; g.beginPath(); g.arc(0, 0, 120 + (1 - view.ring) * 380, 0, 7); g.stroke(); g.restore(); }
+  if (!inHole) {   // the blowpipe, out to the right
+    g.strokeStyle = '#0e0b09'; g.lineWidth = 16; g.beginPath(); g.moveTo(90, 0); g.lineTo(520, -60); g.stroke();
+    g.strokeStyle = '#8a8680'; g.lineWidth = 9; g.stroke();
+    if (t < 1) { g.save(); g.setLineDash([10, 8]); g.strokeStyle = 'rgba(232,196,100,.55)'; g.lineWidth = 3; g.beginPath(); to.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath(); g.stroke(); g.restore(); }
+  }
+  const sag = S.meter > S.band[1] ? (S.meter - S.band[1]) * 0.6 : 0;
+  g.shadowColor = S.white > 0 ? '#fff2c4' : col; g.shadowBlur = S.white > 0 ? 60 : 20 + heat * 30;
+  g.fillStyle = S.white > 0 ? '#fff6dc' : col; g.globalAlpha = 0.92; g.strokeStyle = '#0e0b09'; g.lineWidth = 5;
+  const BLOB = blobOf(to);
+  g.beginPath(); BLOB.forEach((p, i) => { const q = to[i], x = lerp(p[0], q[0], t), y = lerp(p[1], q[1], t) + (y0 => y0 > 0 ? sag * (y0 / 110) : 0)(lerp(p[1], q[1], t)); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+  g.closePath(); g.fill(); g.globalAlpha = 1; g.stroke(); g.shadowBlur = 0;
+  if (cobalt) { g.fillStyle = 'rgba(40,80,200,.35)'; g.fill(); }
+  g.fillStyle = 'rgba(255,255,255,.35)'; g.beginPath(); g.ellipse(-20, -30, 10, 26, 0.3, 0, 7); g.fill();
+  g.strokeStyle = '#120806'; g.lineWidth = 3;
+  S.crackMarks.forEach(r => { const x = -50 + r * 100; g.beginPath(); g.moveTo(x, -40); g.lineTo(x + 12, -10); g.lineTo(x - 8, 14); g.lineTo(x + 10, 40); g.moveTo(x + 12, -10); g.lineTo(x + 30, -16); g.stroke(); });
+  g.restore();
+}
+
 function drawMeter(g, S, L, heat, now, c) {
   // the meter, with the band to strike in
   const mx = L.mx, my = L.my, mh = 470, mw = 44;
@@ -319,7 +376,7 @@ function drawMeter(g, S, L, heat, now, c) {
   g.fillText(c.meter, mx + mw / 2, my - 18);
   g.textAlign = 'right'; g.font = '700 15px "Alegreya Sans", sans-serif'; g.fillStyle = 'rgba(185,170,140,.9)';
   c.labels.forEach(([v, l]) => g.fillText(l, mx - 24, my + mh - v / 100 * mh - 4));
-  g.save(); g.translate(mx + mw + 20, (by0 + by1) / 2); g.rotate(Math.PI / 2); g.textAlign = 'center'; g.fillStyle = '#e8c464'; g.font = '800 14px "Alegreya Sans", sans-serif'; g.fillText(c.id === 'stretcher' ? 'STITCH HERE' : c.id === 'bowbench' ? 'BEND HERE' : c.id === 'kettle' ? 'STIR HERE' : 'STRIKE HERE', 0, 0); g.restore();
+  g.save(); g.translate(mx + mw + 20, (by0 + by1) / 2); g.rotate(Math.PI / 2); g.textAlign = 'center'; g.fillStyle = '#e8c464'; g.font = '800 14px "Alegreya Sans", sans-serif'; g.fillText(c.id === 'stretcher' ? 'STITCH HERE' : c.id === 'bowbench' ? 'BEND HERE' : c.id === 'kettle' ? 'STIR HERE' : c.id === 'glass' ? 'BLOW HERE' : 'STRIKE HERE', 0, 0); g.restore();
   if (S.white > 0) { g.fillStyle = 'rgba(255,242,196,' + (0.1 + 0.06 * Math.sin(now / 90)) + ')'; g.fillRect(0, 0, L.W, L.H); }
 }
 

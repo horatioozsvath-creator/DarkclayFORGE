@@ -1,5 +1,5 @@
 // THE CARD: a piece of gear drawn as a collector's card framed by its tier (Darkclay Zero, docs/THE-CARD.md).
-import { TIERS } from './data.js?v=9';
+import { TIERS } from './data.js?v=10';
 
 const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
 // the picture of each kind of piece; m is the metal's tint
@@ -8,6 +8,9 @@ export const ART = {
   dagger: m => '<svg viewBox="-330 -70 650 140"><path d="M-120,-16 L250,-6 L300,0 L250,6 L-120,16 Z" fill="' + m + '" stroke="#000" stroke-width="7"/><rect x="-250" y="-13" width="110" height="26" rx="6" fill="#6a4a2a" stroke="#000" stroke-width="5"/><path d="M-140,-46 L-112,-46 L-112,46 L-140,46 Z" fill="#9a96a0" stroke="#000" stroke-width="5"/></svg>',
   axe: m => '<svg viewBox="-330 -90 650 180"><rect x="-300" y="-10" width="470" height="20" fill="#6a4a2a" stroke="#000" stroke-width="6"/><path d="M120,-12 L150,-80 Q230,-60 250,0 Q230,60 150,80 L120,12 Z" fill="' + m + '" stroke="#000" stroke-width="7"/></svg>',
   helm: m => '<svg viewBox="-420 -140 840 220"><path d="M-120,40 Q-130,-110 0,-120 Q130,-110 120,40 L90,60 L-90,60 Z" fill="' + m + '" stroke="#000" stroke-width="8"/><rect x="-14" y="-30" width="28" height="90" fill="rgba(0,0,0,.28)" stroke="#000" stroke-width="5"/></svg>',
+  lens: m => '<svg viewBox="-420 -130 840 260"><ellipse cx="0" cy="0" rx="110" ry="110" fill="' + m + '" fill-opacity=".55" stroke="#000" stroke-width="10"/><ellipse cx="0" cy="0" rx="124" ry="124" fill="none" stroke="#6a4a2a" stroke-width="14"/><ellipse cx="-36" cy="-40" rx="24" ry="44" fill="rgba(255,255,255,.4)" transform="rotate(30 -36 -40)"/><rect x="118" y="-12" width="150" height="24" fill="#6a4a2a" stroke="#000" stroke-width="6"/></svg>',
+  goblet: m => '<svg viewBox="-420 -140 840 280"><path d="M-90,-110 L90,-110 L80,-20 Q50,25 16,30 L16,90 L70,110 L-70,110 L-16,90 L-16,30 Q-50,25 -80,-20 Z" fill="' + m + '" fill-opacity=".6" stroke="#000" stroke-width="9" stroke-linejoin="round"/><path d="M-50,-90 Q-60,-40 -30,-10" stroke="rgba(255,255,255,.5)" stroke-width="10" fill="none" stroke-linecap="round"/></svg>',
+  pane: m => '<svg viewBox="-420 -130 840 260"><rect x="-160" y="-110" width="320" height="220" fill="' + m + '" fill-opacity=".5" stroke="#4a3020" stroke-width="16"/><path d="M0,-110 L0,110 M-160,0 L160,0" stroke="#4a3020" stroke-width="10"/><path d="M-130,-80 L-60,-30 M60,20 L130,70" stroke="rgba(255,255,255,.5)" stroke-width="8" stroke-linecap="round"/></svg>',
   draught: m => bottleArt(m, 'M-44,90 L-44,-10 Q-44,-50 -14,-64 L-14,-110 L14,-110 L14,-64 Q44,-50 44,-10 L44,90 Z'),
   salve: m => '<svg viewBox="-420 -120 840 240"><ellipse cx="0" cy="60" rx="150" ry="34" fill="#4a3424" stroke="#000" stroke-width="8"/><path d="M-150,60 L-150,0 L150,0 L150,60" fill="#6a5040" stroke="#000" stroke-width="8"/><ellipse cx="0" cy="0" rx="150" ry="34" fill="' + m + '" stroke="#000" stroke-width="8"/><ellipse cx="-40" cy="-6" rx="40" ry="8" fill="rgba(255,255,255,.3)"/></svg>',
   oil: m => bottleArt(m, 'M-30,90 L-60,20 L-24,-60 L-24,-110 L24,-110 L24,-60 L60,20 L30,90 Z'),

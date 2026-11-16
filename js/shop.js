@@ -2,10 +2,10 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_SHELVES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS } from './data.js?v=9';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf } from './rules.js?v=9';
-import { charmGap } from './room.js?v=9';
-import { fame, purseMult, patienceOf, haggleMult, onWall } from './growth.js?v=9';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS } from './data.js?v=10';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf } from './rules.js?v=10';
+import { charmGap } from './room.js?v=10';
+import { fame, purseMult, patienceOf, haggleMult, onWall } from './growth.js?v=10';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;

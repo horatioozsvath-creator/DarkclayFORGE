@@ -51,12 +51,12 @@ npm test
 Browsers and GitHub Pages cache files for a few minutes. Each release bumps the `?v=` number on every script import and stylesheet link (in `index.html` and `js/*.js`), so a player never runs a new file against an old one:
 
 ```bash
-sed -i '' -E 's/\?v=[0-9]+/?v=10/g' index.html js/*.js
+sed -i '' -E 's/\?v=[0-9]+/?v=11/g' index.html js/*.js
 ```
 
 ## Status
 
-All seven milestones, the bench (bows, staves, arrows) and the kettle (brews in batches). Next: glass (`docs/STATIONS-PLAN.md`). See `docs/PLAN.md`.
+All seven milestones and five stations: the forge, the stretcher, the bench, the kettle and glass (`docs/STATIONS-PLAN.md`). See `docs/PLAN.md`.
 
 Open the game with `?debug` on the address to reach the save from the browser console as `forge.save`; `forge.wipe()` starts a fresh save.
 

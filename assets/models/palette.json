@@ -112,6 +112,10 @@
    "hex": "#ffffff",
    "kind": "tex"
   },
+  "Prop_glass_meshy": {
+   "hex": "#ffffff",
+   "kind": "tex"
+  },
   "Rag": {
    "hex": "#6a5a48",
    "kind": "toon"
