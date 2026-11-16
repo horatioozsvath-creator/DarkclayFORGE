@@ -82,3 +82,29 @@ test('a RENOWNED shop with a blueprint is sometimes asked for that Relic; only t
   const o = { pattern: 'falchion', least: 4, metal: null };
   assert.ok(!Sh.fills(o, make('falchion', 3))); assert.ok(Sh.fills(o, { ...make('falchion', 3), tier: 'relic' }));
 });
+
+test('every Relic: a real piece to work from, a relic material, and a blueprint that can be found', async () => {
+  const { MATS } = await import('../js/data.js');
+  const byStation = {};
+  for (const [id, r] of Object.entries(RELICS)) {
+    const p = PATTERNS[r.pattern]; assert.ok(p && !p.makes, id);
+    assert.ok(MATS[r.mat] && MATS[r.mat].relic, id + ' material');
+    assert.ok(Array.isArray(r.power) && r.power.length === 2 && r.lore, id);
+    if (r.source !== 'deep') assert.ok(STORIES.some(s => s.after === r.source && s.blueprint === id), id + ': a great story ends in it');
+    const st = p.station || 'forge'; byStation[st] = (byStation[st] || 0) + 1;
+  }
+  assert.ok(byStation.stretcher >= 2 && byStation.bowbench >= 2 && byStation.forge >= 3);
+});
+
+test('the Relic working at the stretcher and the bench: the same rule, at their own meters', () => {
+  for (const [pattern, relic] of [['jerkin', 'wolfmantle'], ['longbow', 'oskbow']]) {
+    const cfg = { patternId: pattern, picks: [0, 2, 2], level: 9, found: [], kit: {} };
+    const plain = R.newWorking({ ...cfg, rework: { from: 2 } }, seeded(1)), S = R.newWorking({ ...cfg, rework: { from: 3, relic } }, seeded(1));
+    assert.ok(S.band[1] - S.band[0] < plain.band[1] - plain.band[0], pattern);
+    S.shape = 100; S.whites = 2; S.whiteHeat = true;
+    const res = R.finish(S, 'quench'); assert.equal(res.tier, 4, pattern);
+    const base = R.makePiece({ patternId: pattern, picks: [0, 2, 2], result: { tier: 3, flawed: false, worked: 20, strikes: 20, heats: 2, cracks: 0, whiteHeat: true }, maker: 'T', rng: seeded(3), now: 1 });
+    const piece = R.relicPiece(R.remakePiece({ card: base, res, picked: null, rng: seeded(4), now: 2 }), relic);
+    assert.equal(piece.name, RELICS[relic].name); assert.equal(piece.tier, 'relic');
+  }
+});

@@ -1,6 +1,6 @@
 # Rarity to Mythic: the full ladder for every station
 
-Status: milestones 11–12 built (releases 22–23); 13–18 planned. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
+Status: milestones 11–13 built (releases 22–24); 14–18 planned. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
 This plan takes every station up the last two: **Relic** (named, one of a kind) and **Mythic** (the Nine).
 
 ## The ladder
@@ -149,3 +149,13 @@ Each milestone ends in a release, as before: rules and tests first, then the scr
   on day 39–63 (one seed none). **RENOWNED down to 1,000 and the Deep's blueprints up to 12 %**: RENOWNED on day 17–21, **the first Relic
   on day 27–63 (median about day 42)**, OF THE REACH on day 63–68. Slower than the four weeks planned for some runs; the next milestones'
   Relics (more patterns to work) should bring the median down.
+
+## Milestone 13, as built (release 24)
+
+- **Four more Relics:** Wolfmantle (jerkin, wyrm-hide) and The Roadwalkers (boots, wyrm-hide) at the stretcher; The Oskbow (longbow,
+  ghost-yew) and The Abbey Staff (staff, starglass core) at the bench. The same Relic working, at each station's own meter.
+- **Bram Oakes's great story** (five steps, from RENOWNED, after his first) ends in The Roadwalkers' blueprint; the other three come
+  from the Deep.
+- **Sim (75 days, seeds 1–6):** the first Relic on day 31–63, as before (the bot works the forge's falchion far more than anything
+  else); now a second and third follow on day 51–73 in half the runs (the Oskbow, the Hollow King's Helm). A player who spreads their
+  trades reaches a Relic sooner than the bot does.

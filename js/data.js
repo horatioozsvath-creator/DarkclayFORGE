@@ -25,6 +25,15 @@ export const RELICS = {
     lore: 'Silver from a grave-ring, and something kept in it that wasn\'t there before.' },
   hollowhelm: { name: 'The Hollow King\'s Helm', pattern: 'helm', mat: 'heartstone', power: ['No fear', 'the wearer stands when others run'], source: 'deep',
     lore: 'Its pattern came up from below the deep doors, scratched on a king\'s shield.' },
+  // the stretcher's and the bench's (milestone 13)
+  wolfmantle: { name: 'Wolfmantle', pattern: 'jerkin', mat: 'wyrmhide', power: ['The pack\'s warmth', 'cold and wet don\'t touch the one who wears it'], source: 'deep',
+    lore: 'Stitched from a hide that walked the high snow longer than the town has stood.' },
+  roadwalkers: { name: 'The Roadwalkers', pattern: 'boots', mat: 'wyrmhide', power: ['The long road', 'a day\'s march costs half'], source: 'bram',
+    lore: 'Bram\'s grandfather wore a pair like them to the sea and back, and never once wore them out.' },
+  oskbow: { name: 'The Oskbow', pattern: 'longbow', mat: 'ghostyew', power: ['The river\'s reach', 'half again the range, and it doesn\'t drop'], source: 'deep',
+    lore: 'Bent from a yew that grew below the deep doors, where no sun has ever been.' },
+  abbeystaff: { name: 'The Abbey Staff', pattern: 'staff', mat: 'starcore', power: ['It remembers', 'a working done once comes easier the second time'], source: 'deep',
+    lore: 'The abbey\'s first abbess walked with one. The scholars say this is its twin.' },
 };
 export const BLUEPRINT_DEEP = 0.12;   // the odds a trip below the deep doors brings back a blueprint (any still to be found, one for a trade you're good at first)
 // the last rework, Rare to Old-Blood: a master of the trade, a piece with a rare part or WHITE HEAT in its making, three times the
@@ -432,6 +441,12 @@ export const STORIES = [
     { patterns: ['helm'], least: 2, line: 'My boy\'s a sergeant. Keep his head, again.', thanks: 'He came home from the high road.' },
     { patterns: ['ring'], least: 3, line: 'My own ring\'s worn through. Silver, the best you\'ve got.', thanks: 'It doesn\'t feel like an old woman\'s hand any more.' },
     { patterns: ['ring'], least: 3, line: 'One last thing. I\'d like a ring to be buried with, beside his.', thanks: 'My husband\'s ring-pattern, from his own mother. You should have it.' } ] },
+  { id: 'bram2', after: 'bram', rung: 5, who: 'Bram Oakes, master drover', fig: '#8a9a6a', blueprint: 'roadwalkers', renown: 40, steps: [
+    { patterns: ['boots', 'axe'], least: 2, line: 'I run three herds now. Boots for my best men.', thanks: 'They walked to the coast and back.' },
+    { patterns: ['arrows', 'longbow', 'axe'], least: 2, line: 'Wolves again, and bigger. Something that reaches them.', thanks: 'Not a calf lost all season.' },
+    { patterns: ['jerkin', 'gloves', 'axe'], least: 2, line: 'The high pass in winter. Keep my lads warm.', thanks: 'They came down singing.' },
+    { patterns: ['dagger', 'axe'], least: 3, line: 'My son takes the first herd out alone. Give him your best.', thanks: 'He came back taller than he went.' },
+    { patterns: ['boots', 'axe'], least: 3, line: 'The longest drive there is: to the sea. I\'m going myself, one last time.', thanks: 'My grandfather\'s boot-pattern. Make them, and they\'ll go anywhere.' } ] },
   { id: 'marrow', who: 'Marrow, the herbalist', fig: '#8a9a6a', gift: 'marrowrail', renown: 10, steps: [
     { patterns: ['draught'], least: 0, line: 'My own kettle\'s cracked. Brew for me this once.', thanks: 'The lane\'s fever broke on it.' },
     { patterns: ['salve'], least: 1, line: 'The tannery boys burn their hands. Something kind.', thanks: 'They come to me singing now. Unheard of.' },
