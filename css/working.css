@@ -212,13 +212,27 @@ canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; touch-
   .barrow { font-size: 11px; }
   .bar { height: 16px; }
   .oddsrow { gap: 10px; font-size: 12px; }
-  .acts { flex: none; grid-template-columns: 1fr 1fr; grid-template-areas: 'fire quench' 'strike strike'; gap: 8px; padding: 2px 10px 10px; }
-  .acts .strike { grid-area: strike; min-height: 76px; font-size: 26px; }
+  /* one row: the fire, STRIKE between, the quench; STRIKE is the widest, not the tallest (tapping the stage strikes too) */
+  .acts { flex: none; grid-template-columns: 1fr 1.5fr 1fr; grid-template-areas: 'fire strike quench'; gap: 8px; padding: 2px 10px calc(10px + env(safe-area-inset-bottom, 0px)); }
+  .acts .strike { grid-area: strike; min-height: 60px; font-size: 22px; }
   .acts .fire { grid-area: fire; }
   .acts .quench { grid-area: quench; }
   .act { min-height: 48px; font-size: 14px; letter-spacing: .06em; }
   .act small { font-size: 9px; }
   .sheet, .result { padding: 10px; }
   .rack.prep11 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+}
+/* a short phone: the piece gets the room. The six tile odds fold away (THE STRIP shows them), the bands tighten */
+@media (max-width: 600px) and (max-height: 760px) {
+  #vWork .odds6 { display: none; }
+  #vWork .band { padding: 4px 10px 6px; gap: 4px; }
+  #vWork .oddsrow { font-size: 11px; gap: 8px; }
+  #vWork .bar { height: 12px; }
+  .acts .strike { min-height: 54px; font-size: 20px; }
+  .act { min-height: 54px; font-size: 12px; }
+  .act small { display: none; }
+}
+@media (max-width: 600px) and (max-height: 620px) {
+  #vWork .oddsrow { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .pop.go, .pop.bigpop.go, .pop.bad.go { animation: fade 1s forwards; } @keyframes fade { 0%,70% { opacity: 1; } 100% { opacity: 0; } } .tkt .in, .bar i { transition: none; } .tkt.new .in, .gift .gt, .bag button.fresh .tile { animation: none; } }
