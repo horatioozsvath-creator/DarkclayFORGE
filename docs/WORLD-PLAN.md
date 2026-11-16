@@ -1,6 +1,6 @@
 # The living Reach: a plan (milestones 19–24)
 
-Status: planned, nothing built. Builds on release 37.
+Status: planned and decided (2026-11-16), nothing built. Builds on release 37.
 
 ## What it's for
 
@@ -29,8 +29,7 @@ that wears out, a bank, and a runner who can come to harm. Each threat has a war
 - **Missing a payment:** the first time, a letter and a late fee. The second, **the bailiff** comes in person and takes pieces from the
   shelf to the value owed (never Relics or Mythics; the Hall is never touched), and renown drops a little. The debt never grows past
   twice what was borrowed.
-- **While away for a long time:** interest is counted per week of real time, like the shop's clock. The bailiff only comes while the
-  page is open, so a long holiday ends with a letter, not empty shelves.
+- **While away:** interest is **paused**: it's only taken for weeks in which the game was opened. A long break costs nothing.
 - **What it's for:** buying the second shop, the Hall or a station early, then paying it back from what it earns.
 
 ### Wear, and the forge that breaks
@@ -104,13 +103,38 @@ that wears out, a bank, and a runner who can come to harm. Each threat has a war
 Each ends in a release, as before: rules and tests first, then the screens, a sim run (the sim gets thieves, wear, loans and a guard,
 and must show a steady player's income dips, not collapses), then a check on a phone.
 
-## Questions to decide before building
+## Questions (answered below)
 
 1. **Can a runner die?** Recommended: yes, but rare (about 1 trip in 150 below the deep doors with no gear, far less with gear, never
    on the short roads), always with a warning before a dangerous trip. The alternative is hurt only.
 2. **Can thieves take a Relic from a shelf?** Recommended: yes, and AFTER THE GANG always gets a Relic back if the runner reaches them
    (a story, not a loss). Never from the Hall, never a Mythic (it can't be on a shelf).
-3. **Loan interest while away:** recommended as above: it counts in real weeks, but the bailiff only comes while the page is open.
+3. **Loan interest while away:** recommended: it counts in real weeks, but the bailiff only comes while the page is open. (Decided otherwise: paused while away.)
 4. **The gentler Reach:** recommended: offered on every new game and switchable later under the Bank; existing saves start with the
    threats on but a week's grace before the first one.
 5. **Order:** recommended as listed (the Bank first, as it's self-contained and gives players a way to absorb the later losses).
+
+## Decided (2026-11-16)
+
+1. **A runner can die, rarely:** only on the most dangerous trips, with a warning first; gear you made cuts the chance a lot. Runners
+   can be equipped (milestone 22). A memorial stone goes in the shop.
+2. **Thieves can take a Relic from a shelf;** AFTER THE GANG always recovers it if the runner reaches them. Never from the Hall.
+3. **Loan interest is paused while away:** only taken for weeks in which the game was opened.
+4. **The gentler Reach:** offered on every new game, switchable later under the Bank; existing saves get a week's grace.
+5. **Order:** as listed, the Bank first.
+
+## Milestone 19, as built (release 38)
+
+- **THE BANK** is a fifth place in the top bar (js/bank.js, no page access; tests/bank.test.mjs).
+- **The account:** PUT IN, TAKE OUT, ALL MY PURSE. Coin there can't be stolen. 1 % a week, at most 400 c.
+- **A loan:** from KNOWN (1,000 c; SOUGHT 3,000; FAMED 8,000; RENOWNED 20,000; OF THE REACH 40,000). 5 % a week, from the purse, then
+  the account. Short of it: a letter, the unpaid part and a 10 % fee onto the loan. A second miss: the bailiff takes shelf pieces, best
+  first, toward twice what was missed (each piece's worth off the loan), never a Relic or a Mythic, and renown drops by 10. A loan never
+  grows past twice what was borrowed.
+- **The week:** seven real days, counted only when the game is open at its end: a long time away counts as one week (interest paused
+  while away, as decided). The bank's book lists every week and every move.
+- **The gentler Reach:** a tick-box on every empty slot ("A gentler Reach: no thieves, monsters or dangers"), and SPARE THIS SAVE / LET
+  THE REACH IN under the Bank. Saves from before get a week's grace (`threatsFrom`). Nothing reads it yet: the threats come from
+  milestone 20. The bank's own bailiff isn't a threat: it comes with a loan the player chose.
+- **Sim (45 days, seeds 1–3, `BANK=1`):** the bot borrows for the second shop the day it's allowed and repays before interest falls due;
+  income is unchanged. The bank is no shortcut for a steady player; it helps one short of coin.

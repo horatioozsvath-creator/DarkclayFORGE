@@ -1,26 +1,27 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE } from './data.js?v=37';
-import * as R from './rules.js?v=37';
-import * as Sh from './shop.js?v=37';
-import * as St from './staff.js?v=37';
-import * as Rm from './room.js?v=37';
-import * as G from './growth.js?v=37';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=37';
-import * as Snd from './sound.js?v=37';
-import * as Town from './town.js?v=37';
-import * as V from './visit.js?v=37';
-import * as Br from './branch.js?v=37';
-import * as Hl from './hall.js?v=37';
-import * as Trail from './trail.js?v=37';
-import { ICONS, emblem, watch } from './icons.js?v=37';
-import { drawFlyer, flyerBlob } from './flyer.js?v=37';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=37';
-import { card, ART } from './card.js?v=37';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=37';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=37';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE } from './data.js?v=38';
+import * as R from './rules.js?v=38';
+import * as Sh from './shop.js?v=38';
+import * as St from './staff.js?v=38';
+import * as Rm from './room.js?v=38';
+import * as G from './growth.js?v=38';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=38';
+import * as Snd from './sound.js?v=38';
+import * as Town from './town.js?v=38';
+import * as V from './visit.js?v=38';
+import * as Br from './branch.js?v=38';
+import * as Bank from './bank.js?v=38';
+import * as Hl from './hall.js?v=38';
+import * as Trail from './trail.js?v=38';
+import { ICONS, emblem, watch } from './icons.js?v=38';
+import { drawFlyer, flyerBlob } from './flyer.js?v=38';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=38';
+import { card, ART } from './card.js?v=38';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=38';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=38';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 37;
+const VERSION = 38;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayFORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -32,6 +33,9 @@ const rng = Math.random;
 const save = load();
 Town.refreshTown(save, Date.now());
 R.convertSave(save); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save); G.fixWall(save);
+// a new game started from the title with the gentler Reach chosen (or not); a save from before the threats gets a week's grace
+try { const g = sessionStorage.getItem('darkclayforge.newGentle'); if (g != null) { sessionStorage.removeItem('darkclayforge.newGentle'); if (!save.made && save.threatsFrom == null) { save.gentle = g === '1'; save.threatsFrom = Date.now(); } } } catch (e) { /* none */ }
+Bank.fixThreats(save, Date.now());
 save.queue = [];   // whoever was at the counter when the page closed has gone
 // the first shop's catch-up (staff.js), then the second shop's keeper over the same time
 function catchUpAll(nowMs) {
@@ -63,7 +67,7 @@ const rwCard = () => rw && save.cards.find(c => c.id === rw.id);
 const stn = () => S ? S.station : R.stationOf(pat);
 const benchPicks = () => rw ? R.srcOf(rwCard()).picks : picks();
 const benchName = () => rw ? TIERS[rw.from].name + ' ' + rwCard().name : (S.metal.adj || S.metal.name) + ' ' + PATTERNS[pat].name;
-const HUBS = ['home', 'shop', 'supp', 'staff', 'branch'];
+const HUBS = ['home', 'shop', 'supp', 'staff', 'branch', 'bank'];
 const hour = () => Sh.hourOf(Date.now());
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function show(which) {
@@ -74,6 +78,7 @@ function show(which) {
   $('vShop').hidden = which !== 'shop';
   $('vSupp').hidden = which !== 'supp';
   $('vStaff').hidden = which !== 'staff';
+  $('vBank').hidden = which !== 'bank';
   $('vVisit').hidden = which !== 'visit';
   $('vBranch').hidden = which !== 'branch';
   $('navBranch').hidden = !save.branch;
@@ -98,13 +103,13 @@ function toast(html) {
 }
 // sound: woken by the first tap or key; the mute switch kept apart from the save
 ['pointerdown', 'keydown'].forEach(t => document.addEventListener(t, Snd.unlock, { capture: true }));
-const MUSIC_OF = { home: 'forge', prepare: 'forge', work: 'forge', shop: 'shop', supp: 'shop', staff: 'shop', visit: 'shop', branch: 'shop' };
+const MUSIC_OF = { home: 'forge', prepare: 'forge', work: 'forge', shop: 'shop', supp: 'shop', staff: 'shop', visit: 'shop', branch: 'shop', bank: 'shop' };
 function musicLabel() { $('musicBtn').innerHTML = ICONS.music + (Snd.isMusicOn() ? 'ON' : 'OFF'); $('musicBtn').setAttribute('aria-pressed', String(Snd.isMusicOn())); }
 $('musicBtn').onclick = () => { Snd.setMusicOn(!Snd.isMusicOn()); musicLabel(); };
 function muteLabel() { $('muteBtn').innerHTML = ICONS.sound + (Snd.isMuted() ? 'OFF' : 'ON'); $('muteBtn').setAttribute('aria-pressed', String(!Snd.isMuted())); }
 $('muteBtn').onclick = () => { Snd.setMuted(!Snd.isMuted()); muteLabel(); Snd.play('coin'); };
 muteLabel(); musicLabel();
-const go = where => where === 'home' ? toHome() : where === 'shop' ? toShop() : where === 'staff' ? toStaff() : where === 'branch' ? toBranch() : toSupp();
+const go = where => where === 'home' ? toHome() : where === 'shop' ? toShop() : where === 'staff' ? toStaff() : where === 'bank' ? toBank() : where === 'branch' ? toBranch() : toSupp();
 document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
 // never stuck: broke, nothing made, nothing to make it from
 function rescueCheck() {
@@ -326,7 +331,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=37').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=38').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -817,6 +822,62 @@ function backOpen(id) {
 
 // ---------- STAFF ----------
 const hm = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? h + ' h ' + m + ' min' : m ? m + ' min' : s + ' s'; };
+// ---------- THE BANK ----------
+let bankTick = 0, bankNote = '';
+const cn = n => Math.round(n).toLocaleString() + ' c';
+function bookLine(line) { const b = Bank.bankOf(save); b.log = [{ at: Date.now(), line }].concat(b.log || []).slice(0, 14); }
+// the week's end while the game is open: the letter, in the book and a toast
+function bankWeek(now) {
+  const w = Bank.weekly(save, now); if (!w) return;
+  const bits = [];
+  if (w.earned) bits.push('the account earned ' + cn(w.earned));
+  if (w.interest) bits.push(w.unpaid ? 'the loan\'s ' + cn(w.interest) + ' was short by ' + cn(w.unpaid) + ': it and a fee of ' + cn(w.fee) + ' went onto the loan' : 'the loan\'s interest, ' + cn(w.interest) + ', was paid');
+  if (w.bailiff) bits.push(w.bailiff.took.length ? 'the bailiff came and took ' + w.bailiff.took.map(t => t.name).join(', ') + ', ' + cn(w.bailiff.got) + ' off the loan, and the town talks' : 'the bailiff came, found the shelves bare, and the town talks');
+  const line = 'A week: ' + bits.join('; ') + '.';
+  bookLine(line); store(save); coins();
+  toast('<b>' + (w.bailiff ? 'The bailiff' : w.unpaid ? 'A letter from the bank' : 'The bank\'s week') + '</b><br>' + esc(line));
+  if (w.unpaid || w.bailiff) { $('navBank').hidden = false; Snd.play('bell'); }
+  if (screen === 'bank') renderBank(); else if (screen === 'shop' && w.bailiff) renderShop();
+}
+function toBank() { clearTimers(); S = null; show('bank'); coins(); $('navBank').hidden = true; bankNote = ''; renderBank(); }
+function renderBank() {
+  if (screen !== 'bank') return;
+  const b = Bank.bankOf(save), lim = Bank.limitOf(save), now = Date.now(), until = b.due ? Math.max(0, b.due - now) : 0;
+  const days = ms => { const d = Math.ceil(ms / 86400000); return d <= 1 ? 'within a day' : 'in ' + d + ' days'; };
+  $('bankTally').innerHTML = 'In the bank <b>' + cn(b.deposit) + '</b>' + (b.loan ? '<br>Owed <b>' + cn(b.loan) + '</b>' : '');
+  $('bankDep').textContent = cn(b.deposit);
+  $('bankDepWord').textContent = 'Coin in the bank can\'t be stolen. It earns 1 % a week, up to 400 c, for each week the game is open at the week\'s end: a long time away counts as one week.'
+    + (b.deposit ? ' This week: +' + cn(Bank.depositEarns(save)) + ', ' + days(until) + '.' : '');
+  $('bankLoan').textContent = b.loan ? cn(b.loan) + ' OWED' : lim ? 'UP TO ' + cn(lim) : 'NOT YET';
+  $('bankLoanWord').textContent = !lim && !b.loan ? 'The bank lends to a shop that is ' + Bank.lendsFrom() + ' or better: from 1,000 c, up to 40,000 c OF THE REACH.'
+    : (b.loan ? 'You owe ' + cn(b.loan) + '. Interest is 5 % a week: ' + cn(Bank.interestDue(save)) + ' ' + days(until) + ', from your purse, then your account. Short of it, the unpaid part and a fee go onto the loan; miss twice and the bailiff takes pieces from the shelves (never a Relic or a Mythic). Like the account, a week only counts when the game is open. '
+      : 'Borrow up to ' + cn(lim) + ' at your renown. Interest is 5 % a week, only for weeks the game is open. Repay any time. ')
+      + (b.missed ? 'One payment is behind: the next missed brings the bailiff.' : b.loan ? 'You can borrow ' + cn(Bank.canBorrow(save)) + ' more.' : '');
+  $('bankLoanWord').classList.toggle('bad', !!b.missed);
+  $('bankBorrow').disabled = !Bank.canBorrow(save); $('bankRepay').disabled = $('bankRepayAll').disabled = !b.loan || !save.coins;
+  $('bankOut').disabled = !b.deposit; $('bankIn').disabled = $('bankAll').disabled = !save.coins;
+  $('bankGentle').textContent = save.gentle ? 'ON' : 'OFF';
+  $('bankGentleWord').textContent = 'Hard times are coming to the Reach: thieves, monsters, a forge that wears out, danger on the road. They come with warnings, and what\'s lost can be won back. '
+    + (save.gentle ? 'This save is spared them.' : 'This save will face them. Turn the gentler Reach on and it\'s spared.');
+  $('bankGentleBtn').textContent = save.gentle ? 'LET THE REACH IN' : 'SPARE THIS SAVE';
+  $('bankBook').innerHTML = (b.log || []).length ? b.log.map(e => '<li><span class="ln">' + new Date(e.at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' · ' + esc(e.line) + '</span></li>').join('') : '<li class="empty">Nothing yet.</li>';
+  $('bankNote').textContent = bankNote;
+}
+const bankN = id => Math.floor(+$(id).value || 0);
+function bankDo(r, line) { bankNote = r.why ? 'Not done: ' + r.why + '.' : ''; if (r.ok) { bookLine(line(r.n)); store(save); coins(); Snd.play('coin'); } renderBank(); }
+$('bankIn').onclick = () => bankDo(Bank.deposit(save, bankN('bankDepN'), Date.now()), n => 'Put in ' + cn(n) + '.');
+$('bankAll').onclick = () => bankDo(Bank.deposit(save, save.coins, Date.now()), n => 'Put in ' + cn(n) + ', the whole purse.');
+$('bankOut').onclick = () => bankDo(Bank.withdraw(save, bankN('bankDepN') || Bank.bankOf(save).deposit), n => 'Took out ' + cn(n) + '.');
+$('bankBorrow').onclick = () => { const n = bankN('bankLoanN'); if (n > 0 && !confirm('Borrow ' + cn(n) + '? Interest is ' + cn(Math.ceil(n * 0.05)) + ' a week until it\'s repaid.')) return; bankDo(Bank.borrow(save, n, Date.now()), m => 'Borrowed ' + cn(m) + '.'); };
+$('bankRepay').onclick = () => bankDo(Bank.repay(save, bankN('bankLoanN')), n => 'Repaid ' + cn(n) + '.');
+$('bankRepayAll').onclick = () => bankDo(Bank.repay(save, Bank.bankOf(save).loan), n => 'Repaid ' + cn(n) + (Bank.bankOf(save).loan ? '' : ': the loan is cleared') + '.');
+$('bankGentleBtn').onclick = () => {
+  if (!save.gentle && !confirm('Spare this save from thieves, monsters, wear and danger on the road?')) return;
+  if (save.gentle && !confirm('Let the Reach in? Thieves, monsters, wear and danger on the road will come, with warnings, after a week.')) return;
+  save.gentle = !save.gentle; if (!save.gentle) save.threatsFrom = Math.max(save.threatsFrom || 0, Date.now() + 7 * 86400000);
+  bookLine(save.gentle ? 'The gentler Reach: this save is spared.' : 'The Reach let in: hard times from a week on.'); store(save); renderBank();
+};
+
 function toStaff() { clearTimers(); S = null; rescueCheck(); show('staff'); coins(); renderStaff(); tip('staff', $('staffList').closest('section')); }
 let staffTick = 0;
 function personHtml(p, hired) {
@@ -898,7 +959,7 @@ function returning(nowMs) {
   save.queue = [];
   const a = catchUpAll(nowMs);
   store(save); coins();
-  if (screen === 'shop') renderShop(); else if (screen === 'staff') renderStaff(); else if (screen === 'home') toHome(); else if (screen === 'supp') renderSupp();
+  if (screen === 'shop') renderShop(); else if (screen === 'staff') renderStaff(); else if (screen === 'home') toHome(); else if (screen === 'supp') renderSupp(); else if (screen === 'bank') renderBank();
   showAway(a);
 }
 // on the way out, the time is written down
@@ -1387,6 +1448,7 @@ function frame(now) {
   if (back.length) { store(save); if (screen === 'staff') renderStaff(); }
   save.lastSeen = nowMs;
   if (nowMs - lastStore > 5000) { lastStore = nowMs; store(save); }
+  if (nowMs - bankTick > 2000) { bankTick = nowMs; bankWeek(nowMs); }
   if (screen === 'staff' && nowMs - staffTick > 1000) { staffTick = nowMs; document.querySelectorAll('#staffList [data-back]').forEach(b => { b.textContent = hm((+b.dataset.back - nowMs) / 1000); }); }
   const sig = counterSig();
   if (visits.length || sig !== lastSig) {
@@ -1493,7 +1555,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=37').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=38').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -1572,7 +1634,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=37').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=38').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }
@@ -1672,6 +1734,7 @@ function showTitle(away) {
   $('tSlots').innerHTML = slots.map((p, i) => {
     const n = i + 1, here = n === on;
     if (!p) return '<div class="tslot empty' + (here ? ' on' : '') + '"><div class="ttop">' + emblem('', true) + '<div class="tinfo"><div class="n">SLOT ' + n + (here ? ' · THIS ONE' : '') + '</div><b>Empty</b><div class="tren">A cold forge and sixty coins.</div></div></div>'
+      + '<label class="tgentle"><input type="checkbox" data-tgentle="' + n + '"> A gentler Reach: no thieves, monsters or dangers</label>'
       + '<div class="tacts"><button class="seg go" data-tplay="' + n + '">' + ICONS.flame + 'LIGHT THE FORGE</button></div></div>';
     const rung = RENOWN.reduce((a, r, k) => p.renown >= r.at ? k : a, 0);
     return '<div class="tslot' + (here ? ' on' : '') + '" style="--heat:' + HEAT[rung] + '"><div class="ttop">' + emblem(HEAT[rung]) + '<div class="tinfo"><div class="n">SLOT ' + n + (here ? ' · PLAYING' : '') + '</div><b>' + esc(p.maker) + '</b>'
@@ -1691,6 +1754,8 @@ function showTitle(away) {
 function closeTitle() { $('title').hidden = true; document.body.style.overflow = ''; const a = titleAway; titleAway = null; if (a) showAway(a); }
 // another slot: this one written down, then the page opens again on that one (straight in, no title)
 function playSlot(n) {
+  const gb = $('tSlots').querySelector('[data-tgentle="' + n + '"]');
+  if (gb) { if (n === activeSlot() && !save.made) { save.gentle = gb.checked; save.threatsFrom = Date.now(); store(save); } else try { sessionStorage.setItem('darkclayforge.newGentle', gb.checked ? '1' : '0'); } catch (e) { /* none */ } }
   if (n === activeSlot()) { Snd.unlock(); closeTitle(); return; }
   save.lastSeen = Date.now(); store(save); replacing = true;
   setActiveSlot(n); try { sessionStorage.setItem('darkclayforge.skipTitle', '1'); } catch (e) { /* none */ }

@@ -1,6 +1,6 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The stage: the fire, the anvil, the piece taking shape, the hammer and the heat meter, drawn on a 1280 × 720 canvas.
-import { FORGE, KC } from './data.js?v=37';
+import { FORGE, KC } from './data.js?v=38';
 
 // two layouts: wide (a desktop, a phone on its side) and tall (a phone held upright), the same drawing moved and scaled
 export const LAYOUTS = {

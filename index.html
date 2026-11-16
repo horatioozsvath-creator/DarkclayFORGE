@@ -22,9 +22,9 @@
 <meta property="og:image:height" content="630">
 <meta property="og:url" content="https://horatioozsvath-creator.github.io/DarkclayFORGE/">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="css/fonts.css?v=37">
-<link rel="stylesheet" href="css/working.css?v=37">
-<link rel="stylesheet" href="css/game.css?v=37">
+<link rel="stylesheet" href="css/fonts.css?v=38">
+<link rel="stylesheet" href="css/working.css?v=38">
+<link rel="stylesheet" href="css/game.css?v=38">
 </head>
 <body>
 <!-- an unofficial copy: says where the real game is (js/main.js OFFICIAL) -->
@@ -49,6 +49,7 @@
       <button class="seg" data-go="shop">THE SHOP <span class="dot" id="navSold" hidden></span></button>
       <button class="seg" data-go="supp">SUPPLIERS</button>
       <button class="seg" data-go="staff">STAFF</button>
+      <button class="seg" data-go="bank">BANK <span class="dot" id="navBank" hidden></span></button>
       <button class="seg" data-go="branch" id="navBranch" hidden>THE LANDING</button>
     </div>
     <div class="purse"><span aria-live="polite"><span>PURSE</span> <b id="coins">0</b> <span>COINS</span></span><button class="seg mute" id="musicBtn" aria-label="Music"></button><button class="seg mute" id="muteBtn" aria-label="Sound"></button><button class="seg mute exitbtn" id="titleBtn" aria-label="Exit to the title screen: save slots, version, licence"></button></div>
@@ -261,6 +262,33 @@
     </section>
   </main>
 
+  <!-- THE BANK: coin kept safe, loans by renown, the gentler Reach -->
+  <main id="vBank" hidden>
+    <header class="top"><div><div class="kicker">THE COUNTING HOUSE ON BRIDGE STREET</div><h1>The Bank</h1></div><div class="tally" id="bankTally"></div></header>
+    <section class="card">
+      <h2><span>YOUR ACCOUNT</span><b id="bankDep"></b></h2>
+      <p class="note" id="bankDepWord"></p>
+      <div class="bankrow"><label class="maker">COINS<input id="bankDepN" type="number" min="1" step="1" inputmode="numeric"></label>
+        <button class="seg go" id="bankIn">PUT IN</button><button class="seg" id="bankOut">TAKE OUT</button><button class="seg" id="bankAll">ALL MY PURSE</button></div>
+    </section>
+    <section class="card">
+      <h2><span>A LOAN</span><b id="bankLoan"></b></h2>
+      <p class="note" id="bankLoanWord"></p>
+      <div class="bankrow"><label class="maker">COINS<input id="bankLoanN" type="number" min="1" step="1" inputmode="numeric"></label>
+        <button class="seg go" id="bankBorrow">BORROW</button><button class="seg" id="bankRepay">REPAY</button><button class="seg" id="bankRepayAll">REPAY IT ALL</button></div>
+    </section>
+    <section class="card">
+      <h2><span>THE GENTLER REACH</span><b id="bankGentle"></b></h2>
+      <p class="note" id="bankGentleWord"></p>
+      <div class="rbtns left"><button class="seg" id="bankGentleBtn"></button></div>
+    </section>
+    <section class="card">
+      <h2><span>THE BANK'S BOOK</span></h2>
+      <ul class="ledger" id="bankBook"></ul>
+    </section>
+    <p class="note" id="bankNote" role="status"></p>
+  </main>
+
   <!-- SUPPLIERS: bars, hides and the pedlar's pack, priced by the hour -->
   <main id="vSupp" hidden>
     <header class="top"><div><div class="kicker">THE ROAD AND THE YARD</div><h1>Suppliers</h1></div><div class="tally" id="hourWord"></div></header>
@@ -389,6 +417,6 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js" } }</script>
-<script type="module" src="js/main.js?v=37"></script>
+<script type="module" src="js/main.js?v=38"></script>
 </body>
 </html>

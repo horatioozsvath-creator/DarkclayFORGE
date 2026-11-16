@@ -42,6 +42,12 @@ export const MYTHICS = {
 export const TRAIL = { rung: 6, deep: 0.35, court: 0.4 };
 // milestone 18: the Court asks for each Mythic once (half the orders while one is waiting), paying twice its worth; all Nine made is
 // the ending: the maker's mark becomes Maker of the Nine and the Hall's charm doubles
+// THE BANK (milestone 19): a week is seven real days, but only a week the game was opened is counted (interest pauses while away).
+// deposit: 1 % a week, at most 400 c; loans by renown rung (none below KNOWN), 5 % a week; a missed payment adds the interest and a
+// late fee to the loan; two missed and the bailiff takes shelf pieces (never a Relic or Mythic) toward it. A loan never grows past
+// twice what was borrowed. grace: a save from before the threats gets a week before the first one.
+export const BANK = { week: 7 * 24 * 3600000, depositRate: 0.01, depositCap: 400, loanRate: 0.05, lateFee: 0.1, bailiffAfter: 2, bailiffRenown: 10,
+  debtCap: 2, limits: [0, 0, 1000, 3000, 8000, 20000, 40000], grace: 7 * 24 * 3600000 };
 export const NINE = { courtOdds: 0.5, courtPays: 2, hallCharm: 2, title: 'MAKER OF THE NINE' };
 // THE MYTHIC WORKINGS (milestone 17). A part: a special working at its station, once its Mythic's shard is found, by a maker at trade 6
 // in something there, with two of the station's rare things and the bars of the piece it's worked as (PART_PATTERN). Narrow, WHITE HEAT

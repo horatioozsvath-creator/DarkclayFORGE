@@ -1,12 +1,12 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=37';
-import { levelOf, makePiece, partOptions } from './rules.js?v=37';
-import { awayStep } from './shop.js?v=37';
-import { wageMult, capBonus, rung } from './growth.js?v=37';
-import * as Trail from './trail.js?v=37';
-import { TRAIL } from './data.js?v=37';
+import { ROLES, TRAITS, NAMES, ROUTES, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=38';
+import { levelOf, makePiece, partOptions } from './rules.js?v=38';
+import { awayStep } from './shop.js?v=38';
+import { wageMult, capBonus, rung } from './growth.js?v=38';
+import * as Trail from './trail.js?v=38';
+import { TRAIL } from './data.js?v=38';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }

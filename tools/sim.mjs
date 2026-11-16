@@ -11,6 +11,7 @@ import * as Town from '../js/town.js';
 import * as Br from '../js/branch.js';
 import * as Hl from '../js/hall.js';
 import * as Trail from '../js/trail.js';
+import * as Bank from '../js/bank.js';
 import { BRANCH, RELICS, MYTHICS } from '../js/data.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD } from '../js/data.js';
 
@@ -197,6 +198,17 @@ function runBranch(day) {
   v.shelf.forEach((e, i) => { if (!e && back.length) Sh.place(v, back.shift().id, i); });
   const cost = Rm.shelfCost(v.room); if (cost != null && save.coins - cost > 3000 && back.length > 4) Rm.buy(v, 'shelf');
 }
+// the bank (BANK=1): borrow for the second shop as soon as the bank will lend enough, pay the week's interest, repay with plenty over
+const BANKING = process.env.BANK === '1';
+let loanDay = null, interestPaid = 0;
+function runBank(day) {
+  if (!BANKING) return;
+  const w = Bank.weekly(save, t); if (w) interestPaid += w.paid;
+  if (!save.branch && Br.canBuy({ ...save, coins: 1e9 }).ok && save.coins < BRANCH.cost + 300) {
+    const need = BRANCH.cost + 300 - save.coins; if (need <= Bank.canBorrow(save) && Bank.borrow(save, need, t).ok) { loanDay = day; note('borrowed ' + need + ' c for the second shop'); }
+  }
+  const b = Bank.bankOf(save); if (b.loan && save.coins > b.loan + 4000) Bank.repay(save, b.loan);
+}
 // spending, with a reserve kept for materials
 function spend(hour) {
   const reserve = 80;
@@ -234,7 +246,7 @@ for (let d = 1; d <= days; d++) {
     tally(Sh.shopStep(save, 50, rng, t, false, clerk));
     St.payWages(save, 50); St.resolveTrips(save, t, rng);
     t += 50000; save.lastSeen = t;
-    if (s % 600 === 0) { runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
+    if (s % 600 === 0) { runBank(d); runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
     if (save.branch) tally(Br.step(save, 50, rng, t));
     if (Sh.rescue(save, hour)) note('scrap bin');
   }
@@ -263,3 +275,5 @@ if (process.env.WHY) for (const id of Object.keys(RELICS)) {
   console.log('  ' + id.padEnd(14), (save.relicsMade || []).includes(id) ? 'MADE' : (save.blueprints || []).includes(id) ? 'bp' : 'no bp',
     r.pattern, 'pat', lvl(r.pattern), st, Trail.stationLevel(save, st), 'owns', Rm.owns(save, st), 'oldblood', save.cards.filter(c => c.tier === 'oldblood' && c.pattern === r.pattern).length, 'rare', save.cards.filter(c => c.tier === 'rare' && c.pattern === r.pattern).length, 'mat', save.mats[r.mat] || 0);
 }
+if (BANKING) console.log('bank: borrowed on day', loanDay, ' interest paid', interestPaid, ' owed now', Bank.bankOf(save).loan, ' second shop from day', branchDay);
+console.log('EARNED', save.earned, 'coins', save.coins);
