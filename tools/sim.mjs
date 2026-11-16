@@ -11,7 +11,7 @@ import * as Town from '../js/town.js';
 import * as Br from '../js/branch.js';
 import * as Hl from '../js/hall.js';
 import * as Trail from '../js/trail.js';
-import { BRANCH, RELICS } from '../js/data.js';
+import { BRANCH, RELICS, MYTHICS } from '../js/data.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD } from '../js/data.js';
 
 const days = +process.argv[2] || 7, seed0 = +process.argv[3] || 1, SESSION_MIN = +process.argv[4] || 45;
@@ -24,6 +24,12 @@ const OLD = process.env.OLD !== '0', TOWN = process.env.TOWN !== '0', BRANCHES =
 let t = Date.UTC(2026, 10, 1, 9), log = [], made = 0, oldTried = 0, oldMade = 0, spent = { mats: 0, staff: 0, tools: 0, room: 0 };
 const H = 3600000, lvl = id => R.levelOf((save.trades[id] || {}).xp || 0).level, note = m => log.push('  ' + m);
 
+// on the trail (CHASE=0 turns it off): from RENOWNED, a pattern with a blueprint whose Relic isn't made yet is practised to trade 7, and
+// its Old-Blood pieces are kept in the back for the Relic working
+const CHASE = process.env.CHASE !== '0';
+const chasing = id => G.rung(save) >= 5 && (save.blueprints || []).some(b => RELICS[b].pattern === id && !(save.relicsMade || []).includes(b));
+// off the shelf and out of the Hall, into the back room (for a working)
+function toBack(c) { const sl = Sh.onShelf(save, c.id); if (sl >= 0) Sh.takeDown(save, sl); if (save.hall) for (const k of Object.keys(save.hall.shown || {})) if (save.hall.shown[k] === c.id) delete save.hall.shown[k]; }
 // which piece to make: the best worth over materials the bot can make or buy, at its trade
 function choose(hour) {
   let best = null;
@@ -37,7 +43,7 @@ function choose(hour) {
       const cost = short.reduce((c, x) => c + Sh.priceOf(x.mat, hour) * (x.n - x.have), 0);
       if (cost > save.coins) return;
       const o = save.order, forOrder = o && o.pattern === id && (!o.metal || o.metal === m.id) && !Sh.inBack(save).some(x => Sh.fills(o, x));   // making to order
-      const worth = PATTERNS[id].value * m.val * 1.4 * (forOrder ? 4 : 1), score = worth - Sh.recipeCost(rec, hour) + (lvl(id) < 3 ? 15 : 0);
+      const worth = PATTERNS[id].value * m.val * 1.4 * (forOrder ? 4 : 1), score = worth - Sh.recipeCost(rec, hour) + (lvl(id) < 3 ? 15 : 0) + (CHASE && chasing(id) && lvl(id) < OLD_BLOOD.level + 1 ? 250 : 0);
       if (!best || score > best.score) best = { id, picks, short, score };
     });
   }
@@ -81,7 +87,7 @@ function tryOldBlood(hour) {
       const p = R.remakePiece({ card: c, res, picked: null, rng, now: t }); save.cards[save.cards.indexOf(c)] = p; oldMade++;
       note('OLD-BLOOD: ' + p.name + ' (' + p.worth + ' c)');
     }
-    if (slot >= 0) Sh.place(save, (took ? save.cards.find(x => x.id === c.id) : c).id, slot);
+    if (slot >= 0 && !(took && CHASE && chasing(c.pattern))) Sh.place(save, (took ? save.cards.find(x => x.id === c.id) : c).id, slot);
     return;
   }
 }
@@ -126,7 +132,9 @@ function relicWork(day) {
   if (!r) { const c = St.candidates(save, Math.floor(t / H)).find(x => x.role === 'runner'); if (c && save.coins > St.hireFee(c) + 500) { St.hire(save, c); r = St.runnerOf(save); } }
   if (r && !r.trip && save.coins > 900) St.sendRunner(save, 'below', t);
   for (const c of save.cards.filter(x => x.tier === 'oldblood')) {
-    const g = Sh.relicFor(save, c); if (!g.ok) continue;
+    let g = Sh.relicFor(save, c);
+    if (!g.ok && g.why.length === 1 && /back room/.test(g.why[0])) { toBack(c); g = Sh.relicFor(save, c); }
+    if (!g.ok) continue;
     const cost = Sh.relicCost(c, g.relic), short = Sh.short(save.mats, cost);
     if (short.some(x => RELICS[g.relic].mat === x.mat)) continue;
     short.forEach(x => Sh.buy(save, x.mat, x.n - x.have, Math.floor(t / H)));
@@ -137,6 +145,37 @@ function relicWork(day) {
       const p = R.relicPiece(R.remakePiece({ card: c, res, picked: null, rng, now: t }), g.relic);
       save.cards[save.cards.indexOf(c)] = p; save.relicsMade = (save.relicsMade || []).concat(g.relic); relics.push(g.relic + ' d' + day);
       note('A RELIC: ' + p.name + ' (' + p.worth + ' c)');
+    }
+    return;
+  }
+}
+// the Nine (milestone 18): each shard's three parts worked when they can be (about half take), then the Mythic working on its Relic,
+// taken down from the Hall for it (about a quarter take: WHITE HEAT three times and no crack)
+let mythics = [], partsMade = 0, partsTried = 0, mythicTried = 0, courtAsked = 0;
+function nineWork(day) {
+  if (!Trail.open(save)) return;
+  const hour = Math.floor(t / H), buyShort = cost => Sh.short(save.mats, cost).forEach(x => Sh.buy(save, x.mat, x.n - x.have, hour));
+  for (const id of Object.keys(MYTHICS)) {
+    if (!Trail.hasShard(save, id) || (save.mythicsMade || []).includes(id)) continue;
+    for (let i = 0; i < 3; i++) {
+      const g = Trail.partGate(save, id, i); if (!g.ok) continue;
+      const cost = Sh.recipe(g.pattern, [0, 0, 0]).concat([Trail.partExtra(g.station)]);
+      buyShort(cost); if (!Sh.takeMats(save, cost)) continue;
+      partsTried++; if (rng() < 0.5) { Trail.makePart(save, id, i); partsMade++; }
+      return;
+    }
+    const relic = save.cards.find(c => c.tier === 'relic' && c.relic === MYTHICS[id].relic); if (!relic) continue;
+    let g = Sh.mythicFor(save, relic);
+    if (!g.ok && save.hall && g.why.length === 1 && /back room/.test(g.why[0])) { for (const k of Object.keys(save.hall.shown || {})) if (save.hall.shown[k] === relic.id) delete save.hall.shown[k]; g = Sh.mythicFor(save, relic); }
+    if (!g.ok) continue;
+    const cost = Sh.mythicCost(relic, id);
+    if (Sh.short(save.mats, cost).some(x => x.mat === RELICS[MYTHICS[id].relic].mat)) continue;
+    buyShort(cost); if (!Sh.takeMats(save, cost)) continue;
+    mythicTried++;
+    if (rng() < 0.25) {
+      const p = R.mythicPiece({ ...relic, tier: 'mythic' }, id);
+      save.cards[save.cards.indexOf(relic)] = p; save.mythicsMade = (save.mythicsMade || []).concat(id); mythics.push(id + ' d' + day);
+      note('ONE OF THE NINE: ' + p.name + (G.isNine(save) ? ' · MAKER OF THE NINE' : ''));
     }
     return;
   }
@@ -195,7 +234,7 @@ for (let d = 1; d <= days; d++) {
     tally(Sh.shopStep(save, 50, rng, t, false, clerk));
     St.payWages(save, 50); St.resolveTrips(save, t, rng);
     t += 50000; save.lastSeen = t;
-    if (s % 600 === 0) { runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); relicWork(d); runHall(d); trailWatch(d); }   // saving up for the second shop once it may be bought
+    if (s % 600 === 0) { runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
     if (save.branch) tally(Br.step(save, 50, rng, t));
     if (Sh.rescue(save, hour)) note('scrap bin');
   }
@@ -216,3 +255,11 @@ console.log('relics:', relics.join(', ') || 'none', ' tried', relicTried, ' blue
 console.log('big sales:', JSON.stringify(big), ' orders filled:', orders, '(stories', stories + ')', ' second shop from day', branchDay, save.branch ? 'sold ' + save.branch.sold + ' for ' + save.branch.earned + ' c' : '');
 console.log('old-blood: tried', oldTried, 'made', oldMade, ' sold by tier:', tiers);
 console.log('spent:', spent, ' trades:', Object.fromEntries(Object.entries(save.trades).map(([k, v]) => [k, lvl(k)])), ' in the back:', Sh.inBack(save).length);
+console.log('nine:', mythics.join(', ') || 'none', ' parts', partsMade + '/' + partsTried, ' mythic tries', mythicTried, ' court asked', courtAsked, G.isNine(save) ? ' · MAKER OF THE NINE' : '');
+const firstRelic = relics[0] ? relics[0].split(' d')[1] : '-';
+console.log('SUMMARY first-relic d' + firstRelic + ' relics ' + relics.length + ' shards ' + (save.shards || []).length + ' parts ' + partsMade + ' mythics ' + mythics.length + ' renown ' + G.renownOf(save));
+if (process.env.WHY) for (const id of Object.keys(RELICS)) {
+  const r = RELICS[id], st = PATTERNS[r.pattern].station || 'forge';
+  console.log('  ' + id.padEnd(14), (save.relicsMade || []).includes(id) ? 'MADE' : (save.blueprints || []).includes(id) ? 'bp' : 'no bp',
+    r.pattern, 'pat', lvl(r.pattern), st, Trail.stationLevel(save, st), 'owns', Rm.owns(save, st), 'oldblood', save.cards.filter(c => c.tier === 'oldblood' && c.pattern === r.pattern).length, 'rare', save.cards.filter(c => c.tier === 'rare' && c.pattern === r.pattern).length, 'mat', save.mats[r.mat] || 0);
+}

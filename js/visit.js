@@ -2,13 +2,13 @@
 // A shop front as a link, with no page access: what a friend sees when they visit (the room as it's arranged, the cards on its
 // shelves with their prices, the wall's pieces in full, a sign). Packed small here; js/share.js compresses it into the address after
 // #shop=. A link comes from someone else's browser: unpack checks and rebuilds every part, and the room must pass the room rules.
-import { FURNITURE, TIERS, RENOWN, ROOM_SIZES, STATIONS, CHARM_MAX, SHELF_LEVELS, MAX_PLACES } from './data.js?v=35';
-import { ART } from './card.js?v=35';
-import { valid, shelfSpots, charm, levelOf, homeOf } from './room.js?v=35';
-import { priceAt } from './shop.js?v=35';
-import { makePiece } from './rules.js?v=35';
-import { rung, hallCards } from './growth.js?v=35';
-import { cardFields, checkCard } from './share.js?v=35';
+import { FURNITURE, TIERS, RENOWN, ROOM_SIZES, STATIONS, CHARM_MAX, SHELF_LEVELS, MAX_PLACES } from './data.js?v=36';
+import { ART } from './card.js?v=36';
+import { valid, shelfSpots, charm, levelOf, homeOf } from './room.js?v=36';
+import { priceAt } from './shop.js?v=36';
+import { makePiece } from './rules.js?v=36';
+import { rung, hallCards, isNine } from './growth.js?v=36';
+import { cardFields, checkCard } from './share.js?v=36';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 const str = (v, n) => typeof v === 'string' && v.length <= n ? v : null;
@@ -31,6 +31,7 @@ export function packShop(save, now = Date.now()) {
     sh, w: (save.wall || []).map(id => cards.get(id)).filter(Boolean).slice(0, MAX_WALL).map(cardFields),
     u: save.uid || '', f: (c => c ? cardFields(c) : null)(featuredOf(save)),
     hl: hallCards(save).slice(0, MAX_WALL).map(cardFields),   // the Hall's pieces
+    n9: isNine(save) ? 1 : 0,   // the Maker of the Nine
   };
 }
 // the piece on the flyer: the one chosen, else the shop's best on show (the wall and the shelves), else its best anywhere
@@ -81,7 +82,8 @@ export function unpackShop(o) {
   if (uid == null) return null;
   let featured = null;
   if (o.f != null) { featured = checkCard(o.f); if (!featured) return null; featured.id = 'flyer'; }
-  return { uid, featured, maker, at, renown: RENOWN[o.rw].word, rung: o.rw, size: ROOM_SIZES[o.sz], charm: Math.round(o.ch), made: o.md, sold: o.sd, stations: o.st, room, stands, wall, hall };
+  if (o.n9 != null && o.n9 !== 0 && o.n9 !== 1) return null;
+  return { uid, featured, nine: o.n9 === 1, maker, at, renown: RENOWN[o.rw].word, rung: o.rw, size: ROOM_SIZES[o.sz], charm: Math.round(o.ch), made: o.md, sold: o.sd, stations: o.st, room, stands, wall, hall };
 }
 
 // ---------- a copy from a flyer: a sample of the featured piece, kept by a visitor ----------

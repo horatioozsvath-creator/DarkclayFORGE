@@ -39,18 +39,22 @@ export const MYTHICS = {
   morning: { name: 'The Window of Morning', relic: 'corrowgoblet', shard: 'star', parts: [['forge', 'a leading'], ['stretcher', 'a hanging'], ['kettle', 'a staining']],
     powers: [['Poison shows', 'what would harm clouds in its light'], ['First light', 'the room it hangs in wakes rested'], ['The long view', 'through it, the town as it will be']], lore: 'The Corrows\' cup, melted and blown into the window of a hall.' },
 };
-export const TRAIL = { rung: 6, deep: 0.1, court: 0.15 };
+export const TRAIL = { rung: 6, deep: 0.35, court: 0.4 };
+// milestone 18: the Court asks for each Mythic once (half the orders while one is waiting), paying twice its worth; all Nine made is
+// the ending: the maker's mark becomes Maker of the Nine and the Hall's charm doubles
+export const NINE = { courtOdds: 0.5, courtPays: 2, hallCharm: 2, title: 'MAKER OF THE NINE' };
 // THE MYTHIC WORKINGS (milestone 17). A part: a special working at its station, once its Mythic's shard is found, by a maker at trade 6
 // in something there, with two of the station's rare things and the bars of the piece it's worked as (PART_PATTERN). Narrow, WHITE HEAT
 // once and not one crack; short of it, the stuff is spent and it can be tried again.
 export const PART_WORK = { level: 6, band: 0.8, whiteStreak: 12, whites: 1, rare: 2 };
 export const PART_PATTERN = { forge: 'dagger', stretcher: 'gloves', bowbench: 'staff', kettle: 'oil', glass: 'lens' };
-// The Mythic: its Relic reforged at the Relic's own station, with the shard and its three parts, at trade 9: the narrowest band in the
+// The Mythic: its Relic reforged at the Relic's own station, with the shard and its three parts, at trade 9 in the station (5 in the pattern): the narrowest band in the
 // game, WHITE HEAT three times, not one crack. Short of it, the Relic stays as it was; the shard and the parts are kept.
-export const MYTHIC_WORK = { tier: 5, level: 9, band: 0.6, whiteStreak: 12, whites: 3, costX: 3 };   // the trail opens OF THE REACH; a trip below finds a shard 10 %; Court orders, 15 % of orders
-// the Relic working: a master of the trade (trade 9), the blueprint, an Old-Blood piece of its kind, the bars of a last rework and its
+export const MYTHIC_WORK = { tier: 5, level: 9, pattern: 5, band: 0.6, whiteStreak: 12, whites: 3, costX: 3 };   // the trail opens OF THE REACH; a trip below finds a shard 35 %; Court orders, 40 % of orders (milestone 18)
+// the Relic working: a master of the station (trade 9 in something there, 5 in the pattern), the blueprint, an Old-Blood piece of its kind, the bars of a last rework and its
 // relic material. Narrower than Old-Blood's, WHITE HEAT twice, not one crack; short of that, the piece stays Old-Blood, untouched.
-export const RELIC_WORK = { tier: 4, level: 9, band: 0.7, whiteStreak: 12, whites: 2, costX: 3 };
+// level: trade 9 in the station (its best pattern); pattern: trade 5 in the piece's own (its WHITE HEAT open). Milestone 18: was trade 9 in the pattern
+export const RELIC_WORK = { tier: 4, level: 9, pattern: 5, band: 0.7, whiteStreak: 12, whites: 2, costX: 3 };
 // the Relics (docs/RARITY-PLAN.md): one of each in a save. source: where its blueprint comes from (a regular's great story, or the Deep)
 export const RELICS = {
   gatewarden: { name: 'Gatewarden', pattern: 'falchion', mat: 'heartstone', power: ['Holds the line', 'a parry with it breaks a charge'], source: 'vance',
@@ -78,7 +82,7 @@ export const RELICS = {
   corrowgoblet: { name: 'The Corrow Goblet', pattern: 'goblet', mat: 'moonsilver', power: ['Poison shows', 'what\'s poured in it clouds if it would harm'], source: 'corrow',
     lore: 'The Corrows have drunk from one like it for three hundred years, and buried no one before their time.' },
 };
-export const BLUEPRINT_DEEP = 0.12;   // the odds a trip below the deep doors brings back a blueprint (any still to be found, one for a trade you're good at first)
+export const BLUEPRINT_DEEP = 0.22;   // the odds a trip below the deep doors brings back a blueprint (any still to be found, one for a trade you're good at first)
 // the last rework, Rare to Old-Blood: a master of the trade, a piece with a rare part or WHITE HEAT in its making, three times the
 // rework's bars and one rare thing of the station's; a narrower band, WHITE HEAT later, and not one crack (a crack: it stays Rare)
 export const OLD_BLOOD = { tier: 3, level: 6, costX: 3, band: 0.8, whiteStreak: 12,
@@ -413,7 +417,7 @@ export const TOWN_EVENTS = [
   { id: 'feast', name: 'Saint Brannoc\'s feast', line: 'Bells, bread and an open hand: it\'s a day for spending.', effect: 'Every buyer a step keener, purses fuller.', purse: 1.2, keen: true },
   { id: 'caravan', name: 'A spice caravan', line: 'A caravan from the south camps by the river for the night.', effect: 'Factors and travellers with deep purses.', gap: 0.85, weights: { factor: 3, traveller: 2, steward: 2 }, purse: 1.1 },
   { id: 'siege', name: 'Raiders on the high road', line: 'The gates are shut at noon. Fewer come in, and those who do want steel.', effect: 'Half the customers, but they carry a third more.', gap: 1.8, weights: { guard: 3 }, purse: 1.35 },
-  { id: 'starfall', name: 'A star falls on the Reach', line: 'Something burned across the sky last night and came down past the high pasture.', effect: 'Fewer customers: half the town has gone to look. A shard of Veric may lie there.', gap: 1.3, weight: 1.5 },
+  { id: 'starfall', name: 'A star falls on the Reach', line: 'Something burned across the sky last night and came down past the high pasture.', effect: 'Fewer customers: half the town has gone to look. A shard of Veric may lie there.', gap: 1.3, weight: 4 },
   { id: 'storm', name: 'A three-day storm', line: 'Rain off the Reach. Only the desperate are out.', effect: 'Fewer customers.', gap: 1.4 },
 ];
 export const TOWN_COLD = [

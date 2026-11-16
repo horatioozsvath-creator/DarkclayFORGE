@@ -32,3 +32,19 @@ large back room of good pieces to send there, so a real player's gain should be 
 It makes a piece every 50 seconds with no working to play, so its early game is far faster than a person's. It never haggles at the
 counter (its sales are the shelf's), and it doesn't brew. Read its numbers as relative (with or without a feature), not as how fast a
 player goes.
+
+## Release 36: the long balance (milestone 18)
+
+The sim now runs to 150–180 days, works the Mythic parts and workings, and chases the trail (from RENOWNED it practises the patterns it
+holds blueprints for and keeps their Old-Blood back; `CHASE=0` for the old bot). Numbers before this aren't comparable.
+
+| | Result (150 days, seeds 1–6) |
+|---|---|
+| First Relic | day 30–71, median about 40 |
+| Relics by day 150 | 5–8 of 11 |
+| First Mythic | day 52–91 |
+| Mythics by day 150 | 3–5 of 9 (4–7 by day 180) |
+| Renown by day 150 | 12,000–13,400 |
+
+The plan's target (the first Relic in about four weeks, all Nine in about three months) is met for the first Relic in some runs and
+not for the Nine. See docs/RARITY-PLAN.md, milestone 18, for why and what would change it.

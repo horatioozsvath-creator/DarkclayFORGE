@@ -40,7 +40,7 @@ test('the trail: closed until OF THE REACH; a clue opens with its Relic made', (
 test('shards: below the deep doors now and then; the Court\'s orders; the fallen star, once on its day', () => {
   const s = reach(), runner = { id: 'r', role: 'runner', name: 'Kit', trait: 'keen', xp: 0 }, rng = seeded(3);
   let got = 0; for (let i = 0; i < 1000; i++) { const h = St.haul(s, runner, 'below', rng, 0); if (h.shard) { got++; assert.equal(MYTHICS[h.shard].shard, 'deep'); } }
-  assert.ok(got > 50 && got < 150, got + ' of 1000');
+  assert.ok(got > 200 && got < 400, got + ' of 1000 (about one trip in three)');
   // the Court: an Old-Blood piece of the Relic's kind; its shard with the pay
   let court = null; for (let i = 0; i < 200 && !court; i++) { const t = reach(); Sh.postOrder(t, seeded(i), 0); if (t.order.shard) court = t; }
   assert.ok(court); const o = court.order; assert.equal(o.least, 3); assert.equal(MYTHICS[o.shard].shard, 'court');
@@ -50,7 +50,7 @@ test('shards: below the deep doors now and then; the Court\'s orders; the fallen
   let star = null; for (let d = 20000; d < 23000 && !star; d++) { const t = Town.townOn(d); if (t.event === 'starfall') star = t; }
   assert.ok(star, 'a star falls now and then');
   let falls = 0; for (let d = 20000; d < 24000; d++) if (Town.townOn(d).event === 'starfall') falls++;
-  assert.ok(falls > 120 && falls < 280, falls + ' in 4000 days (about one in three weeks)');
+  assert.ok(falls > 320 && falls < 520, falls + ' in 4000 days (about one in ten)');
   const t = reach(); const r = Trail.claimStar(t, star); assert.equal(MYTHICS[r.shard].shard, 'star');
   assert.ok(Trail.claimStar(t, star).why, 'once a day');
   assert.ok(Trail.claimStar(reach(), { ...star, event: 'fair' }).why);

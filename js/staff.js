@@ -1,12 +1,12 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=35';
-import { levelOf, makePiece, partOptions } from './rules.js?v=35';
-import { awayStep } from './shop.js?v=35';
-import { wageMult, capBonus, rung } from './growth.js?v=35';
-import * as Trail from './trail.js?v=35';
-import { TRAIL } from './data.js?v=35';
+import { ROLES, TRAITS, NAMES, ROUTES, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=36';
+import { levelOf, makePiece, partOptions } from './rules.js?v=36';
+import { awayStep } from './shop.js?v=36';
+import { wageMult, capBonus, rung } from './growth.js?v=36';
+import * as Trail from './trail.js?v=36';
+import { TRAIL } from './data.js?v=36';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -86,9 +86,9 @@ export function haul(save, p, route, rng, now) {
   // a blueprint, now and then: one of the Deep's still to be found
   let blueprint = null;
   if (r.relic && rng() < BLUEPRINT_DEEP) {
-    // any blueprint still to be found, one for a trade the maker is good at (7 and up) if there is one
+    // any blueprint still to be found, one for a station the maker is good at (trade 7 and up in something there) if there is one
     const left = Object.keys(RELICS).filter(k => !(save.blueprints || []).includes(k) && !(save.relicsMade || []).includes(k));
-    const good = left.filter(k => levelOf(((save.trades || {})[RELICS[k].pattern] || {}).xp || 0).level >= 7);
+    const good = left.filter(k => Trail.stationLevel(save, PATTERNS[RELICS[k].pattern].station || 'forge') >= 7);
     if (left.length) blueprint = pick(good.length ? good : left, rng);
   }
   const n = Math.round((r.commons[0] + rng() * (r.commons[1] - r.commons[0])) * (1 + 0.08 * (l - 1)) * (p.trait === 'keen' ? 1.2 : 1));

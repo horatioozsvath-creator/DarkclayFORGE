@@ -104,7 +104,7 @@ export function emblem(heat, empty) {
 
 // ---------- every button its icon: matched on what it says, first match wins ----------
 const RULES = [
-  [/^EXIT\b/, 'exit'], [/^SKILLS\b/, 'skills'], [/^FILL FROM THE BACK/, 'crate'], [/^LEDGER\b/, 'book'], [/^ON THE BOOKS\b/, 'scroll2'], [/^BUY WHAT'S SHORT/, 'buy'], [/^MAKE IT/, 'hammer'], [/^THE FORGE$|^TO THE FORGE|^TO MY FORGE|^BACK TO MY FORGE/, 'anvil'], [/^THE SHOP( FRONT)?$|^TO THE SHOP|IN THE BACK · TO THE SHOP/, 'shop'],
+  [/^EXIT\b/, 'exit'], [/^SKILLS\b/, 'skills'], [/^THE FORGE IS STILL WARM/, 'flame'], [/^READ THE ENDING/, 'book'], [/^KEEP IT$/, 'crown'], [/^FILL FROM THE BACK/, 'crate'], [/^LEDGER\b/, 'book'], [/^ON THE BOOKS\b/, 'scroll2'], [/^BUY WHAT'S SHORT/, 'buy'], [/^MAKE IT/, 'hammer'], [/^THE FORGE$|^TO THE FORGE|^TO MY FORGE|^BACK TO MY FORGE/, 'anvil'], [/^THE SHOP( FRONT)?$|^TO THE SHOP|IN THE BACK · TO THE SHOP/, 'shop'],
   [/^SUPPLIERS$|^TO THE SUPPLIERS/, 'crate'], [/^STAFF$/, 'people'], [/^THE LANDING$/, 'boat'], [/^THE WORKSHOP$|^WORKSHOP$/, 'anvil'], [/^THE HALL$/, 'column'],
   [/^STRIKE/, 'hammer'], [/^INTO THE FIRE|^OUT OF THE FIRE|^STOKE|^HEAT IT|^SOAK IT|^INTO THE STEAM|^BACK TO THE GLORY/, 'flame'], [/QUENCH|^STOP|^SET$|^STRING$|^LET IT DRY/, 'check'],
   [/^WORK IT|^WORK ANOTHER|^CONTINUE|^PLAY$/, 'hammer'], [/^MAKE IT$/, 'anvil'], [/^LEAVE IT/, 'back'], [/^LIGHT THE FORGE|^NEW GAME/, 'flame'],

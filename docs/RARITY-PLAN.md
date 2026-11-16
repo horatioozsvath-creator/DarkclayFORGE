@@ -1,6 +1,6 @@
 # Rarity to Mythic: the full ladder for every station
 
-Status: milestones 11–17 built (releases 22–30); 18 planned. The Nine can be made. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
+Status: milestones 11–18 built (releases 22–36). The pace target (all Nine in about three months) is not met yet: see milestone 18. The Nine can be made. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
 This plan takes every station up the last two: **Relic** (named, one of a kind) and **Mythic** (the Nine).
 
 ## The ladder
@@ -211,3 +211,25 @@ Each milestone ends in a release, as before: rules and tests first, then the scr
   as it was and the shard and parts are kept. The Mythic takes its name, lore and three powers; one in a save; never broken down.
 - **Not yet:** the Court's once-only purchase of each Mythic and the ending (milestone 18). The pace finding from milestone 16 stands:
   in the sim almost nobody reaches a Mythic; milestone 18 tunes it.
+
+## Milestone 18, as built (release 36)
+
+- **Mastery by the station:** a Relic or Mythic working now asks **trade 9 in something at the piece's station** (its best pattern
+  there) and **trade 5 in the piece's own pattern** (its WHITE HEAT open), not trade 9 in that pattern. Old-Blood still asks trade 6
+  in the pattern, so in practice a Relic needs trade 6 there. The Deep's blueprints favour a station the maker is good at.
+- **More of the trail:** a trip below finds a shard 35 % of the time (was 10 %), the Court's shard orders are 40 % of orders while one
+  waits (was 15 %), the fallen star about one day in ten (was one in three weeks), the Deep's blueprints 22 % (was 12 %).
+- **The Court buys each Mythic once:** while the maker holds one of the Nine the Court hasn't asked for, half the special orders are the
+  Court's, for that piece, paying twice its worth (+50 renown). Sell it (out of the Hall if it's there) or KEEP IT: either way the Court
+  never asks for that one again. A Mythic can't go on a shelf and fills no other order; one shelved before release 36 comes down.
+- **The ending, Maker of the Nine:** the ninth Mythic made (sold or kept, made counts) shows the ending; the maker's title becomes
+  MAKER OF THE NINE on the forge and shop signs, the save slot, the flyer and shop links (`n9`); the Hall's charm doubles. THE TRAIL OF
+  THE NINE keeps a READ THE ENDING AGAIN button.
+- **The sim** now works the parts and Mythic workings, and plays like someone chasing the trail (`CHASE=0` for the old bot): from
+  RENOWNED it practises the patterns it holds blueprints for, keeps their Old-Blood pieces back, and takes a piece down from the shelf or
+  the Hall for a working. **Its numbers aren't comparable with earlier milestones'.**
+- **Sim (150 days, seeds 1–6):** the first Relic on day 30–71 (median about 40); 5–8 Relics by day 150; the first Mythic on day 52–91;
+  **3–5 of the Nine by day 150**; at 180 days (seeds 1, 3, 5) 4–7. **All Nine in about three months is not met.** Raising the odds
+  further did little: shards keep pace with Relics; the tail is each Relic's chain (trade 6 in its own pattern, a Rare, the Old-Blood
+  rework, then the Relic working), and the sim's success rates for the workings are fixed guesses. Faster would need a structural change,
+  for example every clue open OF THE REACH (shards and parts gathered alongside the Relics), or a Relic piece that needn't be Old-Blood.

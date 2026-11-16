@@ -12,7 +12,7 @@ export function peekSlots() {
     try {
       const raw = localStorage.getItem(keyOf(i + 1)); if (!raw) return null;
       const s = JSON.parse(raw); if (!s || s.v !== 1) return null;
-      return { maker: s.maker || 'the Maker', coins: s.coins || 0, made: s.made || 0, sold: s.sold || 0, renown: s.renown || 0, cards: (s.cards || []).length, lastSeen: s.lastSeen || 0 };
+      return { maker: s.maker || 'the Maker', coins: s.coins || 0, made: s.made || 0, sold: s.sold || 0, renown: s.renown || 0, cards: (s.cards || []).length, lastSeen: s.lastSeen || 0, nine: (s.mythicsMade || []).length >= 9 };
     } catch (e) { return null; }
   });
 }

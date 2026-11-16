@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // Growth, with no page access: tools, the maker's level and perks, renown, the display wall.
-import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS, HALL_RENOWN, HALL_CHARM } from './data.js?v=35';
-import { levelOf, MAX_LEVEL } from './rules.js?v=35';
+import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS, HALL_RENOWN, HALL_CHARM, MYTHICS, NINE } from './data.js?v=36';
+import { levelOf, MAX_LEVEL } from './rules.js?v=36';
 
 // ---------- tools ----------
 export const has = (save, id) => (save.tools || []).includes(id);
@@ -52,7 +52,9 @@ export const wallRenown = save => (save.wall || []).reduce((a, id) => { const c 
 export const hallCards = save => save.hall ? Object.values(save.hall.shown || {}).map(id => save.cards.find(c => c.id === id)).filter(Boolean) : [];
 export const onHall = (save, id) => !!save.hall && Object.values(save.hall.shown || {}).includes(id);
 export const hallRenown = save => hallCards(save).reduce((a, c) => a + (HALL_RENOWN[c.tier] || 0), 0);
-export const hallCharm = save => hallCards(save).reduce((a, c) => a + (HALL_CHARM[c.tier] || 0), 0);
+export const hallCharm = save => hallCards(save).reduce((a, c) => a + (HALL_CHARM[c.tier] || 0), 0) * (isNine(save) ? NINE.hallCharm : 1);
+// the ending: every one of the Nine made (sold to the Court or kept, made counts)
+export const isNine = save => Object.keys(MYTHICS).every(id => (save.mythicsMade || []).includes(id));
 export const renownOf = save => Math.floor(save.renown || 0) + wallRenown(save) + hallRenown(save);
 export function rung(save) { const r = renownOf(save); let i = 0; RENOWN.forEach((x, k) => { if (r >= x.at) i = k; }); return i; }
 export const nextRung = save => RENOWN[rung(save) + 1] || null;

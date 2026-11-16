@@ -556,3 +556,11 @@ h1, .tname, .screenbar .t { font-family: var(--carve); font-weight: 900; letter-
 .opt b { font-family: var(--carve); letter-spacing: .06em; }
 .opt.go { background: linear-gradient(180deg, #e7b25c, #b77b2c); color: #1d1206; border-color: #3a2408; box-shadow: inset 0 2px 0 rgba(255,240,200,.55), inset 0 -3px 0 rgba(70,40,8,.6); }
 .opt:focus-visible { outline: none; box-shadow: inset 0 0 0 2px #e8c464; }
+/* the ending */
+.ending { max-width: 520px; text-align: center; }
+.ending h2 { font: 900 clamp(28px, 7vw, 40px)/1.1 var(--carve); color: #e8c464; margin: 6px 0 14px; text-shadow: 0 0 24px rgba(228,80,94,.35); }
+.ending p { color: var(--bone-dim); font-size: 15px; line-height: 1.55; margin: 0 0 12px; text-align: left; }
+.ending p b { color: #e8c464; }
+.ninelist { list-style: none; padding: 0; margin: 14px 0 4px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; }
+.ninelist li { font: 700 13px var(--carve); color: var(--t-mythic); border-left: 3px solid var(--t-mythic); background: rgba(228,80,94,.07); padding: 6px 8px; text-align: left; }
+#trailWord .seg { margin-left: 6px; }

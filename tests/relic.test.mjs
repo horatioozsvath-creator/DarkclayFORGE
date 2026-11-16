@@ -64,9 +64,9 @@ test('blueprints: a great story\'s end, after the first and at RENOWNED; the Dee
   // the Deep: the Hollow King's Helm, now and then
   const runner = { id: 'r', role: 'runner', name: 'Kit', trait: 'keen', xp: 0 }, d = { ...s, blueprints: [], found: ['ember'] };
   let got = 0; const rng = seeded(9); for (let i = 0; i < 2000; i++) if (St.haul(d, runner, 'below', rng, 0).blueprint) got++;
-  assert.ok(got > 80 && got < 200, got + ' of 2000 trips');
-  // one for a trade the maker is good at, first
-  d.trades = { falchion: { xp: 1e6 } }; let gw = 0; for (let i = 0; i < 2000; i++) { const b = St.haul(d, runner, 'below', rng, 0).blueprint; if (b) { assert.equal(b, 'gatewarden'); gw++; } }
+  assert.ok(got > 180 && got < 380, got + ' of 2000 trips');
+  // one for a station the maker is good at, first: a master of the falchion is shown the forge's
+  d.trades = { falchion: { xp: 1e6 } }; let gw = 0; for (let i = 0; i < 2000; i++) { const b = St.haul(d, runner, 'below', rng, 0).blueprint; if (b) { assert.equal(PATTERNS[RELICS[b].pattern].station || 'forge', 'forge'); gw++; } }
   assert.ok(gw > 80);
   d.blueprints = Object.keys(RELICS); for (let i = 0; i < 300; i++) assert.ok(!St.haul(d, runner, 'below', rng, 0).blueprint, 'all found: no more');
 });
