@@ -125,14 +125,16 @@ export function strike(S) {
   if (m < lo) {
     // the stretcher: too dry, a stitch turns nothing over (no tear); the forge: a learner's cold strike does nothing, a CRACK slips in after
     if (st.dryDead || S.level < 3) { S.streak = 0; pop({ label: 'NOTHING', why: st.dryDead ? st.cold : 'TOO COLD · IT DOESN\'T MOVE', size: 'bad', colour: KC.HOLD }); return { k: 'HOLD', dead: true, pops }; }
-    slipIn(S, 'CRACK', 'COLD', 'Struck cold (strike ' + S.strikes + ')');
+    slipIn(S, 'CRACK', 'COLD', (st.id === 'bowbench' ? 'Bent cold: it split (bend ' : 'Struck cold (strike ') + S.strikes + ')');
   }
+  // the bench: a bend across the grain turns nothing over (the steam still drains)
+  if (st.grain && acrossGrain(S)) { S.streak = 0; pop({ label: 'NOTHING', why: 'ACROSS THE GRAIN · WAIT FOR IT', size: 'bad', colour: KC.HOLD }); return { k: 'HOLD', dead: true, pops }; }
   const tore = st.wetTear && m > hi && S.level >= 3;
   if (tore) slipIn(S, 'CRACK', 'WET', 'Too wet: it tore (stitch ' + S.strikes + ')');
   if (!left(S).length) { deal(S); pop({ label: 'SHUFFLED', gain: 'THE STRIP RAN OUT · EVERY TILE BACK IN', size: 'bigpop', colour: KC.FOUND }); }
   const tk = S.rack.find(x => !x.up);
   tk.up = true; tk.n = S.strikes; tk.peek = false;
-  let k = tk.k, why = m < lo ? 'STRUCK COLD · A CRACK SLIPPED IN' : tore ? 'TOO WET · A TEAR SLIPPED IN' : '', gain = '', size = '', colour = null, drop = false;
+  let k = tk.k, why = m < lo ? (st.id === 'bowbench' ? 'BENT COLD · IT SPLIT' : 'STRUCK COLD · A CRACK SLIPPED IN') : tore ? 'TOO WET · A TEAR SLIPPED IN' : '', gain = '', size = '', colour = null, drop = false;
   if (k === 'CRACK' && (S.white > 0 || S.warden)) { why = S.warden ? 'THE WARDEN\'S TILE HOLDS IT' : 'WHITE HEAT · NO CRACK'; S.warden = false; k = 'HOLD'; }
   const mult = S.twin && k !== 'CRACK' ? 2 : 1;
   if (S.twin && k !== 'CRACK') { S.twin = false; why = why || 'TWIN · IT COUNTS TWICE'; }
@@ -186,9 +188,12 @@ export function toggleFire(S) {
 }
 
 // The heat over time. Returns { scaled: true } when a face-down GOOD turns to HOLD from being left in past white.
+// the grain turns: with the stave for a while, then across it
+export function acrossGrain(S) { const g = (S.station || {}).grain; if (!g) return false; return (S.grainT || 0) % (g.with + g.across) >= g.with; }
 export function tick(S, dt) {
   if (S.phase !== 'work' || S.done) return {};
   const out = {};
+  if (S.station && S.station.grain) { const was = acrossGrain(S); S.grainT = (S.grainT || 0) + dt; if (acrossGrain(S) !== was) out.grain = true; }
   if (S.inFire) {
     S.meter = Math.min(100, S.meter + S.rise * dt);
     if (S.meter >= S.over) {
@@ -269,7 +274,8 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now, k
     stats.push(['Damage', lo + '–' + hi, Math.min(1, hi / BARS.damage)]);
     const word = SPEED_WORDS.filter(s => p.speed >= s[0]).pop()[1];
     stats.push(['Speed', word, Math.min(1, p.speed / BARS.speed)]);
-    stats.push(['Reach', p.reach.toFixed(1) + ' m', Math.min(1, p.reach / BARS.reach)]);
+    if (p.range) stats.push(['Range', p.range + ' m', Math.min(1, p.range / 60)]);
+    else stats.push(['Reach', p.reach.toFixed(1) + ' m', Math.min(1, p.reach / BARS.reach)]);
     stats.push(['Skill', p.skill, null]);
   }
   if (p.armour) {
@@ -283,11 +289,11 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now, k
   const rareN = parts.filter(o => o.rare).length, partsVal = parts.slice(1).reduce((v, o) => v * (o.val || 1), 1);
   const worth = Math.max(1, Math.round(p.value * metal.val * tier.worth * (1 + w / 200) * (1 + 0.25 * rareN) * partsVal
     * Math.pow(0.9, result.cracks) * (result.flawed ? 0.5 : 1)));
-  const leather = stationOf(patternId).id === 'stretcher';
-  const made = [(leather ? 'Stitched by ' : 'Forged by ') + maker];
+  const leather = stationOf(patternId).id === 'stretcher', wood = stationOf(patternId).id === 'bowbench';
+  const made = [(leather ? 'Stitched by ' : wood ? 'Bent by ' : 'Forged by ') + maker];
   if (result.instant) made.push('made at once, at the plain odds');
   else {
-    made.push('WORKED +' + worked + ' %', result.strikes + (leather ? ' stitches · ' : ' strikes · ') + result.heats + (leather ? ' soak' : ' heat') + (result.heats > 1 ? 's' : ''),
+    made.push('WORKED +' + worked + ' %', result.strikes + (leather ? ' stitches · ' : wood ? ' bends · ' : ' strikes · ') + result.heats + (leather ? ' soak' : wood ? ' steaming' : ' heat') + (result.heats > 1 ? 's' : ''),
       result.cracks ? result.cracks + ' crack' + (result.cracks > 1 ? 's' : '') : 'no crack');
     if (result.whiteHeat) made.push('WHITE HEAT');
   }
@@ -308,7 +314,7 @@ export function srcOf(card) {
   const cr = (card.made || []).find(x => /^\d+ crack/.test(x)), cracks = cr ? +cr.match(/\d+/)[0] : 0;
   return { picks: [m, 0, 0], worked, strikes: 0, heats: 0, cracks, whiteHeat: (card.made || []).includes('WHITE HEAT'), frost: card.affixes.some(a => a[0] === 'Frost-kissed'), instant: false, reworked: 0 };
 }
-export const makerOf = card => card.maker || ((card.made || [])[0] || '').replace(/^(Forged|Stitched) by /, '') || 'an old maker';
+export const makerOf = card => card.maker || ((card.made || [])[0] || '').replace(/^(Forged|Stitched|Bent) by /, '') || 'an old maker';
 // A piece out of the fire again: the same piece (its id, its maker, the affixes it carried), its tier and its making moved on.
 export function remakePiece({ card, res, picked, rng, now }) {
   const src = srcOf(card);

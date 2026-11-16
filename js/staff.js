@@ -72,7 +72,7 @@ export function sendRunner(save, route, now) {
   p.trip = { route, left: now, back: now + tripHours(p, route) * H };
   return true;
 }
-const COMMONS = ['iron', 'iron', 'iron', 'bronze', 'bronze', 'steel', 'wrap', 'cord', 'ash', 'wool', 'strap', 'horn', 'rowan', 'silk', 'sharkhide', 'deer', 'deer', 'goat', 'gut', 'linen'];
+const COMMONS = ['iron', 'iron', 'iron', 'bronze', 'bronze', 'steel', 'wrap', 'cord', 'ash', 'wool', 'strap', 'horn', 'rowan', 'silk', 'sharkhide', 'deer', 'deer', 'goat', 'gut', 'linen', 'yew', 'birch', 'goose', 'bone'];
 const RARES = Object.keys(MATS).filter(id => MATS[id].rare);
 export function haul(save, p, route, rng, now) {
   const r = ROUTES[route], l = levelOfP(p), mats = {};

@@ -1,7 +1,7 @@
 // The shop's rules, with no page access: materials and suppliers, the shelf and its tags, customers and sales.
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
-import { PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_SHELVES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
+import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_SHELVES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
   HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS } from './data.js?v=7';
 import { chosenParts, partOptions, makePiece, srcOf, levelOf } from './rules.js?v=7';
 import { charmGap } from './room.js?v=7';
@@ -95,10 +95,11 @@ export function newCustomer(rng) {
     mood: weighted(MOODS, t.moods, rng), least: t.least || 0, fig: t.fig };
 }
 const PAIRS = ['gloves', 'boots'];
+const SHEAVES = ['arrows'];
 export const wants = (want, card) => want === 'any' || want === card.pattern || PATTERNS[card.pattern].want === want;
 export function wantWord(want) {
-  if (PATTERNS[want]) { const n = PATTERNS[want].name.toLowerCase(); return PAIRS.includes(want) ? 'a pair of ' + n : (/^[aeiou]/.test(n) ? 'an ' : 'a ') + n; }
-  return { weapon: 'a weapon', helm: 'something for the head', ring: 'a ring', armour: 'something to wear', any: 'something good' }[want];
+  if (PATTERNS[want]) { const n = PATTERNS[want].name.toLowerCase(); return SHEAVES.includes(want) ? 'a sheaf of ' + n : PAIRS.includes(want) ? 'a pair of ' + n : (/^[aeiou]/.test(n) ? 'an ' : 'a ') + n; }
+  return { weapon: 'a weapon', helm: 'something for the head', ring: 'a ring', armour: 'something to wear', bow: 'a bow', any: 'something good' }[want];
 }
 export const takeOdds = (mood, tag) => mood === 'PINCHED' && tag === 'dear' ? 0 : Math.min(0.95, MOOD_ODDS[mood] * TAGS[tag].odds);
 const LINES = {
@@ -318,7 +319,7 @@ export function postOrder(save, rng, now) {
 }
 export function orderWord(o) {
   const rest = (o.metal ? MATS[o.metal].name.replace(' bar', '').toLowerCase() + ' ' : '') + PATTERNS[o.pattern].name.toLowerCase();
-  return o.least ? TIERS[o.least].name + ' or better ' + rest : PAIRS.includes(o.pattern) ? 'a pair of ' + rest : (/^[aeiou]/.test(rest) ? 'an ' : 'a ') + rest;
+  return o.least ? TIERS[o.least].name + ' or better ' + rest : SHEAVES.includes(o.pattern) ? 'a sheaf of ' + rest : PAIRS.includes(o.pattern) ? 'a pair of ' + rest : (/^[aeiou]/.test(rest) ? 'an ' : 'a ') + rest;
 }
 export const fills = (o, card) => !!o && card.pattern === o.pattern && TIER_N[card.tier] >= o.least && (!o.metal || card.metal === o.metal) && !card.flawed;
 export function deliver(save, cardId, now) {
@@ -353,6 +354,15 @@ export function salvage(save, cardId) {
 // back in the fire: half the bars (rounded up) of its own metal; Common to Fine, Fine to Rare
 export const reworkCost = card => [{ mat: card.metal, n: Math.ceil(PATTERNS[card.pattern].bars / 2) }];
 export const canRework = (save, card) => TIER_N[card.tier] < TIERS.length - 1 && onShelf(save, card.id) < 0 && !onWall(save, card.id);
+
+// ---------- parts for other stations, forged at once ----------
+export function forgePart(save, id, n = 1) {
+  const f = FORGED_PARTS[id]; if (!f) return false;
+  for (const [m, k] of Object.entries(f.from)) if ((save.mats[m] || 0) < k * n) return false;
+  for (const [m, k] of Object.entries(f.from)) { save.mats[m] -= k * n; if (!save.mats[m]) delete save.mats[m]; }
+  save.mats[id] = (save.mats[id] || 0) + f.makes * n;
+  return true;
+}
 
 // ---------- never stuck ----------
 // No coin for a bar and a cord, nothing made and nothing to make one from: the yard's scrap bin gives a dagger's worth.

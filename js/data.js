@@ -31,7 +31,18 @@ export const STRETCHER = {
   cold: 'TOO DRY · IT STIFFENS',
   twist: 'Keep it supple. Too dry: a stitch turns nothing over. Too wet: a stitch tears (a CRACK slips in, from trade 3). It dries as you work: SOAK IT again.',
 };
-export const STATIONS = { forge: FORGE, stretcher: STRETCHER };
+// the bench (Zero: STEAM 40–100, drain 5 · cool 3 · rise 30; a cold bend splits; the grain 2.6 s with, 1.4 s across, and a bend
+// across it turns nothing over). Its id is 'bowbench': 'bench' is the seat you can buy for the shop.
+export const BENCH = {
+  id: 'bowbench', name: 'BENCH', word: 'THE BENCH', tool: 'DRAWKNIFE', meter: 'STEAM', fire: 'INTO THE STEAM', out: 'OUT OF THE STEAM', close: 'STRING', place: 'the steam',
+  heatIt: 'STEAM IT', band_: 'pliant band', strike: 'BEND',
+  band: [40, 100], drain: 5, cool: 3, rise: 30, over: 101, grain: { with: 2.6, across: 1.4 }, cost: 2000,
+  colours: ['#5a4630', '#6a5236', '#8a6a42', '#a8844e', '#c8a060', '#e0c088'],
+  labels: [[0, 'SET'], [40, 'PLIANT']],
+  cold: 'IT SPLITS',
+  twist: 'Bend it pliant, with the grain. Bent cold, it splits (a CRACK slips in, from trade 3). Across the grain, a bend turns nothing over: wait for it to turn.',
+};
+export const STATIONS = { forge: FORGE, stretcher: STRETCHER, bowbench: BENCH };
 
 // strip: [GOOD, GREAT, CRACK, HOLD]. level: the trade level that opens the metal (a stand-in until suppliers sell it, milestone 2).
 export const METALS = {
@@ -43,10 +54,19 @@ export const METALS = {
   // the stretcher's hides (Zero's working.json stuffs: deer the baseline, goat easy, shark hard)
   deer: { name: 'Deer hide', adj: 'Deerskin', strip: [10, 3, 4, 3], line: 'the baseline: keep it supple', dmg: 1, val: 1, tint: '#a07850', level: 1 },
   goat: { name: 'Goat hide', adj: 'Goatskin', strip: [11, 2, 2, 5], widen: 1.15, line: 'easy: a wider supple band, few tears', dmg: .9, val: .9, tint: '#c8a878', level: 1 },
+  // the bench's woods (Zero's stuffs: birch easy, yew the baseline, oak hard, old yew rare and wide)
+  birch: { name: 'Birch', adj: 'Birch', strip: [11, 2, 2, 5], widen: 1.15, line: 'springy: a wider pliant band, few splits', dmg: .9, val: .9, tint: '#d8c49a', level: 1 },
+  yew: { name: 'Yew', adj: 'Yew', strip: [10, 3, 4, 3], line: 'the baseline: bend it pliant, with the grain', dmg: 1, val: 1, tint: '#b0723c', level: 1 },
+  oak: { name: 'Oak', adj: 'Oak', strip: [9, 4, 5, 2], widen: .85, line: 'dense: a narrower band, more GREATs and more splits', dmg: 1.2, val: 1.4, tint: '#8a6238', level: 3 },
+  oldyew: { name: 'Old yew', adj: 'Old-yew', strip: [9, 4, 5, 2], widen: 1.15, line: 'centuries in the grain: more GREATs, and a forgiving band', dmg: 1.35, val: 2.2, tint: '#6a3a1e', level: 5 },
   sharkhide: { name: 'Shark hide', adj: 'Sharkskin', strip: [9, 4, 5, 2], widen: .85, line: 'tough: a narrower band, more GREATs and more tears', dmg: 1.3, val: 1.6, tint: '#6a7a80', level: 3 },
 };
 const BLADE_METALS = ['iron', 'bronze', 'steel', 'silver', 'darkclay'];
 const HIDES = ['deer', 'goat', 'sharkhide'];
+const WOODS = ['yew', 'birch', 'oak', 'oldyew'];
+const STRINGS = [{ name: 'Gut', mat: 'gut' }, { name: 'Silk', mat: 'silk', val: 1.1 }, { name: 'Wyvern sinew', mat: 'sinew', rare: true }];
+const NOCKS = [{ name: 'Horn', mat: 'horn' }, { name: 'Bone', mat: 'bone' }, { name: 'Starmetal', mat: 'starmetal', rare: true }];
+const bowAffixes = ['strongdrawn', 'quicknocked', 'farflying', 'balanced', 'keen', 'quiet', 'hallowed', 'deepborn'];
 const RARE_LEVEL = 5;   // the trade level that opens a pattern's rare part
 
 const weaponAffixes = ['keen', 'biting', 'balanced', 'parrying', 'crushing', 'steady', 'hallowed', 'deepborn', 'sundering'];
@@ -90,6 +110,19 @@ export const PATTERNS = {
   hood: { name: 'Hood', trade: 'Hoods', kind: 'HOOD · HEAD', art: 'hood', armour: 1, weight: 1, value: 22, bars: 1, want: 'helm', station: 'stretcher',
     parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
     affixes: wearAffixes, lore: ['Rain off, ears warm.', 'It sits close and keeps out more than weather.', 'A hood a scout would trade a horse for.'] },
+  // the bench's (arrows need forged heads, a staff a forged ferrule: made at the forge, or bought dearer)
+  shortbow: { name: 'Shortbow', trade: 'Shortbows', kind: 'BOW · TWO HANDS', art: 'shortbow', dice: [1, 6], dmg: [3, 8], speed: 1.5, range: 30, skill: 'ARCHERY', value: 45, bars: 2, want: 'bow', station: 'bowbench',
+    parts: [{ part: 'Stave', metals: WOODS }, { part: 'String', opts: STRINGS }, { part: 'Nocks', opts: NOCKS }],
+    affixes: bowAffixes, lore: ['It draws, it looses, it flies true enough.', 'Quick to the string and quicker to the mark.', 'It bends like it remembers the tree.'] },
+  longbow: { name: 'Longbow', trade: 'Longbows', kind: 'BOW · TWO HANDS', art: 'longbow', dice: [1, 8], dmg: [5, 12], speed: 1.0, range: 60, skill: 'ARCHERY', value: 90, bars: 3, want: 'bow', station: 'bowbench',
+    parts: [{ part: 'Stave', metals: WOODS }, { part: 'String', opts: STRINGS }, { part: 'Nocks', opts: NOCKS }],
+    affixes: bowAffixes, lore: ['A long pull and a long way.', 'The kind of bow that wins a field.', 'Heartwood and sapwood, and the arrow goes where it\'s told.'] },
+  staff: { name: 'Staff', trade: 'Staves', kind: 'STAFF · FOCUS', art: 'staff', dice: [1, 6], dmg: [2, 6], speed: 1.2, reach: 2.0, skill: 'STAVES', value: 60, bars: 2, want: 'weapon', station: 'bowbench',
+    parts: [{ part: 'Stave', metals: WOODS }, { part: 'Ferrule', opts: [{ name: 'Forged ferrule', mat: 'ferrule' }] }, { part: 'Head', opts: [{ name: 'Plain' }, { name: 'Rough gem', mat: 'gem', val: 1.5 }, { name: 'Starglass', mat: 'starglass', rare: true }] }],
+    affixes: ['startouched', 'learned', 'moonlit', 'spiritsighted', 'hallowed', 'balanced', 'steady'], lore: ['A walking stick with ambitions.', 'It hums a little in the hand.', 'The grain spirals, and so does whatever passes through it.'] },
+  arrows: { name: 'Arrows', trade: 'Arrows', kind: 'ARROWS · A SHEAF OF 20', art: 'arrows', dice: [1, 6], dmg: [2, 5], speed: 1.8, range: 40, skill: 'ARCHERY', value: 24, bars: 1, want: 'arrows', station: 'bowbench',
+    parts: [{ part: 'Shafts', metals: WOODS }, { part: 'Heads', opts: [{ name: 'Forged heads', mat: 'arrowheads' }] }, { part: 'Fletching', opts: [{ name: 'Goose', mat: 'goose' }, { name: 'Raven', mat: 'raven', val: 1.1 }] }],
+    affixes: ['strongdrawn', 'farflying', 'biting', 'hallowed', 'bleeding'], lore: ['Twenty of them, all alike, which is the point.', 'Straight shafts and honest heads.', 'Each one fletched as if it were the only one.'] },
   gloves: { name: 'Gloves', trade: 'Gloves', kind: 'GLOVES · HANDS', art: 'gloves', armour: 1, weight: 1, value: 24, bars: 1, want: 'armour', station: 'stretcher',
     parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
     affixes: wearAffixes, lore: ['Work gloves: the work is yours.', 'They fit like they were measured. They were.', 'Ten fingers of good leather and not a seam that rubs.'] },
@@ -122,6 +155,9 @@ export const AFFIXES = {
   lightstrapped: { word: 'Light-strapped', min: 8, max: 15, line: '{0}% lighter' },
   weatherproof: { word: 'Weatherproof', min: 15, max: 30, line: 'wet and cold come on {0}% slower' },
   coinsense: { word: 'Coin-sense', min: 5, max: 12, line: '+{0}% coins found' },
+  strongdrawn: { word: 'Strong-drawn', min: 1, max: 2, line: '+{0} on every arrow' },
+  quicknocked: { word: 'Quick-nocked', min: 10, max: 20, line: 'draws {0}% quicker' },
+  farflying: { word: 'Far-flying', min: 10, max: 20, line: 'arrows fly {0}% further' },
   learned: { word: 'Learned', min: 5, max: 12, line: '+{0}% trade XP' },
 };
 
@@ -145,6 +181,10 @@ export const BARS = { damage: 16, speed: 2.3, reach: 3.0, armour: 12, weight: 8 
 export const MATS = {
   iron: { name: 'Iron bar', price: 8, unit: 'bar' }, bronze: { name: 'Bronze bar', price: 7, unit: 'bar' }, steel: { name: 'Steel bar', price: 14, unit: 'bar' },
   silver: { name: 'Silver bar', price: 30, unit: 'bar' }, darkclay: { name: 'Darkclay steel bar', price: 40, unit: 'bar' },
+  birch: { name: 'Birch stave', price: 7 }, yew: { name: 'Yew stave', price: 8 }, oak: { name: 'Oak stave', price: 12 }, oldyew: { name: 'Old yew stave', price: 35 },
+  bone: { name: 'Bone', price: 2 }, goose: { name: 'Goose feathers', price: 1 }, raven: { name: 'Raven feathers', price: 3 },
+  arrowheads: { name: 'Arrowheads', price: 8, forged: true }, ferrule: { name: 'Ferrule', price: 14, forged: true },
+  sinew: { name: 'Wyvern sinew', price: 50, rare: true }, starmetal: { name: 'Starmetal', price: 60, rare: true },
   deer: { name: 'Deer hide', price: 6 }, goat: { name: 'Goat hide', price: 5 }, linen: { name: 'Linen', price: 3 }, gut: { name: 'Gut', price: 1 },
   silverthread: { name: 'Silver thread', price: 40, rare: true },
   wrap: { name: 'Leather wrap', price: 3 }, cord: { name: 'Cord', price: 1 }, sharkhide: { name: 'Shark hide', price: 9 }, horn: { name: 'Horn', price: 4 },
@@ -157,7 +197,8 @@ export const MATS = {
 export const SUPPLIERS = [
   { id: 'yard', name: 'Dougal\'s Yard', kind: 'THE SMELTER', line: 'Bars from the smelter, iron to darkclay steel.', lines: ['iron', 'bronze', 'steel', 'silver', 'darkclay'] },
   { id: 'tannery', name: 'The Tannery on the Ford', kind: 'HIDES, HAFTS AND CLOTH', line: 'Wraps, cord, hafts, linings and straps.', lines: ['deer', 'goat', 'sharkhide', 'wrap', 'cord', 'gut', 'horn', 'ash', 'rowan', 'wool', 'linen', 'silk', 'strap'] },
-  { id: 'pack', name: 'Nell Quarry\'s Pack', kind: 'A PEDLAR', line: 'Gems always; rare things, two at a time, changing on the hour.', lines: ['gem'], rare: ['blackwater', 'bogoak', 'winterfox', 'starglass', 'silverthread'], pick: 2 },
+  { id: 'timber', name: 'Hollin\'s Timber', kind: 'STAVES AND FEATHERS', line: 'Staves seasoned for the bench, feathers, bone; forged heads and ferrules, dear.', lines: ['birch', 'yew', 'oak', 'oldyew', 'bone', 'goose', 'raven', 'arrowheads', 'ferrule'] },
+  { id: 'pack', name: 'Nell Quarry\'s Pack', kind: 'A PEDLAR', line: 'Gems always; rare things, two at a time, changing on the hour.', lines: ['gem'], rare: ['blackwater', 'bogoak', 'winterfox', 'starglass', 'silverthread', 'sinew', 'starmetal'], pick: 2 },
 ];
 
 // ---------- the shop ----------
@@ -170,12 +211,14 @@ export const START_SLOTS = 4;
 export const CUSTOMERS = [
   { id: 'folk', weight: 30, purse: [6, 45], wants: ['dagger', 'ring', 'any', 'dagger', 'axe', 'armour', 'gloves'], moods: [15, 35, 50], fig: '#a08a6a',
     names: ['a miner off the shift', 'a carter', 'a farmer\'s wife', 'a ferryman', 'a charcoal burner', 'a boy with his savings', 'a widow from the lane'] },
-  { id: 'guard', weight: 25, purse: [40, 170], wants: ['falchion', 'axe', 'helm', 'weapon', 'dagger', 'armour', 'jerkin'], moods: [35, 50, 15], fig: '#7a8aa0',
+  { id: 'guard', weight: 25, purse: [40, 170], wants: ['falchion', 'axe', 'helm', 'weapon', 'dagger', 'armour', 'jerkin', 'bow', 'arrows'], moods: [35, 50, 15], fig: '#7a8aa0',
     names: ['a warden\'s man', 'a gate guard', 'a sergeant of the pikes', 'a drover riding out armed', 'a watchman'] },
   { id: 'traveller', weight: 20, purse: [30, 240], wants: ['any', 'ring', 'weapon', 'dagger', 'boots', 'armour'], moods: [30, 45, 25], fig: '#8a9a6a',
     names: ['a caravan master', 'a pilgrim to the abbey', 'a tinker', 'a hedge-knight\'s squire', 'a ferry-bound merchant'] },
-  { id: 'delver', weight: 15, purse: [80, 420], wants: ['weapon', 'helm', 'axe', 'falchion', 'any', 'armour', 'boots'], moods: [50, 40, 10], fig: '#9a6a5a',
+  { id: 'delver', weight: 15, purse: [80, 420], wants: ['weapon', 'helm', 'axe', 'falchion', 'any', 'armour', 'boots', 'arrows', 'staff'], moods: [50, 40, 10], fig: '#9a6a5a',
     names: ['a delver of the Reach', 'one of Osk\'s Four', 'a door-breaker', 'a lamp-carrier back from the deep'] },
+  { id: 'hunter', weight: 12, purse: [20, 180], wants: ['bow', 'arrows', 'shortbow', 'longbow', 'arrows', 'boots', 'any'], moods: [35, 45, 20], fig: '#6a7a4a',
+    names: ['a hunter from the Reach', 'a trapper', 'a fowler', 'a poacher, quietly', 'a deer-stalker'] },
   { id: 'factor', weight: 7, purse: [200, 750], wants: ['ring', 'helm', 'any'], least: 1, moods: [30, 55, 15], fig: '#b89a5a',
     names: ['a guild factor', 'a reeve\'s steward', 'a lord\'s buyer'] },
   { id: 'collector', weight: 3, purse: [500, 1600], wants: ['any'], least: 1, moods: [55, 40, 5], fig: '#a07ab8',
@@ -205,8 +248,8 @@ export const SELLER_ODDS = 0.14;   // of those who come in while you're at the c
 // the named regulars who leave special orders (Darkclay Zero's regulars, §5.2): wants, a least tier, a metal they insist on
 export const REGULARS = [
   { who: 'Sergeant Ollo Vance', wants: ['falchion', 'axe', 'helm', 'jerkin'], line: 'For the gate. The pikes need better than they\'ve got.', fig: '#7a8aa0' },
-  { who: 'Lady Ysmay Corrow', wants: ['ring', 'falchion', 'helm'], least: 1, line: 'Something with a maker\'s mark worth the name.', fig: '#a07ab8' },
-  { who: 'Bram Oakes, a drover', wants: ['dagger', 'axe', 'boots'], line: 'For my drovers. Good ones, mind.', fig: '#8a9a6a' },
+  { who: 'Lady Ysmay Corrow', wants: ['ring', 'falchion', 'helm', 'longbow', 'staff'], least: 1, line: 'Something with a maker\'s mark worth the name.', fig: '#a07ab8' },
+  { who: 'Bram Oakes, a drover', wants: ['dagger', 'axe', 'boots', 'arrows'], line: 'For my drovers. Good ones, mind.', fig: '#8a9a6a' },
   { who: 'Ketty Moss, a widow', wants: ['ring'], metal: 'silver', line: 'A silver ring, for his grave.', fig: '#a08a6a' },
   { who: 'Tib Harrow', wants: ['dagger'], line: 'A knife. My own. I\'ve saved for it.', fig: '#a08a6a' },
 ];
@@ -266,6 +309,7 @@ export const FURNITURE = {
   anvil: { name: 'Anvil', fp: [1, 1], fixed: true, model: 'anvil' },
   counter: { name: 'Counter', fp: [2, 1], fixed: true, model: 'counter' },
   stretcher: { name: 'Stretcher', fp: [2, 1], fixed: true, model: 'stretcher', station: 'stretcher' },
+  bowbench: { name: 'Bending bench', fp: [2, 1], fixed: true, model: 'bowbench', station: 'bowbench' },
   shelf: { name: 'Shelf', fp: [2, 1], slots: 2, model: 'shelf', line: 'Two places for pieces to sell.' },
   rug: { name: 'Rug', fp: [2, 2], charm: 2, cost: 180, model: 'rug', line: 'Warm underfoot.' },
   barrels: { name: 'Barrels', fp: [1, 1], charm: 1, cost: 90, model: 'barrels' },
@@ -316,4 +360,11 @@ export const PERKS = {
     { id: 'word', word: 'Good word', line: 'renown comes half as fast again' },
     { id: 'hours', word: 'Long hours', line: 'the shop kept two hours longer while you\'re away' },
   ] },
+};
+
+// parts for the bench, forged at once from iron (no working): a strong link between the stations, never a dead end (they're also
+// sold, dearer, at Hollin's Timber)
+export const FORGED_PARTS = {
+  arrowheads: { name: 'Arrowheads', from: { iron: 1 }, makes: 2, line: 'a bar of iron makes heads for two sheaves' },
+  ferrule: { name: 'A ferrule', from: { iron: 1 }, makes: 1, line: 'an iron cap for a staff\'s foot' },
 };
