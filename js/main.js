@@ -80,6 +80,27 @@ function rescueCheck() {
   if (Sh.rescue(save, hour())) { store(save); toast('<b>The yard\'s scrap bin.</b> Dougal leaves you a bar and a cord, enough for a dagger.'); }
 }
 
+// ---------- first-time hints: each shown once, in place; all can be turned off ----------
+const HINTS = {
+  home: 'Welcome to your forge. <i>Pick a pattern</i> to make your first piece: the dagger takes the least.',
+  prepare: 'This is your <i>strip</i>: the clay tiles you\'ll turn over as you strike. GOOD and GREAT shape the piece, a CRACK marks it. When you\'re ready, <i>WORK IT</i>.',
+  work: 'Put it <i>INTO THE FIRE</i> (R), wait for the <i>gold band</i>, then <i>STRIKE</i> (Space, or tap). Fill SHAPE, then <i>QUENCH</i> (Q).',
+  result: 'Every piece becomes a card. Put it <i>ON THE SHELF</i> and customers will buy it.',
+  shop: 'While you\'re on this screen, customers come to the <i>counter</i>: show them a piece and choose your price. Away from it, they buy from the shelf at its tag: <i>CHEAP, FAIR or DEAR</i>.',
+  supp: 'Materials for the forge. <i>Prices change on the hour</i>: the arrows show which way.',
+  staff: 'A <i>counter clerk</i> sells while you\'re away (the game closed). A <i>runner</i> goes out for materials.',
+  points: 'You have a <i>skill point</i>. Spend it in THE MAKER below.',
+};
+function tip(key, before, parent) {
+  document.querySelectorAll('.hintcard[data-h="' + key + '"]').forEach(x => x.remove());
+  if (save.hintsOff || (save.seen || []).includes(key)) return;
+  const el = document.createElement('div'); el.className = 'hintcard'; el.dataset.h = key;
+  el.innerHTML = '<span class="k">A HINT</span><span>' + HINTS[key] + '</span><span class="btns"><button class="seg">GOT IT</button><button class="skip">NO MORE HINTS</button></span>';
+  el.querySelector('.seg').onclick = () => { save.seen = (save.seen || []).concat(key); store(save); el.remove(); };
+  el.querySelector('.skip').onclick = () => { save.hintsOff = true; store(save); document.querySelectorAll('.hintcard').forEach(x => x.remove()); };
+  if (before) before.parentNode.insertBefore(el, before); else parent.appendChild(el);
+}
+
 // ---------- THE FORGE (home) ----------
 function toHome() {
   clearTimers(); S = null; rescueCheck(); show('home'); coins();
@@ -97,6 +118,8 @@ function toHome() {
     ? '<button tabindex="-1" title="' + f.name + ': ' + f.line + '"><div style="aspect-ratio:3/4">' + bagLook(id).face + '</div>' + f.short + '</button>'
     : '<button class="unk" disabled><div style="aspect-ratio:3/4">' + unknownLook(id).face + '</div>NOT FOUND</button>').join('');
   renderMaker(); renderTools();
+  if (!save.made && !save.cards.length) tip('home', $('patterns').closest('section'));
+  if (G.pointsLeft(save) > 0) tip('points', document.querySelector('.maker-card'));
   const have = Object.entries(save.mats).filter(([, n]) => n > 0);
   $('storeWord').textContent = have.length ? have.reduce((a, [, n]) => a + n, 0) + ' THINGS' : 'EMPTY';
   $('store').innerHTML = have.length ? have.map(([id, n]) => '<span>' + MATS[id].name + '<b>' + n + '</b></span>').join('')
@@ -161,11 +184,12 @@ $('lookClose').onclick = () => { $('look').hidden = true; };
 let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
-  if (!dioP) dioP = import('./diorama.js?v=6').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
-    dio = d;
+  tip('shop', $('floor'));
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=6').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+    dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(save.room, save); d.setQueue(save.queue); renderDioBar(); }
     return d;
-  });
+  }); }
   else if (dio) { dio.setRoom(save.room, save); dio.setQueue(save.queue); dio.redraw(); }
 }
 
@@ -434,7 +458,7 @@ function backOpen(id) {
 
 // ---------- STAFF ----------
 const hm = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? h + ' h ' + m + ' min' : m ? m + ' min' : s + ' s'; };
-function toStaff() { clearTimers(); S = null; rescueCheck(); show('staff'); coins(); renderStaff(); }
+function toStaff() { clearTimers(); S = null; rescueCheck(); show('staff'); coins(); renderStaff(); tip('staff', $('staffList').closest('section')); }
 let staffTick = 0;
 function personHtml(p, hired) {
   const lv = R.levelOf(p.xp || 0), tr = St.traitOf(p);
@@ -519,7 +543,7 @@ window.addEventListener('pagehide', () => { save.lastSeen = Date.now(); store(sa
 
 // ---------- SUPPLIERS ----------
 let suppHour = null;
-function toSupp() { clearTimers(); S = null; rescueCheck(); show('supp'); coins(); renderSupp(); }
+function toSupp() { clearTimers(); S = null; rescueCheck(); show('supp'); coins(); renderSupp(); tip('supp', $('supps')); }
 function renderSupp() {
   if (screen !== 'supp') return;
   const h = hour(); suppHour = h;
@@ -558,6 +582,7 @@ function toPrepare() {
   $('makeIt').innerHTML = rw ? '<b>LEAVE IT</b>Keep it ' + TIERS[rw.from].name + '. Back to the shop.' : '<b>MAKE IT</b>At once, at the plain odds. It teaches nothing.';
   $('workIt').innerHTML = rw ? '<b>WORK IT AGAIN</b>The tiles turn face down and shuffle.' : '<b>WORK IT</b>The tiles turn face down and shuffle.';
   partSegs(); renderPrep();
+  tip('prepare', document.querySelector('#vPrep .prep'));
 }
 function toRework(id) {
   const c = save.cards.find(x => x.id === id);
@@ -677,6 +702,7 @@ function toWork() {
   setFireBtn();
   popLabel({ label: 'HEAT IT', gain: FORGE.fire, why: 'then strike in the gold band', colour: '#e8c464' });
   render();
+  tip('work', null, $('vWork'));
 }
 function setFireBtn() {
   $('bFire').innerHTML = (S.inFire ? FORGE.out : FORGE.fire) + '<small>' + (S.inFire ? 'R' : 'R · RESHUFFLES THE STRIP') + '</small>';
@@ -707,6 +733,7 @@ function playPops(pops) {
 }
 function strike() {
   if (screen !== 'work' || !S || S.done || paused) return;
+  if (S.strikes >= 3) document.querySelectorAll('#vWork .hintcard').forEach(x => x.remove());
   const now = performance.now();
   if (now - lastStrike < 420) return;
   lastStrike = now;
@@ -862,6 +889,7 @@ function complete(res, picked) {
   const sb = $('rDone').querySelector('.rbtns'); sb.querySelectorAll('.sharebtn').forEach(x => x.remove());
   const shb = shareBtn(piece, $('rDone')); shb.classList.add('sharebtn'); sb.appendChild(shb);
   $('rAgain').focus({ preventScroll: true }); $('result').scrollTop = 0;
+  if (!res.rework) tip('result', $('rDone').querySelector('.rbtns'));
 }
 $('rAgain').onclick = () => { rw = null; toPrepare(); };
 $('rHome').onclick = toHome;
