@@ -212,13 +212,15 @@ export function rollAffixes(patternId, n, rng, not = []) {
 }
 
 // ---------- the card: a finished piece, kept as plain data ----------
+export const WORKED_CAP = 50;
 export function makePiece({ patternId, picks, result, picked, maker, rng, now }) {
   const p = PATTERNS[patternId], parts = chosenParts(patternId, picks), metal = parts[0], tier = TIERS[result.tier];
   let affixes = picked ? [picked] : [];
   affixes = affixes.concat(rollAffixes(patternId, Math.max(0, tier.affixes - affixes.length), rng, affixes.map(a => a[2])));
   if (metal.affix) affixes.push(metal.affix);
   if (result.frost) affixes.push(['Frost-kissed', 'a small frost side on the piece']);
-  const worked = result.worked, wk = 1 + worked / 100 * 0.25;   // WORKED adds up to a quarter over the tier's plain numbers
+  // WORKED adds up to an eighth over the tier's plain numbers, counted to 50 % (the card still shows the true figure)
+  const worked = result.worked, w = Math.min(WORKED_CAP, worked), wk = 1 + w / 100 * 0.25;
   const stats = [];
   if (p.dmg) {
     const lo = Math.max(1, Math.round(p.dmg[0] * metal.dmg * tier.mult * wk)), hi = Math.max(lo + 1, Math.round(p.dmg[1] * metal.dmg * tier.mult * wk));
@@ -237,7 +239,7 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now })
   const bonus = Math.round((tier.mult * wk - 1) * 100 / 12);
   const dice = p.dice ? p.dice[0] + 'd' + p.dice[1] + (bonus > 0 ? '+' + bonus : '') : '';
   const rareN = parts.filter(o => o.rare).length, partsVal = parts.slice(1).reduce((v, o) => v * (o.val || 1), 1);
-  const worth = Math.max(1, Math.round(p.value * metal.val * tier.worth * (1 + worked / 200) * (1 + 0.25 * rareN) * partsVal
+  const worth = Math.max(1, Math.round(p.value * metal.val * tier.worth * (1 + w / 200) * (1 + 0.25 * rareN) * partsVal
     * Math.pow(0.9, result.cracks) * (result.flawed ? 0.5 : 1)));
   const made = ['Forged by ' + maker];
   if (result.instant) made.push('made at once, at the plain odds');

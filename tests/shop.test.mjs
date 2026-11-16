@@ -89,7 +89,7 @@ test('every piece the forge makes has someone who can afford it at FAIR', () => 
   for (const id of Object.keys(PATTERNS)) {
     const metals = R.partOptions(id)[0].opts.length, n = R.partOptions(id).map(p => p.opts.length);
     for (let m = 0; m < metals; m++) for (let tier = 0; tier < 3; tier++) for (let g = 0; g < n[1]; g++) for (let h = 0; h < n[2]; h++) {
-      const result = { tier, flawed: false, worked: 40, strikes: 30, heats: 2, cracks: 0 };
+      const result = { tier, flawed: false, worked: 400, strikes: 90, heats: 6, cracks: 0 };   // past any cap
       const p = R.makePiece({ patternId: id, picks: [m, g, h], result, maker: 'T', rng: seeded(1), now: 1 });
       assert.ok(p.worth <= best(id), id + ' ' + p.name + ' tier ' + tier + ': ' + p.worth + ' over ' + best(id));
     }
