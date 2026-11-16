@@ -1,9 +1,10 @@
 // The shop's rules, with no page access: materials and suppliers, the shelf and its tags, customers and sales.
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
-import { PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS } from './data.js?v=4';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf } from './rules.js?v=4';
+import { PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_SHELVES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS } from './data.js?v=5';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf } from './rules.js?v=5';
+import { charmGap } from './room.js?v=5';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -51,7 +52,7 @@ export function buy(save, id, n, hour) {
 
 // ---------- the shelf ----------
 export function fixShelf(save) {
-  save.slots = Math.max(START_SLOTS, Math.min(START_SLOTS + SLOT_COSTS.length, save.slots || START_SLOTS));
+  save.slots = Math.max(START_SLOTS, Math.min(MAX_SHELVES * 2, save.slots || START_SLOTS));
   const ids = new Set(save.cards.map(c => c.id));
   const shelf = (save.shelf || []).slice(0, save.slots).map(e => e && ids.has(e.id) && TAGS[e.tag] ? e : null);
   while (shelf.length < save.slots) shelf.push(null);
@@ -143,7 +144,7 @@ export function shopStep(save, dt, rng, now, present = false, clerk = null) {
   }
   if (save.shopNext == null) save.shopNext = gap(rng);
   save.shopNext -= dt;
-  while (save.shopNext <= 0) { out.push(...arrive(save, rng, now, present, clerk)); save.shopNext += gap(rng); }
+  while (save.shopNext <= 0) { out.push(...arrive(save, rng, now, present, clerk)); save.shopNext += gap(rng) * charmGap(save); }
   return out;
 }
 
@@ -157,7 +158,7 @@ export function awayStep(save, dt, rng, at, clerk) {
   save.awayNext -= dt;
   while (save.awayNext <= 0) {
     const when = at + save.awayNext * 1000;   // when they came in, so the ledger keeps the night's times
-    save.awayNext += awayGap(rng);
+    save.awayNext += awayGap(rng) * charmGap(save);
     if (!clerk) { out.missed++; continue; }
     const e = visit(save, rng, when, undefined, { rate: clerk.rate, by: clerk.name, quiet: true });
     if (e.sold) { out.sold.push(e); out.cut += e.sold.full - e.sold.price; } else out.missed++;

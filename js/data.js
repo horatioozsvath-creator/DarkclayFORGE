@@ -214,3 +214,33 @@ export const ROUTES = {
   reach: { name: 'Out to the Reach', from: 'the Reach', h: 3, fee: 35, commons: [5, 8], rare: 1, piece: 0.25, tile: 0.12 },
   deep: { name: 'Into the deep doors', from: 'the deep doors', h: 8, fee: 80, commons: [6, 10], rare: 2, piece: 0.5, tile: 0.3 },
 };
+
+// ---------- the diorama (milestone 5) ----------
+// The shop is a grid of one-metre tiles, the back wall at z = 0, the left wall at x = 0, open to the front (the camera's side).
+// The door is in the left wall at DOOR_Z; that tile and the tiles in front of the counter are kept clear for customers.
+export const DOOR_Z = 3;
+export const ROOM_SIZES = [
+  { w: 6, d: 5, cost: 0, capH: 0, word: 'A SMALL SHOP' },
+  { w: 8, d: 6, cost: 600, capH: 1, word: 'A GOOD SHOP' },
+  { w: 10, d: 7, cost: 1600, capH: 2, word: 'A FINE SHOP' },
+];
+// fp: the footprint in tiles [x, z] before turning; fixed: can be moved, never sold; slots: shelf places; charm: draws customers
+export const FURNITURE = {
+  forge: { name: 'Forge', fp: [2, 2], fixed: true, model: 'forge' },
+  anvil: { name: 'Anvil', fp: [1, 1], fixed: true, model: 'anvil' },
+  counter: { name: 'Counter', fp: [2, 1], fixed: true, model: 'counter' },
+  shelf: { name: 'Shelf', fp: [2, 1], slots: 2, model: 'shelf', line: 'Two places for pieces to sell.' },
+  rug: { name: 'Rug', fp: [2, 2], charm: 2, cost: 60, model: 'rug', line: 'Warm underfoot.' },
+  barrels: { name: 'Barrels', fp: [1, 1], charm: 1, cost: 30, model: 'barrels' },
+  crates: { name: 'Crates', fp: [2, 1], charm: 1, cost: 35, model: 'crates' },
+  lamp: { name: 'Lamp', fp: [1, 1], charm: 2, cost: 50, model: 'lamp', line: 'A light in the window draws folk in.' },
+  chest: { name: 'Chest', fp: [1, 1], charm: 1, cost: 35, model: 'chest' },
+  bench: { name: 'Bench', fp: [2, 1], charm: 2, cost: 45, model: 'bench', line: 'Somewhere to wait.' },
+  table: { name: 'Table', fp: [2, 2], charm: 3, cost: 90, model: 'table' },
+  rack: { name: 'Pelt rack', fp: [2, 1], charm: 3, cost: 120, model: 'rack' },
+  workbench: { name: 'Workbench', fp: [2, 1], charm: 3, cost: 110, model: 'workbench', line: 'Folk like to see the work.' },
+};
+export const SHELF_COSTS = [200, 450, 900, 1600, 2500, 3600];   // the 3rd shelf to the 8th
+export const MAX_SHELVES = 8;
+export const CHARM_MAX = 20;          // charm counted, at most
+export const CHARM_STEP = 0.025;      // each point of charm: customers come that much sooner (20 points: half as many again)
