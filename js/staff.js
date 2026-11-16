@@ -82,7 +82,7 @@ export function haul(save, p, route, rng, now) {
   if (r.gem && rng() < r.gem) mats.gem = (mats.gem || 0) + 1;
   let piece = null, tile = null;
   if (r.piece && rng() < r.piece) {
-    const ids = Object.keys(PATTERNS), pattern = pick(ids, rng), metals = partOptions(pattern)[0].opts;
+    const ids = Object.keys(PATTERNS).filter(k => !PATTERNS[k].makes), pattern = pick(ids, rng), metals = partOptions(pattern)[0].opts;
     piece = makePiece({ patternId: pattern, picks: [Math.floor(rng() * Math.min(3, metals.length)), 0, 0],
       result: { tier: rng() < 0.35 ? 1 : 0, flawed: false, worked: Math.floor(rng() * 20), strikes: 20, heats: 2, cracks: Math.floor(rng() * 3) }, maker: 'an old maker', rng, now });
   }

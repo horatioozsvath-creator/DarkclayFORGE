@@ -61,7 +61,8 @@ export function fixWall(save) {
   const ids = new Set(save.cards.map(c => c.id));
   save.wall = (save.wall || []).filter(id => ids.has(id)).slice(0, wallSlots(save));
 }
-export const wallCharm = save => (save.wall || []).reduce((a, id) => { const c = save.cards.find(x => x.id === id); return a + (c ? TIERS.findIndex(t => t.id === c.tier) + 1 : 0); }, 0);
+// a pane hung on the wall goes in the window: twice the charm
+export const wallCharm = save => (save.wall || []).reduce((a, id) => { const c = save.cards.find(x => x.id === id); return a + (c ? (TIERS.findIndex(t => t.id === c.tier) + 1) * ((PATTERNS[c.pattern] || {}).windowed ? 2 : 1) : 0); }, 0);
 export function hang(save, id) {
   if (onWall(save, id) || !save.cards.some(c => c.id === id) || (save.shelf || []).some(e => e && e.id === id)) return false;
   if ((save.wall || []).length >= wallSlots(save)) return false;

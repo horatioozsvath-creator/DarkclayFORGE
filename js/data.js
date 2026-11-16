@@ -54,7 +54,18 @@ export const KETTLE = {
   cold: 'TOO COOL · IT DOESN\'T TAKE',
   twist: 'Hold a simmer. Stirring doesn\'t cool it: it settles by itself, and STOKE raises it. Too cool, a stir doesn\'t take; too hot, it boils over (a CRACK, from trade 3, and the boil drops).',
 };
-export const STATIONS = { forge: FORGE, stretcher: STRETCHER, bowbench: BENCH, kettle: KETTLE };
+// glass (Zero: THE GATHER 40–80, drain 5 · cool 5 · rise 30; too stiff it shatters, and the very next tile turned is a CRACK; too
+// soft it sags, SHAPE slipping back 4 a blow while shaping; WHITE HEAT after 10 clean blows, not 8)
+export const GLASS = {
+  id: 'glass', name: 'GLASS', word: 'THE GLASS', tool: 'BLOWPIPE', meter: 'THE GATHER', fire: 'BACK TO THE GLORY HOLE', out: 'OUT OF THE GLORY HOLE', close: 'SET', place: 'the glory hole',
+  heatIt: 'GATHER IT', band_: 'soft band', strike: 'BLOW', again: 'BACK TO THE GLORY HOLE', made: ['blow', 'gather'],
+  band: [40, 80], drain: 5, cool: 5, rise: 30, over: 101, shatter: true, sag: 4, whiteStreak: 10, cost: 3500,
+  colours: ['#2a3a3a', '#3a6a6a', '#c8702a', '#f0a040', '#ffd27a', '#fff2c0'],
+  labels: [[0, 'STIFF'], [40, 'SOFT'], [80, 'RUNNING']],
+  cold: 'TOO STIFF · IT SHATTERS',
+  twist: 'Keep it soft. Too stiff, it shatters: the very next tile is a CRACK (from trade 3). Too hot, it sags: SHAPE slips back. It cools fastest of all.',
+};
+export const STATIONS = { forge: FORGE, stretcher: STRETCHER, bowbench: BENCH, kettle: KETTLE, glass: GLASS };
 
 // strip: [GOOD, GREAT, CRACK, HOLD]. level: the trade level that opens the metal (a stand-in until suppliers sell it, milestone 2).
 export const METALS = {
@@ -66,6 +77,11 @@ export const METALS = {
   // the stretcher's hides (Zero's working.json stuffs: deer the baseline, goat easy, shark hard)
   deer: { name: 'Deer hide', adj: 'Deerskin', strip: [10, 3, 4, 3], line: 'the baseline: keep it supple', dmg: 1, val: 1, tint: '#a07850', level: 1 },
   goat: { name: 'Goat hide', adj: 'Goatskin', strip: [11, 2, 2, 5], widen: 1.15, line: 'easy: a wider supple band, few tears', dmg: .9, val: .9, tint: '#c8a878', level: 1 },
+  // the glass's sands (Zero's glass strip the baseline)
+  clearsand: { name: 'Clear sand', adj: 'Clear', strip: [9, 4, 5, 2], line: 'the baseline: keep it soft', dmg: 1, val: 1, tint: '#cfe8e8', level: 1 },
+  riversand: { name: 'River sand', adj: 'Greenglass', strip: [10, 3, 4, 3], widen: 1.15, line: 'forgiving: a wider soft band, a green cast', dmg: .9, val: .85, tint: '#9ac8a0', level: 1 },
+  blacksand: { name: 'Black sand', adj: 'Smoke', strip: [9, 4, 5, 2], widen: .85, line: 'darker glass, a narrower soft band', dmg: 1.2, val: 1.4, tint: '#6a6a78', level: 3 },
+  seasand: { name: 'Sea-glass sand', adj: 'Sea-glass', strip: [8, 5, 5, 2], widen: 1.2, line: 'drowned sand: more GREATs, and a kinder band', dmg: 1.35, val: 2.2, tint: '#7ad0d8', level: 5 },
   // the kettle's herbs (the first part: it sets the strip)
   mending: { name: 'Mending herbs', adj: 'Mending', strip: [10, 3, 4, 3], line: 'the baseline: hold a simmer', dmg: 1, val: 1, tint: '#7ac46a', level: 1 },
   sleepmoss: { name: 'Sleepmoss', adj: 'Sleepmoss', strip: [11, 2, 2, 5], widen: 1.15, line: 'gentle: a wider simmer, few boil-overs', dmg: .9, val: .9, tint: '#8a9ad8', level: 1 },
@@ -82,6 +98,10 @@ const BLADE_METALS = ['iron', 'bronze', 'steel', 'silver', 'darkclay'];
 const HIDES = ['deer', 'goat', 'sharkhide'];
 const WOODS = ['yew', 'birch', 'oak', 'oldyew'];
 const HERBS = ['mending', 'sleepmoss', 'emberroot', 'ghostcap'];
+const SANDS = ['clearsand', 'riversand', 'blacksand', 'seasand'];
+const FLUX = [{ name: 'Potash', mat: 'potash' }, { name: 'Lime', mat: 'lime' }];
+const COLOUR = [{ name: 'Clear' }, { name: 'Cobalt', mat: 'cobalt', val: 1.2 }, { name: 'Starglass', mat: 'starglass', rare: true }];
+const glassAffixes = ['moonlit', 'spiritsighted', 'startouched', 'learned', 'coinsense', 'hallowed'];
 const WATER = [{ name: 'Well water' }, { name: 'Spring water', mat: 'springwater', val: 1.05 }, { name: 'Moonwell water', mat: 'moonwater', rare: true }];
 const BINDER = [{ name: 'Honey', mat: 'honey' }, { name: 'Beeswax', mat: 'wax' }, { name: 'Tallow', mat: 'tallow' }];
 const brewAffixes = ['learned', 'startouched', 'warmlined', 'weatherproof', 'graveward', 'steady', 'quiet'];
@@ -131,6 +151,19 @@ export const PATTERNS = {
   hood: { name: 'Hood', trade: 'Hoods', kind: 'HOOD · HEAD', art: 'hood', armour: 1, weight: 1, value: 22, bars: 1, want: 'helm', station: 'stretcher',
     parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
     affixes: wearAffixes, lore: ['Rain off, ears warm.', 'It sits close and keeps out more than weather.', 'A hood a scout would trade a horse for.'] },
+  // the glass's: lenses, goblets and panes are pieces; bottles go to the store room for the kettle (makes: what a working yields)
+  lens: { name: 'Lens', trade: 'Lenses', kind: 'LENS', art: 'lens', clarity: 10, value: 40, bars: 2, want: 'glass', station: 'glass',
+    parts: [{ part: 'Sand', metals: SANDS }, { part: 'Flux', opts: FLUX }, { part: 'Colour', opts: COLOUR }],
+    affixes: glassAffixes, lore: ['It brings the far thing near.', 'Ground true: not a ripple in it.', 'Through it a scholar reads what the page forgot.'] },
+  goblet: { name: 'Goblet', trade: 'Goblets', kind: 'GOBLET', art: 'goblet', clarity: 8, value: 34, bars: 2, want: 'glass', station: 'glass',
+    parts: [{ part: 'Sand', metals: SANDS }, { part: 'Flux', opts: FLUX }, { part: 'Colour', opts: COLOUR }],
+    affixes: glassAffixes, lore: ['It holds wine and catches the fire.', 'A stem as thin as a reed, and it stands.', 'Lords drink from worse.'] },
+  pane: { name: 'Pane', trade: 'Panes', kind: 'PANE · A WINDOW', art: 'pane', clarity: 6, value: 34, bars: 2, want: 'glass', station: 'glass', windowed: true,
+    parts: [{ part: 'Sand', metals: SANDS }, { part: 'Flux', opts: FLUX }, { part: 'Colour', opts: COLOUR }],
+    affixes: glassAffixes, lore: ['Daylight, let in.', 'Flat as still water.', 'The light through it looks like it\'s been somewhere better.'] },
+  bottles: { name: 'Bottles', trade: 'Bottles', kind: 'BOTTLES · FOR THE KETTLE', art: 'draught', value: 4, bars: 1, station: 'glass', makes: { mat: 'bottle', n: [6, 8, 10] },
+    parts: [{ part: 'Sand', metals: SANDS }, { part: 'Flux', opts: FLUX }, { part: 'Colour', opts: [{ name: 'Clear' }] }],
+    affixes: [], lore: ['', '', ''] },
   // the kettle's: a batch of three, each bottle sold on its own (every batch takes three bottles: bought, or blown at the glass)
   draught: { name: 'Draught', trade: 'Draughts', kind: 'DRAUGHT · A BATCH', art: 'draught', potency: 10, value: 14, bars: 2, batch: 3, want: 'brew', station: 'kettle',
     parts: [{ part: 'Herb', metals: HERBS }, { part: 'Water', opts: WATER }, { part: 'Binder', opts: BINDER }],
@@ -215,6 +248,8 @@ export const BARS = { damage: 16, speed: 2.3, reach: 3.0, armour: 12, weight: 8 
 export const MATS = {
   iron: { name: 'Iron bar', price: 8, unit: 'bar' }, bronze: { name: 'Bronze bar', price: 7, unit: 'bar' }, steel: { name: 'Steel bar', price: 14, unit: 'bar' },
   silver: { name: 'Silver bar', price: 30, unit: 'bar' }, darkclay: { name: 'Darkclay steel bar', price: 40, unit: 'bar' },
+  clearsand: { name: 'Clear sand', price: 6 }, riversand: { name: 'River sand', price: 5 }, blacksand: { name: 'Black sand', price: 12 }, seasand: { name: 'Sea-glass sand', price: 30 },
+  potash: { name: 'Potash', price: 1 }, lime: { name: 'Lime', price: 1 }, cobalt: { name: 'Cobalt', price: 8 },
   mending: { name: 'Mending herbs', price: 3 }, sleepmoss: { name: 'Sleepmoss', price: 3 }, emberroot: { name: 'Emberroot', price: 6 }, ghostcap: { name: 'Ghostcap', price: 16 },
   springwater: { name: 'Spring water', price: 1 }, honey: { name: 'Honey', price: 2 }, wax: { name: 'Beeswax', price: 2 }, tallow: { name: 'Tallow', price: 1 },
   bottle: { name: 'Bottle', price: 4, blown: true }, moonwater: { name: 'Moonwell water', price: 40, rare: true },
@@ -235,6 +270,7 @@ export const SUPPLIERS = [
   { id: 'yard', name: 'Dougal\'s Yard', kind: 'THE SMELTER', line: 'Bars from the smelter, iron to darkclay steel.', lines: ['iron', 'bronze', 'steel', 'silver', 'darkclay'] },
   { id: 'tannery', name: 'The Tannery on the Ford', kind: 'HIDES, HAFTS AND CLOTH', line: 'Wraps, cord, hafts, linings and straps.', lines: ['deer', 'goat', 'sharkhide', 'wrap', 'cord', 'gut', 'horn', 'ash', 'rowan', 'wool', 'linen', 'silk', 'strap'] },
   { id: 'timber', name: 'Hollin\'s Timber', kind: 'STAVES AND FEATHERS', line: 'Staves seasoned for the bench, feathers, bone; forged heads and ferrules, dear.', lines: ['birch', 'yew', 'oak', 'oldyew', 'bone', 'goose', 'raven', 'arrowheads', 'ferrule'] },
+  { id: 'sandpit', name: 'The Sandpit', kind: 'SAND AND FLUX', line: 'Sands for the glass, potash and lime, cobalt for blue.', lines: ['clearsand', 'riversand', 'blacksand', 'seasand', 'potash', 'lime', 'cobalt'] },
   { id: 'herbs', name: 'Marrow\'s Herbs', kind: 'THE HERBALIST', line: 'Herbs, honey, wax, spring water; bottles too, though the glassworks\' are dearer here.', lines: ['mending', 'sleepmoss', 'emberroot', 'ghostcap', 'springwater', 'honey', 'wax', 'tallow', 'bottle'] },
   { id: 'pack', name: 'Nell Quarry\'s Pack', kind: 'A PEDLAR', line: 'Gems always; rare things, two at a time, changing on the hour.', lines: ['gem'], rare: ['blackwater', 'bogoak', 'winterfox', 'starglass', 'silverthread', 'sinew', 'starmetal', 'moonwater'], pick: 2 },
 ];
@@ -251,13 +287,13 @@ export const CUSTOMERS = [
     names: ['a miner off the shift', 'a carter', 'a farmer\'s wife', 'a ferryman', 'a charcoal burner', 'a boy with his savings', 'a widow from the lane'] },
   { id: 'guard', weight: 25, purse: [40, 170], wants: ['falchion', 'axe', 'helm', 'weapon', 'dagger', 'armour', 'jerkin', 'bow', 'arrows', 'oil', 'brew'], moods: [35, 50, 15], fig: '#7a8aa0',
     names: ['a warden\'s man', 'a gate guard', 'a sergeant of the pikes', 'a drover riding out armed', 'a watchman'] },
-  { id: 'traveller', weight: 20, purse: [30, 240], wants: ['any', 'ring', 'weapon', 'dagger', 'boots', 'armour', 'brew', 'tonic'], moods: [30, 45, 25], fig: '#8a9a6a',
+  { id: 'traveller', weight: 20, purse: [30, 240], wants: ['any', 'ring', 'weapon', 'dagger', 'boots', 'armour', 'brew', 'tonic', 'glass', 'goblet'], moods: [30, 45, 25], fig: '#8a9a6a',
     names: ['a caravan master', 'a pilgrim to the abbey', 'a tinker', 'a hedge-knight\'s squire', 'a ferry-bound merchant'] },
-  { id: 'delver', weight: 15, purse: [80, 420], wants: ['weapon', 'helm', 'axe', 'falchion', 'any', 'armour', 'boots', 'arrows', 'staff', 'draught', 'brew'], moods: [50, 40, 10], fig: '#9a6a5a',
+  { id: 'delver', weight: 15, purse: [80, 420], wants: ['weapon', 'helm', 'axe', 'falchion', 'any', 'armour', 'boots', 'arrows', 'staff', 'draught', 'brew', 'lens'], moods: [50, 40, 10], fig: '#9a6a5a',
     names: ['a delver of the Reach', 'one of Osk\'s Four', 'a door-breaker', 'a lamp-carrier back from the deep'] },
   { id: 'hunter', weight: 12, purse: [20, 180], wants: ['bow', 'arrows', 'shortbow', 'longbow', 'arrows', 'boots', 'any', 'salve'], moods: [35, 45, 20], fig: '#6a7a4a',
     names: ['a hunter from the Reach', 'a trapper', 'a fowler', 'a poacher, quietly', 'a deer-stalker'] },
-  { id: 'factor', weight: 7, purse: [200, 750], wants: ['ring', 'helm', 'any'], least: 1, moods: [30, 55, 15], fig: '#b89a5a',
+  { id: 'factor', weight: 7, purse: [200, 750], wants: ['ring', 'helm', 'any', 'glass', 'lens', 'goblet'], least: 1, moods: [30, 55, 15], fig: '#b89a5a',
     names: ['a guild factor', 'a reeve\'s steward', 'a lord\'s buyer'] },
   { id: 'collector', weight: 3, purse: [500, 1600], wants: ['any'], least: 1, moods: [55, 40, 5], fig: '#a07ab8',
     names: ['a collector of maker\'s marks', 'Lady Ysmay Corrow\'s man'] },
@@ -286,7 +322,7 @@ export const SELLER_ODDS = 0.14;   // of those who come in while you're at the c
 // the named regulars who leave special orders (Darkclay Zero's regulars, §5.2): wants, a least tier, a metal they insist on
 export const REGULARS = [
   { who: 'Sergeant Ollo Vance', wants: ['falchion', 'axe', 'helm', 'jerkin'], line: 'For the gate. The pikes need better than they\'ve got.', fig: '#7a8aa0' },
-  { who: 'Lady Ysmay Corrow', wants: ['ring', 'falchion', 'helm', 'longbow', 'staff'], least: 1, line: 'Something with a maker\'s mark worth the name.', fig: '#a07ab8' },
+  { who: 'Lady Ysmay Corrow', wants: ['ring', 'falchion', 'helm', 'longbow', 'staff', 'lens', 'goblet'], least: 1, line: 'Something with a maker\'s mark worth the name.', fig: '#a07ab8' },
   { who: 'Bram Oakes, a drover', wants: ['dagger', 'axe', 'boots', 'arrows'], line: 'For my drovers. Good ones, mind.', fig: '#8a9a6a' },
   { who: 'Ketty Moss, a widow', wants: ['ring'], metal: 'silver', line: 'A silver ring, for his grave.', fig: '#a08a6a' },
   { who: 'Marrow, the herbalist', wants: ['tonic', 'draught', 'salve'], line: 'My own kettle\'s cracked. Brew for me this once.', fig: '#8a9a6a' },
@@ -350,6 +386,7 @@ export const FURNITURE = {
   stretcher: { name: 'Stretcher', fp: [2, 1], fixed: true, model: 'stretcher', station: 'stretcher' },
   bowbench: { name: 'Bending bench', fp: [2, 1], fixed: true, model: 'bowbench', station: 'bowbench' },
   kettle: { name: 'Kettle', fp: [2, 1], fixed: true, model: 'kettle', station: 'kettle' },
+  glass: { name: 'Glass furnace', fp: [2, 2], fixed: true, model: 'glass', station: 'glass' },
   shelf: { name: 'Shelf', fp: [2, 1], slots: 2, model: 'shelf', line: 'Two places for pieces to sell.' },
   rug: { name: 'Rug', fp: [2, 2], charm: 2, cost: 180, model: 'rug', line: 'Warm underfoot.' },
   barrels: { name: 'Barrels', fp: [1, 1], charm: 1, cost: 90, model: 'barrels' },

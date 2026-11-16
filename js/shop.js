@@ -106,7 +106,7 @@ const SHEAVES = ['arrows'];
 export const wants = (want, card) => want === 'any' || want === card.pattern || PATTERNS[card.pattern].want === want;
 export function wantWord(want) {
   if (PATTERNS[want]) { const n = PATTERNS[want].name.toLowerCase(); return SHEAVES.includes(want) ? 'a sheaf of ' + n : PAIRS.includes(want) ? 'a pair of ' + n : (/^[aeiou]/.test(n) ? 'an ' : 'a ') + n; }
-  return { weapon: 'a weapon', helm: 'something for the head', ring: 'a ring', armour: 'something to wear', bow: 'a bow', brew: 'something from the kettle', any: 'something good' }[want];
+  return { weapon: 'a weapon', helm: 'something for the head', ring: 'a ring', armour: 'something to wear', bow: 'a bow', brew: 'something from the kettle', glass: 'something of glass', any: 'something good' }[want];
 }
 export const takeOdds = (mood, tag) => mood === 'PINCHED' && tag === 'dear' ? 0 : Math.min(0.95, MOOD_ODDS[mood] * TAGS[tag].odds);
 const LINES = {
@@ -283,7 +283,7 @@ export function newSeller(rng, hour, now) {
     const n = rare ? 1 : 2 + Math.floor(rng() * 4);
     c.offer = { type: 'mats', mat, n, price: Math.max(1, Math.round(priceOf(mat, hour) * n * (rare ? 0.6 : 0.7))) };
   } else {
-    const ids = Object.keys(PATTERNS), pattern = ids[Math.floor(rng() * ids.length)], metals = partOptions(pattern)[0].opts;
+    const ids = Object.keys(PATTERNS).filter(k => !PATTERNS[k].makes), pattern = ids[Math.floor(rng() * ids.length)], metals = partOptions(pattern)[0].opts;
     const m = Math.floor(rng() * Math.min(3, metals.length)), tier = rng() < 0.3 ? 1 : 0, cracks = Math.floor(rng() * 3);
     const card = makePiece({ patternId: pattern, picks: [m, 0, 0], result: { tier, flawed: false, worked: Math.floor(rng() * 20), strikes: 20, heats: 2, cracks },
       maker: 'an old maker', rng, now });
@@ -341,7 +341,7 @@ export function deliver(save, cardId, now) {
 // ---------- the back room: break a piece down, or send it back in the fire ----------
 // breaking down gives back half its bars, rounded down (a one-bar piece gives no bar back), and any rare part it carried
 export function salvageOf(card) {
-  if (PATTERNS[card.pattern].batch) return [];   // a brew can't be unbrewed
+  if (PATTERNS[card.pattern].batch || PATTERNS[card.pattern].makes) return [];   // a brew can't be unbrewed
   const src = srcOf(card), parts = chosenParts(card.pattern, src.picks), out = {};
   const bars = Math.floor(PATTERNS[card.pattern].bars / 2);
   if (bars) out[card.metal] = bars;
@@ -359,7 +359,7 @@ export function salvage(save, cardId) {
 }
 // back in the fire: half the bars (rounded up) of its own metal; Common to Fine, Fine to Rare
 export const reworkCost = card => [{ mat: card.metal, n: Math.ceil(PATTERNS[card.pattern].bars / 2) }];
-export const canRework = (save, card) => !PATTERNS[card.pattern].batch && TIER_N[card.tier] < TIERS.length - 1 && onShelf(save, card.id) < 0 && !onWall(save, card.id);
+export const canRework = (save, card) => !PATTERNS[card.pattern].batch && !PATTERNS[card.pattern].makes && TIER_N[card.tier] < TIERS.length - 1 && onShelf(save, card.id) < 0 && !onWall(save, card.id);
 
 // ---------- parts for other stations, forged at once ----------
 export function forgePart(save, id, n = 1) {

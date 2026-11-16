@@ -125,7 +125,8 @@ export function strike(S) {
   if (m < lo) {
     // the stretcher: too dry, a stitch turns nothing over (no tear); the forge: a learner's cold strike does nothing, a CRACK slips in after
     if (st.dryDead || st.noTake || S.level < 3) { S.streak = 0; S.stirred = true; pop({ label: 'NOTHING', why: st.dryDead || st.noTake ? st.cold : 'TOO COLD · IT DOESN\'T MOVE', size: 'bad', colour: KC.HOLD }); return { k: 'HOLD', dead: true, pops }; }
-    slipIn(S, 'CRACK', 'COLD', (st.id === 'bowbench' ? 'Bent cold: it split (bend ' : 'Struck cold (strike ') + S.strikes + ')');
+    if (st.shatter) S.shatterNext = true;   // glass: not a random slip, the very next tile turned
+    else slipIn(S, 'CRACK', 'COLD', (st.id === 'bowbench' ? 'Bent cold: it split (bend ' : 'Struck cold (strike ') + S.strikes + ')');
   }
   // the bench: a bend across the grain turns nothing over (the steam still drains)
   if (st.grain && acrossGrain(S)) { S.streak = 0; pop({ label: 'NOTHING', why: 'ACROSS THE GRAIN · WAIT FOR IT', size: 'bad', colour: KC.HOLD }); return { k: 'HOLD', dead: true, pops }; }
@@ -136,9 +137,18 @@ export function strike(S) {
   const boiled = st.boilOver && m > hi;
   if (boiled) { if (S.level >= 3) slipIn(S, 'CRACK', 'BOIL', 'Boiled over (stir ' + S.strikes + ')'); S.meter = Math.max(0, S.meter - st.boilOver); }
   if (!left(S).length) { deal(S); pop({ label: 'SHUFFLED', gain: 'THE STRIP RAN OUT · EVERY TILE BACK IN', size: 'bigpop', colour: KC.FOUND }); }
-  const tk = S.rack.find(x => !x.up);
+  let tk = S.rack.find(x => !x.up);
+  if (S.shatterNext) {   // it shattered: this tile is a CRACK (a found tile there swaps places with the first plain one after it)
+    S.shatterNext = false;
+    if (tk.k === 'FOUND') { const i = S.rack.indexOf(tk), j = S.rack.findIndex((x, n) => n > i && !x.up && x.k !== 'FOUND'); if (j > i) { [S.rack[i], S.rack[j]] = [S.rack[j], S.rack[i]]; tk = S.rack[i]; } }
+    if (tk.k !== 'FOUND') { tk.k = 'CRACK'; tk.src = 'SHATTER'; }
+    S.heatLines.push({ what: 'Too stiff: it shattered (blow ' + S.strikes + ')', how: 'the next tile a CRACK', col: KC.CRACK });
+  }
+  // glass too soft: it sags, and SHAPE slips back while shaping
+  const sagged = st.sag && m > hi && S.shape < 100;
+  if (sagged) S.shape = Math.max(0, S.shape - st.sag);
   tk.up = true; tk.n = S.strikes; tk.peek = false;
-  let k = tk.k, why = m < lo ? (st.id === 'bowbench' ? 'BENT COLD · IT SPLIT' : 'STRUCK COLD · A CRACK SLIPPED IN') : tore ? 'TOO WET · A TEAR SLIPPED IN' : boiled ? (S.level >= 3 ? 'IT BOILED OVER · A CRACK SLIPPED IN' : 'IT BOILED OVER') : '', gain = '', size = '', colour = null, drop = false;
+  let k = tk.k, why = m < lo ? (st.shatter ? 'TOO STIFF · IT SHATTERED' : st.id === 'bowbench' ? 'BENT COLD · IT SPLIT' : 'STRUCK COLD · A CRACK SLIPPED IN') : sagged ? 'TOO HOT · IT SAGS' : tore ? 'TOO WET · A TEAR SLIPPED IN' : boiled ? (S.level >= 3 ? 'IT BOILED OVER · A CRACK SLIPPED IN' : 'IT BOILED OVER') : '', gain = '', size = '', colour = null, drop = false;
   if (k === 'CRACK' && (S.white > 0 || S.warden)) { why = S.warden ? 'THE WARDEN\'S TILE HOLDS IT' : 'WHITE HEAT · NO CRACK'; S.warden = false; k = 'HOLD'; }
   const mult = S.twin && k !== 'CRACK' ? 2 : 1;
   if (S.twin && k !== 'CRACK') { S.twin = false; why = why || 'TWIN · IT COUNTS TWICE'; }
@@ -178,7 +188,7 @@ export function strike(S) {
     if (k === 'TRUE') { size = 'bigpop'; S.earned = true; S.whiteHeat = true; S.white = 4; why = why || 'WHITE HEAT · THE PICK IS YOURS'; }
     pop({ tile: tk, gain, why, size, colour, ring: k === 'TRUE' ? '#fff2c4' : null });
     if (shaping && S.shape >= 100) pop({ label: 'IT\'S MADE', gain: 'NOW EVERY STRIKE PUSHES IT', why: st.close + ' WHENEVER YOU CHOOSE', size: 'bigpop', colour: '#e8c464', delay: 700, ring: '#e8c464', made: true });
-    if (S.level >= 5 && S.streak >= 8 && S.white <= 0) { S.white = 4; S.earned = true; S.whiteHeat = true; S.streak = 0; pop({ label: 'WHITE HEAT', gain: 'NO CRACK FOR 4 s', why: 'THE PICK IS YOURS', size: 'bigpop', colour: '#fff2c4', delay: 600, ring: '#fff2c4' }); }
+    if (S.level >= 5 && S.streak >= (st.whiteStreak || 8) && S.white <= 0) { S.white = 4; S.earned = true; S.whiteHeat = true; S.streak = 0; pop({ label: 'WHITE HEAT', gain: 'NO CRACK FOR 4 s', why: 'THE PICK IS YOURS', size: 'bigpop', colour: '#fff2c4', delay: 600, ring: '#fff2c4' }); }
   }
   return { k, dead: false, pops, drop };
 }
@@ -280,6 +290,10 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now, k
   // WORKED adds up to an eighth over the tier's plain numbers, counted to 50 % (the card still shows the true figure)
   const worked = result.worked, w = Math.min(WORKED_CAP, worked), wk = 1 + w / 100 * 0.25;
   const stats = [];
+  if (p.clarity) {   // glass: how clear it is
+    const cl = Math.max(1, Math.round(p.clarity * metal.dmg * tier.mult * wk));
+    stats.push(['Clarity', String(cl), Math.min(1, cl / 20)]);
+  }
   if (p.potency) {   // a brew: its potency (what it mends, how long an oil keeps an edge), and the batch
     const po = Math.max(1, Math.round(p.potency * metal.dmg * tier.mult * wk));
     stats.push(['Potency', String(po), Math.min(1, po / 24)]);
@@ -306,11 +320,11 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now, k
   const rareN = parts.filter(o => o.rare).length, partsVal = parts.slice(1).reduce((v, o) => v * (o.val || 1), 1);
   const worth = Math.max(1, Math.round(p.value * metal.val * tier.worth * (1 + w / 200) * (1 + 0.25 * rareN) * partsVal
     * Math.pow(0.9, result.cracks) * (result.flawed ? 0.5 : 1)));
-  const sid = stationOf(patternId).id, leather = sid === 'stretcher', wood = sid === 'bowbench', brew = sid === 'kettle';
-  const made = [(leather ? 'Stitched by ' : wood ? 'Bent by ' : brew ? 'Brewed by ' : 'Forged by ') + maker];
+  const sid = stationOf(patternId).id, leather = sid === 'stretcher', wood = sid === 'bowbench', brew = sid === 'kettle', glass = sid === 'glass';
+  const made = [(leather ? 'Stitched by ' : wood ? 'Bent by ' : brew ? 'Brewed by ' : glass ? 'Blown by ' : 'Forged by ') + maker];
   if (result.instant) made.push('made at once, at the plain odds');
   else {
-    made.push('WORKED +' + worked + ' %', result.strikes + (leather ? ' stitches · ' : wood ? ' bends · ' : brew ? ' stirs · ' : ' strikes · ') + result.heats + (leather ? ' soak' : wood ? ' steaming' : brew ? ' stoking' : ' heat') + (result.heats > 1 ? 's' : ''),
+    made.push('WORKED +' + worked + ' %', result.strikes + (leather ? ' stitches · ' : wood ? ' bends · ' : brew ? ' stirs · ' : glass ? ' blows · ' : ' strikes · ') + result.heats + (leather ? ' soak' : wood ? ' steaming' : brew ? ' stoking' : glass ? ' gather' : ' heat') + (result.heats > 1 ? 's' : ''),
       result.cracks ? result.cracks + ' crack' + (result.cracks > 1 ? 's' : '') : 'no crack');
     if (result.whiteHeat) made.push('WHITE HEAT');
   }
@@ -331,7 +345,9 @@ export function srcOf(card) {
   const cr = (card.made || []).find(x => /^\d+ crack/.test(x)), cracks = cr ? +cr.match(/\d+/)[0] : 0;
   return { picks: [m, 0, 0], worked, strikes: 0, heats: 0, cracks, whiteHeat: (card.made || []).includes('WHITE HEAT'), frost: card.affixes.some(a => a[0] === 'Frost-kissed'), instant: false, reworked: 0 };
 }
-export const makerOf = card => card.maker || ((card.made || [])[0] || '').replace(/^(Forged|Stitched|Bent|Brewed) by /, '') || 'an old maker';
+export const makerOf = card => card.maker || ((card.made || [])[0] || '').replace(/^(Forged|Stitched|Bent|Brewed|Blown) by /, '') || 'an old maker';
+// a working that yields materials, not a piece (the glass's bottles): how many, by the tier it came out
+export const yieldOf = (patternId, tier) => { const m = PATTERNS[patternId].makes; return m ? { mat: m.mat, n: m.n[Math.min(tier, m.n.length - 1)] } : null; };
 // A piece out of the fire again: the same piece (its id, its maker, the affixes it carried), its tier and its making moved on.
 export function remakePiece({ card, res, picked, rng, now }) {
   const src = srcOf(card);

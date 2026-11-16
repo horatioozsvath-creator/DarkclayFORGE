@@ -115,6 +115,7 @@ test('a dropped piece is worse, never lost', () => {
 
 test('every pattern and metal makes a card with its tier\'s affixes', () => {
   for (const id of Object.keys(PATTERNS)) {
+    if (PATTERNS[id].makes) continue;   // bottles: materials, not a piece
     const n = R.partOptions(id)[0].opts.length;
     for (let m = 0; m < n; m++) for (let tier = 0; tier < 3; tier++) {
       const result = { tier, flawed: false, worked: 20, strikes: 20, heats: 2, cracks: 0, whiteHeat: true, frost: false };

@@ -98,6 +98,7 @@ test('every piece the forge makes has someone who can afford it at FAIR', () => 
 
 test('a common piece is worth more than its materials, never a money machine', () => {
   for (const id of Object.keys(PATTERNS)) {
+    if (PATTERNS[id].makes) continue;   // bottles: materials, not a piece
     const metals = R.partOptions(id)[0].opts.length;
     for (let m = 0; m < metals; m++) {
       const p = R.makePiece({ patternId: id, picks: [m, 0, 0], result: { tier: 0, worked: 0, strikes: 16, heats: 1, cracks: 0 }, maker: 'T', rng: seeded(1), now: 1 });
