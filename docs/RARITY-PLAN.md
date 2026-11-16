@@ -1,6 +1,6 @@
 # Rarity to Mythic: the full ladder for every station
 
-Status: milestone 11 built in release 22; 12–18 planned. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
+Status: milestones 11–12 built (releases 22–23); 13–18 planned. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
 This plan takes every station up the last two: **Relic** (named, one of a kind) and **Mythic** (the Nine).
 
 ## The ladder
@@ -24,7 +24,7 @@ The sim reaches FAMED on day 9–10 (docs/BALANCE-NOTES.md); after that nothing 
 | Rung | Renown | Opens |
 |---|---|---|
 | FAMED | 400 | (as now) |
-| **RENOWNED** | 1,200 | the Deep (the runner's new road), relic materials, the Crown's agent, the Hall, relic orders |
+| **RENOWNED** | 1,000 (was 1,200 in release 22) | the Deep (the runner's new road), relic materials, the Crown's agent, the Hall, relic orders |
 | **OF THE REACH** | 3,500 | the trail of the Nine (shards), the Court's orders |
 
 ## Relics, station by station
@@ -121,7 +121,7 @@ Each milestone ends in a release, as before: rules and tests first, then the scr
 
 ## Milestone 11, as built (release 22)
 
-- **RENOWNED** (1,200) and **OF THE REACH** (3,500) above FAMED. Purses stop growing at FAMED, and stewards and master collectors
+- **RENOWNED** (1,200; 1,000 from release 23) and **OF THE REACH** (3,500) above FAMED. Purses stop growing at FAMED, and stewards and master collectors
   level off there: the rungs above bring new things instead of fuller purses.
 - **The Crown's agent** comes to a RENOWNED shop (more often OF THE REACH): purse 8,000–25,000 c, Old-Blood or better only.
 - **Below the deep doors**, a runner's road from RENOWNED: 12 hours, 400 c, three rare things, a found tile or an old piece maybe,
@@ -131,3 +131,21 @@ Each milestone ends in a release, as before: rules and tests first, then the scr
 - **Sim, 60 days, seeds 1–4:** FAMED on day 9–10, **RENOWNED on day 29–32**, renown about 2,500 by day 60 (OF THE REACH not yet:
   Relics on the wall and in the Hall will add to it). The Crown's agent bought 1–3 pieces over 1,000 c by day 60.
 
+
+## Milestone 12, as built (release 23)
+
+- **The Relic tier** (amber, foil, ×1.52, worth ×20, three affixes and a power). A plain rework now stops at Old-Blood: only the Relic
+  working goes past it.
+- **The forge's three Relics:** Gatewarden (falchion, heartstone), The Widow's Band (ring, moonsilver), The Hollow King's Helm (helm,
+  heartstone). One of each in a save, ever.
+- **Blueprints:** Captain Vance's and Ketty's great stories (five steps each, from RENOWNED, after their first story); and the Deep, on
+  12 % of trips (any blueprint still to be found, one for a trade at 7 or more first). Listed under THE FORGE › WORKSHOP.
+- **The Relic working:** from the back room, on an Old-Blood piece of its kind, at trade 9, with the blueprint: three times the bars and
+  one relic material. The band ×0.7 of the usual, WHITE HEAT after 12 clean, and it must come **twice** with **not one crack**. Short of
+  that, the piece stays Old-Blood as it was.
+- **The named card:** its name, its lore, its power under the name; shared links carry the power.
+- **Relic orders:** a RENOWNED shop holding a blueprint is sometimes asked for that Relic (12 % of orders), paying twice its worth.
+- **Tuning, from the sim (75 days, seeds 1–6, now making to order and sending a runner below):** at 1,200 and 8 %, the first Relic came
+  on day 39–63 (one seed none). **RENOWNED down to 1,000 and the Deep's blueprints up to 12 %**: RENOWNED on day 17–21, **the first Relic
+  on day 27–63 (median about day 42)**, OF THE REACH on day 63–68. Slower than the four weeks planned for some runs; the next milestones'
+  Relics (more patterns to work) should bring the median down.

@@ -407,3 +407,10 @@ canvas.dio { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 .notice.event { grid-column: 1 / -1; background: #f0d9a0; border-color: #c9a24a; transform: rotate(-.3deg); }
 .notice.event b { color: #8a2a10; }
 .notice em { display: block; margin-top: 4px; font: 800 12px var(--sans); color: #7a3a10; font-style: normal; }
+
+/* a Relic's power, and its moment */
+.cd-power { margin: -.1em 0 .35em; font: 600 .9em/1.3 var(--sans); color: var(--bone-dim); }
+.cd-power b { color: var(--tc); }
+.result.relic .box { border-color: var(--t-relic); box-shadow: 0 0 70px rgba(232,145,58,.5); }
+.result.relic .oldword { color: var(--t-relic); }
+.blueprints .fi.unknown b { color: var(--bone-faint); }

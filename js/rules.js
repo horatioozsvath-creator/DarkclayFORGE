@@ -1,6 +1,6 @@
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD } from './data.js?v=22';
+import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS } from './data.js?v=23';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -93,13 +93,14 @@ export function newWorking(cfg, rng) {
   if (kit.widen && kit.widen !== 1) { const mid = (b0[0] + b0[1]) / 2, half = (b0[1] - b0[0]) / 2 * kit.widen; band = [Math.max(0, Math.round(mid - half)), Math.min(100, Math.round(mid + half))]; }
   // the last rework, toward Old-Blood: the band narrower about its middle, WHITE HEAT later
   const master = !!(cfg.master && !cfg.rework && masterBrewGate(cfg.patternId, cfg.picks, cfg.level).ok);
-  const old = !!(cfg.rework && reworkTo(cfg.rework.from) === OLD_BLOOD.tier) || master;
-  if (old) { const mid = (band[0] + band[1]) / 2, half = (band[1] - band[0]) / 2 * OLD_BLOOD.band; band = [Math.round(mid - half), Math.round(mid + half)]; }
+  const relic = cfg.rework && cfg.rework.relic && RELICS[cfg.rework.relic] ? cfg.rework.relic : null;
+  const old = !relic && (!!(cfg.rework && reworkTo(cfg.rework.from) === OLD_BLOOD.tier && cfg.rework.from < OLD_BLOOD.tier) || master);
+  if (old || relic) { const k = relic ? RELIC_WORK.band : OLD_BLOOD.band, mid = (band[0] + band[1]) / 2, half = (band[1] - band[0]) / 2 * k; band = [Math.round(mid - half), Math.round(mid + half)]; }
   const S = { cfg, parts, metal, level: cfg.level, rng, station: st,
     band, cool: st.cool * (metal.coolX || 1) * (kit.coolX || 1), drain: st.drain, rise: st.rise, over: st.over,
     phase: 'prepare', meter: st.start || 30, inFire: false, shape: 0, worked: 0, cracks: 0, notches: [], crackMarks: [],
     streak: 0, white: 0, whiteHeat: false, earned: false, scaled: 0, overT: 0, strikes: 0, heats: 1, done: false, dropped: false,
-    twin: false, warden: false, frost: false, rack: [], lines: [], heatLines: [], slipN: 0, oldBlood: old && !master, master, boils: 0, whiteStreak: old ? OLD_BLOOD.whiteStreak : 0 };
+    twin: false, warden: false, frost: false, rack: [], lines: [], heatLines: [], slipN: 0, oldBlood: old && !master, master, relic, whites: 0, boils: 0, whiteStreak: relic ? RELIC_WORK.whiteStreak : old ? OLD_BLOOD.whiteStreak : 0 };
   deal(S);
   return S;
 }
@@ -190,10 +191,10 @@ export function strike(S) {
     if (shaping) { S.shape = Math.min(100, S.shape + g); gain = g ? '+' + g + ' SHAPE' : 'NOTHING GAINED · NOTHING LOST'; }
     else { S.worked += g; gain = g ? '+' + g + ' % WORKED' : 'NOTHING GAINED · NOTHING LOST'; }
     if (k === 'GREAT') size = 'bigpop';
-    if (k === 'TRUE') { size = 'bigpop'; S.earned = true; S.whiteHeat = true; S.white = 4; why = why || 'WHITE HEAT · THE PICK IS YOURS'; }
+    if (k === 'TRUE') { size = 'bigpop'; if (S.white <= 0) S.whites++; S.earned = true; S.whiteHeat = true; S.white = 4; why = why || 'WHITE HEAT · THE PICK IS YOURS'; }
     pop({ tile: tk, gain, why, size, colour, ring: k === 'TRUE' ? '#fff2c4' : null });
     if (shaping && S.shape >= 100) pop({ label: 'IT\'S MADE', gain: 'NOW EVERY STRIKE PUSHES IT', why: st.close + ' WHENEVER YOU CHOOSE', size: 'bigpop', colour: '#e8c464', delay: 700, ring: '#e8c464', made: true });
-    if (S.level >= 5 && S.streak >= (S.whiteStreak || st.whiteStreak || 8) && S.white <= 0) { S.white = 4; S.earned = true; S.whiteHeat = true; S.streak = 0; pop({ label: 'WHITE HEAT', gain: 'NO CRACK FOR 4 s', why: 'THE PICK IS YOURS', size: 'bigpop', colour: '#fff2c4', delay: 600, ring: '#fff2c4' }); }
+    if (S.level >= 5 && S.streak >= (S.whiteStreak || st.whiteStreak || 8) && S.white <= 0) { S.white = 4; S.whites++; S.earned = true; S.whiteHeat = true; S.streak = 0; pop({ label: 'WHITE HEAT', gain: 'NO CRACK FOR 4 s', why: 'THE PICK IS YOURS', size: 'bigpop', colour: '#fff2c4', delay: 600, ring: '#fff2c4' }); }
   }
   return { k, dead: false, pops, drop };
 }
@@ -245,7 +246,7 @@ export const PLAIN_ODDS = { f: 20, r: 5 };
 // Back in the fire (rework): no roll. It takes (the bar filled, quenched): a tier up.
 // A second crack after it took: a tier down (a Common piece stays Common, flawed). A rework teaches, but turns up no found tile.
 // The last rework, Rare to Old-Blood, takes only with not one crack; else it stays Rare (never lower), the materials spent.
-export const reworkTo = from => Math.min(TIERS.length - 1, from + 1);
+export const reworkTo = from => Math.min(OLD_BLOOD.tier, from + 1);   // past Old-Blood only by a Relic working (a blueprint), never a plain rework
 // a master's brew: the kettle's road to Old-Blood, chosen before the working (a batch can't go back on the fire). A master of the
 // brew, moonwell water in the pot; it must finish with not one boil-over and WHITE HEAT reached, or it's an ordinary brew.
 export function masterBrewGate(patternId, picks, level) {
@@ -271,6 +272,12 @@ export function finish(S, how) {
   S.done = true; S.phase = 'done';
   if (S.cfg.rework) {
     const from = S.cfg.rework.from, dropped = how === 'dropped';
+    if (S.relic) {   // WHITE HEAT twice and not one crack: the Relic; short of it, the Old-Blood piece as it was
+      const took = !dropped && S.cracks === 0 && S.whites >= RELIC_WORK.whites;
+      S.dropped = dropped;
+      return { rework: true, relic: S.relic, from, tier: took ? RELIC_WORK.tier : from, failed: !took, flawed: false, dropped, instant: false, odds: odds(S),
+        worked: Math.round(S.worked), strikes: S.strikes, heats: S.heats, cracks: S.cracks, whiteHeat: S.whiteHeat, whites: S.whites, earned: took && S.earned, clean: false, frost: S.frost };
+    }
     if (S.oldBlood) {   // not one crack, or it stays as it was
       const took = !dropped && S.cracks === 0;
       S.dropped = dropped;
@@ -386,6 +393,11 @@ export function srcOf(card) {
   return { picks: [m, 0, 0], worked, strikes: 0, heats: 0, cracks, whiteHeat: (card.made || []).includes('WHITE HEAT'), frost: card.affixes.some(a => a[0] === 'Frost-kissed'), instant: false, reworked: 0 };
 }
 export const makerOf = card => card.maker || ((card.made || [])[0] || '').replace(/^(Forged|Stitched|Bent|Brewed|Blown) by /, '') || 'an old maker';
+// a Relic: the piece out of its Relic working, named, with its own lore and power (its three affixes kept)
+export function relicPiece(piece, id) {
+  const r = RELICS[id];
+  return { ...piece, name: r.name, relic: id, power: r.power.slice(), lore: r.lore, made: (piece.made || []).concat('the Relic working · ' + r.name) };
+}
 // a working that yields materials, not a piece (the glass's bottles): how many, by the tier it came out
 export const yieldOf = (patternId, tier) => { const m = PATTERNS[patternId].makes; return m ? { mat: m.mat, n: m.n[Math.min(tier, m.n.length - 1)] } : null; };
 // A piece out of the fire again: the same piece (its id, its maker, the affixes it carried), its tier and its making moved on.

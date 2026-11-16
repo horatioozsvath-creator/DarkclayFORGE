@@ -1,6 +1,6 @@
 // Growth, with no page access: tools, the maker's level and perks, renown, the display wall.
-import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS } from './data.js?v=22';
-import { levelOf, MAX_LEVEL } from './rules.js?v=22';
+import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS } from './data.js?v=23';
+import { levelOf, MAX_LEVEL } from './rules.js?v=23';
 
 // ---------- tools ----------
 export const has = (save, id) => (save.tools || []).includes(id);

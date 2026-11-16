@@ -39,7 +39,7 @@ test('a shop packs and opens again: the room as arranged, every card on its plac
     for (const [i, c] of onShelf) { const st = back.stands.find(x => x.slot === i); assert.equal(st.card.name, c.name); assert.equal(st.price, Sh.priceAt(c, 'fair')); assert.equal(st.card.tier, c.tier); }
     assert.equal(back.wall.length, (s.wall || []).length);
     back.wall.forEach((c, i) => assert.equal(c.name, s.cards.find(x => x.id === s.wall[i]).name));
-    assert.equal(back.made, 812); assert.equal(back.renown, big ? 'FAMED' : 'UNKNOWN');
+    assert.equal(back.made, 812); assert.equal(back.renown, big ? 'RENOWNED' : 'UNKNOWN');   // renown 999 and the wall's Old-Blood
     assert.ok(link.length < 3000, (big ? 'big' : 'small') + ' shop link: ' + link.length + ' characters');
     if (big) { assert.ok(back.stands.length >= 40, back.stands.length + ' cards on show'); assert.ok(back.wall.length >= 3); console.log('  big shop link', link.length, 'chars,', back.stands.length, 'cards on show,', back.wall.length, 'on the wall'); }
   }

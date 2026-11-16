@@ -2,11 +2,11 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS } from './data.js?v=22';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf } from './town.js?v=22';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=22';
-import { charmGap, placeGift } from './room.js?v=22';
-import { fame, purseMult, patienceOf, haggleMult, onWall, rung } from './growth.js?v=22';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS } from './data.js?v=23';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf } from './town.js?v=23';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=23';
+import { charmGap, placeGift } from './room.js?v=23';
+import { fame, purseMult, patienceOf, haggleMult, onWall, rung } from './growth.js?v=23';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -381,7 +381,12 @@ const ownsPattern = (save, p) => !!PATTERNS[p] && (!PATTERNS[p].station || PATTE
 export const storyOf = (save, id) => (save.stories || {})[id] || { step: 0, next: 0 };
 // the stories whose next step can come in now: not finished, rested since the last, with a pattern this shop can make
 export function storiesReady(save, now) {
-  return STORIES.filter(s => { const st = storyOf(save, s.id), step = s.steps[st.step]; return step && now >= (st.next || 0) && step.patterns.some(p => ownsPattern(save, p)); });
+  return STORIES.filter(s => {
+    const st = storyOf(save, s.id), step = s.steps[st.step];
+    if (s.after) { const before = STORIES.find(x => x.id === s.after); if (storyOf(save, s.after).step < before.steps.length) return false; }   // a great story: after the first
+    if (s.rung && rung(save) < s.rung) return false;
+    return step && now >= (st.next || 0) && step.patterns.some(p => ownsPattern(save, p));
+  });
 }
 function postStory(save, s, rng, now) {
   const st = storyOf(save, s.id), step = s.steps[st.step], pattern = step.patterns.find(p => ownsPattern(save, p));
@@ -398,6 +403,7 @@ function storyFilled(save, o, now) {
   save.stories[s.id] = { step, next: now + STORY_GAP * 3600000 };
   if (!done) return { thanks: s.steps[o.step].thanks };
   fame(save, s.renown);
+  if (s.blueprint) { save.blueprints = [...new Set((save.blueprints || []).concat(s.blueprint))]; return { thanks: s.steps[o.step].thanks, blueprint: s.blueprint }; }
   const g = placeGift(save, s.gift);
   return { thanks: s.steps[o.step].thanks, gift: s.gift, stored: !!g.stored };
 }
@@ -405,6 +411,14 @@ export function postOrder(save, rng, now) {
   // a regular with a story to go on, more often than not
   const ready = storiesReady(save, now || 0);
   if (ready.length && rng() < STORY_ODDS) return postStory(save, ready[Math.floor(rng() * ready.length)], rng, now);
+  // a RENOWNED shop with a blueprint not yet made: now and then a regular orders that Relic (filled only by it)
+  const bps = rung(save) >= 5 ? (save.blueprints || []).filter(id => !(save.relicsMade || []).includes(id) && ownsPattern(save, RELICS[id].pattern)) : [];
+  if (bps.length && rng() < 0.12) {
+    const id = bps[Math.floor(rng() * bps.length)], pattern = RELICS[id].pattern, r = REGULARS.find(x => x.wants.includes(pattern)) || REGULARS[1];
+    save.order = { who: r.who, fig: r.fig, pattern, least: RELIC_WORK.tier, metal: null, line: 'They say you have the pattern of ' + RELICS[id].name + '. I would have it, whatever it costs.', posted: save.clock || 0, relic: id,
+      due: (save.clock || 0) + ORDER_TIME[1] * 4, pays: orderPays(pattern, null, RELIC_WORK.tier) };
+    return log(save, { at: now, who: r.who, fig: r.fig, mood: 'EAGER', want: pattern, sold: null, order: 'posted', line: 'Left a special order: ' + RELICS[id].name + '.' });
+  }
   // a regular asks only for what this shop's stations can make
   const owns = p => ownsPattern(save, p);
   const regs = REGULARS.filter(x => x.wants.some(owns)), r = regs[Math.floor(rng() * regs.length)], can = r.wants.filter(owns);
@@ -420,6 +434,7 @@ export function postOrder(save, rng, now) {
   return log(save, { at: now, who: r.who, fig: r.fig, mood: 'EAGER', want: pattern, sold: null, order: 'posted', line: 'Left a special order: ' + orderWord(save.order) + '.' });
 }
 export function orderWord(o) {
+  if (o.relic) return RELICS[o.relic].name + ', the Relic';
   const rest = (o.metal ? MATS[o.metal].name.replace(' bar', '').toLowerCase() + ' ' : '') + PATTERNS[o.pattern].name.toLowerCase();
   return o.least ? TIERS[o.least].name + ' or better ' + rest : SHEAVES.includes(o.pattern) ? 'a sheaf of ' + rest : PAIRS.includes(o.pattern) ? 'a pair of ' + rest : (/^[aeiou]/.test(rest) ? 'an ' : 'a ') + rest;
 }
@@ -450,7 +465,7 @@ export function salvageOf(card) {
 export const salvageWorth = card => salvageOf(card).reduce((c, r) => c + MATS[r.mat].price * r.n, 0);
 export function salvage(save, cardId) {
   const card = save.cards.find(c => c.id === cardId);
-  if (!card || card.sample || onShelf(save, cardId) >= 0 || onWall(save, cardId) || onOtherShelf(save, cardId)) return null;
+  if (!card || card.sample || card.tier === 'relic' || card.tier === 'mythic' || onShelf(save, cardId) >= 0 || onWall(save, cardId) || onOtherShelf(save, cardId)) return null;   // a one-of-a-kind piece is never broken
   const got = salvageOf(card);
   got.forEach(r => { save.mats[r.mat] = (save.mats[r.mat] || 0) + r.n; });
   save.cards = save.cards.filter(c => c.id !== cardId);
@@ -464,9 +479,22 @@ export const reworkCost = card => {
   const rare = OLD_BLOOD.rare[stationOf(card.pattern).id];
   return [{ mat: card.metal, n: n * OLD_BLOOD.costX }].concat(rare ? [{ mat: rare, n: 1 }] : []);
 };
+// the Relic working for this piece: which Relic it could become, and what's missing ({ ok, relic, why })
+export function relicFor(save, card) {
+  const id = Object.keys(RELICS).find(k => RELICS[k].pattern === card.pattern);
+  if (!id || card.sample || card.tier !== TIERS[OLD_BLOOD.tier].id) return { ok: false, relic: null, why: [] };
+  const r = RELICS[id], why = [];
+  if ((save.relicsMade || []).includes(id)) return { ok: false, relic: id, made: true, why: ['made already: there\'s only one'] };
+  if (!(save.blueprints || []).includes(id)) why.push('its blueprint');
+  if (tradeLevel(save, card.pattern) < RELIC_WORK.level) why.push('trade ' + RELIC_WORK.level + ' in ' + PATTERNS[card.pattern].trade.toLowerCase());
+  if (card.flawed) why.push('not a flawed piece');
+  if (onShelf(save, card.id) >= 0 || onWall(save, card.id) || onOtherShelf(save, card.id)) why.push('it in the back room');
+  return { ok: !why.length, relic: id, why };
+}
+export const relicCost = (card, id) => [{ mat: card.metal, n: Math.ceil(PATTERNS[card.pattern].bars / 2) * RELIC_WORK.costX }, { mat: RELICS[id].mat, n: 1 }];
 export const tradeLevel = (save, pattern) => levelOf(((save.trades || {})[pattern] || {}).xp || 0).level;
 // Common and Fine go up a tier; Rare only toward Old-Blood, for a master with the right piece (rules.js oldBloodGate)
-export const canRework = (save, card) => !card.sample && !PATTERNS[card.pattern].batch && !PATTERNS[card.pattern].makes && TIER_N[card.tier] < TIERS.length - 1
+export const canRework = (save, card) => !card.sample && !PATTERNS[card.pattern].batch && !PATTERNS[card.pattern].makes && TIER_N[card.tier] < OLD_BLOOD.tier
   && onShelf(save, card.id) < 0 && !onWall(save, card.id) && !onOtherShelf(save, card.id) && (TIER_N[card.tier] < OLD_BLOOD.tier - 1 || oldBloodGate(card, tradeLevel(save, card.pattern)).ok);
 
 // ---------- parts for other stations, forged at once ----------

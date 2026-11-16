@@ -1,9 +1,9 @@
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES } from './data.js?v=22';
-import { levelOf, makePiece, partOptions } from './rules.js?v=22';
-import { awayStep } from './shop.js?v=22';
-import { wageMult, capBonus, rung } from './growth.js?v=22';
+import { ROLES, TRAITS, NAMES, ROUTES, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=23';
+import { levelOf, makePiece, partOptions } from './rules.js?v=23';
+import { awayStep } from './shop.js?v=23';
+import { wageMult, capBonus, rung } from './growth.js?v=23';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -74,12 +74,20 @@ export function sendRunner(save, route, now) {
 }
 const COMMONS = ['iron', 'iron', 'iron', 'bronze', 'bronze', 'steel', 'wrap', 'cord', 'ash', 'wool', 'strap', 'horn', 'rowan', 'silk', 'sharkhide', 'deer', 'deer', 'goat', 'gut', 'linen', 'yew', 'birch', 'goose', 'bone'];
 const RARES = Object.keys(MATS).filter(id => MATS[id].rare);
-export const RELICS = Object.keys(MATS).filter(id => MATS[id].relic);
+export const RELIC_MATS = Object.keys(MATS).filter(id => MATS[id].relic);
 export function haul(save, p, route, rng, now) {
   const r = ROUTES[route], l = levelOfP(p), mats = {};
   // the Deep can come back with nothing much: a few common things, no more
   if (r.empty && rng() < r.empty) { for (let i = 0; i < 2; i++) { const m = pick(COMMONS, rng); mats[m] = (mats[m] || 0) + 1; } return { mats, piece: null, tile: null, empty: true }; }
-  if (r.relic) { for (const odds of r.relic) if (rng() < odds) { const m = pick(RELICS, rng); mats[m] = (mats[m] || 0) + 1; } }
+  if (r.relic) { for (const odds of r.relic) if (rng() < odds) { const m = pick(RELIC_MATS, rng); mats[m] = (mats[m] || 0) + 1; } }
+  // a blueprint, now and then: one of the Deep's still to be found
+  let blueprint = null;
+  if (r.relic && rng() < BLUEPRINT_DEEP) {
+    // any blueprint still to be found, one for a trade the maker is good at (7 and up) if there is one
+    const left = Object.keys(RELICS).filter(k => !(save.blueprints || []).includes(k) && !(save.relicsMade || []).includes(k));
+    const good = left.filter(k => levelOf(((save.trades || {})[RELICS[k].pattern] || {}).xp || 0).level >= 7);
+    if (left.length) blueprint = pick(good.length ? good : left, rng);
+  }
   const n = Math.round((r.commons[0] + rng() * (r.commons[1] - r.commons[0])) * (1 + 0.08 * (l - 1)) * (p.trait === 'keen' ? 1.2 : 1));
   for (let i = 0; i < n; i++) { const m = pick(COMMONS, rng); mats[m] = (mats[m] || 0) + 1; }
   for (let i = 0; i < r.rare; i++) { const m = pick(RARES, rng); mats[m] = (mats[m] || 0) + 1; }
@@ -92,7 +100,7 @@ export function haul(save, p, route, rng, now) {
   }
   const missing = Object.keys(FOUND).filter(id => !save.found.includes(id));
   if (r.tile && missing.length && rng() < r.tile * (p.trait === 'lucky' ? 2 : 1)) tile = pick(missing, rng);
-  return { mats, piece, tile };
+  return { mats, piece, tile, blueprint };
 }
 // trips that have come home by `now`: their hauls put away. Returns what each brought.
 export function resolveTrips(save, now, rng) {
@@ -103,6 +111,7 @@ export function resolveTrips(save, now, rng) {
     Object.entries(h.mats).forEach(([m, n]) => { save.mats[m] = (save.mats[m] || 0) + n; });
     if (h.piece) save.cards.unshift(h.piece);
     if (h.tile) save.found.push(h.tile);
+    if (h.blueprint) save.blueprints = [...new Set((save.blueprints || []).concat(h.blueprint))];
     gain(p, 1 + Math.ceil(ROUTES[route].h));
     p.trip = null;
     out.push({ who: p.name, route, at, ...h });

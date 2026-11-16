@@ -1,7 +1,7 @@
 // The shop's two rooms, with no page access: the shop front (counter, shelves, decor; where customers come) and the workshop
 // behind it (the forge, the anvil and every station). A grid each, what stands on it, buying, moving, selling back, growing.
-import { FURNITURE, ROOM_SIZES, WORK_SIZES, DOOR_Z, WORK_DOOR_X, SHELF_COSTS, SHELF_LEVELS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=22';
-import { wallCharm } from './growth.js?v=22';
+import { FURNITURE, ROOM_SIZES, WORK_SIZES, DOOR_Z, WORK_DOOR_X, SHELF_COSTS, SHELF_LEVELS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=23';
+import { wallCharm } from './growth.js?v=23';
 
 export const SIZES = { shop: ROOM_SIZES, work: WORK_SIZES };
 export const sizeOf = room => SIZES[room.kind || 'shop'][room.size || 0];

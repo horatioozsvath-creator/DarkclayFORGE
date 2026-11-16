@@ -10,10 +10,10 @@ const at = renown => ({ renown, wall: [], cards: [], shelf: [] });
 
 test('two rungs above FAMED; purses stop growing at FAMED, the Crown\'s agent comes from RENOWNED', () => {
   assert.deepEqual(RENOWN.slice(-2).map(r => r.word), ['RENOWNED', 'OF THE REACH']);
-  assert.equal(G.rung(at(1200)), RENOWNED_RUNG); assert.equal(G.rung(at(5000)), RENOWN.length - 1);
+  assert.equal(G.rung(at(1000)), RENOWNED_RUNG); assert.equal(G.rung(at(999)), FAMED_RUNG); assert.equal(G.rung(at(5000)), RENOWN.length - 1);
   assert.equal(G.purseMult(at(5000)), G.purseMult(at(400)), 'purses grow to FAMED, no further');
   const ids = CUSTOMERS.map(c => c.id), share = (s, id) => { const w = Sh.customerWeights(s); return w[ids.indexOf(id)] / w.reduce((a, b) => a + b, 0); };
-  assert.equal(share(at(1000), 'crown'), 0); assert.ok(share(at(1200), 'crown') > 0); assert.ok(share(at(4000), 'crown') > share(at(1200), 'crown'));
+  assert.equal(share(at(900), 'crown'), 0); assert.ok(share(at(1000), 'crown') > 0); assert.ok(share(at(4000), 'crown') > share(at(1000), 'crown'));
   assert.equal(Sh.customerWeights(at(5000))[ids.indexOf('steward')], Sh.customerWeights(at(400))[ids.indexOf('steward')], 'stewards level off at FAMED');
   const rng = seeded(3); for (let i = 0; i < 2000; i++) { const c = Sh.newCustomer(rng, at(1500)); if (c.type === 'crown') { assert.ok(c.purse >= 8000 && c.least === 3); } }
 });

@@ -11,7 +11,22 @@ export const TIERS = [
   { id: 'rare', name: 'Rare', c: '#6fb1ec', glow: .45, mult: 1.22, worth: 4, affixes: 2 },
   // Darkclay Zero's Old-Blood (data/zero/tiers.json: violet, foil, ×1.36, three affixes): never rolled, only a master's last rework
   { id: 'oldblood', name: 'Old-Blood', c: '#b48cf0', glow: .55, mult: 1.36, worth: 8, affixes: 3, foil: true },
+  // Zero's Relic (amber, foil, ×1.52): a named piece, one of a kind in a save, worked from an Old-Blood one with a blueprint (RELICS)
+  { id: 'relic', name: 'Relic', c: '#e8913a', glow: .7, mult: 1.52, worth: 20, affixes: 3, foil: true },
 ];
+// the Relic working: a master of the trade (trade 9), the blueprint, an Old-Blood piece of its kind, the bars of a last rework and its
+// relic material. Narrower than Old-Blood's, WHITE HEAT twice, not one crack; short of that, the piece stays Old-Blood, untouched.
+export const RELIC_WORK = { tier: 4, level: 9, band: 0.7, whiteStreak: 12, whites: 2, costX: 3 };
+// the Relics (docs/RARITY-PLAN.md): one of each in a save. source: where its blueprint comes from (a regular's great story, or the Deep)
+export const RELICS = {
+  gatewarden: { name: 'Gatewarden', pattern: 'falchion', mat: 'heartstone', power: ['Holds the line', 'a parry with it breaks a charge'], source: 'vance',
+    lore: 'Forged for the gate, and the gate has never fallen while it hung there.' },
+  widowsband: { name: 'The Widow\'s Band', pattern: 'ring', mat: 'moonsilver', power: ['A vow kept', 'the wearer can\'t be turned from the path they chose'], source: 'ketty',
+    lore: 'Silver from a grave-ring, and something kept in it that wasn\'t there before.' },
+  hollowhelm: { name: 'The Hollow King\'s Helm', pattern: 'helm', mat: 'heartstone', power: ['No fear', 'the wearer stands when others run'], source: 'deep',
+    lore: 'Its pattern came up from below the deep doors, scratched on a king\'s shield.' },
+};
+export const BLUEPRINT_DEEP = 0.12;   // the odds a trip below the deep doors brings back a blueprint (any still to be found, one for a trade you're good at first)
 // the last rework, Rare to Old-Blood: a master of the trade, a piece with a rare part or WHITE HEAT in its making, three times the
 // rework's bars and one rare thing of the station's; a narrower band, WHITE HEAT later, and not one crack (a crack: it stays Rare)
 export const OLD_BLOOD = { tier: 3, level: 6, costX: 3, band: 0.8, whiteStreak: 12,
@@ -404,6 +419,19 @@ export const STORIES = [
     { patterns: ['ring'], least: 1, line: 'Something with a maker\'s mark worth the name.', thanks: 'It was admired. I said where it came from.' },
     { patterns: ['falchion', 'longbow', 'staff'], least: 2, line: 'A gift for the duke. It must not shame me.', thanks: 'The duke asked your name.' },
     { patterns: ['ring', 'goblet', 'lens'], least: 2, line: 'My daughter marries in spring. The finest thing you can make.', thanks: 'My grandmother\'s king, in stone. He belongs in a maker\'s shop.' } ] },
+  // the great stories: from RENOWNED, after the regular's first story is told; five steps and a blueprint at the end
+  { id: 'vance2', after: 'vance', rung: 5, who: 'Captain Ollo Vance', fig: '#7a8aa0', blueprint: 'gatewarden', renown: 40, steps: [
+    { patterns: ['helm'], least: 2, line: 'They made me captain. The new watch needs helms worthy of the gate.', thanks: 'The gate\'s never looked so sure of itself.' },
+    { patterns: ['falchion'], least: 2, line: 'Raiders burned the mill. My sergeants need blades.', thanks: 'The mill\'s rebuilt. The raiders aren\'t.' },
+    { patterns: ['jerkin', 'helm'], least: 2, line: 'Winter on the walls. Keep my men alive.', thanks: 'Not one lost to the cold.' },
+    { patterns: ['axe', 'falchion'], least: 3, line: 'The old king\'s men are back on the high road. Your best, and better.', thanks: 'We held. Your work held.' },
+    { patterns: ['falchion'], least: 3, line: 'One more. For the gate itself, to hang over it.', thanks: 'The first gate-captain\'s pattern, from the guardhouse vault. Make it real.' } ] },
+  { id: 'ketty2', after: 'ketty', rung: 5, who: 'Ketty Moss, a grandmother now', fig: '#a08a6a', blueprint: 'widowsband', renown: 40, steps: [
+    { patterns: ['ring'], least: 1, line: 'My boy\'s wed. A ring for his bride, from the same hands as his father\'s.', thanks: 'She cried. Good tears.' },
+    { patterns: ['dagger'], least: 2, line: 'A grandson! A little knife, for when he\'s grown.', thanks: 'It\'s in the chest, waiting for him.' },
+    { patterns: ['helm'], least: 2, line: 'My boy\'s a sergeant. Keep his head, again.', thanks: 'He came home from the high road.' },
+    { patterns: ['ring'], least: 3, line: 'My own ring\'s worn through. Silver, the best you\'ve got.', thanks: 'It doesn\'t feel like an old woman\'s hand any more.' },
+    { patterns: ['ring'], least: 3, line: 'One last thing. I\'d like a ring to be buried with, beside his.', thanks: 'My husband\'s ring-pattern, from his own mother. You should have it.' } ] },
   { id: 'marrow', who: 'Marrow, the herbalist', fig: '#8a9a6a', gift: 'marrowrail', renown: 10, steps: [
     { patterns: ['draught'], least: 0, line: 'My own kettle\'s cracked. Brew for me this once.', thanks: 'The lane\'s fever broke on it.' },
     { patterns: ['salve'], least: 1, line: 'The tannery boys burn their hands. Something kind.', thanks: 'They come to me singing now. Unheard of.' },
@@ -539,11 +567,11 @@ export const TOOLS = {
 export const RENOWN = [
   { at: 0, word: 'UNKNOWN' }, { at: 15, word: 'NOTED' }, { at: 50, word: 'KNOWN' }, { at: 150, word: 'SOUGHT' }, { at: 400, word: 'FAMED' },
   // above FAMED (docs/RARITY-PLAN.md): RENOWNED opens the Deep's lowest road and the Crown's agent; OF THE REACH, the trail of the Nine
-  { at: 1200, word: 'RENOWNED' }, { at: 3500, word: 'OF THE REACH' },
+  { at: 1000, word: 'RENOWNED' }, { at: 3500, word: 'OF THE REACH' },
 ];
 export const FAMED_RUNG = 4, RENOWNED_RUNG = 5, REACH_RUNG = 6;   // purses grow with renown up to FAMED; the rungs above open things instead
 export const PURSE_STEP = 0.2;   // purses grow this much a rung
-export const WALL_RENOWN = { common: 2, fine: 5, rare: 12, oldblood: 30 };
+export const WALL_RENOWN = { common: 2, fine: 5, rare: 12, oldblood: 30, relic: 80 };
 export const WALL_SLOTS = 3;     // +1 for each bigger room
 // the maker's skills: a point each maker level; each branch's perks in order
 export const PERKS = {

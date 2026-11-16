@@ -9,7 +9,7 @@ import * as Rm from '../js/room.js';
 import * as G from '../js/growth.js';
 import * as Town from '../js/town.js';
 import * as Br from '../js/branch.js';
-import { BRANCH } from '../js/data.js';
+import { BRANCH, RELICS } from '../js/data.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD } from '../js/data.js';
 
 const days = +process.argv[2] || 7, seed0 = +process.argv[3] || 1, SESSION_MIN = +process.argv[4] || 45;
@@ -34,7 +34,8 @@ function choose(hour) {
       if (short.some(x => !Sh.sells(x.mat, hour))) return;
       const cost = short.reduce((c, x) => c + Sh.priceOf(x.mat, hour) * (x.n - x.have), 0);
       if (cost > save.coins) return;
-      const worth = PATTERNS[id].value * m.val * 1.4, score = worth - Sh.recipeCost(rec, hour) + (lvl(id) < 3 ? 15 : 0);
+      const o = save.order, forOrder = o && o.pattern === id && (!o.metal || o.metal === m.id) && !Sh.inBack(save).some(x => Sh.fills(o, x));   // making to order
+      const worth = PATTERNS[id].value * m.val * 1.4 * (forOrder ? 4 : 1), score = worth - Sh.recipeCost(rec, hour) + (lvl(id) < 3 ? 15 : 0);
       if (!best || score > best.score) best = { id, picks, short, score };
     });
   }
@@ -97,6 +98,30 @@ function restock() {
   // yesterday's DEAR pieces the town no longer wants go back to FAIR
   save.shelf.forEach((e, i) => { const c = e && save.cards.find(x => x.id === e.id); if (c && !hot(c) && e.tag === 'dear') Sh.setTag(save, i, 'fair'); });
 }
+// the Relics: from RENOWNED a runner goes below the deep doors whenever home; an Old-Blood piece with its blueprint, the trade and
+// the material goes to the Relic working (a steady player gets WHITE HEAT twice with no crack about a third of the time)
+let relics = [], relicTried = 0;
+function relicWork(day) {
+  if (G.rung(save) < 5) return;
+  let r = St.runnerOf(save);
+  if (!r) { const c = St.candidates(save, Math.floor(t / H)).find(x => x.role === 'runner'); if (c && save.coins > St.hireFee(c) + 500) { St.hire(save, c); r = St.runnerOf(save); } }
+  if (r && !r.trip && save.coins > 900) St.sendRunner(save, 'below', t);
+  for (const c of save.cards.filter(x => x.tier === 'oldblood')) {
+    const g = Sh.relicFor(save, c); if (!g.ok) continue;
+    const cost = Sh.relicCost(c, g.relic), short = Sh.short(save.mats, cost);
+    if (short.some(x => RELICS[g.relic].mat === x.mat)) continue;
+    short.forEach(x => Sh.buy(save, x.mat, x.n - x.have, Math.floor(t / H)));
+    if (!Sh.takeMats(save, cost)) continue;
+    relicTried++;
+    if (rng() < 0.35) {
+      const res = { tier: 4, flawed: false, worked: 10, strikes: 30, heats: 3, cracks: 0, whiteHeat: true };
+      const p = R.relicPiece(R.remakePiece({ card: c, res, picked: null, rng, now: t }), g.relic);
+      save.cards[save.cards.indexOf(c)] = p; save.relicsMade = (save.relicsMade || []).concat(g.relic); relics.push(g.relic + ' d' + day);
+      note('A RELIC: ' + p.name + ' (' + p.worth + ' c)');
+    }
+    return;
+  }
+}
 // a special order (a story's step too): delivered from the back room if something there fills it
 let orders = 0, stories = 0;
 function fillOrder() {
@@ -151,7 +176,7 @@ for (let d = 1; d <= days; d++) {
     tally(Sh.shopStep(save, 50, rng, t, false, clerk));
     St.payWages(save, 50); St.resolveTrips(save, t, rng);
     t += 50000; save.lastSeen = t;
-    if (s % 600 === 0) { runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); }   // saving up for the second shop once it may be bought
+    if (s % 600 === 0) { runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); relicWork(d); }   // saving up for the second shop once it may be bought
     if (save.branch) tally(Br.step(save, 50, rng, t));
     if (Sh.rescue(save, hour)) note('scrap bin');
   }
@@ -165,6 +190,8 @@ for (let d = 1; d <= days; d++) {
   log.forEach(l => console.log(l)); log = [];
 }
 const tiers = {}; save.ledger.forEach(e => { if (e.sold) tiers[e.sold.tier] = (tiers[e.sold.tier] || 0) + 1; });
+console.log('stories:', JSON.stringify(Object.fromEntries(Object.entries(save.stories || {}).map(([k, v]) => [k, v.step]))));
+console.log('relics:', relics.join(', ') || 'none', ' tried', relicTried, ' blueprints', (save.blueprints || []).join(','), ' relic mats', Object.entries(save.mats).filter(([m]) => ['heartstone','moonsilver','wyrmhide','ghostyew','starcore','moonmead'].includes(m)).map(([m, n]) => m + ' ' + n).join(' '));
 console.log('big sales:', JSON.stringify(big), ' orders filled:', orders, '(stories', stories + ')', ' second shop from day', branchDay, save.branch ? 'sold ' + save.branch.sold + ' for ' + save.branch.earned + ' c' : '');
 console.log('old-blood: tried', oldTried, 'made', oldMade, ' sold by tier:', tiers);
 console.log('spent:', spent, ' trades:', Object.fromEntries(Object.entries(save.trades).map(([k, v]) => [k, lvl(k)])), ' in the back:', Sh.inBack(save).length);
