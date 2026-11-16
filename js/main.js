@@ -1,9 +1,12 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES } from './data.js?v=6';
+import { KINDS, KC, TIERS, FORGE, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=6';
 import * as R from './rules.js?v=6';
 import * as Sh from './shop.js?v=6';
 import * as St from './staff.js?v=6';
 import * as Rm from './room.js?v=6';
+import * as G from './growth.js?v=6';
+import { decodeCard, linkFor } from './share.js?v=6';
+import * as Snd from './sound.js?v=6';
 import { lookOf, bagLook, unknownLook } from './tiles.js?v=6';
 import { card, ART } from './card.js?v=6';
 import { paint, sparksFor, LAYOUTS } from './stage.js?v=6';
@@ -12,7 +15,7 @@ import { load, store } from './save.js?v=6';
 const $ = id => document.getElementById(id);
 const rng = Math.random;
 const save = load();
-Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
+Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save); G.fixWall(save);
 save.queue = [];   // whoever was at the counter when the page closed has gone
 let awaySum = St.catchUp(save, Date.now(), rng);   // the shop while the page was closed
 store(save);
@@ -65,6 +68,11 @@ function toast(html) {
   $('toasts').appendChild(t); setTimeout(() => t.remove(), 4300);
   while ($('toasts').children.length > 3) $('toasts').firstChild.remove();
 }
+// sound: woken by the first tap or key; the mute switch kept apart from the save
+['pointerdown', 'keydown'].forEach(t => document.addEventListener(t, Snd.unlock, { capture: true }));
+function muteLabel() { $('muteBtn').textContent = Snd.isMuted() ? '♪ OFF' : '♪ ON'; $('muteBtn').setAttribute('aria-pressed', String(!Snd.isMuted())); }
+$('muteBtn').onclick = () => { Snd.setMuted(!Snd.isMuted()); muteLabel(); Snd.play('coin'); };
+muteLabel();
 const go = where => where === 'home' ? toHome() : where === 'shop' ? toShop() : where === 'staff' ? toStaff() : toSupp();
 document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
 // never stuck: broke, nothing made, nothing to make it from
@@ -88,6 +96,7 @@ function toHome() {
   $('homeBag').innerHTML = Object.entries(FOUND).map(([id, f]) => save.found.includes(id)
     ? '<button tabindex="-1" title="' + f.name + ': ' + f.line + '"><div style="aspect-ratio:3/4">' + bagLook(id).face + '</div>' + f.short + '</button>'
     : '<button class="unk" disabled><div style="aspect-ratio:3/4">' + unknownLook(id).face + '</div>NOT FOUND</button>').join('');
+  renderMaker(); renderTools();
   const have = Object.entries(save.mats).filter(([, n]) => n > 0);
   $('storeWord').textContent = have.length ? have.reduce((a, [, n]) => a + n, 0) + ' THINGS' : 'EMPTY';
   $('store').innerHTML = have.length ? have.map(([id, n]) => '<span>' + MATS[id].name + '<b>' + n + '</b></span>').join('')
@@ -95,8 +104,53 @@ function toHome() {
   const back = Sh.inBack(save).length;
   $('toBack').textContent = back + ' IN THE BACK · TO THE SHOP';
 }
-function openLook(html, acts, wide) {
+// ---------- THE MAKER: level, renown, skills; THE WORKSHOP: tools ----------
+let perkNote = '', toolNote = '';
+function renderMaker() {
+  const lv = G.makerLevel(save), pts = G.pointsLeft(save), ren = G.renownOf(save), rg = G.rung(save), nx = G.nextRung(save);
+  $('makerWord').textContent = save.maker.toUpperCase();
+  $('mkLevel').innerHTML = 'Maker level <b>' + lv.level + '</b>';
+  $('mkXp').style.width = (lv.need ? Math.round(lv.into / lv.need * 100) : 100) + '%';
+  $('mkPoints').textContent = (pts ? pts + ' SKILL POINT' + (pts > 1 ? 'S' : '') + ' TO SPEND · ' : '') + 'ALL PRACTICE COUNTS: EVERY TRADE AND HAGGLING';
+  $('mkRenown').innerHTML = 'Renown <b>' + RENOWN[rg].word + '</b> · ' + ren;
+  $('mkRen').style.width = (nx ? Math.round((ren - RENOWN[rg].at) / (nx.at - RENOWN[rg].at) * 100) : 100) + '%';
+  $('mkRenNext').textContent = (nx ? nx.word + ' AT ' + nx.at + ' · ' : '') + 'PURSES +' + Math.round((G.purseMult(save) - 1) * 100) + ' % · FROM FAIR SALES, ORDERS, THE WALL';
+  $('branches').innerHTML = Object.entries(PERKS).map(([bk, b]) => '<div class="branch"><h3>' + b.word + '</h3>' + b.perks.map((p, i) => {
+    const have = G.perked(save, p.id), can = G.canTake(save, bk, i).ok;
+    return '<button class="perk' + (have ? ' have' : can ? ' can' : '') + '" data-b="' + bk + '" data-i="' + i + '"' + (have || !can ? ' aria-disabled="true"' : '') + '><b>' + p.word + '</b><span>' + p.line + '</span></button>';
+  }).join('') + '</div>').join('');
+  $('perkNote').textContent = perkNote || (pts ? 'Spend a point: each branch in order.' : 'Rise a level to earn a point.');
+  $('branches').querySelectorAll('.perk').forEach(b => b.onclick = () => {
+    if (b.getAttribute('aria-disabled') === 'true') { const w = G.canTake(save, b.dataset.b, +b.dataset.i).why; if (w && w !== 'yours already') { perkNote = 'Not yet: ' + w + '.'; renderMaker(); } return; }
+    const r = G.takePerk(save, b.dataset.b, +b.dataset.i);
+    perkNote = r.ok ? 'Learned: ' + PERKS[b.dataset.b].perks[+b.dataset.i].word + '.' : 'Not yet: ' + r.why + '.';
+    store(save); renderMaker();
+  });
+}
+function renderTools() {
+  $('tools').innerHTML = Object.entries(TOOLS).map(([id, t]) => {
+    const have = G.has(save, id), c = G.canBuyTool(save, id);
+    return '<div class="fi' + (have ? ' have' : '') + '"><b>' + t.name + '</b><span>' + t.line + '.</span>' + (have ? '' : '<button class="seg" data-tool="' + id + '"' + (c.ok ? '' : ' disabled') + '>BUY · ' + t.cost + ' c</button>' + (c.why && c.why !== 'not enough coin' ? '<span>' + c.why + '</span>' : '')) + '</div>';
+  }).join('');
+  $('toolNote').textContent = toolNote || 'Tools work on every piece, new or back in the fire.';
+  $('tools').querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { const r = G.buyTool(save, b.dataset.tool); toolNote = r.ok ? 'Bought: ' + TOOLS[b.dataset.tool].name + '.' : 'Not bought: ' + r.why + '.'; if (r.ok) { store(save); coins(); } renderTools(); });
+}
+// a piece to share: the link carries the card itself
+async function sharePiece(c) {
+  const url = linkFor(c, location.href.split('?')[0]);
+  try {
+    if (navigator.share) { await navigator.share({ title: c.name, text: c.name + ' · ' + TIERS.find(t => t.id === c.tier).name + ', made by ' + (c.maker || save.maker), url }); return 'Shared.'; }
+    await navigator.clipboard.writeText(url); return 'Link copied. Anyone with it sees this card.';
+  } catch (e) { return e && e.name === 'AbortError' ? '' : 'Copy this link: ' + url; }
+}
+function shareBtn(c, where) {
+  const b = document.createElement('button'); b.className = 'seg'; b.textContent = 'SHARE THIS CARD';
+  b.onclick = async () => { const m = await sharePiece(c); if (m) { let p = where.querySelector('.sharemsg'); if (!p) { p = document.createElement('p'); p.className = 'note sharemsg'; where.appendChild(p); } p.textContent = m; } };
+  return b;
+}
+function openLook(html, acts, wide, shareOf) {
   $('lookCard').innerHTML = html; $('lookActs').innerHTML = acts || ''; $('lookActs').onclick = null;
+  if (shareOf) $('lookActs').appendChild(shareBtn(shareOf, $('lookActs')));
   $('look').querySelector('.box').classList.toggle('wide', !!wide);
   $('look').hidden = false; $('look').scrollTop = 0; $('lookClose').focus({ preventScroll: true });
 }
@@ -151,6 +205,22 @@ function renderDioBar() {
   };
 }
 $('arrangeBtn').onclick = () => { arranging = !arranging; picked = null; dioMsg = ''; renderDioBar(); };
+function renderWall() {
+  G.fixWall(save);
+  const n = G.wallSlots(save), w = save.wall || [];
+  $('wallWord').textContent = w.length + ' OF ' + n + ' · RENOWN +' + G.wallRenown(save);
+  $('wall').innerHTML = Array.from({ length: n }, (_, i) => {
+    const c = w[i] && save.cards.find(x => x.id === w[i]);
+    return c ? '<button data-wall="' + c.id + '" aria-label="' + esc(c.name) + ', on the wall">' + card(c, { short: true, price: 'ON THE WALL' }) + '</button>'
+      : '<button class="slot-empty" data-wallempty="1">EMPTY<br>' + (Sh.inBack(save).length ? 'HANG FROM THE BACK' : 'KEEP A FINE PIECE') + '</button>';
+  }).join('');
+  $('wall').querySelectorAll('[data-wall]').forEach(b => b.onclick = () => {
+    const c = save.cards.find(x => x.id === b.dataset.wall);
+    openLook(card(c), '<button class="seg" id="unhang">TAKE IT DOWN</button>', false, c);
+    $('unhang').onclick = () => { G.unhang(save, c.id); store(save); $('look').hidden = true; renderShop(); };
+  });
+  $('wall').querySelectorAll('[data-wallempty]').forEach(b => b.onclick = () => $('back').scrollIntoView({ behavior: 'smooth', block: 'center' }));
+}
 let furnNote = '';
 function renderFurnish() {
   const room = save.room, size = Rm.sizeOf(room), next = Rm.nextSize(room);
@@ -206,13 +276,13 @@ function renderCounter() {
   lastSig = counterSig();
   box.hidden = !c;
   if (!c) return;
-  const hl = Sh.haggleLevel(save);
+  const hl = Sh.haggleLevel(save), rd = G.readLevels(save);
   $('queueWord').textContent = save.queue.length > 1 ? (save.queue.length - 1) + ' WAITING BEHIND' : 'NO ONE BEHIND';
   const head = '<div class="cust">' + figure(c.fig).replace('class="fig in"', 'class="fig"') + '<div class="nm">' + esc(c.who) + '</div>'
     + (c.tell ? '<div class="tell">' + esc(c.tell) + '</div>' : '')
     + '<div class="meta">' + (c.kind === 'buyer' ? 'Wants <b>' + Sh.wantWord(c.want) + (c.least ? ', Fine or better' : '') + '</b>' : 'Has something to sell')
-    + (c.kind === 'buyer' && hl >= 3 ? '<span class="mood ' + c.mood + '">' + c.mood + '</span>' : '')
-    + (c.kind === 'buyer' && hl >= 6 ? '<span>Purse <b>' + c.purse + ' c</b></span>' : '') + '</div></div>';
+    + (c.kind === 'buyer' && hl >= rd.mood ? '<span class="mood ' + c.mood + '">' + c.mood + '</span>' : '')
+    + (c.kind === 'buyer' && hl >= rd.purse ? '<span>Purse <b>' + c.purse + ' c</b></span>' : '') + '</div></div>';
   let body = '';
   if (c.kind === 'seller') {
     const o = c.offer, h = hour();
@@ -230,29 +300,29 @@ function renderCounter() {
     if (!list.length) body = '<div class="note">Nothing on the shelf for them.' + (Sh.inBack(save).some(x => Sh.wants(c.want, x)) ? ' Something in the back would do: put it on the shelf.' : '') + '</div>'
       + '<div class="rbtns left"><button class="hbtn" data-act="away">NOTHING FOR THEM</button></div>';
     else {
-      const e = list[c.shows % list.length];
+      const e = list[c.shows % list.length], hm2 = G.haggleMult(save);
       body = '<div class="offer"><div>' + card(e.card, { short: true, price: Sh.priceAt(e.card, e.tag) + ' c<span class="tagword">' + TAGS[e.tag].word + '</span>' }) + '</div><div class="choices">'
-        + '<div class="row3">' + Object.entries(HAGGLE).map(([k, h]) => { const pr = Sh.hagglePrice(e.card, e.tag, k); return '<button class="hbtn' + (k === 'hold' ? ' go' : '') + '" data-act="h:' + k + '" data-id="' + e.card.id + '">' + h.word + '<small>' + pr + ' c</small></button>'; }).join('') + '</div>'
+        + '<div class="row3">' + Object.entries(HAGGLE).map(([k, h]) => { const pr = Sh.hagglePrice(e.card, e.tag, k, hm2); return '<button class="hbtn' + (k === 'hold' ? ' go' : '') + '" data-act="h:' + k + '" data-id="' + e.card.id + '">' + h.word + '<small>' + pr + ' c</small></button>'; }).join('') + '</div>'
         + '<div class="rbtns left">' + (list.length > 1 && c.shows < 2 ? '<button class="seg" data-act="another">SHOW ANOTHER</button>' : '') + '<button class="seg" data-act="away">NOTHING FOR THEM</button></div></div></div>';
     }
   }
   if (Date.now() - counterNoteAt > 6000) counterNote = '';
   $('counterBody').innerHTML = head + body + (counterNote ? '<p class="note' + (counterNoteBad ? ' bad' : '') + '">' + counterNote + '</p>' : '')
-    + (hl < 6 ? '<p class="note" style="color:var(--bone-faint)">Haggling ' + hl + (hl < 3 ? ': read their mood from their words. It shows at Haggling 3, their purse at 6.' : ': their purse shows at Haggling 6.') + '</p>' : '');
+    + (hl < rd.purse ? '<p class="note" style="color:var(--bone-faint)">Haggling ' + hl + (hl < rd.mood ? ': read their mood from their words. It shows at Haggling ' + rd.mood + ', their purse at ' + rd.purse + '.' : ': their purse shows at Haggling ' + rd.purse + '.') + '</p>' : '');
   tickCounter();
 }
 $('counterBody').onclick = ev => {
   const b = ev.target.closest('button'); if (!b || b.disabled) return;
   const a = b.dataset.act, now = Date.now(), c = save.queue[0]; if (!c) return;
   counterNote = ''; counterNoteBad = false; counterNoteAt = Date.now();
-  if (a === 'buy') { const e = Sh.buyOffer(save, now); if (e) counterNote = 'Bought: ' + esc(e.bought.what) + '.'; }
+  if (a === 'buy') { const e = Sh.buyOffer(save, now); if (e) { counterNote = 'Bought: ' + esc(e.bought.what) + '.'; Snd.play('coin'); } }
   else if (a === 'away') Sh.sendAway(save, now);
   else if (a === 'another') c.shows++;
-  else if (a === 'take' || a === 'refuse') { const r = Sh.answerCounter(save, a === 'take', now); if (r) { counterNote = r.outcome === 'sold' ? 'Sold for ' + r.price + ' c.' : 'They went.'; counterNoteBad = r.outcome !== 'sold'; } }
+  else if (a === 'take' || a === 'refuse') { const r = Sh.answerCounter(save, a === 'take', now); if (r) { counterNote = r.outcome === 'sold' ? 'Sold for ' + r.price + ' c.' : 'They went.'; counterNoteBad = r.outcome !== 'sold'; if (r.outcome === 'sold') Snd.play('coin'); } }
   else if (a.startsWith('h:')) {
     const r = Sh.haggle(save, b.dataset.id, a.slice(2), now);
     if (r) {
-      if (r.outcome === 'sold') counterNote = 'Sold for ' + r.price + ' c.';
+      if (r.outcome === 'sold') { counterNote = 'Sold for ' + r.price + ' c.'; Snd.play('coin'); }
       else if (r.outcome === 'over') { counterNote = '"' + r.price + ' c? That\'s more than I carry." Show another, or meet them.'; counterNoteBad = true; }
       else if (r.outcome === 'gone') { counterNote = 'They went.'; counterNoteBad = true; }
     }
@@ -288,7 +358,7 @@ function renderShop() {
   if (screen !== 'shop') return;
   renderCounter(); renderOrder();
   const hlv = R.levelOf((save.haggle || {}).xp || 0);
-  $('tally').innerHTML = '<b>' + (save.sold || 0) + '</b> sold · <b>' + (save.earned || 0) + '</b> coins taken<br>Haggling <b>' + hlv.level + '</b>' + (hlv.need ? ' · ' + hlv.into + ' / ' + hlv.need : '');
+  $('tally').innerHTML = '<b>' + (save.sold || 0) + '</b> sold · <b>' + (save.earned || 0) + '</b> coins taken<br>Haggling <b>' + hlv.level + '</b>' + (hlv.need ? ' · ' + hlv.into + ' / ' + hlv.need : '') + ' · Renown <b>' + RENOWN[G.rung(save)].word + '</b>';
   const filled = save.shelf.filter(Boolean).length;
   $('shelfWord').textContent = filled + ' OF ' + save.slots + ' · CUSTOMERS BUY FROM HERE';
   $('slots2').innerHTML = save.shelf.map((e, i) => {
@@ -301,7 +371,7 @@ function renderShop() {
   const cost = Rm.shelfCost(save.room);
   $('buySlot').hidden = cost == null;
   if (cost != null) { $('buySlot').textContent = 'ANOTHER SHELF · TWO PLACES · ' + cost + ' COINS'; $('buySlot').disabled = save.coins < cost; }
-  renderFurnish();
+  renderFurnish(); renderWall();
   const back = Sh.inBack(save);
   $('backWord').textContent = back.length + (back.length === 1 ? ' PIECE' : ' PIECES') + ' · NOT FOR SALE YET';
   $('back').innerHTML = back.length ? back.map(c => '<button data-id="' + c.id + '" aria-label="' + esc(c.name) + '">' + card(c, { short: true }) + '</button>').join('')
@@ -330,12 +400,12 @@ function slotOpen(slot) {
   }
   const c = save.cards.find(x => x.id === e.id);
   const acts = () => tagSegs(slot) + '<button class="seg" id="takeDown">TAKE IT DOWN</button>';
-  openLook(card(c), acts());
+  openLook(card(c), acts(), false, c);
   $('lookActs').onclick = ev => {
     const b = ev.target.closest('button'); if (!b) return;
     if (b.dataset.tag) {
       if (!save.shelf[slot]) return;
-      Sh.setTag(save, slot, b.dataset.tag); store(save); $('lookActs').innerHTML = acts();
+      Sh.setTag(save, slot, b.dataset.tag); store(save); $('lookActs').innerHTML = acts(); $('lookActs').appendChild(shareBtn(c, $('lookActs')));
       $('lookActs').querySelector('[data-tag="' + b.dataset.tag + '"]').focus(); renderShop();
     } else if (b.id === 'takeDown') { Sh.takeDown(save, slot); store(save); $('look').hidden = true; renderShop(); }
   };
@@ -345,12 +415,14 @@ function backOpen(id) {
   const sv = Sh.salvageOf(c), cost = Sh.reworkCost(c), canRw = Sh.canRework(save, c), haveRw = Sh.canMake(save.mats, cost);
   const toTier = TIERS[R.reworkTo(TIERS.findIndex(t => t.id === c.tier))];
   let acts = free >= 0 ? '<button class="seg go" id="putUp">PUT IT ON THE SHELF · FAIR ' + Sh.priceAt(c, 'fair') + ' c</button>' : '<p>The shelf is full. Take something down, or buy another shelf.</p>';
+  acts += (save.wall || []).length < G.wallSlots(save) ? '<button class="seg" id="hangIt">HANG IT ON THE WALL</button>' : '';
   if (save.order && Sh.fills(save.order, c)) acts += '<button class="seg go" id="deliverIt">DELIVER TO ' + esc(save.order.who.toUpperCase()) + ' · ' + save.order.pays + ' c</button>';
   acts += '<div class="row2">'
     + (canRw ? '<button class="seg" id="reworkIt"' + (haveRw ? '' : ' disabled') + '>BACK IN THE FIRE · TO ' + toTier.name.toUpperCase() + ' · ' + cost.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') + '</button>' : '')
     + '<button class="seg" id="breakIt">BREAK IT DOWN · ' + (sv.length ? sv.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') : 'nothing worth keeping') + '</button></div>'
     + (canRw && !haveRw ? '<p>Back in the fire takes ' + cost.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') + '. You have ' + (save.mats[cost[0].mat] || 0) + '.</p>' : '');
-  openLook(card(c), acts);
+  openLook(card(c), acts, false, c);
+  if ($('hangIt')) $('hangIt').onclick = () => { if (G.hang(save, id)) { store(save); $('look').hidden = true; renderShop(); } };
   if (free >= 0) $('putUp').onclick = () => { Sh.place(save, id, free); store(save); $('look').hidden = true; renderShop(); };
   if ($('deliverIt')) $('deliverIt').onclick = () => { const o = save.order; if (Sh.deliver(save, id, Date.now())) { store(save); coins(); $('look').hidden = true; renderShop(); toast('<b>Order filled · +' + o.pays + ' c</b><br>' + esc(o.who)); } };
   if ($('reworkIt')) $('reworkIt').onclick = () => toRework(id);
@@ -471,7 +543,7 @@ function renderSupp() {
 function newWorking() {
   const n = R.slotsFor(lvl());
   save.chosen = save.chosen.filter(id => save.found.includes(id)).slice(0, n);
-  S = R.newWorking({ patternId: pat, picks: benchPicks().slice(), level: lvl(), found: save.chosen.slice(), kit: {}, rework: rw ? { from: rw.from } : null }, rng);
+  S = R.newWorking({ patternId: pat, picks: benchPicks().slice(), level: lvl(), found: save.chosen.slice(), kit: G.kitOf(save), rework: rw ? { from: rw.from } : null }, rng);
 }
 function toPrepare() {
   clearTimers(); paused = false;
@@ -640,6 +712,7 @@ function strike() {
   lastStrike = now;
   const ev = R.strike(S);
   if (!ev) return;
+  Snd.play(ev.dead ? 'dead' : ev.k);
   setFireBtn(); playPops(ev.pops);
   view.flash = 1; view.sparks.push(...sparksFor(ev.k, ev.dead));
   render();
@@ -648,13 +721,14 @@ function strike() {
 function toggleFire() {
   if (screen !== 'work' || !S || S.done || paused) return;
   const r = R.toggleFire(S);
+  if (S.inFire) Snd.play('fire');
   if (r && r.shuffled) popLabel({ label: 'SHUFFLED', gain: 'BACK IN THE FIRE · EVERY TILE RETURNS', size: 'bigpop', colour: '#e8c464' });
   setFireBtn(); render();
 }
 function quench() {
   if (screen !== 'work' || !S || S.done || paused) return;
   if (S.shape < 100) { popLabel({ label: 'NOT YET', gain: 'FILL THE SHAPE FIRST', size: 'bad', colour: '#8e9bb0' }); return; }
-  finish('quench');
+  Snd.play('quench'); finish('quench');
 }
 function toggleSheet(on) {
   if (screen !== 'work' || !S || S.done) return;
@@ -766,6 +840,7 @@ function complete(res, picked) {
       R.partOptions(pat).forEach(pp => pp.opts.forEach(o => { if ((o.level || 1) > before.level && o.level <= after.level) got.push(o.name); }));
       opened = got.length ? ' It opens: ' + got.join(', ') + '.' : '';
     }
+    if (after.level > before.level) Snd.play('level');
     tEl.innerHTML = '<div><b>' + (after.level > before.level ? p.trade.toUpperCase() + ' · NOW TRADE ' + after.level : 'PRACTICE · ' + p.trade.toUpperCase()) + '</b><span>+' + xp + ' practice · trade ' + after.level
       + (after.need ? ' · ' + after.into + ' of ' + after.need + ' to the next' : ' · mastered') + '.' + opened + '</span></div>';
   }
@@ -774,7 +849,7 @@ function complete(res, picked) {
   const gEl = $('rGift'); gEl.hidden = true; gEl.className = 'gift';
   if (res.clean && missing.length) {
     const id = missing[Math.floor(rng() * missing.length)];
-    save.found.push(id); fresh = id;
+    save.found.push(id); fresh = id; Snd.play('chime');
     gEl.innerHTML = '<div class="gt">' + bagLook(id).face + '</div><div><b>A NEW FOUND TILE · FOR A ' + (res.cracks === 0 ? 'CLEAN' : 'WHITE-HOT') + ' WORKING</b><strong>' + FOUND[id].name + '</strong><span>'
       + FOUND[id].line + '. In your bag now (' + save.found.length + ' of ' + Object.keys(FOUND).length + ').</span></div>';
     gEl.hidden = false;
@@ -784,6 +859,8 @@ function complete(res, picked) {
   $('rShelf').textContent = 'ON THE SHELF · ' + Sh.priceAt(piece, 'fair') + ' c';
   $('rShelf').onclick = () => { Sh.place(save, piece.id, free); store(save); toShop(); };
   if (!store(save)) $('rWhy').textContent += ' · This browser would not save it.';
+  const sb = $('rDone').querySelector('.rbtns'); sb.querySelectorAll('.sharebtn').forEach(x => x.remove());
+  const shb = shareBtn(piece, $('rDone')); shb.classList.add('sharebtn'); sb.appendChild(shb);
   $('rAgain').focus({ preventScroll: true }); $('result').scrollTop = 0;
 }
 $('rAgain').onclick = () => { rw = null; toPrepare(); };
@@ -798,7 +875,7 @@ function fitStage() {   // a phone held upright gets the tall drawing
   if (cv.width !== layout.W || cv.height !== layout.H) { cv.width = layout.W; cv.height = layout.H; }
 }
 window.addEventListener('resize', fitStage); fitStage();
-let lastT = performance.now(), lastStore = 0, dioSig = '';
+let lastT = performance.now(), lastStore = 0, dioSig = '', lastQ = 0;
 function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
   // the shop's clock: only while this page is in front (a hidden tab gets no frames, so no time passes)
@@ -821,11 +898,13 @@ function frame(now) {
   if (visits.length || sig !== lastSig) {
     if (visits.length || save.queue.length) store(save);
     visits.forEach(e => {
-      if (e.sold) { coins(); if (screen !== 'shop') { toast('<b>Sold: ' + esc(e.sold.name) + ' · +' + e.sold.price + ' c</b><br>to ' + esc(e.who)); $('navSold').hidden = false; } }
+      if (e.sold) { coins(); Snd.play('coin'); if (screen !== 'shop') { toast('<b>Sold: ' + esc(e.sold.name) + ' · +' + e.sold.price + ' c</b><br>to ' + esc(e.who)); $('navSold').hidden = false; } }
       if (e.order === 'posted' && screen !== 'shop') { toast('<b>A special order</b><br>' + esc(e.who) + ': ' + esc(Sh.orderWord(save.order)) + '.'); $('navSold').hidden = false; }
     });
     if (screen === 'shop') renderShop();
   } else if (screen === 'shop' && floorShown && save.ledger[0] && Date.now() - save.ledger[0].at > 30000) renderFloor();
+  if (screen === 'shop' && save.queue.length > lastQ) Snd.play('bell');
+  lastQ = save.queue.length;
   if (screen === 'shop') { tickCounter(); if (dio) { if (sig !== dioSig) { dioSig = sig; dio.setQueue(save.queue); } visits.forEach(e => { if (!e.served && !e.by) dio.walkIn(e); }); dio.tick(); } }
   if (screen === 'supp' && suppHour !== hour()) renderSupp();
   if (S && screen === 'work') {
@@ -874,5 +953,16 @@ if (!phoneQ.matches && !save.made) $('howd').open = true;
 if (new URLSearchParams(location.search).has('debug')) window.forge = { save, Sh, R, St, renderShop, toShop, toStaff, showAway, store: () => store(save), wipe: () => { save.v = 0; store(save); location.reload(); } };
 
 toHome();
-showAway(awaySum); awaySum = null;
+// a card shared by link: shown view only, never added to this save; the away summary waits for it to close
+const shared = location.hash.startsWith('#card=') ? decodeCard(location.hash.slice(6)) : null;
+if (location.hash.startsWith('#card=')) history.replaceState(null, '', location.pathname + location.search);
+if (shared) {
+  openLook('<div class="sharedhead"><div class="k">A PIECE SHARED WITH YOU</div><p>Made by ' + esc(shared.maker || 'a maker') + ' at their forge.</p></div>' + card(shared),
+    '<p>Make your own at the forge.</p>');
+  $('lookClose').textContent = 'TO MY FORGE';
+  const away = awaySum, close = $('lookClose').onclick;
+  $('lookClose').onclick = () => { $('look').hidden = true; $('lookClose').textContent = 'CLOSE'; $('lookClose').onclick = close; showAway(away); };
+} else if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+if (!shared) showAway(awaySum);
+awaySum = null;
 requestAnimationFrame(frame);

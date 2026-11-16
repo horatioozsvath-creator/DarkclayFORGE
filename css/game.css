@@ -279,3 +279,32 @@ canvas.dio { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 .furn .fi b { font: 800 15px var(--sans); color: var(--bone); }
 .furn .fi span { font: 600 12px var(--sans); color: var(--bone-faint); }
 .furn .fi .seg { min-height: 38px; justify-self: start; }
+
+/* ---------- milestone 6: the maker, the workshop, the wall, sharing, sound ---------- */
+.makerrow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 12px; }
+@media (max-width: 560px) { .makerrow { grid-template-columns: minmax(0, 1fr); } }
+.mk-l { font: 800 18px var(--display); color: var(--bone); margin-bottom: 4px; }
+.mk-l b { color: var(--gold); }
+.mk-s { font: 600 12px var(--sans); color: var(--bone-faint); margin-top: 4px; letter-spacing: .04em; }
+.maker-card .xp { height: 6px; background: #0b0807; border: 1px solid var(--line-soft); }
+.maker-card .xp i { display: block; height: 100%; background: linear-gradient(90deg, #7a4a20, var(--ember-hot)); }
+.branches { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 760px) { .branches { grid-template-columns: minmax(0, 1fr); } }
+.branch { display: grid; gap: 6px; align-content: start; }
+.branch h3 { margin: 0; font: 800 11px var(--sans); letter-spacing: .16em; color: var(--ember-hot); }
+.perk { all: unset; box-sizing: border-box; cursor: pointer; display: grid; gap: 2px; padding: 8px 10px; background: var(--panel-2); border: 1px solid var(--line-soft); }
+.perk b { font: 800 14px var(--sans); color: var(--bone); }
+.perk span { font: 600 12px var(--sans); color: var(--bone-faint); }
+.perk.have { border-color: var(--gold); background: #2e2214; }
+.perk.have b::after { content: ' ✓'; color: var(--gold); }
+.perk.can { border-color: var(--ember-hot); }
+.perk.can:hover, .perk.can:focus-visible { background: #3a2412; }
+.perk[aria-disabled="true"] { cursor: default; opacity: .6; }
+.perk.have[aria-disabled="true"] { opacity: 1; }
+.furn .fi.have b::after { content: ' · YOURS'; color: var(--gold); font-size: 11px; letter-spacing: .1em; }
+.sharedhead { text-align: center; display: grid; gap: 4px; }
+.sharedhead .k { font: 800 12px var(--sans); letter-spacing: .16em; color: var(--ember-hot); }
+.sharedhead p { margin: 0; color: var(--bone-dim); font-size: 14px; }
+.mute { min-width: 40px; }
+.nav .seg.mute, .nav .seg.mute[aria-pressed="true"] { color: var(--bone-dim); background: var(--panel-2); border-color: var(--line-soft); }
+.nav .seg.mute[aria-pressed="false"] { color: var(--bone-faint); }

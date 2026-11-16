@@ -21,6 +21,7 @@
       <button class="seg" data-go="shop">THE SHOP <span class="dot" id="navSold" hidden></span></button>
       <button class="seg" data-go="supp">SUPPLIERS</button>
       <button class="seg" data-go="staff">STAFF</button>
+      <button class="seg mute" id="muteBtn" aria-label="Sound"></button>
     </div>
     <div class="purse" aria-live="polite"><span>PURSE</span><b id="coins">0</b><span>COINS</span></div>
   </nav>
@@ -47,6 +48,22 @@
     <section class="card">
       <h2><span>THE PATTERNS</span><b>EACH IS A TRADE · PRACTICE RAISES IT</b></h2>
       <div class="patterns" id="patterns"></div>
+    </section>
+
+    <section class="card maker-card">
+      <h2><span>THE MAKER</span><b id="makerWord"></b></h2>
+      <div class="makerrow">
+        <div><div class="mk-l" id="mkLevel"></div><div class="xp"><i id="mkXp"></i></div><div class="mk-s" id="mkPoints"></div></div>
+        <div><div class="mk-l" id="mkRenown"></div><div class="xp"><i id="mkRen"></i></div><div class="mk-s" id="mkRenNext"></div></div>
+      </div>
+      <div class="branches" id="branches"></div>
+      <p class="note" id="perkNote"></p>
+    </section>
+
+    <section class="card">
+      <h2><span>THE WORKSHOP</span><b>TOOLS FOR THE FORGE</b></h2>
+      <div class="furn" id="tools"></div>
+      <p class="note" id="toolNote"></p>
     </section>
 
     <section class="card">
@@ -92,6 +109,11 @@
     <section class="card">
       <h2><span>IN THE BACK</span><b id="backWord"></b></h2>
       <div class="shelf" id="back"></div>
+    </section>
+    <section class="card" id="wallBox">
+      <h2><span>THE WALL</span><b id="wallWord"></b></h2>
+      <div class="shelf slots" id="wall"></div>
+      <p class="note">Pieces you keep. Not for sale: they add to your renown and the shop's charm.</p>
     </section>
     <section class="card" id="furnish">
       <h2><span>FURNISH AND GROW</span><b id="charmWord"></b></h2>
