@@ -1,16 +1,16 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=7';
-import * as R from './rules.js?v=7';
-import * as Sh from './shop.js?v=7';
-import * as St from './staff.js?v=7';
-import * as Rm from './room.js?v=7';
-import * as G from './growth.js?v=7';
-import { decodeCard, linkFor } from './share.js?v=7';
-import * as Snd from './sound.js?v=7';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=7';
-import { card, ART } from './card.js?v=7';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=7';
-import { load, store } from './save.js?v=7';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=8';
+import * as R from './rules.js?v=8';
+import * as Sh from './shop.js?v=8';
+import * as St from './staff.js?v=8';
+import * as Rm from './room.js?v=8';
+import * as G from './growth.js?v=8';
+import { decodeCard, linkFor } from './share.js?v=8';
+import * as Snd from './sound.js?v=8';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=8';
+import { card, ART } from './card.js?v=8';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=8';
+import { load, store } from './save.js?v=8';
 
 const $ = id => document.getElementById(id);
 const rng = Math.random;
@@ -86,6 +86,7 @@ const HINTS = {
   home: 'Welcome to your forge. <i>Pick a pattern</i> to make your first piece: the dagger takes the least.',
   prepare: 'This is your <i>strip</i>: the clay tiles you\'ll turn over as you strike. GOOD and GREAT shape the piece, a CRACK marks it. When you\'re ready, <i>WORK IT</i>.',
   work: 'Put it <i>INTO THE FIRE</i> (R), wait for the <i>gold band</i>, then <i>STRIKE</i> (Space, or tap). Fill SHAPE, then <i>QUENCH</i> (Q).',
+  'work-bowbench': 'Put the stave <i>INTO THE STEAM</i> (R) until it\'s <i>pliant</i>, then <i>BEND</i> (Space, or tap) <i>with the grain</i>: watch the arrows under the bench, and wait while it runs across. Fill SHAPE, then <i>STRING</i> it (Q).',
   'work-stretcher': 'Put the hide <i>IN THE SOAK</i> (R) until it\'s <i>supple</i>, then <i>STITCH</i> (Space, or tap). Too dry does nothing, too wet tears; it dries as you work. Fill SHAPE, then <i>SET</i> (Q).',
   result: 'Every piece becomes a card. Put it <i>ON THE SHELF</i> and customers will buy it.',
   shop: 'While you\'re on this screen, customers come to the <i>counter</i>: show them a piece and choose your price. Away from it, they buy from the shelf at its tag: <i>CHEAP, FAIR or DEAR</i>.',
@@ -117,11 +118,14 @@ function toHome() {
   $('patterns').innerHTML = Object.values(STATIONS).map(st => {
     const pats = Object.entries(PATTERNS).filter(([, p]) => (p.station || 'forge') === st.id);
     const head = '<h3 class="stationhead">' + st.word + '</h3>';
-    if (Rm.owns(save, st.id)) return head + pats.map(patBtn).join('');
+    const parts = st.id === 'bowbench' ? '<div class="setup"><b>Parts from the forge</b><span>Arrows need forged heads, a staff a forged ferrule. Forge them at once from iron, or buy them dearer from Hollin\'s Timber.</span><div class="rbtns left">'
+      + Object.entries(FORGED_PARTS).map(([id, f]) => '<button class="seg" data-fp="' + id + '"' + ((save.mats.iron || 0) < f.from.iron ? ' disabled' : '') + '>FORGE ' + f.name.toUpperCase() + ' · ' + f.from.iron + ' IRON → ' + f.makes + ' · HAVE ' + (save.mats[id] || 0) + '</button>').join('') + '</div></div>' : '';
+    if (Rm.owns(save, st.id)) return head + pats.map(patBtn).join('') + parts;
     return head + '<div class="setup"><b>Set up a ' + st.name.toLowerCase() + '</b><span>' + pats.map(([, p]) => p.trade.toLowerCase()).join(', ').replace(/^./, x => x.toUpperCase()) + ', from hides. ' + st.twist + '</span>'
       + '<button class="seg go" data-station="' + st.id + '"' + (save.coins < st.cost ? ' disabled' : '') + '>SET IT UP · ' + st.cost + ' c</button><span id="stNote-' + st.id + '"></span></div>';
   }).join('');
   $('patterns').querySelectorAll('.pat').forEach(b => b.onclick = () => { rw = null; pat = b.dataset.p; toPrepare(); });
+  $('patterns').querySelectorAll('[data-fp]').forEach(b => b.onclick = () => { if (Sh.forgePart(save, b.dataset.fp)) { store(save); Snd.play('GOOD'); toHome(); } });
   $('patterns').querySelectorAll('[data-station]').forEach(b => b.onclick = () => {
     const r = Rm.buyStation(save, b.dataset.station);
     if (r.item) { store(save); coins(); Snd.play('level'); if (dio) dio.setRoom(save.room, save); toHome(); }
@@ -199,7 +203,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=7').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=8').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(save.room, save); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -456,7 +460,7 @@ function backOpen(id) {
   acts += (save.wall || []).length < G.wallSlots(save) ? '<button class="seg" id="hangIt">HANG IT ON THE WALL</button>' : '';
   if (save.order && Sh.fills(save.order, c)) acts += '<button class="seg go" id="deliverIt">DELIVER TO ' + esc(save.order.who.toUpperCase()) + ' · ' + save.order.pays + ' c</button>';
   acts += '<div class="row2">'
-    + (canRw ? '<button class="seg" id="reworkIt"' + (haveRw ? '' : ' disabled') + '>' + (R.stationOf(c.pattern).id === 'forge' ? 'BACK IN THE FIRE' : 'BACK ON THE FRAME') + ' · TO ' + toTier.name.toUpperCase() + ' · ' + cost.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') + '</button>' : '')
+    + (canRw ? '<button class="seg" id="reworkIt"' + (haveRw ? '' : ' disabled') + '>' + R.stationOf(c.pattern).again + ' · TO ' + toTier.name.toUpperCase() + ' · ' + cost.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') + '</button>' : '')
     + '<button class="seg" id="breakIt">BREAK IT DOWN · ' + (sv.length ? sv.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') : 'nothing worth keeping') + '</button></div>'
     + (canRw && !haveRw ? '<p>Back in the fire takes ' + cost.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') + '. You have ' + (save.mats[cost[0].mat] || 0) + '.</p>' : '');
   openLook(card(c), acts, false, c);
@@ -590,7 +594,7 @@ function toPrepare() {
   // a part that the trade hasn't opened yet falls back to the first
   if (!rw) save.picks[pat] = picks().map((k, i) => (opts[i].opts[k] && (opts[i].opts[k].level || 1) <= l.level) ? k : 0);
   newWorking(); show('prepare');
-  $('prepK').textContent = stn().word + (rw ? (stn().id === 'forge' ? ' · BACK IN THE FIRE' : ' · BACK ON THE FRAME') : ' · PREPARE');
+  $('prepK').textContent = stn().word + ' · ' + (rw ? stn().again : 'PREPARE');
   $('prepT').textContent = benchName();
   $('tradeWord').textContent = p.trade.toUpperCase() + ' · TRADE ' + l.level + (l.need ? ' · ' + l.into + ' / ' + l.need : '');
   $('makeIt').innerHTML = rw ? '<b>LEAVE IT</b>Keep it ' + TIERS[rw.from].name + '. Back to the shop.' : '<b>MAKE IT</b>At once, at the plain odds. It teaches nothing.';
@@ -757,7 +761,8 @@ function strike() {
   lastStrike = now;
   const ev = R.strike(S);
   if (!ev) return;
-  Snd.play(S.station.id === 'stretcher' ? (ev.dead ? 'dead' : ev.k === 'CRACK' ? 'tear' : ev.k === 'TRUE' || ev.k === 'FOUND' ? ev.k : 'stitch') : ev.dead ? 'dead' : ev.k);
+  const sid = S.station.id, soft = { stretcher: ['stitch', 'tear'], bowbench: ['bend', 'split'] }[sid];
+  Snd.play(soft ? (ev.dead ? 'dead' : ev.k === 'CRACK' ? soft[1] : ev.k === 'TRUE' || ev.k === 'FOUND' ? ev.k : soft[0]) : ev.dead ? 'dead' : ev.k);
   setFireBtn(); playPops(ev.pops);
   view.flash = 1; view.sparks.push(...sparksFor(ev.k, ev.dead));
   render();
@@ -766,14 +771,14 @@ function strike() {
 function toggleFire() {
   if (screen !== 'work' || !S || S.done || paused) return;
   const r = R.toggleFire(S);
-  if (S.inFire) Snd.play(S.station.id === 'stretcher' ? 'soak' : 'fire');
+  if (S.inFire) Snd.play({ stretcher: 'soak', bowbench: 'steam' }[S.station.id] || 'fire');
   if (r && r.shuffled) popLabel({ label: 'SHUFFLED', gain: 'BACK IN THE FIRE · EVERY TILE RETURNS', size: 'bigpop', colour: '#e8c464' });
   setFireBtn(); render();
 }
 function quench() {
   if (screen !== 'work' || !S || S.done || paused) return;
   if (S.shape < 100) { popLabel({ label: 'NOT YET', gain: 'FILL THE SHAPE FIRST', size: 'bad', colour: '#8e9bb0' }); return; }
-  Snd.play(S.station.id === 'stretcher' ? 'set' : 'quench'); finish('quench');
+  Snd.play({ stretcher: 'set', bowbench: 'twang' }[S.station.id] || 'quench'); finish('quench');
 }
 function toggleSheet(on) {
   if (screen !== 'work' || !S || S.done) return;
@@ -827,11 +832,12 @@ function renderSheet() {
 function hint() {
   let h = '';
   if (!S.done) {
-    const st = S.station, wet = st.wetTear;
-    if (S.inFire) h = S.meter >= S.over ? '<i>Past white.</i> Take it out before it scales.' : wet && S.meter > S.band[1] ? '<i>Soaked.</i> Take it out and let it dry back into the band, or a stitch will tear.' : S.meter >= S.band[0] ? '<i>In the band.</i> ' + (wet ? 'Stitch' : 'Strike') + ': it comes out on the first ' + (wet ? 'stitch' : 'strike') + '.' : (wet ? 'Soaking…' : 'Heating…') + ' wait for the ' + st.band_ + '.';
+    const st = S.station, wet = st.wetTear, Verb = st.strike.charAt(0) + st.strike.slice(1).toLowerCase(), verb = st.strike.toLowerCase();
+    if (S.inFire) h = S.meter >= S.over ? '<i>Past white.</i> Take it out before it scales.' : wet && S.meter > S.band[1] ? '<i>Soaked.</i> Take it out and let it dry back into the band, or a stitch will tear.' : S.meter >= S.band[0] ? '<i>In the band.</i> ' + Verb + ': it comes out on the first ' + verb + '.' : (wet ? 'Soaking…' : 'Heating…') + ' wait for the ' + st.band_ + '.';
     else if (S.meter < S.band[0]) h = (wet ? 'Too dry: <i>' : 'Below the band: <i>') + st.fire + '</i> (every tile returns).';
     else if (wet && S.meter > S.band[1]) h = '<i>Too wet.</i> Let it dry a moment: a stitch now will tear.';
-    else h = S.shape < 100 ? '<i>In the band.</i> ' + (wet ? 'Stitch. It dries as you work.' : 'Strike. It cools while you wait.') : '<i>It\'s made.</i> Each ' + (wet ? 'stitch' : 'strike') + ' pushes it. Read what\'s left face down, then ' + st.close + '.';
+    else if (R.acrossGrain(S)) h = '<i>Across the grain.</i> Wait for it to turn: a bend now does nothing.';
+    else h = S.shape < 100 ? '<i>In the band.</i> ' + Verb + (wet ? '. It dries as you work.' : '. It cools while you wait.') : '<i>It\'s made.</i> Each ' + verb + ' pushes it. Read what\'s left face down, then ' + st.close + '.';
   }
   if ($('hint').innerHTML !== h) $('hint').innerHTML = h;
 }
@@ -873,7 +879,7 @@ function complete(res, picked) {
     : res.dropped ? (res.flawed ? 'A second crack after it was made. It holds together, flawed, and is worth less.' : 'A second crack after it was made dropped it a tier.')
     : 'WORKED +' + res.worked + ' % · it had Fine ' + Math.round(res.odds.f) + ' % · Rare ' + Math.round(res.odds.r) + ' %';
   $('rWhy').textContent = res.instant ? 'No working, no pick, no found tile, no practice.'
-    : (res.cracks ? res.cracks + ' crack' + (res.cracks > 1 ? 's' : '') : 'No cracks') + ' · ' + res.strikes + (R.stationOf(pat).id === 'stretcher' ? ' stitches · ' + res.heats + ' soak' : ' strikes · ' + res.heats + ' heat') + (res.heats > 1 ? 's' : '');
+    : (res.cracks ? res.cracks + ' crack' + (res.cracks > 1 ? 's' : '') : 'No cracks') + ' · ' + res.strikes + ' ' + R.stationOf(pat).made[0] + (res.strikes === 1 ? '' : (R.stationOf(pat).made[0] === 'stitch' ? 'es' : 's')) + ' · ' + res.heats + ' ' + R.stationOf(pat).made[1] + (res.heats > 1 ? 's' : '');
   // practice
   const tEl = $('rTrade'); tEl.hidden = xp === 0; tEl.className = 'gift plain';
   if (xp) {

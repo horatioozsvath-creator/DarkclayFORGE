@@ -2,10 +2,10 @@
 // in to the counter. Loaded only when the shop is opened. Three.js comes through the page's import map as 'three'.
 import * as THREE from 'three';
 import { GLTFLoader } from '../vendor/three/loaders/GLTFLoader.js';
-import { FURNITURE, DOOR_Z } from './data.js?v=7';
-import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=7';
+import { FURNITURE, DOOR_Z } from './data.js?v=8';
+import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=8';
 
-const MODELS = 'assets/models/', M = '?m=2';   // bump m when tools/models.sh rebuilds them
+const MODELS = 'assets/models/', M = '?m=3';   // bump m when tools/models.sh rebuilds them
 const FIGURES = { folk: 'folk', guard: 'dwarf', traveller: 'carter', delver: 'bard', factor: 'chandler', collector: 'herbalist', seller: 'carter', maker: 'smith', clerk: 'chandler' };
 const WALK = 1.5;   // metres a second
 
@@ -27,7 +27,9 @@ function toonBox(w, h, d, hex) { return new THREE.Mesh(new THREE.BoxGeometry(w, 
 const loader = new GLTFLoader(), cache = {};
 function model(name) {
   return cache[name] || (cache[name] = new Promise((ok, no) => loader.load(MODELS + name + '.glb' + M, g => {
-    g.scene.traverse(o => { if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(m => matFor(m.name)) : matFor(o.material.name); });
+    // a painted model keeps its texture, drawn in the same toon bands; the rest take their palette colours
+    const re = m => m.map ? new THREE.MeshToonMaterial({ map: m.map, gradientMap: ramp, side: THREE.FrontSide }) : matFor(m.name);
+    g.scene.traverse(o => { if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(re) : re(o.material); });
     ok(g.scene);
   }, undefined, no)));
 }

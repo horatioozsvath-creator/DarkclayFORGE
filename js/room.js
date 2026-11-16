@@ -1,6 +1,6 @@
 // The shop's room, with no page access: the grid, what stands on it, buying, moving, selling back, and making the room bigger.
-import { FURNITURE, ROOM_SIZES, DOOR_Z, SHELF_COSTS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=7';
-import { wallCharm } from './growth.js?v=7';
+import { FURNITURE, ROOM_SIZES, DOOR_Z, SHELF_COSTS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=8';
+import { wallCharm } from './growth.js?v=8';
 
 export const sizeOf = room => ROOM_SIZES[room.size || 0];
 // the footprint, turned: rot 0 or 2 as authored, 1 or 3 swapped

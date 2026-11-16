@@ -1,5 +1,5 @@
 // The stage: the fire, the anvil, the piece taking shape, the hammer and the heat meter, drawn on a 1280 × 720 canvas.
-import { FORGE, KC } from './data.js?v=7';
+import { FORGE, KC } from './data.js?v=8';
 
 // two layouts: wide (a desktop, a phone on its side) and tall (a phone held upright), the same drawing moved and scaled
 export const LAYOUTS = {
@@ -30,10 +30,11 @@ export function paint(g, S, view, dt, L = LAYOUTS.wide) {
   g.clearRect(0, 0, W, H);
   const heat = S.meter / 100, now = performance.now();
   if (c.id === 'stretcher') drawStretcher(g, S, view, L, heat, now, c);
+  else if (c.id === 'bowbench') drawBench(g, S, view, L, heat, now, c);
   else drawForge(g, S, view, L, heat, now, c);
   for (const s of view.sparks) { if (!s.init) { s.x = L.ax; s.y = L.ay - (c.id === 'stretcher' ? 200 : 80) * L.sc; s.init = 1; } s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 900 * dt; s.t -= dt; }
   view.sparks = view.sparks.filter(s => s.t > 0);
-  for (const s of view.sparks) { g.fillStyle = s.c; g.globalAlpha = Math.min(1, s.t * 2); if (c.id === 'stretcher') { g.beginPath(); g.arc(s.x, s.y, 3, 0, 7); g.fill(); } else g.fillRect(s.x, s.y, 6, 6); }
+  for (const s of view.sparks) { g.fillStyle = s.c; g.globalAlpha = Math.min(1, s.t * 2); if (c.id !== 'forge') { g.beginPath(); g.arc(s.x, s.y, 3, 0, 7); g.fill(); } else g.fillRect(s.x, s.y, 6, 6); }
   g.globalAlpha = 1;
   drawMeter(g, S, L, heat, now, c);
 }
@@ -171,6 +172,83 @@ function drawStretcher(g, S, view, L, heat, now, c) {
   }
 }
 
+// the bench: a steam box where the fire was, a long bench where the anvil was, the stave bent toward its line, the grain shown
+function drawBench(g, S, view, L, heat, now, c) {
+  const t = Math.min(1, S.shape / 100), inSteam = S.inFire, id = S.cfg.patternId, col = mix(c.colours, heat);
+  const fx = 150, fy = 470;
+  g.save(); g.translate(L.fx - fx, L.fy - fy);   // the steam box
+  g.fillStyle = '#4a3020'; g.strokeStyle = '#0e0b09'; g.lineWidth = 6;
+  g.fillRect(40, 470, 240, 150); g.strokeRect(40, 470, 240, 150);
+  g.fillStyle = '#2a1c12'; g.fillRect(60, 490, 200, 30);
+  g.fillStyle = 'rgba(240,240,240,' + (inSteam ? 0.5 : 0.18) + ')';
+  for (let i = 0; i < 7; i++) { const r = ((now / 1400 + i / 7) % 1), x = 80 + (i * 37) % 170 + Math.sin(now / 500 + i) * 10; g.globalAlpha = (1 - r) * (inSteam ? 0.6 : 0.25); g.beginPath(); g.arc(x, 470 - r * 200, 16 + r * 28, 0, 7); g.fill(); }
+  g.globalAlpha = 1;
+  g.fillStyle = 'rgba(236,224,198,.6)'; g.font = '800 22px "Alegreya Sans", sans-serif'; g.textAlign = 'center';
+  g.fillText('THE STEAM', 160, 660);
+  g.restore();
+
+  const ax = 680, ay = 520, py = ay - 120;
+  const onBench = () => { g.translate(L.ax, L.ay); g.scale(L.sc, L.sc); g.translate(-ax, -ay); };
+  g.save(); onBench();   // the bench
+  g.fillStyle = '#3b2414'; g.strokeStyle = '#0e0b09'; g.lineWidth = 5;
+  g.fillRect(ax - 380, ay - 40, 760, 36); g.strokeRect(ax - 380, ay - 40, 760, 36);
+  for (const x of [ax - 340, ax + 300]) { g.fillRect(x, ay - 4, 34, 130); g.strokeRect(x, ay - 4, 34, 130); }
+  // the form: two pegs the stave is bent around
+  g.fillStyle = '#6e6b70'; for (const x of [ax - 300, ax, ax + 300]) { g.beginPath(); g.arc(x, ay - 52, 12, 0, 7); g.fill(); g.stroke(); }
+  g.restore();
+
+  g.save();
+  if (inSteam) { g.translate(L.fx - fx, L.fy - fy); g.translate(160, 505); g.scale(0.32, 0.32); }
+  else { onBench(); g.translate(ax, py); if (view.flash > 0) g.translate((Math.random() - .5) * 5 * view.flash, 0); }
+  if (view.ring > 0) { g.save(); g.strokeStyle = view.ringC; g.globalAlpha = view.ring; g.lineWidth = 10 * view.ring; g.beginPath(); g.arc(0, 0, 120 + (1 - view.ring) * 380, 0, 7); g.stroke(); g.restore(); }
+  g.lineCap = 'round'; g.shadowBlur = 0;
+  const wood = S.white > 0 ? '#f4e6c0' : col;
+  if (id === 'arrows') {   // a sheaf: shafts straightened, fletched as it takes shape
+    for (let i = -2; i <= 2; i++) {
+      const y = i * 22, bend = (1 - t) * 14 * Math.sin(i + 1);
+      g.strokeStyle = '#0e0b09'; g.lineWidth = 12; g.beginPath(); g.moveTo(-300, y); g.quadraticCurveTo(0, y - bend, 300, y); g.stroke();
+      g.strokeStyle = wood; g.lineWidth = 7; g.stroke();
+      if (t > 0.3) { g.fillStyle = '#c9c5be'; g.beginPath(); g.moveTo(300, y - 8); g.lineTo(330, y); g.lineTo(300, y + 8); g.fill(); }
+      if (t > 0.6) { g.fillStyle = '#d8d0c0'; g.beginPath(); g.moveTo(-300, y); g.lineTo(-260, y - 10); g.lineTo(-240, y); g.lineTo(-260, y + 10); g.fill(); }
+    }
+  } else if (id === 'staff') {   // a staff: straightened, tapered, a ferrule at its foot
+    const w = 30 - t * 8;
+    g.strokeStyle = '#0e0b09'; g.lineWidth = w + 8; g.beginPath(); g.moveTo(-340, 0); g.quadraticCurveTo(0, (1 - t) * -40, 340, 0); g.stroke();
+    g.strokeStyle = wood; g.lineWidth = w; g.stroke();
+    if (t > 0.6) { g.fillStyle = '#6e6b70'; g.fillRect(-350, -w / 2 - 2, 30, w + 4); }
+  } else {   // a bow: bent toward its line, strung when it's made
+    const bend = t * (id === 'longbow' ? 110 : 130), half = id === 'longbow' ? 360 : 300;
+    if (t < 1 && !inSteam) { g.save(); g.setLineDash([10, 8]); g.strokeStyle = 'rgba(232,196,100,.5)'; g.lineWidth = 3; g.beginPath(); g.moveTo(-half, -(id === 'longbow' ? 110 : 130) * 0.2); g.quadraticCurveTo(0, -20 - (id === 'longbow' ? 110 : 130), half, -(id === 'longbow' ? 110 : 130) * 0.2); g.stroke(); g.restore(); }
+    if (S.white > 0) { g.shadowColor = '#fff2c4'; g.shadowBlur = 40; }
+    g.strokeStyle = '#0e0b09'; g.lineWidth = 30; g.beginPath(); g.moveTo(-half, -bend * 0.2); g.quadraticCurveTo(0, -20 - bend, half, -bend * 0.2); g.stroke();
+    g.strokeStyle = wood; g.lineWidth = 22; g.stroke(); g.shadowBlur = 0;
+    if (t >= 1) { g.strokeStyle = '#ece0c6'; g.lineWidth = 2; g.beginPath(); g.moveTo(-half, -bend * 0.2); g.lineTo(half, -bend * 0.2); g.stroke(); }
+  }
+  // splits where it split
+  g.strokeStyle = '#2a0e08'; g.lineWidth = 4;
+  S.crackMarks.forEach(r => { const x = -200 + r * 400; g.beginPath(); g.moveTo(x - 20, -6); g.lineTo(x, 2); g.lineTo(x + 24, -4); g.stroke(); });
+  if (S.frost) { g.strokeStyle = 'rgba(207,232,255,.9)'; g.lineWidth = 2; for (let i = 0; i < 5; i++) { const x = -100 + i * 50; g.beginPath(); g.moveTo(x - 8, -60); g.lineTo(x + 8, -44); g.moveTo(x + 8, -60); g.lineTo(x - 8, -44); g.stroke(); } }
+  g.restore();
+
+  // the grain: arrows along the stave, green with it, red across it
+  if (S.phase === 'work' && !inSteam) {
+    const across = S.station.grain && (S.grainT || 0) % (S.station.grain.with + S.station.grain.across) >= S.station.grain.with;
+    g.save(); onBench(); g.translate(ax, ay + 60);
+    g.strokeStyle = across ? '#c4483a' : '#8fc46a'; g.lineWidth = 5; g.lineCap = 'round';
+    for (let i = -3; i <= 3; i++) { g.beginPath(); if (across) { g.moveTo(i * 44, -16); g.lineTo(i * 44, 16); } else { g.moveTo(i * 44 - 16, 0); g.lineTo(i * 44 + 16, 0); } g.stroke(); }
+    g.fillStyle = across ? '#c4483a' : '#8fc46a'; g.font = '800 24px "Alegreya Sans", sans-serif'; g.textAlign = 'center';
+    g.fillText(across ? 'ACROSS THE GRAIN · WAIT' : 'WITH THE GRAIN', 0, 52);
+    g.restore();
+    // the drawknife: two handles, a blade drawn along the stave on a bend
+    const f = view.flash, x = ax - 120 + (1 - f) * 240;
+    g.save(); onBench(); g.translate(x, py - 70 + f * 30);
+    g.fillStyle = '#5a4030'; g.strokeStyle = '#000'; g.lineWidth = 3;
+    g.fillRect(-90, -10, 30, 60); g.strokeRect(-90, -10, 30, 60); g.fillRect(60, -10, 30, 60); g.strokeRect(60, -10, 30, 60);
+    g.fillStyle = '#c9c5be'; g.fillRect(-62, 30, 124, 12); g.strokeRect(-62, 30, 124, 12);
+    g.restore();
+  }
+}
+
 function drawMeter(g, S, L, heat, now, c) {
   // the meter, with the band to strike in
   const mx = L.mx, my = L.my, mh = 470, mw = 44;
@@ -186,7 +264,7 @@ function drawMeter(g, S, L, heat, now, c) {
   g.fillText(c.meter, mx + mw / 2, my - 18);
   g.textAlign = 'right'; g.font = '700 15px "Alegreya Sans", sans-serif'; g.fillStyle = 'rgba(185,170,140,.9)';
   c.labels.forEach(([v, l]) => g.fillText(l, mx - 24, my + mh - v / 100 * mh - 4));
-  g.save(); g.translate(mx + mw + 20, (by0 + by1) / 2); g.rotate(Math.PI / 2); g.textAlign = 'center'; g.fillStyle = '#e8c464'; g.font = '800 14px "Alegreya Sans", sans-serif'; g.fillText(c.id === 'stretcher' ? 'STITCH HERE' : 'STRIKE HERE', 0, 0); g.restore();
+  g.save(); g.translate(mx + mw + 20, (by0 + by1) / 2); g.rotate(Math.PI / 2); g.textAlign = 'center'; g.fillStyle = '#e8c464'; g.font = '800 14px "Alegreya Sans", sans-serif'; g.fillText(c.id === 'stretcher' ? 'STITCH HERE' : c.id === 'bowbench' ? 'BEND HERE' : 'STRIKE HERE', 0, 0); g.restore();
   if (S.white > 0) { g.fillStyle = 'rgba(255,242,196,' + (0.1 + 0.06 * Math.sin(now / 90)) + ')'; g.fillRect(0, 0, L.W, L.H); }
 }
 

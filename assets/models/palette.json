@@ -76,6 +76,10 @@
    "hex": "#c9b896",
    "kind": "toon"
   },
+  "Prop_bench_meshy": {
+   "hex": "#ffffff",
+   "kind": "tex"
+  },
   "Rag": {
    "hex": "#6a5a48",
    "kind": "toon"

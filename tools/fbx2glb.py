@@ -40,6 +40,11 @@ for spec in specs:
         m.use_nodes = True
         m.use_backface_culling = True   # the outline hull is drawn from its back faces only: never double-sided
         nt = m.node_tree
+        # a painted model (Zero's Meshy props): its texture is kept as it is, and the page draws it in the toon bands
+        tex = next((n for n in nt.nodes if n.type == 'TEX_IMAGE' and n.image and n.image.has_data), None)
+        if tex:
+            used[key] = {'hex': '#ffffff', 'kind': 'tex'}
+            continue
         bsdf = next((n for n in nt.nodes if n.type == 'BSDF_PRINCIPLED'), None) or nt.nodes.new('ShaderNodeBsdfPrincipled')
         out_n = next((n for n in nt.nodes if n.type == 'OUTPUT_MATERIAL'), None) or nt.nodes.new('ShaderNodeOutputMaterial')
         nt.links.new(bsdf.outputs[0], out_n.inputs[0])
@@ -52,7 +57,7 @@ for spec in specs:
         used[key] = {'hex': hx, 'kind': kind}
     path = os.path.join(out, name + '.glb')
     bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', export_yup=True, export_apply=True,
-                              export_materials='EXPORT', export_animations=False, export_cameras=False, export_lights=False)
+                              export_materials='EXPORT', export_image_format='JPEG', export_jpeg_quality=85, export_animations=False, export_cameras=False, export_lights=False)
     print('GLB', name, os.path.getsize(path))
 
 json.dump({'slots': used}, open(os.path.join(out, 'palette.json'), 'w'), indent=1, sort_keys=True)

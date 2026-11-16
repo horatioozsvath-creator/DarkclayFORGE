@@ -13,7 +13,7 @@ export const TIERS = [
 
 export const FORGE = {
   id: 'forge', name: 'FORGE', word: 'THE FORGE', tool: 'HAMMER', meter: 'HEAT', fire: 'INTO THE FIRE', out: 'OUT OF THE FIRE', close: 'QUENCH', place: 'the fire',
-  heatIt: 'HEAT IT', band_: 'gold band', strike: 'STRIKE',
+  heatIt: 'HEAT IT', band_: 'gold band', strike: 'STRIKE', again: 'BACK IN THE FIRE', made: ['strike', 'heat'],
   band: [45, 86], drain: 8, cool: 3, rise: 36, over: 95,
   colours: ['#3a3634', '#7a1e10', '#c8401a', '#f08a2a', '#ffd25a', '#fff6dc'],
   labels: [[0, 'BLACK'], [30, 'DULL RED'], [45, 'CHERRY'], [70, 'YELLOW'], [86, 'WHITE']],
@@ -24,7 +24,7 @@ export const FORGE = {
 // nothing over; too wet, a stitch tears (a CRACK slips in, from trade 3). Nothing scales: a hide can soak as long as it likes.
 export const STRETCHER = {
   id: 'stretcher', name: 'STRETCHER', word: 'THE STRETCHER', tool: 'AWL', meter: 'DAMP', fire: 'SOAK IT', out: 'OUT OF THE SOAK', close: 'SET', place: 'the soak',
-  heatIt: 'SOAK IT', band_: 'supple band', strike: 'STITCH',
+  heatIt: 'SOAK IT', band_: 'supple band', strike: 'STITCH', again: 'BACK ON THE FRAME', made: ['stitch', 'soak'],
   band: [35, 80], drain: 8, cool: 3, rise: 32, over: 101, dryDead: true, wetTear: true, cost: 1200,
   colours: ['#d8c098', '#b89060', '#8a6a44', '#6a5a4a', '#4a5a6a', '#2a4a6a'],
   labels: [[0, 'DRY'], [35, 'SUPPLE'], [80, 'SOAKED']],
@@ -35,7 +35,7 @@ export const STRETCHER = {
 // across it turns nothing over). Its id is 'bowbench': 'bench' is the seat you can buy for the shop.
 export const BENCH = {
   id: 'bowbench', name: 'BENCH', word: 'THE BENCH', tool: 'DRAWKNIFE', meter: 'STEAM', fire: 'INTO THE STEAM', out: 'OUT OF THE STEAM', close: 'STRING', place: 'the steam',
-  heatIt: 'STEAM IT', band_: 'pliant band', strike: 'BEND',
+  heatIt: 'STEAM IT', band_: 'pliant band', strike: 'BEND', again: 'BACK ON THE BENCH', made: ['bend', 'steaming'],
   band: [40, 100], drain: 5, cool: 3, rise: 30, over: 101, grain: { with: 2.6, across: 1.4 }, cost: 2000,
   colours: ['#5a4630', '#6a5236', '#8a6a42', '#a8844e', '#c8a060', '#e0c088'],
   labels: [[0, 'SET'], [40, 'PLIANT']],
