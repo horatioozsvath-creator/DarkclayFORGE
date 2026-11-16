@@ -1,6 +1,6 @@
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { KINDS, KC, TIERS, FORGE, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS } from './data.js';
+import { KINDS, KC, TIERS, FORGE, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS } from './data.js?v=2';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -236,8 +236,8 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now })
   stats.push(['Wear', result.flawed ? 'FLAWED' : result.cracks ? 'NOTCHED' : 'KEEN', result.flawed ? .2 : result.cracks ? .6 : 1]);
   const bonus = Math.round((tier.mult * wk - 1) * 100 / 12);
   const dice = p.dice ? p.dice[0] + 'd' + p.dice[1] + (bonus > 0 ? '+' + bonus : '') : '';
-  const rareN = parts.filter(o => o.rare).length;
-  const worth = Math.max(1, Math.round(p.value * metal.val * tier.worth * (1 + worked / 100) * (1 + 0.25 * rareN)
+  const rareN = parts.filter(o => o.rare).length, partsVal = parts.slice(1).reduce((v, o) => v * (o.val || 1), 1);
+  const worth = Math.max(1, Math.round(p.value * metal.val * tier.worth * (1 + worked / 200) * (1 + 0.25 * rareN) * partsVal
     * Math.pow(0.9, result.cracks) * (result.flawed ? 0.5 : 1)));
   const made = ['Forged by ' + maker];
   if (result.instant) made.push('made at once, at the plain odds');

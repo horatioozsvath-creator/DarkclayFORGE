@@ -7,13 +7,23 @@
 <title>Darkclay Forge</title>
 <meta name="description" content="Work iron at the forge, tile by tile, and keep every piece you make as a card.">
 <link rel="stylesheet" href="css/fonts.css">
-<link rel="stylesheet" href="css/working.css">
-<link rel="stylesheet" href="css/game.css">
+<link rel="stylesheet" href="css/working.css?v=2">
+<link rel="stylesheet" href="css/game.css?v=2">
 </head>
 <body>
 <div class="wrap">
 
-  <!-- THE FORGE: the patterns, the found tiles, the work so far -->
+  <!-- the way between the forge, the shop and the suppliers; the purse -->
+  <nav class="nav" id="nav" aria-label="The shop's rooms">
+    <div class="tabs">
+      <button class="seg" data-go="home">THE FORGE</button>
+      <button class="seg" data-go="shop">THE SHOP <span class="dot" id="navSold" hidden></span></button>
+      <button class="seg" data-go="supp">SUPPLIERS</button>
+    </div>
+    <div class="purse" aria-live="polite"><span>PURSE</span><b id="coins">0</b><span>COINS</span></div>
+  </nav>
+
+  <!-- THE FORGE: the patterns, the found tiles, the store room -->
   <main id="vHome">
     <header class="top">
       <div>
@@ -43,10 +53,40 @@
     </section>
 
     <section class="card">
-      <h2><span>YOUR WORK</span><b id="workCount"></b></h2>
-      <div class="shelf" id="shelf"></div>
+      <h2><span>THE STORE ROOM</span><b id="storeWord"></b></h2>
+      <div class="store" id="store"></div>
+      <div class="rbtns left"><button class="seg" data-go="supp">TO THE SUPPLIERS</button><button class="seg" data-go="shop" id="toBack"></button></div>
     </section>
-    <p class="foot">Saved in this browser. The shop, its shelves and its customers come next.</p>
+    <p class="foot">Saved in this browser. Customers come in while the game is open.</p>
+  </main>
+
+  <!-- THE SHOP: the floor, the shelf, the back room, the ledger -->
+  <main id="vShop" hidden>
+    <header class="top"><div><div class="kicker">THE MAKER'S SHOP · OPEN</div><h1>The Shop</h1></div><div class="tally" id="tally"></div></header>
+    <section class="floor" id="floor" aria-label="The shop floor">
+      <div class="door" aria-hidden="true"><i></i></div>
+      <div class="visitor" id="visitor"></div>
+      <div class="counter" aria-hidden="true"></div>
+    </section>
+    <section class="card">
+      <h2><span>THE SHELF</span><b id="shelfWord"></b></h2>
+      <div class="shelf slots" id="slots2"></div>
+      <div class="rbtns left"><button class="seg" id="buySlot"></button></div>
+    </section>
+    <section class="card">
+      <h2><span>IN THE BACK</span><b id="backWord"></b></h2>
+      <div class="shelf" id="back"></div>
+    </section>
+    <section class="card">
+      <h2><span>THE LEDGER</span><b>WHO CAME IN</b></h2>
+      <ul class="ledger" id="ledger"></ul>
+    </section>
+  </main>
+
+  <!-- SUPPLIERS: bars, hides and the pedlar's pack, priced by the hour -->
+  <main id="vSupp" hidden>
+    <header class="top"><div><div class="kicker">THE ROAD AND THE YARD</div><h1>Suppliers</h1></div><div class="tally" id="hourWord"></div></header>
+    <div class="supps" id="supps"></div>
   </main>
 
   <div class="screen" id="screen" hidden>
@@ -63,6 +103,11 @@
             <h2><span>THE PARTS</span><b id="partsHead"></b></h2>
             <div class="kit" id="parts"></div>
             <div class="found-lines" id="partLine"></div>
+          </div>
+          <div class="card" id="takesCard">
+            <h2><span>WHAT IT TAKES</span><b id="takesWord"></b></h2>
+            <ul class="lines takes" id="takes"></ul>
+            <div class="rbtns left" id="takesBtns"></div>
           </div>
           <div class="card" style="border-color:var(--line)">
             <h2><span>FOUND TILES</span><b id="slotWord"></b></h2>
@@ -141,7 +186,7 @@
       <p id="rWhy" class="small"></p>
       <div class="gift" id="rTrade" hidden></div>
       <div class="gift" id="rGift" hidden></div>
-      <div class="rbtns"><button class="seg" id="rHome">TO THE FORGE</button><button class="seg go" id="rAgain">WORK ANOTHER</button></div>
+      <div class="rbtns"><button class="seg" id="rHome">TO THE FORGE</button><button class="seg" id="rShelf">ON THE SHELF</button><button class="seg go" id="rAgain">WORK ANOTHER</button></div>
     </div>
   </div>
 </div>
@@ -150,10 +195,13 @@
 <div class="result" id="look" hidden role="dialog" aria-modal="true" aria-label="A piece you made">
   <div class="box">
     <div id="lookCard"></div>
+    <div id="lookActs" class="lookacts"></div>
     <div class="rbtns"><button class="seg" id="lookClose">CLOSE</button></div>
   </div>
 </div>
 
-<script type="module" src="js/main.js"></script>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script type="module" src="js/main.js?v=2"></script>
 </body>
 </html>

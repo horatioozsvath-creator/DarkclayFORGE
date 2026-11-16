@@ -1,18 +1,20 @@
-// DarkclayFORGE, milestone 1: the forge. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT.
-import { KINDS, KC, TIERS, FORGE, PATTERNS, FOUND } from './data.js';
-import * as R from './rules.js';
-import { lookOf, bagLook, unknownLook } from './tiles.js';
-import { card, ART } from './card.js';
-import { paint, sparksFor, LAYOUTS } from './stage.js';
-import { load, store } from './save.js';
+// DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
+import { KINDS, KC, TIERS, FORGE, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS } from './data.js?v=2';
+import * as R from './rules.js?v=2';
+import * as Sh from './shop.js?v=2';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=2';
+import { card, ART } from './card.js?v=2';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=2';
+import { load, store } from './save.js?v=2';
 
 const $ = id => document.getElementById(id);
 const save = load();
+Sh.fixShelf(save);
 const rng = Math.random;
 const phoneQ = window.matchMedia('(max-width: 600px)');
 const TIERC = ['var(--t-common)', 'var(--t-fine)', 'var(--t-rare)'];
 
-let screen = 'home';       // home | prepare | work
+let screen = 'home';       // home | shop | supp | prepare | work
 let pat = 'falchion';      // the pattern on the bench
 let S = null;              // the working
 let paused = false, lastStrike = 0, fresh = null, prevOdds = null;
@@ -24,10 +26,17 @@ const clearTimers = () => { timers.forEach(clearTimeout); timers.length = 0; };
 const levelFor = id => R.levelOf((save.trades[id] || {}).xp || 0);
 const lvl = () => levelFor(pat).level;
 const picks = () => save.picks[pat] || (save.picks[pat] = PATTERNS[pat].parts.map(() => 0));
+const HUBS = ['home', 'shop', 'supp'];
+const hour = () => Sh.hourOf(Date.now());
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function show(which) {
   screen = which;
+  $('nav').hidden = !HUBS.includes(which);
+  document.querySelectorAll('#nav [data-go]').forEach(b => b.dataset.go === which ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'));
   $('vHome').hidden = which !== 'home';
-  $('screen').hidden = which === 'home';
+  $('vShop').hidden = which !== 'shop';
+  $('vSupp').hidden = which !== 'supp';
+  $('screen').hidden = HUBS.includes(which);
   $('vPrep').hidden = which !== 'prepare';
   $('vWork').hidden = which !== 'work';
   $('result').hidden = true; $('look').hidden = true; $('sheet').hidden = true;
@@ -35,9 +44,27 @@ function show(which) {
   if (which !== 'work') window.scrollTo(0, 0);
 }
 
+let shownCoins = null;
+function coins() {
+  const el = $('coins');
+  if (shownCoins !== null && save.coins > shownCoins) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+  shownCoins = save.coins; el.textContent = save.coins;
+}
+function toast(html) {
+  const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = html;
+  $('toasts').appendChild(t); setTimeout(() => t.remove(), 4300);
+  while ($('toasts').children.length > 3) $('toasts').firstChild.remove();
+}
+const go = where => where === 'home' ? toHome() : where === 'shop' ? toShop() : toSupp();
+document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
+// never stuck: broke, nothing made, nothing to make it from
+function rescueCheck() {
+  if (Sh.rescue(save, hour())) { store(save); toast('<b>The yard\'s scrap bin.</b> Dougal leaves you a bar and a cord, enough for a dagger.'); }
+}
+
 // ---------- THE FORGE (home) ----------
 function toHome() {
-  clearTimers(); S = null; show('home');
+  clearTimers(); S = null; rescueCheck(); show('home'); coins();
   $('maker').value = save.maker;
   $('patterns').innerHTML = Object.entries(PATTERNS).map(([id, p]) => {
     const l = levelFor(id), n = save.cards.filter(c => c.pattern === id).length;
@@ -51,14 +78,120 @@ function toHome() {
   $('homeBag').innerHTML = Object.entries(FOUND).map(([id, f]) => save.found.includes(id)
     ? '<button tabindex="-1" title="' + f.name + ': ' + f.line + '"><div style="aspect-ratio:3/4">' + bagLook(id).face + '</div>' + f.short + '</button>'
     : '<button class="unk" disabled><div style="aspect-ratio:3/4">' + unknownLook(id).face + '</div>NOT FOUND</button>').join('');
-  $('workCount').textContent = save.cards.length + (save.cards.length === 1 ? ' PIECE' : ' PIECES');
-  $('shelf').innerHTML = save.cards.length
-    ? save.cards.map((c, i) => '<button data-i="' + i + '" aria-label="' + c.name + ', ' + c.tier + '">' + card(c, { short: true }) + '</button>').join('')
-    : '<div class="empty">Nothing yet. Pick a pattern and work your first piece.</div>';
-  $('shelf').querySelectorAll('button').forEach(b => b.onclick = () => { $('lookCard').innerHTML = card(save.cards[+b.dataset.i]); $('look').hidden = false; $('lookClose').focus({ preventScroll: true }); $('look').scrollTop = 0; });
+  const have = Object.entries(save.mats).filter(([, n]) => n > 0);
+  $('storeWord').textContent = have.length ? have.reduce((a, [, n]) => a + n, 0) + ' THINGS' : 'EMPTY';
+  $('store').innerHTML = have.length ? have.map(([id, n]) => '<span>' + MATS[id].name + '<b>' + n + '</b></span>').join('')
+    : '<span class="empty">Nothing in the store room. The suppliers sell bars, hides and hafts.</span>';
+  const back = Sh.inBack(save).length;
+  $('toBack').textContent = back + ' IN THE BACK · TO THE SHOP';
+}
+function openLook(html, acts, wide) {
+  $('lookCard').innerHTML = html; $('lookActs').innerHTML = acts || ''; $('lookActs').onclick = null;
+  $('look').querySelector('.box').classList.toggle('wide', !!wide);
+  $('look').hidden = false; $('look').scrollTop = 0; $('lookClose').focus({ preventScroll: true });
 }
 $('maker').onchange = () => { save.maker = $('maker').value.trim() || 'the Maker'; $('maker').value = save.maker; store(save); };
 $('lookClose').onclick = () => { $('look').hidden = true; };
+
+// ---------- THE SHOP ----------
+let floorShown = null;
+function toShop() { clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop(); }
+function figure(colour) {
+  return '<svg class="fig in" viewBox="0 0 46 110" aria-hidden="true"><circle cx="23" cy="14" r="11" fill="' + colour + '" stroke="#000" stroke-width="3"/>'
+    + '<path d="M8,32 Q23,24 38,32 L42,78 L33,78 L31,108 L15,108 L13,78 L4,78 Z" fill="' + colour + '" stroke="#000" stroke-width="3"/></svg>';
+}
+function renderFloor() {
+  const e = save.ledger[0], v = $('visitor');
+  if (!e || Date.now() - e.at > 30000) {
+    const n = save.shelf.filter(Boolean).length;
+    v.innerHTML = '<div class="idle">The door\'s open. ' + (n ? n + ' on the shelf.' : 'The shelf is bare: put something out.') + '</div>';
+    floorShown = null; return;
+  }
+  if (floorShown === e.at) return;
+  floorShown = e.at;
+  v.innerHTML = figure(e.fig) + '<div class="say"><b><span class="mood ' + e.mood + '">' + e.mood + '</span>' + esc(e.who) + '</b>'
+    + 'Wants ' + Sh.wantWord(e.want) + '. ' + esc(e.line) + (e.sold ? ' <span class="sold">Sold: ' + esc(e.sold.name) + ', ' + e.sold.price + ' c.</span>' : '') + '</div>';
+}
+function renderShop() {
+  if (screen !== 'shop') return;
+  $('tally').innerHTML = '<b>' + (save.sold || 0) + '</b> sold · <b>' + (save.earned || 0) + '</b> coins taken';
+  const filled = save.shelf.filter(Boolean).length;
+  $('shelfWord').textContent = filled + ' OF ' + save.slots + ' · CUSTOMERS BUY FROM HERE';
+  $('slots2').innerHTML = save.shelf.map((e, i) => {
+    if (!e) return '<button class="slot-empty" data-slot="' + i + '">EMPTY<br>' + (Sh.inBack(save).length ? 'TAP TO STOCK' : 'MAKE SOMETHING') + '</button>';
+    const c = save.cards.find(x => x.id === e.id);
+    return '<button data-slot="' + i + '" aria-label="' + esc(c.name) + ', ' + TAGS[e.tag].word + ' at ' + Sh.priceAt(c, e.tag) + ' coins">'
+      + card(c, { short: true, price: Sh.priceAt(c, e.tag) + ' c<span class="tagword">' + TAGS[e.tag].word + '</span>' }) + '</button>';
+  }).join('');
+  $('slots2').querySelectorAll('button').forEach(b => b.onclick = () => slotOpen(+b.dataset.slot));
+  const cost = Sh.nextSlotCost(save);
+  $('buySlot').hidden = cost == null;
+  if (cost != null) { $('buySlot').textContent = 'ANOTHER SHELF · ' + cost + ' COINS'; $('buySlot').disabled = save.coins < cost; }
+  const back = Sh.inBack(save);
+  $('backWord').textContent = back.length + (back.length === 1 ? ' PIECE' : ' PIECES') + ' · NOT FOR SALE YET';
+  $('back').innerHTML = back.length ? back.map(c => '<button data-id="' + c.id + '" aria-label="' + esc(c.name) + '">' + card(c, { short: true }) + '</button>').join('')
+    : '<div class="empty">Nothing in the back. What you make at the forge comes here.</div>';
+  $('back').querySelectorAll('button').forEach(b => b.onclick = () => backOpen(b.dataset.id));
+  $('ledger').innerHTML = save.ledger.length ? save.ledger.slice(0, 12).map(e => '<li><span><span class="mood ' + e.mood + '">' + e.mood + '</span><b>' + esc(e.who) + '</b> · wants ' + Sh.wantWord(e.want) + '</span>'
+    + (e.sold ? '<span class="amt">+' + e.sold.price + ' c</span>' : '<span class="amt no">NO SALE</span>') + '<span class="ln">' + (e.sold ? 'Bought the ' + esc(e.sold.name) + ' (' + TAGS[e.sold.tag].word + '). ' : '') + esc(e.line) + '</span></li>').join('')
+    : '<li class="empty">No one yet. Customers come in every half a minute or so while the game is open.</li>';
+  renderFloor();
+}
+$('buySlot').onclick = () => { if (Sh.buySlot(save)) { store(save); coins(); renderShop(); } };
+function tagSegs(slot) {
+  const e = save.shelf[slot], c = save.cards.find(x => x.id === e.id);
+  return '<p>The price on it. Cheaper sells sooner; dearer waits for the right purse.</p><div class="group">'
+    + Object.entries(TAGS).map(([id, t]) => '<button class="seg" data-tag="' + id + '" aria-pressed="' + (e.tag === id) + '">' + t.word + ' · ' + Sh.priceAt(c, id) + ' c</button>').join('') + '</div>';
+}
+function slotOpen(slot) {
+  const e = save.shelf[slot];
+  if (!e) {
+    const back = Sh.inBack(save);
+    if (!back.length) { toHome(); return; }
+    openLook('<div class="pickgrid">' + back.map(c => '<button data-id="' + c.id + '" aria-label="' + esc(c.name) + '">' + card(c, { short: true }) + '</button>').join('') + '</div>',
+      '<p>Choose a piece for the shelf. It goes up at FAIR.</p>', true);
+    $('lookCard').querySelectorAll('button').forEach(b => b.onclick = () => { Sh.place(save, b.dataset.id, slot); store(save); $('look').hidden = true; renderShop(); });
+    return;
+  }
+  const c = save.cards.find(x => x.id === e.id);
+  const acts = () => tagSegs(slot) + '<button class="seg" id="takeDown">TAKE IT DOWN</button>';
+  openLook(card(c), acts());
+  $('lookActs').onclick = ev => {
+    const b = ev.target.closest('button'); if (!b) return;
+    if (b.dataset.tag) {
+      if (!save.shelf[slot]) return;
+      Sh.setTag(save, slot, b.dataset.tag); store(save); $('lookActs').innerHTML = acts();
+      $('lookActs').querySelector('[data-tag="' + b.dataset.tag + '"]').focus(); renderShop();
+    } else if (b.id === 'takeDown') { Sh.takeDown(save, slot); store(save); $('look').hidden = true; renderShop(); }
+  };
+}
+function backOpen(id) {
+  const c = save.cards.find(x => x.id === id), free = save.shelf.findIndex(e => !e);
+  openLook(card(c), free >= 0 ? '<button class="seg go" id="putUp">PUT IT ON THE SHELF · FAIR ' + Sh.priceAt(c, 'fair') + ' c</button>' : '<p>The shelf is full. Take something down, or buy another shelf.</p>');
+  if (free >= 0) $('putUp').onclick = () => { Sh.place(save, id, free); store(save); $('look').hidden = true; renderShop(); };
+}
+
+// ---------- SUPPLIERS ----------
+let suppHour = null;
+function toSupp() { clearTimers(); S = null; rescueCheck(); show('supp'); coins(); renderSupp(); }
+function renderSupp() {
+  if (screen !== 'supp') return;
+  const h = hour(); suppHour = h;
+  const mins = 60 - new Date().getMinutes();
+  $('hourWord').innerHTML = 'Prices change on the hour · next in <b>' + mins + ' min</b>';
+  $('supps').innerHTML = SUPPLIERS.map(sp => '<section class="card supp"><h2><span>' + sp.kind + '</span><b>' + sp.name.toUpperCase() + '</b></h2><p class="line">' + sp.line + '</p>'
+    + Sh.linesOf(sp, h).map(id => {
+      const m = MATS[id], pr = Sh.priceOf(id, h), was = Sh.priceOf(id, h - 1);
+      const tr = pr > was ? '<i class="up">▲</i>' : pr < was ? '<i class="down">▼</i>' : '';
+      return '<div class="buyrow"><span><b class="' + (m.rare ? 'rare' : '') + '">' + m.name + (m.rare ? ' ✶' : '') + '</b><small>HAVE ' + (save.mats[id] || 0) + '</small></span>'
+        + '<span class="pr">' + pr + ' c ' + tr + '</span>'
+        + '<button class="seg" data-buy="' + id + '" data-n="1"' + (save.coins < pr ? ' disabled' : '') + '>BUY 1</button>'
+        + '<button class="seg b5" data-buy="' + id + '" data-n="5"' + (save.coins < pr * 5 ? ' disabled' : '') + '>BUY 5</button></div>';
+    }).join('') + '</section>').join('');
+  $('supps').querySelectorAll('[data-buy]').forEach(b => b.onclick = () => {
+    if (Sh.buy(save, b.dataset.buy, +b.dataset.n, hour())) { store(save); coins(); renderSupp(); const nb = $('supps').querySelector('[data-buy="' + b.dataset.buy + '"][data-n="' + b.dataset.n + '"]'); if (nb && !nb.disabled) nb.focus(); }
+  });
+}
 
 // ---------- PREPARE ----------
 function newWorking() {
@@ -135,13 +268,36 @@ function renderPrep() {
   const order = { GOOD: 0, GREAT: 1, HOLD: 2, CRACK: 3, TRUE: 4, FOUND: 5 };
   const sorted = S.rack.slice().sort((a, b) => order[a.k] - order[b.k] || (a.src > b.src ? 1 : -1));
   $('prepRack').innerHTML = sorted.map(x => { const L = lookOf(x); return '<div class="tkt up" style="--r:' + L.r + 'deg; opacity:1"><div class="in"><div class="b">' + L.back + '</div><div class="f">' + L.face + '</div></div></div>'; }).join('');
+  renderTakes();
   $('prepCount').textContent = S.rack.length + ' TILES';
   $('prepOdds').innerHTML = oddsHtml(R.counts(S.rack), S.rack.length, null);
   $('prepLines').innerHTML = linesHtml(S.lines);
 }
 
+// what this pattern with these parts takes, against the store room
+const rec = () => Sh.recipe(pat, picks());
+function renderTakes() {
+  const r = rec(), h = hour(), sh = Sh.short(save.mats, r), ok = !sh.length;
+  $('takesWord').textContent = ok ? 'IN THE STORE ROOM' : 'SHORT';
+  $('takes').innerHTML = r.map(x => { const have = save.mats[x.mat] || 0; return '<li><b>' + MATS[x.mat].name + ' × ' + x.n + '</b><em class="' + (have >= x.n ? 'ok' : 'short') + '">have ' + have + '</em></li>'; }).join('');
+  $('makeIt').disabled = !ok; $('workIt').disabled = !ok;
+  $('takesCard').style.borderColor = ok ? '' : 'var(--blood)';
+  if (ok) { $('takesBtns').innerHTML = '<span class="small" style="color:var(--bone-faint)">Taken when you begin. Walk away from a working and they\'re spent.</span>'; return; }
+  const gone = sh.filter(x => !Sh.sells(x.mat, h));
+  const cost = sh.reduce((c, x) => c + Sh.priceOf(x.mat, h) * (x.n - x.have), 0);
+  $('takesBtns').innerHTML = gone.length ? '<span class="small" style="color:var(--bone-faint)">' + gone.map(x => MATS[x.mat].name).join(', ') + ': not in the pedlar\'s pack this hour.</span>'
+    : '<button class="seg go" id="buyShort"' + (save.coins < cost ? ' disabled' : '') + '>BUY WHAT\'S SHORT · ' + cost + ' c</button>'
+      + (save.coins < cost ? '<span class="small" style="color:var(--bone-faint)">You have ' + save.coins + ' coins.</span>' : '');
+  if (!gone.length) $('buyShort').onclick = () => { sh.forEach(x => Sh.buy(save, x.mat, x.n - x.have, hour())); store(save); renderTakes(); };
+}
+function spend() {   // take the materials as a working begins; false if they're not all there
+  if (!Sh.takeMats(save, rec())) { renderTakes(); return false; }
+  store(save); return true;
+}
+
 // ---------- THE WORKING ----------
 function toWork() {
+  if (!spend()) return;
   R.begin(S); paused = false; prevOdds = null; lastStrike = 0;
   view.flash = 0; view.ring = 0; view.sparks = [];
   show('work');
@@ -315,6 +471,10 @@ function complete(res, picked) {
       + FOUND[id].line + '. In your bag now (' + save.found.length + ' of ' + Object.keys(FOUND).length + ').</span></div>';
     gEl.hidden = false;
   }
+  const free = save.shelf.findIndex(e => !e);
+  $('rShelf').hidden = free < 0;
+  $('rShelf').textContent = 'ON THE SHELF · ' + Sh.priceAt(piece, 'fair') + ' c';
+  $('rShelf').onclick = () => { Sh.place(save, piece.id, free); store(save); toShop(); };
   if (!store(save)) $('rWhy').textContent += ' · This browser would not save it.';
   $('rAgain').focus({ preventScroll: true }); $('result').scrollTop = 0;
 }
@@ -333,6 +493,14 @@ window.addEventListener('resize', fitStage); fitStage();
 let lastT = performance.now();
 function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+  // the shop's clock: only while this page is in front (a hidden tab gets no frames, so no time passes)
+  const visits = Sh.shopStep(save, dt, rng, Date.now());
+  if (visits.length) {
+    store(save);
+    visits.forEach(e => { if (e.sold) { coins(); if (screen !== 'shop') { toast('<b>Sold: ' + esc(e.sold.name) + ' · +' + e.sold.price + ' c</b><br>to ' + esc(e.who)); $('navSold').hidden = false; } } });
+    if (screen === 'shop') renderShop();
+  } else if (screen === 'shop' && floorShown && save.ledger[0] && Date.now() - save.ledger[0].at > 30000) renderFloor();
+  if (screen === 'supp' && suppHour !== hour()) renderSupp();
   if (S && screen === 'work') {
     if (!paused && !S.done) {
       const out = R.tick(S, dt);
@@ -348,9 +516,12 @@ function frame(now) {
 
 // ---------- wiring ----------
 $('workIt').onclick = toWork;
-$('makeIt').onclick = () => finish('instant');
+$('makeIt').onclick = () => { if (spend()) finish('instant'); };
 $('bHome').onclick = toHome;
-$('bLeave').onclick = toPrepare;
+$('bLeave').onclick = () => {
+  if (S && !S.done && !confirm('Walk away from this working? The materials are spent.')) return;
+  toPrepare();
+};
 $('bStrike').onclick = strike;
 $('bFire').onclick = toggleFire;
 $('bQuench').onclick = quench;
@@ -368,7 +539,7 @@ document.addEventListener('keydown', e => {
     else if (/^[qQxX]$/.test(e.key)) quench();
     else if (/^[yY]$/.test(e.key)) toggleSheet();
     else if (e.key === 'Escape') toggleSheet(false);
-  } else if (screen === 'prepare' && e.code === 'Space' && !onButton) { toWork(); e.preventDefault(); }
+  } else if (screen === 'prepare' && e.code === 'Space' && !onButton) { if (!$('workIt').disabled) toWork(); e.preventDefault(); }
 });
 if (!phoneQ.matches && !save.made) $('howd').open = true;
 

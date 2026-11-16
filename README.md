@@ -24,9 +24,10 @@ npm test
 
 ## Layout
 
-- `index.html` — the page and its four screens: the forge, PREPARE, THE WORKING, THE RESULT
+- `index.html` — the page and its screens: the forge, the shop, suppliers, PREPARE, THE WORKING, THE RESULT
 - `js/data.js` — patterns, metals, affixes, found tiles, tiers
 - `js/rules.js` — the strip, the working, the result, the card's numbers, trades by practice
+- `js/shop.js` — materials, suppliers and prices, the shelf and its tags, customers and sales
 - `js/main.js` — the screens and the controls
 - `js/stage.js` — the canvas: fire, anvil, piece, hammer, heat meter
 - `js/tiles.js`, `js/card.js`, `js/save.js` — clay tiles, collector cards, the browser save
@@ -35,8 +36,16 @@ npm test
 - `docs/PLAN.md` — the build plan and milestones
 - `docs/the-working-mockup.html` — the original mockup the crafting follows
 
+## Releasing
+
+Browsers and GitHub Pages cache files for a few minutes. Each release bumps the `?v=` number on every script import and stylesheet link (in `index.html` and `js/*.js`), so a player never runs a new file against an old one:
+
+```bash
+sed -i '' -E 's/\?v=[0-9]+/?v=3/g' index.html js/*.js
+```
+
 ## Status
 
-Milestone 1 of 7: the forge. See `docs/PLAN.md`.
+Milestones 1 and 2 of 7: the forge, and the shelf and the till. See `docs/PLAN.md`.
 
 Fonts: Alegreya and Alegreya Sans, SIL Open Font License.

@@ -125,7 +125,7 @@ test('every pattern and metal makes a card with its tier\'s affixes', () => {
   }
   const common = R.makePiece({ patternId: 'falchion', picks: [0, 0, 0], result: { tier: 0, worked: 0, strikes: 16, heats: 1, cracks: 0 }, maker: 'T', rng: seeded(1), now: 1 });
   const rare = R.makePiece({ patternId: 'falchion', picks: [0, 0, 0], result: { tier: 2, worked: 40, strikes: 30, heats: 2, cracks: 0 }, maker: 'T', rng: seeded(1), now: 1 });
-  assert.ok(rare.worth > common.worth * 8);
+  assert.ok(rare.worth > common.worth * 3.5);
 });
 
 test('practice teaches, MAKE IT does not', () => {
