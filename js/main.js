@@ -1,26 +1,26 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=31';
-import * as R from './rules.js?v=31';
-import * as Sh from './shop.js?v=31';
-import * as St from './staff.js?v=31';
-import * as Rm from './room.js?v=31';
-import * as G from './growth.js?v=31';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=31';
-import * as Snd from './sound.js?v=31';
-import * as Town from './town.js?v=31';
-import * as V from './visit.js?v=31';
-import * as Br from './branch.js?v=31';
-import * as Hl from './hall.js?v=31';
-import * as Trail from './trail.js?v=31';
-import { ICONS, emblem } from './icons.js?v=31';
-import { drawFlyer, flyerBlob } from './flyer.js?v=31';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=31';
-import { card, ART } from './card.js?v=31';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=31';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=31';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=32';
+import * as R from './rules.js?v=32';
+import * as Sh from './shop.js?v=32';
+import * as St from './staff.js?v=32';
+import * as Rm from './room.js?v=32';
+import * as G from './growth.js?v=32';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=32';
+import * as Snd from './sound.js?v=32';
+import * as Town from './town.js?v=32';
+import * as V from './visit.js?v=32';
+import * as Br from './branch.js?v=32';
+import * as Hl from './hall.js?v=32';
+import * as Trail from './trail.js?v=32';
+import { ICONS, emblem } from './icons.js?v=32';
+import { drawFlyer, flyerBlob } from './flyer.js?v=32';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=32';
+import { card, ART } from './card.js?v=32';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=32';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=32';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 31;
+const VERSION = 32;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayFORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -306,7 +306,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=31').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=32').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -1443,7 +1443,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=31').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=32').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -1520,7 +1520,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=31').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=32').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }
@@ -1674,6 +1674,7 @@ $('tLicense').onclick = () => openLook('<div class="licence"><div class="sharedh
   + '<h3>MADE WITH</h3><p><b>three.js</b> · © 2010–2024 three.js authors · MIT License.<br><b>Alegreya</b> · © 2011 The Alegreya Project Authors · <b>Alegreya Sans</b> · © 2013 The Alegreya Sans Project Authors · SIL Open Font License 1.1.</p>'
   + '<p>The full text is in the LICENSE file at the game\'s address.</p></div>', '');
 $('titleBtn').onclick = () => showTitle();
+$('titleBtn').innerHTML = ICONS.exit + 'EXIT';
 $('tLicense').innerHTML = ICONS.scroll + 'LICENCE';
 // a copy on someone else's site: say so, and where the real game is
 if (!OFFICIAL.hosts.includes(location.hostname)) {

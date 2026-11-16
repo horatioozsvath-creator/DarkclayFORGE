@@ -467,3 +467,7 @@ canvas.dio { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 .tacts .del { color: var(--bone-faint); background: transparent; }
 .tacts .del:hover { color: #e4805e; border-color: #8a3a20; }
 .tfoot .seg { display: inline-flex; align-items: center; }
+
+/* the way back to the title */
+.seg.mute.exitbtn, .exitbtn { display: inline-flex; align-items: center; color: var(--gold); border-color: rgba(232,196,100,.45); }
+.exitbtn .ico { margin-right: .35em; }

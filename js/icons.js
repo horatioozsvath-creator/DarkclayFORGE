@@ -22,6 +22,8 @@ export const ICONS = {
   sweep: svg('<path d="M14.5 3.5l-6 9"/><path d="M6.8 11.3l4.9 3.2-1.9 3c-.8 1.2-2.5 1.6-3.7.8l-1.6-1c-1.2-.8-1.5-2.4-.7-3.6z"/><path d="M15 19.5h.01M18 17h.01M20 20h.01"/>'),
   // the licence: a sealed scroll
   scroll: svg('<path d="M6 4h11a2.5 2.5 0 0 1 0 5H16v9.5a2.5 2.5 0 0 1-2.5 2.5H5a2.5 2.5 0 0 1-2.5-2.5V17H13"/><path d="M6 4a2.5 2.5 0 0 0-2.5 2.5V17"/><circle cx="9.5" cy="12.5" r="2"/>'),
+  // exit: an open door, the way out marked
+  exit: svg('<path d="M13.5 3.5H5.5v17h8"/><path d="M5.5 3.5l6 2v15l-6-2"/><path d="M16 12h6M19 9l3 3-3 3"/><path d="M9 12.5h.01"/>'),
   // refresh: a turning arrow
   refresh: svg('<path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/>'),
 };
