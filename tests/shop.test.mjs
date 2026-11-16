@@ -102,7 +102,7 @@ test('a common piece is worth more than its materials, never a money machine', (
     for (let m = 0; m < metals; m++) {
       const p = R.makePiece({ patternId: id, picks: [m, 0, 0], result: { tier: 0, worked: 0, strikes: 16, heats: 1, cracks: 0 }, maker: 'T', rng: seeded(1), now: 1 });
       const cost = Sh.recipe(id, [m, 0, 0]).reduce((c, r) => c + MATS[r.mat].price * r.n, 0);
-      const x = p.worth / cost;
+      const x = p.worth * (PATTERNS[id].batch || 1) / cost;   // a batch sells a bottle at a time
       assert.ok(x >= 1.1 && x <= 3.2, id + ' ' + p.name + ': worth ' + p.worth + ' over materials ' + cost + ' = ' + x.toFixed(2));
     }
   }

@@ -16,6 +16,7 @@ export function recipe(patternId, picks) {
   const parts = chosenParts(patternId, picks), need = {};
   need[parts[0].id] = PATTERNS[patternId].bars;
   parts.slice(1).forEach(o => { if (o.mat) need[o.mat] = (need[o.mat] || 0) + 1; });
+  if (PATTERNS[patternId].batch) need.bottle = (need.bottle || 0) + PATTERNS[patternId].batch;   // a batch takes a bottle each
   return Object.entries(need).map(([mat, n]) => ({ mat, n }));
 }
 export const short = (mats, rec) => rec.filter(r => (mats[r.mat] || 0) < r.n).map(r => ({ ...r, have: mats[r.mat] || 0 }));
@@ -59,6 +60,12 @@ export function fixShelf(save) {
   while (shelf.length < save.slots) shelf.push(null);
   save.shelf = shelf;
 }
+// one sold from the shelf: a batch gives up a bottle and stays while it has any; a piece goes
+export function takeOne(save, card) {
+  if ((card.count || 1) > 1) { card.count--; return; }
+  const slot = onShelf(save, card.id); if (slot >= 0) save.shelf[slot] = null;
+  save.cards = save.cards.filter(x => x.id !== card.id);
+}
 export const priceAt = (card, tag) => Math.max(1, Math.round(card.worth * TAGS[tag].mult));
 export const onShelf = (save, id) => save.shelf.findIndex(e => e && e.id === id);
 export const inBack = save => save.cards.filter(c => onShelf(save, c.id) < 0 && !onWall(save, c.id));
@@ -99,7 +106,7 @@ const SHEAVES = ['arrows'];
 export const wants = (want, card) => want === 'any' || want === card.pattern || PATTERNS[card.pattern].want === want;
 export function wantWord(want) {
   if (PATTERNS[want]) { const n = PATTERNS[want].name.toLowerCase(); return SHEAVES.includes(want) ? 'a sheaf of ' + n : PAIRS.includes(want) ? 'a pair of ' + n : (/^[aeiou]/.test(n) ? 'an ' : 'a ') + n; }
-  return { weapon: 'a weapon', helm: 'something for the head', ring: 'a ring', armour: 'something to wear', bow: 'a bow', any: 'something good' }[want];
+  return { weapon: 'a weapon', helm: 'something for the head', ring: 'a ring', armour: 'something to wear', bow: 'a bow', brew: 'something from the kettle', any: 'something good' }[want];
 }
 export const takeOdds = (mood, tag) => mood === 'PINCHED' && tag === 'dear' ? 0 : Math.min(0.95, MOOD_ODDS[mood] * TAGS[tag].odds);
 const LINES = {
@@ -122,7 +129,7 @@ export function visit(save, rng, now, c = richer(save, newCustomer(rng)), o = {}
     const e = afford[0], price = Math.max(1, Math.round(priceAt(e.card, e.tag) * (o.rate || 1)));
     if (rng() < Math.min(0.95, takeOdds(c.mood, e.tag) * (o.boost || 1))) {
       save.coins += price; save.sold = (save.sold || 0) + 1; save.earned = (save.earned || 0) + price;
-      save.cards = save.cards.filter(x => x.id !== e.card.id); save.shelf[e.slot] = null;
+      takeOne(save, e.card);
       entry.sold = { name: e.card.name, tier: e.card.tier, price, full: priceAt(e.card, e.tag), tag: e.tag, id: e.card.id };
       if (e.tag !== 'cheap') fame(save, 1);
       entry.line = '"' + LINES.sold[c.mood] + '"' + (o.by ? ' Sold by ' + o.by + (o.rate && o.rate < 1 ? ', who kept ' + (priceAt(e.card, e.tag) - price) + ' c.' : '.') : '');
@@ -218,8 +225,7 @@ export const hagglePrice = (card, tag, choice, mult = 1) => Math.max(1, Math.rou
 export const moodFor = (c, card) => c.want === card.pattern ? LIFT[c.mood] : c.mood;
 function sellAt(save, c, card, price, how, now) {
   save.coins += price; save.sold = (save.sold || 0) + 1; save.earned = (save.earned || 0) + price;
-  const slot = onShelf(save, card.id); if (slot >= 0) save.shelf[slot] = null;
-  save.cards = save.cards.filter(x => x.id !== card.id);
+  takeOne(save, card);
   return log(save, { at: now, who: c.who, type: c.type, fig: c.fig, mood: c.mood, want: c.want, purse: c.purse, served: true,
     sold: { name: card.name, tier: card.tier, price, tag: how, id: card.id }, line: '"' + { EAGER: 'Done. Wrap it up.', WARY: 'Fair enough. Done.', PINCHED: 'It\'s all I have. Done.' }[c.mood] + '"' });
 }
@@ -325,8 +331,7 @@ export const fills = (o, card) => !!o && card.pattern === o.pattern && TIER_N[ca
 export function deliver(save, cardId, now) {
   const o = save.order, card = save.cards.find(c => c.id === cardId);
   if (!o || !card || !fills(o, card) || onWall(save, cardId)) return null;
-  const slot = onShelf(save, card.id); if (slot >= 0) save.shelf[slot] = null;
-  save.cards = save.cards.filter(c => c.id !== cardId);
+  takeOne(save, card);
   save.coins += o.pays; save.earned = (save.earned || 0) + o.pays; save.sold = (save.sold || 0) + 1;
   save.order = null; save.orderNext = (save.clock || 0) + 240; fame(save, 3);
   return log(save, { at: now, who: o.who, fig: o.fig, mood: 'EAGER', want: o.pattern, sold: { name: card.name, tier: card.tier, price: o.pays, tag: 'order', id: card.id },
@@ -336,6 +341,7 @@ export function deliver(save, cardId, now) {
 // ---------- the back room: break a piece down, or send it back in the fire ----------
 // breaking down gives back half its bars, rounded down (a one-bar piece gives no bar back), and any rare part it carried
 export function salvageOf(card) {
+  if (PATTERNS[card.pattern].batch) return [];   // a brew can't be unbrewed
   const src = srcOf(card), parts = chosenParts(card.pattern, src.picks), out = {};
   const bars = Math.floor(PATTERNS[card.pattern].bars / 2);
   if (bars) out[card.metal] = bars;
@@ -353,7 +359,7 @@ export function salvage(save, cardId) {
 }
 // back in the fire: half the bars (rounded up) of its own metal; Common to Fine, Fine to Rare
 export const reworkCost = card => [{ mat: card.metal, n: Math.ceil(PATTERNS[card.pattern].bars / 2) }];
-export const canRework = (save, card) => TIER_N[card.tier] < TIERS.length - 1 && onShelf(save, card.id) < 0 && !onWall(save, card.id);
+export const canRework = (save, card) => !PATTERNS[card.pattern].batch && TIER_N[card.tier] < TIERS.length - 1 && onShelf(save, card.id) < 0 && !onWall(save, card.id);
 
 // ---------- parts for other stations, forged at once ----------
 export function forgePart(save, id, n = 1) {

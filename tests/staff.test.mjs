@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as St from '../js/staff.js';
 import * as Sh from '../js/shop.js';
 import * as R from '../js/rules.js';
-import { ROUTES, AWAY_CAP_H, TIERS } from '../js/data.js';
+import { ROUTES, AWAY_CAP_H, TIERS, MATS } from '../js/data.js';
 
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const H = 3600000, T0 = 1.8e12;
@@ -122,13 +122,12 @@ test('a trip comes home during the catch-up, even past the cap', () => {
 });
 
 test('a runner\'s haul is worth more than the road costs, over many trips', () => {
-  const { MATS } = { MATS: null };
   for (const route of Object.keys(ROUTES)) {
     let worth = 0, n = 200;
     for (let i = 0; i < n; i++) {
       const s = blank({ staff: [runner({ trait: 'quick' })] });
       const h = St.haul(s, s.staff[0], route, seeded(i), T0);
-      worth += Object.entries(h.mats).reduce((a, [m, k]) => a + k * (({ iron: 8, bronze: 7, steel: 14, wrap: 3, cord: 1, ash: 2, wool: 2, strap: 2, horn: 4, rowan: 4, silk: 10, sharkhide: 9, gem: 14, blackwater: 45, bogoak: 35, winterfox: 55, starglass: 70 })[m] || 0), 0) + (h.piece ? h.piece.worth * 0.5 : 0);
+      worth += Object.entries(h.mats).reduce((a, [m, k]) => a + k * MATS[m].price, 0) + (h.piece ? h.piece.worth * 0.5 : 0);
     }
     const wage = 3 * ROUTES[route].h;
     assert.ok(worth / n > ROUTES[route].fee + wage, route + ': ' + (worth / n).toFixed(1) + ' against ' + (ROUTES[route].fee + wage));

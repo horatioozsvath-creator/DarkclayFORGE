@@ -93,7 +93,7 @@ export function newWorking(cfg, rng) {
   if (kit.widen && kit.widen !== 1) { const mid = (b0[0] + b0[1]) / 2, half = (b0[1] - b0[0]) / 2 * kit.widen; band = [Math.max(0, Math.round(mid - half)), Math.min(100, Math.round(mid + half))]; }
   const S = { cfg, parts, metal, level: cfg.level, rng, station: st,
     band, cool: st.cool * (metal.coolX || 1) * (kit.coolX || 1), drain: st.drain, rise: st.rise, over: st.over,
-    phase: 'prepare', meter: 30, inFire: false, shape: 0, worked: 0, cracks: 0, notches: [], crackMarks: [],
+    phase: 'prepare', meter: st.start || 30, inFire: false, shape: 0, worked: 0, cracks: 0, notches: [], crackMarks: [],
     streak: 0, white: 0, whiteHeat: false, earned: false, scaled: 0, overT: 0, strikes: 0, heats: 1, done: false, dropped: false,
     twin: false, warden: false, frost: false, rack: [], lines: [], heatLines: [], slipN: 0 };
   deal(S);
@@ -124,17 +124,21 @@ export function strike(S) {
   const st = S.station || FORGE;
   if (m < lo) {
     // the stretcher: too dry, a stitch turns nothing over (no tear); the forge: a learner's cold strike does nothing, a CRACK slips in after
-    if (st.dryDead || S.level < 3) { S.streak = 0; pop({ label: 'NOTHING', why: st.dryDead ? st.cold : 'TOO COLD · IT DOESN\'T MOVE', size: 'bad', colour: KC.HOLD }); return { k: 'HOLD', dead: true, pops }; }
+    if (st.dryDead || st.noTake || S.level < 3) { S.streak = 0; S.stirred = true; pop({ label: 'NOTHING', why: st.dryDead || st.noTake ? st.cold : 'TOO COLD · IT DOESN\'T MOVE', size: 'bad', colour: KC.HOLD }); return { k: 'HOLD', dead: true, pops }; }
     slipIn(S, 'CRACK', 'COLD', (st.id === 'bowbench' ? 'Bent cold: it split (bend ' : 'Struck cold (strike ') + S.strikes + ')');
   }
   // the bench: a bend across the grain turns nothing over (the steam still drains)
   if (st.grain && acrossGrain(S)) { S.streak = 0; pop({ label: 'NOTHING', why: 'ACROSS THE GRAIN · WAIT FOR IT', size: 'bad', colour: KC.HOLD }); return { k: 'HOLD', dead: true, pops }; }
   const tore = st.wetTear && m > hi && S.level >= 3;
   if (tore) slipIn(S, 'CRACK', 'WET', 'Too wet: it tore (stitch ' + S.strikes + ')');
+  // the kettle: the first stir starts it settling; over the band it boils over (a CRACK from trade 3) and the boil drops
+  S.stirred = true;
+  const boiled = st.boilOver && m > hi;
+  if (boiled) { if (S.level >= 3) slipIn(S, 'CRACK', 'BOIL', 'Boiled over (stir ' + S.strikes + ')'); S.meter = Math.max(0, S.meter - st.boilOver); }
   if (!left(S).length) { deal(S); pop({ label: 'SHUFFLED', gain: 'THE STRIP RAN OUT · EVERY TILE BACK IN', size: 'bigpop', colour: KC.FOUND }); }
   const tk = S.rack.find(x => !x.up);
   tk.up = true; tk.n = S.strikes; tk.peek = false;
-  let k = tk.k, why = m < lo ? (st.id === 'bowbench' ? 'BENT COLD · IT SPLIT' : 'STRUCK COLD · A CRACK SLIPPED IN') : tore ? 'TOO WET · A TEAR SLIPPED IN' : '', gain = '', size = '', colour = null, drop = false;
+  let k = tk.k, why = m < lo ? (st.id === 'bowbench' ? 'BENT COLD · IT SPLIT' : 'STRUCK COLD · A CRACK SLIPPED IN') : tore ? 'TOO WET · A TEAR SLIPPED IN' : boiled ? (S.level >= 3 ? 'IT BOILED OVER · A CRACK SLIPPED IN' : 'IT BOILED OVER') : '', gain = '', size = '', colour = null, drop = false;
   if (k === 'CRACK' && (S.white > 0 || S.warden)) { why = S.warden ? 'THE WARDEN\'S TILE HOLDS IT' : 'WHITE HEAT · NO CRACK'; S.warden = false; k = 'HOLD'; }
   const mult = S.twin && k !== 'CRACK' ? 2 : 1;
   if (S.twin && k !== 'CRACK') { S.twin = false; why = why || 'TWIN · IT COUNTS TWICE'; }
@@ -182,6 +186,12 @@ export function strike(S) {
 // Into the fire and out. Going in with any tile turned (or slipped in) brings every tile back, shuffled.
 export function toggleFire(S) {
   if (S.phase !== 'work' || S.done) return null;
+  const st = S.station || FORGE;
+  if (st.stoke) {   // the kettle: STOKE raises the boil at once; it deals the strip again, as a firing does
+    S.meter = Math.min(100, S.meter + st.stoke);
+    if (S.rack.some(x => x.up || x.added)) { S.heats++; deal(S); return { shuffled: true, stoked: true }; }
+    return { shuffled: false, stoked: true };
+  }
   S.inFire = !S.inFire;
   if (S.inFire && S.rack.some(x => x.up || x.added)) { S.heats++; deal(S); return { shuffled: true }; }
   return { shuffled: false };
@@ -194,7 +204,8 @@ export function tick(S, dt) {
   if (S.phase !== 'work' || S.done) return {};
   const out = {};
   if (S.station && S.station.grain) { const was = acrossGrain(S); S.grainT = (S.grainT || 0) + dt; if (acrossGrain(S) !== was) out.grain = true; }
-  if (S.inFire) {
+  if ((S.station || FORGE).stoke) { if (S.stirred) S.meter = Math.max(0, S.meter - S.cool * dt); }
+  else if (S.inFire) {
     S.meter = Math.min(100, S.meter + S.rise * dt);
     if (S.meter >= S.over) {
       S.overT += dt;
@@ -269,6 +280,11 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now, k
   // WORKED adds up to an eighth over the tier's plain numbers, counted to 50 % (the card still shows the true figure)
   const worked = result.worked, w = Math.min(WORKED_CAP, worked), wk = 1 + w / 100 * 0.25;
   const stats = [];
+  if (p.potency) {   // a brew: its potency (what it mends, how long an oil keeps an edge), and the batch
+    const po = Math.max(1, Math.round(p.potency * metal.dmg * tier.mult * wk));
+    stats.push(['Potency', String(po), Math.min(1, po / 24)]);
+    stats.push(['Batch', '×' + (p.batch || 1), null]);
+  }
   if (p.dmg) {
     const lo = Math.max(1, Math.round(p.dmg[0] * metal.dmg * tier.mult * wk)), hi = Math.max(lo + 1, Math.round(p.dmg[1] * metal.dmg * tier.mult * wk));
     stats.push(['Damage', lo + '–' + hi, Math.min(1, hi / BARS.damage)]);
@@ -289,11 +305,11 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now, k
   const rareN = parts.filter(o => o.rare).length, partsVal = parts.slice(1).reduce((v, o) => v * (o.val || 1), 1);
   const worth = Math.max(1, Math.round(p.value * metal.val * tier.worth * (1 + w / 200) * (1 + 0.25 * rareN) * partsVal
     * Math.pow(0.9, result.cracks) * (result.flawed ? 0.5 : 1)));
-  const leather = stationOf(patternId).id === 'stretcher', wood = stationOf(patternId).id === 'bowbench';
-  const made = [(leather ? 'Stitched by ' : wood ? 'Bent by ' : 'Forged by ') + maker];
+  const sid = stationOf(patternId).id, leather = sid === 'stretcher', wood = sid === 'bowbench', brew = sid === 'kettle';
+  const made = [(leather ? 'Stitched by ' : wood ? 'Bent by ' : brew ? 'Brewed by ' : 'Forged by ') + maker];
   if (result.instant) made.push('made at once, at the plain odds');
   else {
-    made.push('WORKED +' + worked + ' %', result.strikes + (leather ? ' stitches · ' : wood ? ' bends · ' : ' strikes · ') + result.heats + (leather ? ' soak' : wood ? ' steaming' : ' heat') + (result.heats > 1 ? 's' : ''),
+    made.push('WORKED +' + worked + ' %', result.strikes + (leather ? ' stitches · ' : wood ? ' bends · ' : brew ? ' stirs · ' : ' strikes · ') + result.heats + (leather ? ' soak' : wood ? ' steaming' : brew ? ' stoking' : ' heat') + (result.heats > 1 ? 's' : ''),
       result.cracks ? result.cracks + ' crack' + (result.cracks > 1 ? 's' : '') : 'no crack');
     if (result.whiteHeat) made.push('WHITE HEAT');
   }
@@ -301,7 +317,7 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now, k
   made.push(parts.map(o => o.name.toLowerCase()).filter(n => n !== 'none' && n !== 'plain').join(' · '));
   return { id: now.toString(36) + Math.floor(rng() * 1e6).toString(36), at: now, pattern: patternId, metal: metal.id, tier: tier.id,
     name: (metal.adj || metal.name) + ' ' + p.name, kind: p.kind, art: p.art, tint: metal.tint, dice, stats, affixes: affixes.map(a => [a[0], a[1]]),
-    made, lore: p.lore[result.tier], worth, flawed: result.flawed, maker,
+    made, lore: p.lore[result.tier], worth, flawed: result.flawed, maker, count: p.batch || undefined,
     src: { picks: (picks || []).slice(), worked, strikes: result.strikes || 0, heats: result.heats || 0, cracks: result.cracks || 0,
       whiteHeat: !!result.whiteHeat, frost: !!result.frost, instant: !!result.instant, reworked } };
 }
@@ -314,7 +330,7 @@ export function srcOf(card) {
   const cr = (card.made || []).find(x => /^\d+ crack/.test(x)), cracks = cr ? +cr.match(/\d+/)[0] : 0;
   return { picks: [m, 0, 0], worked, strikes: 0, heats: 0, cracks, whiteHeat: (card.made || []).includes('WHITE HEAT'), frost: card.affixes.some(a => a[0] === 'Frost-kissed'), instant: false, reworked: 0 };
 }
-export const makerOf = card => card.maker || ((card.made || [])[0] || '').replace(/^(Forged|Stitched|Bent) by /, '') || 'an old maker';
+export const makerOf = card => card.maker || ((card.made || [])[0] || '').replace(/^(Forged|Stitched|Bent|Brewed) by /, '') || 'an old maker';
 // A piece out of the fire again: the same piece (its id, its maker, the affixes it carried), its tier and its making moved on.
 export function remakePiece({ card, res, picked, rng, now }) {
   const src = srcOf(card);
