@@ -166,8 +166,34 @@ def cardcase():
     return done(P)
 
 
+# the Hall's plinth: where one piece's card rests (js/diorama.js LAYOUTS plinth: PLINTH_REST, PLINTH_LEAN)
+PLINTH_REST, PLINTH_LEAN = (0.12, 1.02), math.radians(40)
+
+
+def plinth():
+    """1 x 1: a stone plinth for the Hall. A stepped base, a fluted column, a cap, and on it a sloped top in red cloth with a little
+    bronze lip for one card to rest against. Symmetric front to back."""
+    m = mats()
+    with Prop('Prop_forge_plinth', 0.03) as P:
+        gbox('base1', -0.38, 0.38, 0.0, 0.08, -0.38, 0.38, m['stone'])
+        gbox('base2', -0.32, 0.32, 0.08, 0.16, -0.32, 0.32, m['stonelight'])
+        cyl('column', 0.0, 0.0, 0.16, 0.82, 0.2, 0.18, m['marble'], seg=12)
+        for i in range(6):
+            a = i / 6 * math.tau
+            K.no_ink(rod('flute%d' % i, (math.cos(a) * 0.19, 0.2, math.sin(a) * 0.19), (math.cos(a) * 0.175, 0.78, math.sin(a) * 0.175), 0.012, 0.012, m['stone'], seg=4))
+        gbox('cap', -0.3, 0.3, 0.82, 0.9, -0.3, 0.3, m['stonelight'])
+        pz, py = PLINTH_REST
+        uz, uy, nz, ny = -math.sin(PLINTH_LEAN), math.cos(PLINTH_LEAN), math.cos(PLINTH_LEAN), math.sin(PLINTH_LEAN)
+        az, ay, L, B = pz - nz * 0.008 - uz * 0.03, py - ny * 0.008 - uy * 0.03, 0.42, 0.04
+        ez, ey = az + uz * L - nz * B, ay + uy * L - ny * B
+        extrude_x('block', [(0.28, 0.9), (0.28, py - 0.04), (ez, ey), (-0.28, ey), (-0.28, 0.9)], -0.28, 0.28, m['stonelight'])
+        extrude_x('cloth', [(az, ay), (az + uz * L, ay + uy * L), (ez, ey), (az - nz * B, ay - ny * B)], -0.27, 0.27, m['cloth'])
+        extrude_x('lip', [(pz + 0.05, py - 0.06), (pz + 0.05, py + 0.05), (pz, py + 0.05), (pz, py - 0.06)], -0.27, 0.27, m['bronze'])
+    return done(P)
+
+
 os.makedirs(OUT, exist_ok=True)
-for name, build in (('Prop_forge_bowbench', bowbench), ('Prop_forge_glass', glassfurnace), ('Prop_forge_cardshelf', cardshelf), ('Prop_forge_cardcase', cardcase)):
+for name, build in (('Prop_forge_bowbench', bowbench), ('Prop_forge_glass', glassfurnace), ('Prop_forge_cardshelf', cardshelf), ('Prop_forge_cardcase', cardcase), ('Prop_forge_plinth', plinth)):
     K.fresh()
     root, rig = build()
     size = K.export_fbx(root, os.path.join(OUT, name + '.fbx'))

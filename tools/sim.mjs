@@ -9,6 +9,7 @@ import * as Rm from '../js/room.js';
 import * as G from '../js/growth.js';
 import * as Town from '../js/town.js';
 import * as Br from '../js/branch.js';
+import * as Hl from '../js/hall.js';
 import { BRANCH, RELICS } from '../js/data.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD } from '../js/data.js';
 
@@ -98,6 +99,17 @@ function restock() {
   // yesterday's DEAR pieces the town no longer wants go back to FAIR
   save.shelf.forEach((e, i) => { const c = e && save.cards.find(x => x.id === e.id); if (c && !hot(c) && e.tag === 'dear') Sh.setTag(save, i, 'fair'); });
 }
+// the Hall: built once it can be afforded with some over, its places filled with the best pieces, more plinths while there are more
+let hallDay = null;
+function runHall(day) {
+  if (process.env.HALL === '0') return;
+  if (!save.hall && Hl.canBuy(save).ok && save.coins > 27000) { Hl.buy(save); hallDay = day; note('built the Hall'); }
+  if (!save.hall) return;
+  Hl.tidy(save);
+  const free = () => Rm.hallSpots(save.hall).filter(p => !(save.hall.shown || {})[p.key]);
+  for (const c of Hl.candidates(save)) { const p = free()[0]; if (!p) break; Hl.show(save, p.key, c.id); }
+  if (!free().length && Hl.candidates(save).length && save.coins > 6000) Rm.buy(save, 'plinth');
+}
 // the Relics: from RENOWNED a runner goes below the deep doors whenever home; an Old-Blood piece with its blueprint, the trade and
 // the material goes to the Relic working (a steady player gets WHITE HEAT twice with no crack about a third of the time)
 let relics = [], relicTried = 0;
@@ -176,7 +188,7 @@ for (let d = 1; d <= days; d++) {
     tally(Sh.shopStep(save, 50, rng, t, false, clerk));
     St.payWages(save, 50); St.resolveTrips(save, t, rng);
     t += 50000; save.lastSeen = t;
-    if (s % 600 === 0) { runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); relicWork(d); }   // saving up for the second shop once it may be bought
+    if (s % 600 === 0) { runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); relicWork(d); runHall(d); }   // saving up for the second shop once it may be bought
     if (save.branch) tally(Br.step(save, 50, rng, t));
     if (Sh.rescue(save, hour)) note('scrap bin');
   }
@@ -190,6 +202,7 @@ for (let d = 1; d <= days; d++) {
   log.forEach(l => console.log(l)); log = [];
 }
 const tiers = {}; save.ledger.forEach(e => { if (e.sold) tiers[e.sold.tier] = (tiers[e.sold.tier] || 0) + 1; });
+console.log('hall from day', hallDay, save.hall ? 'showing ' + Object.keys(save.hall.shown || {}).length + ', renown +' + G.hallRenown(save) : '');
 console.log('stories:', JSON.stringify(Object.fromEntries(Object.entries(save.stories || {}).map(([k, v]) => [k, v.step]))));
 console.log('relics:', relics.join(', ') || 'none', ' tried', relicTried, ' blueprints', (save.blueprints || []).join(','), ' relic mats', Object.entries(save.mats).filter(([m]) => ['heartstone','moonsilver','wyrmhide','ghostyew','starcore','moonmead'].includes(m)).map(([m, n]) => m + ' ' + n).join(' '));
 console.log('big sales:', JSON.stringify(big), ' orders filled:', orders, '(stories', stories + ')', ' second shop from day', branchDay, save.branch ? 'sold ' + save.branch.sold + ' for ' + save.branch.earned + ' c' : '');

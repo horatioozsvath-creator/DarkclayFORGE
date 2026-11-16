@@ -2,11 +2,11 @@
 // in to the counter. Loaded only when the shop is opened. Three.js comes through the page's import map as 'three'.
 import * as THREE from 'three';
 import { GLTFLoader } from '../vendor/three/loaders/GLTFLoader.js';
-import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=25';
-import { ART } from './card.js?v=25';
-import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=25';
+import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=26';
+import { ART } from './card.js?v=26';
+import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=26';
 
-const MODELS = 'assets/models/', M = '?m=9';   // bump m when tools/models.sh rebuilds them
+const MODELS = 'assets/models/', M = '?m=10';   // bump m when tools/models.sh rebuilds them
 const FIGURES = { folk: 'folk', guard: 'dwarf', traveller: 'carter', delver: 'bard', factor: 'chandler', collector: 'herbalist', steward: 'chandler', master: 'herbalist', seller: 'carter', maker: 'smith', clerk: 'chandler' };
 const WALK = 1.5;   // metres a second
 
@@ -64,6 +64,9 @@ const LAYOUTS = [
   ROW(SLOPE.z, SLOPE.y, SLOPE.lean, 0.54, [-0.6, 0, 0.6]),
   [...ROW(...cz(0.36, 0.55), CASE, 0.5, [-0.6, 0, 0.6]), ...ROW(...cz(-0.02, 1.24), CASE, 0.5, [-0.6, 0, 0.6])],
 ];
+// the Hall's: a plinth's one card (tools/station_props.py PLINTH_REST, PLINTH_LEAN), a glass case's front row of three
+LAYOUTS.plinth = ROW(0.12, 1.02 + 0.017, Math.PI * 40 / 180, 0.42, [0]);
+LAYOUTS.hallcase = LAYOUTS[2].slice(0, 3);
 const placeOf = e => (LAYOUTS[e.lv] || LAYOUTS[0])[e.spot] || LAYOUTS[0][0];
 const modelOf = it => it.kind === 'shelf' ? (SHELF_LEVELS[it.lv | 0] || SHELF_LEVELS[0]).model : FURNITURE[it.kind].model;
 const arts = {};
@@ -186,8 +189,8 @@ export async function create(host, { onTap } = {}) {
   // at the left back through to the shop.
   function buildRoom() {
     roomG.clear();
-    const { w, d } = size, work = view === 'work';
-    const [f1, f2, wb, wl] = work ? ['#3e3a36', '#48433e', '#5a524a', '#524a42'] : ['#4a3424', '#54392a', '#6a5040', '#5e4636'];
+    const { w, d } = size, hall = view === 'hall', work = view === 'work' || hall;   // the Hall: a gallery, its door back to the shop as the workshop's
+    const [f1, f2, wb, wl] = hall ? ['#6a6258', '#7a7266', '#8a8070', '#827868'] : work ? ['#3e3a36', '#48433e', '#5a524a', '#524a42'] : ['#4a3424', '#54392a', '#6a5040', '#5e4636'];
     const floor = toonBox(w, 0.12, d, f1); floor.position.set(w / 2, -0.06, d / 2); floor.userData.floor = true; roomG.add(floor);
     for (let x = 0; x < w; x++) for (let z = 0; z < d; z++) if ((x + z) % 2) { const t = toonBox(0.98, 0.01, 0.98, f2); t.position.set(x + 0.5, 0.005, z + 0.5); roomG.add(t); }
     if (work) { const back = toonBox(w + 0.2, 2.6, 0.2, wb); back.position.set(w / 2, 1.3, -0.1); roomG.add(back); }
@@ -205,8 +208,8 @@ export async function create(host, { onTap } = {}) {
     if (work) { const through = new THREE.Mesh(new THREE.PlaneGeometry(1, 2.1), new THREE.MeshBasicMaterial({ color: 0x3a2414 })); through.rotation.y = Math.PI / 2; through.position.set(-0.22, 1.05, DOOR_Z + 0.5); through.userData.door = 'shop'; roomG.add(through); }
     const lintel = toonBox(0.24, 0.5, 1.1, '#3b2414'); lintel.position.set(-0.1, 2.35, DOOR_Z + 0.5); roomG.add(lintel);
     const step = toonBox(0.6, 0.06, 1, '#2a1c12'); step.position.set(-0.3, 0.03, DOOR_Z + 0.5); roomG.add(step);
-    ember.position.set(work ? 1 : WORK_DOOR_X + 0.5, 1.2, work ? 1.2 : 0.4);
-    ember.intensity = work ? 6 : 2.5;
+    ember.position.set(hall ? w / 2 : work ? 1 : WORK_DOOR_X + 0.5, hall ? 2.2 : 1.2, hall ? d / 2 : work ? 1.2 : 0.4);
+    ember.intensity = hall ? 4 : work ? 6 : 2.5;
   }
   function drawMarks() {
     markG.clear();
@@ -261,7 +264,7 @@ export async function create(host, { onTap } = {}) {
     s.at = performance.now(); lately.set(s.id, s);
   }
   function drawStands() {
-    const want = new Map(view === 'shop' && room ? shown.map(e => [e.slot, e]) : []);
+    const want = new Map((view === 'shop' || view === 'hall') && room ? shown.map(e => [e.slot, e]) : []);
     for (const [slot, s] of [...stands]) { const e = want.get(slot); if (!e || standKey(e) !== s.key || !itemObjs.has(e.shelf) || s.obj.parent !== itemObjs.get(e.shelf)) dropStand(slot); }
     for (const [slot, e] of want) {
       if (stands.has(slot)) continue;
@@ -421,7 +424,7 @@ export async function create(host, { onTap } = {}) {
   return {
     // show the shop front or the workshop: everything in view rebuilt for that room
     setRoom(r, save) {
-      const v = r.kind === 'work' ? 'work' : 'shop', changed = v !== view || r !== room;
+      const v = r.kind === 'work' || r.kind === 'hall' ? r.kind : 'shop', changed = v !== view || r !== room;
       if (changed) { for (const slot of [...stands.keys()]) dropStand(slot); for (const o of itemObjs.values()) itemsG.remove(o); itemObjs.clear(); for (const [id, p] of [...people]) { peopleG.remove(p.obj); people.delete(id); } }
       view = v; room = r; const s = sizeOf(r);
       if (changed || s.w !== size.w || s.d !== size.d || !roomG.children.length) { size = { w: s.w, d: s.d }; buildRoom(); fitCamera(); }

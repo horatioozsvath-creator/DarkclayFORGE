@@ -569,6 +569,9 @@ export const FURNITURE = {
   flowers: { name: 'Flowers', fp: [1, 1], charm: 2, cost: 90, model: 'flowers', line: 'Something growing, for once.' },
   sacks: { name: 'Sacks', fp: [1, 1], charm: 1, cost: 60, model: 'sacks' },
   herbrail: { name: 'Herb rail', fp: [2, 1], charm: 2, cost: 150, model: 'herbrail', line: 'Herbs drying: the shop smells of summer.' },
+  // the Hall's (room: 'hall'): a plinth holds one piece, a glass case three; places: how many pieces it shows
+  plinth: { name: 'Plinth', fp: [1, 1], places: 1, cost: 1500, model: 'plinth', room: 'hall', line: 'A stone plinth for one piece.' },
+  hallcase: { name: 'Glass case', fp: [2, 1], places: 3, cost: 6000, model: 'cardcase', room: 'hall', line: 'A long case for three pieces.' },
   // gifts from the regulars' stories: never for sale, never sold back (fixed), charm a little over the shop's own
   kettycandles: { name: 'Ketty\'s candles', fp: [1, 1], charm: 4, model: 'candlestand', room: 'shop', fixed: true, gift: true, line: 'They burned for her husband.' },
   watchbanner: { name: 'The watch\'s banner', fp: [1, 1], charm: 4, model: 'banner', scale: 0.6, room: 'shop', fixed: true, gift: true, line: 'The watch flies your mark.' },
@@ -578,6 +581,13 @@ export const FURNITURE = {
 };
 export const SHELF_COSTS = [800, 1800, 3600, 6400, 10000, 14400];   // the 3rd shelf to the 8th
 export const MAX_SHELVES = 8;
+// THE HALL (milestone 15): a third room, a gallery for the best pieces (Old-Blood, Relics, Mythics), from RENOWNED. Each piece shown
+// adds renown and charm; the Hall's places are its plinths' and cases'. It shows in shop links and flyers.
+export const HALL = { cost: 25000, rung: 5, plinths: 4, tiers: ['oldblood', 'relic', 'mythic'] };
+export const HALL_SIZES = [
+  { w: 6, d: 5, cost: 0, word: 'A SMALL HALL' }, { w: 8, d: 6, cost: 12000, word: 'A LONG HALL' }, { w: 10, d: 7, cost: 30000, word: 'A GREAT HALL' },
+];
+export const HALL_RENOWN = { oldblood: 15, relic: 80, mythic: 200 }, HALL_CHARM = { oldblood: 1, relic: 3, mythic: 6 };
 // a shelf made better where it stands: more places on the same floor. Each level's model and how its cards are laid out
 // (js/diorama.js LAYOUTS); cost: to reach that level from the one before
 export const SHELF_LEVELS = [

@@ -1,6 +1,6 @@
 // Growth, with no page access: tools, the maker's level and perks, renown, the display wall.
-import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS } from './data.js?v=25';
-import { levelOf, MAX_LEVEL } from './rules.js?v=25';
+import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS, HALL_RENOWN, HALL_CHARM } from './data.js?v=26';
+import { levelOf, MAX_LEVEL } from './rules.js?v=26';
 
 // ---------- tools ----------
 export const has = (save, id) => (save.tools || []).includes(id);
@@ -47,7 +47,12 @@ export function kitOf(save) {
 
 // ---------- renown ----------
 export const wallRenown = save => (save.wall || []).reduce((a, id) => { const c = save.cards.find(x => x.id === id); return a + (c && !c.sample ? WALL_RENOWN[c.tier] || 0 : 0); }, 0);
-export const renownOf = save => Math.floor(save.renown || 0) + wallRenown(save);
+// the Hall's pieces: the cards shown on its plinths and in its cases, and the renown and charm they bring
+export const hallCards = save => save.hall ? Object.values(save.hall.shown || {}).map(id => save.cards.find(c => c.id === id)).filter(Boolean) : [];
+export const onHall = (save, id) => !!save.hall && Object.values(save.hall.shown || {}).includes(id);
+export const hallRenown = save => hallCards(save).reduce((a, c) => a + (HALL_RENOWN[c.tier] || 0), 0);
+export const hallCharm = save => hallCards(save).reduce((a, c) => a + (HALL_CHARM[c.tier] || 0), 0);
+export const renownOf = save => Math.floor(save.renown || 0) + wallRenown(save) + hallRenown(save);
 export function rung(save) { const r = renownOf(save); let i = 0; RENOWN.forEach((x, k) => { if (r >= x.at) i = k; }); return i; }
 export const nextRung = save => RENOWN[rung(save) + 1] || null;
 export const purseMult = save => 1 + PURSE_STEP * Math.min(FAMED_RUNG, rung(save));   // above FAMED, new buyers instead of fuller purses
@@ -65,7 +70,7 @@ export function fixWall(save) {
 export const wallCharm = save => (save.wall || []).reduce((a, id) => { const c = save.cards.find(x => x.id === id); return a + (c && !c.sample ? (TIERS.findIndex(t => t.id === c.tier) + 1) * ((PATTERNS[c.pattern] || {}).windowed ? 2 : 1) : 0); }, 0);
 export function hang(save, id) {
   const card = save.cards.find(c => c.id === id);
-  if (!card || card.sample || onWall(save, id) || (save.shelf || []).some(e => e && e.id === id) || ((save.branch || {}).shelf || []).some(e => e && e.id === id)) return false;   // a flyer's copy never hangs
+  if (!card || card.sample || onHall(save, id) || onWall(save, id) || (save.shelf || []).some(e => e && e.id === id) || ((save.branch || {}).shelf || []).some(e => e && e.id === id)) return false;   // a flyer's copy never hangs
   if ((save.wall || []).length >= wallSlots(save)) return false;
   save.wall = (save.wall || []).concat(id);
   return true;

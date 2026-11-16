@@ -23,8 +23,8 @@
 <meta property="og:url" content="https://horatioozsvath-creator.github.io/DarkclayFORGE/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="css/fonts.css">
-<link rel="stylesheet" href="css/working.css?v=25">
-<link rel="stylesheet" href="css/game.css?v=25">
+<link rel="stylesheet" href="css/working.css?v=26">
+<link rel="stylesheet" href="css/game.css?v=26">
 </head>
 <body>
 <div class="wrap">
@@ -150,6 +150,10 @@
       <h2><span>THEIR WALL</span><b id="visitWallWord"></b></h2>
       <div class="shelf slots" id="visitWall"></div>
     </section>
+    <section class="card" id="visitHallBox" hidden>
+      <h2><span>THEIR HALL</span><b id="visitHallWord"></b></h2>
+      <div class="shelf slots" id="visitHall"></div>
+    </section>
     <div class="rbtns left"><button class="seg go" id="visitBack"></button></div>
   </main>
 
@@ -162,7 +166,7 @@
       <div class="counter" aria-hidden="true"></div>
     </section>
     <div class="diobar" id="dioBar" hidden>
-      <span class="views"><button class="seg" data-view="shop">THE SHOP FRONT</button><button class="seg" data-view="work">THE WORKSHOP</button></span>
+      <span class="views"><button class="seg" data-view="shop">THE SHOP FRONT</button><button class="seg" data-view="work">THE WORKSHOP</button><button class="seg" data-view="hall" id="viewHall" hidden>THE HALL</button></span>
       <button class="seg" id="arrangeBtn">ARRANGE</button>
       <button class="seg" id="visitMine">VISIT MY SHOP · SHARE</button>
       <span class="diohint" id="dioHint"></span>
@@ -183,6 +187,7 @@
       <button class="tab" data-tabbtn="furnish">FURNISH</button>
       <button class="tab" data-tabbtn="ledger">LEDGER <span class="badge" id="tabLedger" hidden></span></button>
       <button class="tab" data-tabbtn="town">IN TOWN</button>
+      <button class="tab" data-tabbtn="hall" id="tabHallBtn" hidden>THE HALL</button>
     </nav>
     <section data-group="shop" data-tab="shelf" class="card">
       <h2><span>THE SHELF</span><b id="shelfWord"></b></h2>
@@ -209,6 +214,13 @@
     <section data-group="shop" data-tab="ledger" class="card">
       <h2><span>THE LEDGER</span><b>WHO CAME IN</b></h2>
       <ul class="ledger" id="ledger"></ul>
+    </section>
+    <section data-group="shop" data-tab="hall" class="card">
+      <h2><span>THE HALL</span><b id="hallWord"></b></h2>
+      <p class="note">Your best pieces, shown: Old-Blood, Relics and Mythics. They're not for sale here, and each adds renown and charm. Tap a place to show a piece; see it in 3D from THE HALL above.</p>
+      <div class="shelf slots" id="hallSlots"></div>
+      <div class="rbtns left"><button class="seg" id="hallPlinth"></button><button class="seg" id="hallCase"></button><button class="seg" id="hallExpand"></button></div>
+      <p class="note" id="hallNote"></p>
     </section>
     <section data-group="shop" data-tab="town" class="card">
       <h2><span>THE NOTICE BOARD</span><b id="townWord"></b></h2>
@@ -361,6 +373,6 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js" } }</script>
-<script type="module" src="js/main.js?v=25"></script>
+<script type="module" src="js/main.js?v=26"></script>
 </body>
 </html>

@@ -1,9 +1,9 @@
 // The shop's two rooms, with no page access: the shop front (counter, shelves, decor; where customers come) and the workshop
 // behind it (the forge, the anvil and every station). A grid each, what stands on it, buying, moving, selling back, growing.
-import { FURNITURE, ROOM_SIZES, WORK_SIZES, DOOR_Z, WORK_DOOR_X, SHELF_COSTS, SHELF_LEVELS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=25';
-import { wallCharm } from './growth.js?v=25';
+import { FURNITURE, ROOM_SIZES, WORK_SIZES, HALL_SIZES, HALL, DOOR_Z, WORK_DOOR_X, SHELF_COSTS, SHELF_LEVELS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=26';
+import { wallCharm, hallCharm } from './growth.js?v=26';
 
-export const SIZES = { shop: ROOM_SIZES, work: WORK_SIZES };
+export const SIZES = { shop: ROOM_SIZES, work: WORK_SIZES, hall: HALL_SIZES };
 export const sizeOf = room => SIZES[room.kind || 'shop'][room.size || 0];
 // which room a kind of furniture belongs in: the forge, the anvil and the stations in the workshop; counter and shelves in front
 export const homeOf = kind => FURNITURE[kind].room || 'any';
@@ -83,7 +83,7 @@ export function upgradeShelf(save, id) {
   return { level: it.lv, places: next.places };
 }
 // the shop front's charm, and the wall's pieces with it, under the one cap (the workshop's decor is for the maker's eyes only)
-export function charm(room, save) { return Math.min(CHARM_MAX, room.items.reduce((c, i) => c + (FURNITURE[i.kind].charm || 0) + (i.kind === 'shelf' ? SHELF_LEVELS[levelOf(i)].charm || 0 : 0), 0) + (save ? wallCharm(save) : 0)); }
+export function charm(room, save) { return Math.min(CHARM_MAX, room.items.reduce((c, i) => c + (FURNITURE[i.kind].charm || 0) + (i.kind === 'shelf' ? SHELF_LEVELS[levelOf(i)].charm || 0 : 0), 0) + (save ? wallCharm(save) + hallCharm(save) : 0)); }
 // how much sooner customers come for the room's charm (a multiplier on the gap between them)
 export const charmGap = save => save.room ? 1 / (1 + charm(save.room, save) * CHARM_STEP) : 1;
 
@@ -91,7 +91,7 @@ export const charmGap = save => save.room ? 1 / (1 + charm(save.room, save) * CH
 export function valid(room) {
   if (!room || !Array.isArray(room.items) || !SIZES[room.kind || 'shop'] || !sizeOf(room)) return false;
   if (!room.items.every(i => FURNITURE[i.kind] && belongs(room, i.kind))) return false;
-  const must = (room.kind || 'shop') === 'shop' ? ['counter'] : ['forge', 'anvil'];
+  const must = { shop: ['counter'], work: ['forge', 'anvil'], hall: [] }[room.kind || 'shop'];
   for (const k of must) if (room.items.filter(i => i.kind === k).length !== 1) return false;
   for (const id of Object.keys(STATIONS)) if (room.items.filter(i => i.kind === id).length > 1) return false;
   return room.items.every(i => fits(room, i, i.id));
@@ -124,8 +124,16 @@ export function fixRoom(save) {
     save.workshop = room || defaultWorkshop([], 0);
   }
 }
-export const roomOf = (save, which) => which === 'work' ? save.workshop : save.room;
-export const roomWith = (save, id) => [save.room, save.workshop].find(r => r && r.items.some(i => i.id === id));
+export const roomOf = (save, which) => which === 'work' ? save.workshop : which === 'hall' ? save.hall : save.room;
+export const roomWith = (save, id) => [save.room, save.workshop, save.hall].find(r => r && r.items.some(i => i.id === id));
+// ---------- THE HALL: a gallery room (data.js HALL) ----------
+export function defaultHall() {
+  const room = { kind: 'hall', size: 0, items: [], shown: {} };
+  for (let i = 0; i < HALL.plinths; i++) { const it = firstFree(room, 'plinth', 'plinth-' + i); if (it) room.items.push(it); }
+  return room;
+}
+// its places: each plinth's one, each case's three, in the room's order; key: 'item:spot' (what hall.shown maps to a card)
+export const hallSpots = room => room.items.filter(i => FURNITURE[i.kind].places).flatMap(i => Array.from({ length: FURNITURE[i.kind].places }, (_, k) => ({ item: i.id, kind: i.kind, spot: k, key: i.id + ':' + k })));
 
 // ---------- stations: set one up, and it stands in the workshop ----------
 export const owns = (save, id) => id === 'forge' || (save.stations || []).includes(id);
@@ -144,7 +152,8 @@ export const shelfCost = room => SHELF_COSTS[shelvesOf(room) - 2];
 export const costOf = (room, kind) => kind === 'shelf' ? shelfCost(room) : FURNITURE[kind].cost;
 // buy and place where it first fits, in the shop front or the workshop. Returns the new piece, or why it can't be had (nothing paid).
 export function buy(save, kind, which = 'shop') {
-  const f = FURNITURE[kind], room = homeOf(kind) === 'shop' ? save.room : roomOf(save, which);
+  const f = FURNITURE[kind], room = homeOf(kind) === 'shop' ? save.room : homeOf(kind) === 'hall' ? save.hall : roomOf(save, which);
+  if (!room) return { why: 'no hall yet' };
   if (!f || f.fixed) return { why: 'not for sale' };
   if (kind === 'shelf' && shelvesOf(save.room) >= MAX_SHELVES) return { why: 'as many shelves as a shop can use' };
   const cost = costOf(save.room, kind);
@@ -170,6 +179,7 @@ export const turn = (save, id) => { const r = roomWith(save, id), it = r && r.it
 export function sellBack(save, id) {
   const room = roomWith(save, id), it = room && room.items.find(i => i.id === id), f = it && FURNITURE[it.kind];
   if (!it || f.fixed) return { why: 'it stays' };
+  if (FURNITURE[it.kind].places && room.shown && Object.keys(room.shown).some(k => k.startsWith(it.id + ':'))) return { why: 'take its pieces off first' };
   if (it.kind === 'shelf') {
     if (shelvesOf(save.room) <= 2) return { why: 'a shop keeps two shelves' };
     if (spotsOfShelf(save.room, id).some(i => save.shelf[i])) return { why: 'take the pieces off it first' };

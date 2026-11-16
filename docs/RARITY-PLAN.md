@@ -1,6 +1,6 @@
 # Rarity to Mythic: the full ladder for every station
 
-Status: milestones 11–14 built (releases 22–25); 15–18 planned. All eleven Relics are in. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
+Status: milestones 11–15 built (releases 22–26); 16–18 planned. All eleven Relics and the Hall are in. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
 This plan takes every station up the last two: **Relic** (named, one of a kind) and **Mythic** (the Nine).
 
 ## The ladder
@@ -169,3 +169,17 @@ Each milestone ends in a release, as before: rules and tests first, then the scr
   Deep.
 - **Sim (75 days, seeds 1–6):** the first Relic on day 31–63; a second in half the runs by day 40–74; renown 4,000–4,400 by day 75
   (OF THE REACH reached, ready for the trail of the Nine).
+
+## Milestone 15, as built (release 26)
+
+- **The Hall:** a third room, built from FURNISH once the shop is RENOWNED (25,000 c), seen in 3D from **THE HALL** beside the shop
+  front and the workshop. A stone floor, a door back to the shop.
+- **Its places:** it starts with four **plinths** (a new Blender model: stone, a fluted column, a red-cloth top with a bronze lip for one
+  card); more plinths (1,500 c) and **glass cases** of three (6,000 c); a long hall and a great hall (12,000 c, 30,000 c). Decor goes
+  in too.
+- **What it shows:** Old-Blood, Relics and Mythics, the maker's own, from the back room (THE SHOP › THE HALL, or a tap in 3D). A piece
+  shown is off the shelves and the wall, can't be broken down, and adds **renown** (Old-Blood 15, Relic 80, Mythic 200) and **charm**
+  (1, 3, 6).
+- **In links and flyers:** a visit shows **THEIR HALL**; a flyer can feature a Hall piece.
+- **Sim (75 days, seeds 1–4):** the Hall built on day 21–25, 8–16 pieces shown by day 75 (renown +120 to +370); **OF THE REACH 3–5
+  days sooner** (day 60–65 against 64–68 without it).
