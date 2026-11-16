@@ -2,22 +2,24 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RENOWN, OPENING, DEMAND } from './data.js?v=17';
-import { refreshTown, hotPatterns, demandOf, purseMultFor } from './town.js?v=17';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=17';
-import { charmGap } from './room.js?v=17';
-import { fame, purseMult, patienceOf, haggleMult, onWall, rung } from './growth.js?v=17';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RENOWN, OPENING, DEMAND } from './data.js?v=18';
+import { refreshTown, hotPatterns, demandOf, purseMultFor } from './town.js?v=18';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=18';
+import { charmGap } from './room.js?v=18';
+import { fame, purseMult, patienceOf, haggleMult, onWall, rung } from './growth.js?v=18';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
 
 // ---------- recipes ----------
-// what a pattern with these parts takes: the metal's bars, and one of each named material
-export function recipe(patternId, picks) {
+// what a pattern with these parts takes: the metal's bars, and one of each named material; a master's brew a second measure of
+// the herb and one more of its rare water
+export function recipe(patternId, picks, master = false) {
   const parts = chosenParts(patternId, picks), need = {};
   need[parts[0].id] = PATTERNS[patternId].bars;
   parts.slice(1).forEach(o => { if (o.mat) need[o.mat] = (need[o.mat] || 0) + 1; });
   if (PATTERNS[patternId].batch) need.bottle = (need.bottle || 0) + PATTERNS[patternId].batch;   // a batch takes a bottle each
+  if (master && PATTERNS[patternId].batch) { need[parts[0].id] += PATTERNS[patternId].bars; const w = parts[1]; if (w && w.mat) need[w.mat] = (need[w.mat] || 0) + 1; }
   return Object.entries(need).map(([mat, n]) => ({ mat, n }));
 }
 export const short = (mats, rec) => rec.filter(r => (mats[r.mat] || 0) < r.n).map(r => ({ ...r, have: mats[r.mat] || 0 }));
@@ -372,7 +374,7 @@ export function postOrder(save, rng, now) {
   const pattern = hot.length && rng() < 0.5 ? hot[Math.floor(rng() * hot.length)] : can[Math.floor(rng() * can.length)];
   let least = r.least != null ? r.least : (rng() < 0.35 ? 1 : 0);
   // a famed shop: now and then a regular asks for Old-Blood (only a piece that can be reworked that far)
-  if (rung(save) === RENOWN.length - 1 && !PATTERNS[pattern].batch && !PATTERNS[pattern].makes && rng() < 0.2) least = OLD_BLOOD.tier;
+  if (rung(save) === RENOWN.length - 1 && !PATTERNS[pattern].makes && rng() < 0.2) least = OLD_BLOOD.tier;   // a brew too: a master's brew fills it
   let metal = r.metal && metalIndex(pattern, r.metal) >= 0 ? r.metal : null;
   if (!metal && rng() < 0.3) { const ok = ['iron', 'bronze', 'steel'].filter(m => metalIndex(pattern, m) >= 0); metal = ok[Math.floor(rng() * ok.length)]; }
   save.order = { who: r.who, fig: r.fig, pattern, least, metal, line: r.line, posted: save.clock || 0,

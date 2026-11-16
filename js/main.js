@@ -1,17 +1,17 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=17';
-import * as R from './rules.js?v=17';
-import * as Sh from './shop.js?v=17';
-import * as St from './staff.js?v=17';
-import * as Rm from './room.js?v=17';
-import * as G from './growth.js?v=17';
-import { decodeCard, linkFor } from './share.js?v=17';
-import * as Snd from './sound.js?v=17';
-import * as Town from './town.js?v=17';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=17';
-import { card, ART } from './card.js?v=17';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=17';
-import { load, store as storeRaw, toCode, fromCode } from './save.js?v=17';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=18';
+import * as R from './rules.js?v=18';
+import * as Sh from './shop.js?v=18';
+import * as St from './staff.js?v=18';
+import * as Rm from './room.js?v=18';
+import * as G from './growth.js?v=18';
+import { decodeCard, linkFor } from './share.js?v=18';
+import * as Snd from './sound.js?v=18';
+import * as Town from './town.js?v=18';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=18';
+import { card, ART } from './card.js?v=18';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=18';
+import { load, store as storeRaw, toCode, fromCode } from './save.js?v=18';
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
 let replacing = false;
 const store = s => replacing ? false : storeRaw(s);
@@ -31,6 +31,7 @@ let screen = 'home';       // home | shop | supp | prepare | work
 let pat = 'falchion';      // the pattern on the bench
 let S = null;              // the working
 let rw = null;             // back in the fire: { id, from } of the piece on the anvil, or null for a new piece
+let master = false;        // a master's brew chosen at the kettle (rules.js masterBrewGate)
 let paused = false, lastStrike = 0, fresh = null, prevOdds = null;
 const view = { flash: 0, ring: 0, ringC: '#fff', sparks: [] };
 const timers = [];
@@ -168,7 +169,7 @@ function toHome() {
     return head + '<div class="setup"><b>Set up a ' + st.name.toLowerCase() + '</b><span>' + pats.map(([, p]) => p.trade.toLowerCase()).join(', ').replace(/^./, x => x.toUpperCase()) + ', from hides. ' + st.twist + '</span>'
       + '<button class="seg go" data-station="' + st.id + '"' + (save.coins < st.cost ? ' disabled' : '') + '>SET IT UP · ' + st.cost + ' c</button><span id="stNote-' + st.id + '"></span></div>';
   }).join('');
-  $('patterns').querySelectorAll('.pat').forEach(b => b.onclick = () => { rw = null; pat = b.dataset.p; toPrepare(); });
+  $('patterns').querySelectorAll('.pat').forEach(b => b.onclick = () => { rw = null; if (pat !== b.dataset.p) master = false; pat = b.dataset.p; toPrepare(); });
   $('patterns').querySelectorAll('[data-fp]').forEach(b => b.onclick = () => { if (Sh.forgePart(save, b.dataset.fp)) { store(save); Snd.play('GOOD'); toHome(); } });
   $('patterns').querySelectorAll('[data-station]').forEach(b => b.onclick = () => {
     const r = Rm.buyStation(save, b.dataset.station);
@@ -247,7 +248,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=17').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=18').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(shelfShown()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -688,7 +689,8 @@ function renderSupp() {
 function newWorking() {
   const n = R.slotsFor(lvl());
   save.chosen = save.chosen.filter(id => save.found.includes(id)).slice(0, n);
-  S = R.newWorking({ patternId: pat, picks: benchPicks().slice(), level: lvl(), found: save.chosen.slice(), kit: G.kitOf(save), rework: rw ? { from: rw.from } : null }, rng);
+  if (master && (rw || !R.masterBrewGate(pat, benchPicks(), lvl()).ok)) master = false;
+  S = R.newWorking({ patternId: pat, picks: benchPicks().slice(), level: lvl(), found: save.chosen.slice(), kit: G.kitOf(save), rework: rw ? { from: rw.from } : null, master }, rng);
 }
 function toPrepare() {
   clearTimers(); paused = false;
@@ -720,6 +722,14 @@ function pieceKv() {
       + '<span>' + stn().meter.replace('THE ', '') + '</span><b>narrower for a master: the band now ' + S.band[0] + '–' + S.band[1] + '. ' + stn().twist + '</b>'
       + '<span>White heat</span><b>after ' + OLD_BLOOD.whiteStreak + ' clean in a row (not 8): it holds off a crack for 4 s.</b>'
       + '<span>Walk away</span><b>the piece comes out as it was; the materials are spent</b>';
+    return;
+  }
+  if (!rw && S.master) {
+    $('pieceKv').innerHTML = '<span>A master\'s brew</span><b style="color:var(--t-oldblood)">not one boil-over, and WHITE HEAT reached: the batch comes out Old-Blood, no roll, three affixes.</b>'
+      + '<span>Fall short</span><b>a boil-over, no WHITE HEAT, or spilled: an ordinary brew, rolled as usual. The extra herb and water are spent.</b>'
+      + '<span>The boil</span><b>narrower for a master: the simmer now ' + S.band[0] + '–' + S.band[1] + '. ' + stn().twist + '</b>'
+      + '<span>White heat</span><b>after ' + OLD_BLOOD.whiteStreak + ' clean stirs in a row (not 8)</b>'
+      + '<span>Plain odds if it falls short</span><b><span style="color:var(--t-fine)">Fine ' + Math.round(o.f) + ' %</span> · <span style="color:var(--t-rare)">Rare ' + Math.round(o.r) + ' %</span></b>';
     return;
   }
   if (rw) {
@@ -761,6 +771,16 @@ function partSegs() {
     });
   });
   $('partLine').innerHTML = S.parts.filter(o => o.line).map(o => '<div><b>' + o.name + '</b> · ' + o.line + '</div>').join('');
+  // the kettle: a master's brew, toward Old-Blood
+  if (PATTERNS[pat].batch) {
+    const g = R.masterBrewGate(pat, picks(), l), row = document.createElement('div'); row.className = 'row master';
+    row.innerHTML = '<span style="color:var(--t-oldblood)">MASTER\'S BREW</span><div class="group"><button class="seg" aria-pressed="' + master + '"' + (g.ok ? '' : ' disabled') + '>'
+      + (master ? 'ON · TOWARD OLD-BLOOD' : 'OFF') + '</button></div>'
+      + '<p class="note">' + (g.ok ? 'Not one boil-over, and WHITE HEAT: the batch comes out Old-Blood. Fall short, and it\'s an ordinary brew. It takes a second measure of the herb and one more moonwell water.'
+        : 'A master\'s brew can come out Old-Blood. It needs ' + g.why.join(', ') + '.') + '</p>';
+    row.querySelector('button').onclick = () => { master = !master; newWorking(); partSegs(); renderPrep(); };
+    box.appendChild(row);
+  }
 }
 function oddsHtml(cn, tot, prev) {
   return KINDS.map(k => {
@@ -801,12 +821,12 @@ function renderPrep() {
 }
 
 // what this pattern with these parts takes, against the store room
-const rec = () => rw ? Sh.reworkCost(rwCard()) : Sh.recipe(pat, picks());
+const rec = () => rw ? Sh.reworkCost(rwCard()) : Sh.recipe(pat, picks(), master);
 function renderTakes() {
   const r = rec(), h = hour(), sh = Sh.short(save.mats, r), ok = !sh.length;
   $('takesWord').textContent = ok ? 'IN THE STORE ROOM' : 'SHORT';
   $('takes').innerHTML = r.map(x => { const have = save.mats[x.mat] || 0; return '<li><b>' + MATS[x.mat].name + ' × ' + x.n + '</b><em class="' + (have >= x.n ? 'ok' : 'short') + '">have ' + have + '</em></li>'; }).join('');
-  $('makeIt').disabled = !ok && !rw; $('workIt').disabled = !ok;
+  $('makeIt').disabled = (!ok || master) && !rw; $('workIt').disabled = !ok;
   $('takesCard').style.borderColor = ok ? '' : 'var(--blood)';
   if (ok) { $('takesBtns').innerHTML = '<span class="small" style="color:var(--bone-faint)">Taken when you begin. Walk away from a working and they\'re spent.</span>'; return; }
   const gone = sh.filter(x => !Sh.sells(x.mat, h));
@@ -996,7 +1016,10 @@ function complete(res, picked) {
   $('rPick').hidden = true; $('rDone').hidden = false;
   $('rCard').innerHTML = yields ? '<div class="yield"><div class="tier" style="color:' + TIERC[res.tier] + '">' + TIERS[res.tier].name.toUpperCase() + ' BLOWING</div><div class="cd-art">' + ART.draught('#cfe8e8') + '</div><h3>' + yields.n + ' bottles</h3><p>Into the store room for the kettle. You have ' + save.mats[yields.mat] + '.</p></div>' : card(piece);
   if (res.oldBlood && !res.failed) { $('rCard').insertAdjacentHTML('afterbegin', '<div class="oldword">OLD-BLOOD · ' + esc(piece.name.toUpperCase()) + '</div>'); Snd.play('level'); }
-  $('rLine').innerHTML = res.oldBlood ? (res.failed ? (res.dropped ? 'Dropped. ' : 'A crack in the last working. ') + 'It wouldn\'t take Old-Blood: it stays Rare, and the materials are spent.' : 'It took. Rare to Old-Blood: a master\'s piece.')
+  const short = { boiled: 'it boiled over', nowhite: 'no WHITE HEAT', dropped: 'it spilled' }[res.masterShort];
+  $('rLine').innerHTML = res.master ? 'A master\'s brew: not one boil-over, WHITE HEAT. Old-Blood, three bottles of it.'
+    : short ? 'Short of a master\'s brew (' + short + '): an ordinary batch. WORKED +' + res.worked + ' % · it had Fine ' + Math.round(res.odds.f) + ' % · Rare ' + Math.round(res.odds.r) + ' %'
+    : res.oldBlood ? (res.failed ? (res.dropped ? 'Dropped. ' : 'A crack in the last working. ') + 'It wouldn\'t take Old-Blood: it stays Rare, and the materials are spent.' : 'It took. Rare to Old-Blood: a master\'s piece.')
     : res.rework ? (res.dropped ? 'A second crack after it took. It came out ' + TIERS[res.tier].name + (res.flawed ? ', flawed.' : '.') : 'It took. ' + TIERS[res.from].name + ' to ' + TIERS[res.tier].name + '.')
     : res.instant ? 'Made at once at the plain odds: Fine ' + res.odds.f + ' % · Rare ' + res.odds.r + ' %.'
     : res.dropped ? (res.flawed ? 'A second crack after it was made. It holds together, flawed, and is worth less.' : 'A second crack after it was made dropped it a tier.')

@@ -61,14 +61,58 @@ test('the last rework: a narrower band, WHITE HEAT later, and not one crack, or 
   const back = decodeCard(encodeCard(ob)); assert.ok(back); assert.equal(back.tier, 'oldblood');
 });
 
-test('a famed shop is sometimes asked for Old-Blood, never for a brew', () => {
+test('a famed shop is sometimes asked for Old-Blood (a brew too, a master\'s), never for bottles', () => {
   let asked = 0;
   for (let i = 0; i < 400; i++) {
     const save = { renown: 999, wall: [], cards: [], stations: ['kettle', 'stretcher', 'bowbench', 'glass'], ledger: [], clock: 0 };
     Sh.postOrder(save, seeded(i), 0);
-    if (save.order.least === OLD_BLOOD.tier) { asked++; assert.ok(!PATTERNS[save.order.pattern].batch && !PATTERNS[save.order.pattern].makes); assert.match(Sh.orderWord(save.order), /^Old-Blood or better/); }
+    if (save.order.least === OLD_BLOOD.tier) { asked++; assert.ok(!PATTERNS[save.order.pattern].makes); assert.match(Sh.orderWord(save.order), /^Old-Blood or better/); }
   }
   assert.ok(asked > 20 && asked < 200, asked + ' of 400');
   const plain = { renown: 0, wall: [], cards: [], stations: [], ledger: [], clock: 0 };
   for (let i = 0; i < 100; i++) { Sh.postOrder(plain, seeded(i), 0); assert.ok(plain.order.least < OLD_BLOOD.tier); }
+});
+
+// ---------- the kettle: a master's brew ----------
+const MOON = [0, 2, 0];   // mending herb, moonwell water (✶), honey
+const brewing = (o = {}) => R.newWorking({ patternId: 'draught', picks: MOON, level: 6, found: [], kit: {}, master: true, ...o }, seeded(2));
+
+test('a master\'s brew: trade 6 and moonwell water, brews only; an ordinary brew never comes out Old-Blood', () => {
+  assert.ok(R.masterBrewGate('draught', MOON, 6).ok);
+  assert.match(R.masterBrewGate('draught', MOON, 5).why.join(), /trade 6/);
+  assert.match(R.masterBrewGate('draught', [0, 0, 0], 9).why.join(), /moonwell/);
+  assert.ok(!R.masterBrewGate('falchion', [0, 2, 0], 9).ok); assert.ok(!R.masterBrewGate('bottles', [0, 0, 0], 9).ok, 'bottles stop at Rare');
+  assert.ok(!brewing({ level: 5 }).master, 'the switch does nothing without the gate');
+  const rng = seeded(8);
+  for (let i = 0; i < 1500; i++) {
+    const S = R.newWorking({ patternId: 'draught', picks: MOON, level: 10, found: [], kit: {} }, rng);
+    S.shape = 100; S.worked = 200; S.whiteHeat = S.earned = true;
+    assert.ok(R.finish(S, 'quench').tier <= 2);
+  }
+});
+
+test('a master\'s brew: a narrower simmer, WHITE HEAT later; not one boil-over and WHITE HEAT, or an ordinary batch', () => {
+  const plain = R.newWorking({ patternId: 'draught', picks: MOON, level: 6, found: [], kit: {} }, seeded(2)), M = brewing();
+  assert.ok(M.master && !M.oldBlood); assert.ok(M.band[1] - M.band[0] < plain.band[1] - plain.band[0]); assert.equal(M.whiteStreak, 12);
+  M.shape = 100; M.whiteHeat = M.earned = true;
+  const ok = R.finish(M, 'quench'); assert.equal(ok.tier, 3); assert.ok(ok.master && ok.oldBlood);
+  const batch = R.makePiece({ patternId: 'draught', picks: MOON, result: ok, picked: null, maker: 'T', rng: seeded(1), now: 1 });
+  assert.equal(batch.tier, 'oldblood'); assert.equal(batch.count, 3); assert.equal(batch.lore, PATTERNS.draught.lore[3]);
+  const boiled = brewing(); boiled.shape = 100; boiled.whiteHeat = true; boiled.boils = 1;
+  const b = R.finish(boiled, 'quench'); assert.ok(b.tier <= 2); assert.equal(b.masterShort, 'boiled');
+  const cold = brewing(); cold.shape = 100;
+  const c = R.finish(cold, 'quench'); assert.ok(c.tier <= 2); assert.equal(c.masterShort, 'nowhite');
+  const spilt = brewing(); spilt.whiteHeat = true; assert.equal(R.finish(spilt, 'dropped').masterShort, 'dropped');
+  // a boil-over is counted as it happens
+  const live = brewing(); R.begin(live); live.meter = 99; R.strike(live); assert.equal(live.boils, 1);
+});
+
+test('a master\'s brew takes a second measure of the herb and one more moonwell water; a famed order for one is filled by it', () => {
+  const plain = Sh.recipe('draught', MOON), more = Sh.recipe('draught', MOON, true), n = (rec, m) => (rec.find(r => r.mat === m) || {}).n || 0;
+  assert.equal(n(more, 'mending'), n(plain, 'mending') + PATTERNS.draught.bars); assert.equal(n(more, 'moonwater'), n(plain, 'moonwater') + 1);
+  assert.equal(n(more, 'bottle'), n(plain, 'bottle'));
+  assert.deepEqual(Sh.recipe('falchion', [0, 0, 0], true), Sh.recipe('falchion', [0, 0, 0]), 'only brews');
+  const M = brewing(); M.shape = 100; M.whiteHeat = true;
+  const batch = R.makePiece({ patternId: 'draught', picks: MOON, result: R.finish(M, 'quench'), picked: null, maker: 'T', rng: seeded(1), now: 1 });
+  assert.ok(Sh.fills({ pattern: 'draught', least: OLD_BLOOD.tier, metal: null }, batch));
 });

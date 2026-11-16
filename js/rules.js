@@ -1,6 +1,6 @@
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD } from './data.js?v=17';
+import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD } from './data.js?v=18';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -92,13 +92,14 @@ export function newWorking(cfg, rng) {
   let band = b0;
   if (kit.widen && kit.widen !== 1) { const mid = (b0[0] + b0[1]) / 2, half = (b0[1] - b0[0]) / 2 * kit.widen; band = [Math.max(0, Math.round(mid - half)), Math.min(100, Math.round(mid + half))]; }
   // the last rework, toward Old-Blood: the band narrower about its middle, WHITE HEAT later
-  const old = !!(cfg.rework && reworkTo(cfg.rework.from) === OLD_BLOOD.tier);
+  const master = !!(cfg.master && !cfg.rework && masterBrewGate(cfg.patternId, cfg.picks, cfg.level).ok);
+  const old = !!(cfg.rework && reworkTo(cfg.rework.from) === OLD_BLOOD.tier) || master;
   if (old) { const mid = (band[0] + band[1]) / 2, half = (band[1] - band[0]) / 2 * OLD_BLOOD.band; band = [Math.round(mid - half), Math.round(mid + half)]; }
   const S = { cfg, parts, metal, level: cfg.level, rng, station: st,
     band, cool: st.cool * (metal.coolX || 1) * (kit.coolX || 1), drain: st.drain, rise: st.rise, over: st.over,
     phase: 'prepare', meter: st.start || 30, inFire: false, shape: 0, worked: 0, cracks: 0, notches: [], crackMarks: [],
     streak: 0, white: 0, whiteHeat: false, earned: false, scaled: 0, overT: 0, strikes: 0, heats: 1, done: false, dropped: false,
-    twin: false, warden: false, frost: false, rack: [], lines: [], heatLines: [], slipN: 0, oldBlood: old, whiteStreak: old ? OLD_BLOOD.whiteStreak : 0 };
+    twin: false, warden: false, frost: false, rack: [], lines: [], heatLines: [], slipN: 0, oldBlood: old && !master, master, boils: 0, whiteStreak: old ? OLD_BLOOD.whiteStreak : 0 };
   deal(S);
   return S;
 }
@@ -138,7 +139,7 @@ export function strike(S) {
   // the kettle: the first stir starts it settling; over the band it boils over (a CRACK from trade 3) and the boil drops
   S.stirred = true;
   const boiled = st.boilOver && m > hi;
-  if (boiled) { if (S.level >= 3) slipIn(S, 'CRACK', 'BOIL', 'Boiled over (stir ' + S.strikes + ')'); S.meter = Math.max(0, S.meter - st.boilOver); }
+  if (boiled) { S.boils++; if (S.level >= 3) slipIn(S, 'CRACK', 'BOIL', 'Boiled over (stir ' + S.strikes + ')' + (S.master ? ': no master\'s brew now' : '')); S.meter = Math.max(0, S.meter - st.boilOver); }
   if (!left(S).length) { deal(S); pop({ label: 'SHUFFLED', gain: 'THE STRIP RAN OUT · EVERY TILE BACK IN', size: 'bigpop', colour: KC.FOUND }); }
   let tk = S.rack.find(x => !x.up);
   if (S.shatterNext) {   // it shattered: this tile is a CRACK (a found tile there swaps places with the first plain one after it)
@@ -245,6 +246,16 @@ export const PLAIN_ODDS = { f: 20, r: 5 };
 // A second crack after it took: a tier down (a Common piece stays Common, flawed). A rework teaches, but turns up no found tile.
 // The last rework, Rare to Old-Blood, takes only with not one crack; else it stays Rare (never lower), the materials spent.
 export const reworkTo = from => Math.min(TIERS.length - 1, from + 1);
+// a master's brew: the kettle's road to Old-Blood, chosen before the working (a batch can't go back on the fire). A master of the
+// brew, moonwell water in the pot; it must finish with not one boil-over and WHITE HEAT reached, or it's an ordinary brew.
+export function masterBrewGate(patternId, picks, level) {
+  const p = PATTERNS[patternId];
+  if (!p || !p.batch) return { ok: false, why: ['only the kettle\'s brews'] };
+  const why = [];
+  if (level < OLD_BLOOD.level) why.push('trade ' + OLD_BLOOD.level + ' in ' + p.trade.toLowerCase());
+  if (!((chosenParts(patternId, picks || [])[1] || {}).rare)) why.push('moonwell water in the pot');
+  return { ok: !why.length, why };
+}
 // can this piece go toward Old-Blood at this trade level? { ok, why: [what's missing] }
 export function oldBloodGate(card, level) {
   const p = PATTERNS[card.pattern], why = [];
@@ -272,6 +283,12 @@ export function finish(S, how) {
       cracks: S.cracks, whiteHeat: S.whiteHeat, earned: S.earned && !dropped, clean: false, frost: S.frost };
   }
   const instant = how === 'instant', dropped = how === 'dropped';
+  // a master's brew that made it: Old-Blood, no roll
+  if (S.master && !instant && !dropped && S.boils === 0 && S.whiteHeat) {
+    S.dropped = false;
+    return { tier: OLD_BLOOD.tier, master: true, oldBlood: true, flawed: false, dropped: false, instant: false, odds: odds(S), worked: Math.round(S.worked), strikes: S.strikes,
+      heats: S.heats, cracks: S.cracks, whiteHeat: true, earned: S.earned, clean: S.cracks === 0 || S.earned, frost: S.frost };
+  }
   const o = instant ? { f: PLAIN_ODDS.f, r: PLAIN_ODDS.r } : odds(S);
   const roll = S.rng() * 100;
   let tier = roll < o.r ? 2 : roll < o.r + o.f ? 1 : 0, flawed = false;
@@ -281,7 +298,8 @@ export function finish(S, how) {
   // a successful working turns up a found tile: Fine or better and no crack, or WHITE HEAT reached
   const clean = !instant && !dropped && tier >= 1 && (S.cracks === 0 || S.earned);
   return { tier, flawed, dropped, instant, odds: o, worked: instant ? 0 : Math.round(S.worked), strikes: S.strikes, heats: S.heats, cracks: S.cracks,
-    whiteHeat: !instant && S.whiteHeat, earned, clean, frost: !instant && S.frost };
+    whiteHeat: !instant && S.whiteHeat, earned, clean, frost: !instant && S.frost,
+    masterShort: S.master && !instant ? (dropped ? 'dropped' : S.boils ? 'boiled' : 'nowhite') : undefined };
 }
 
 // ---------- affixes ----------

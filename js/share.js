@@ -1,7 +1,7 @@
 // A card as a link: the piece's own data packed into the address after #card=. Nothing is sent anywhere.
 // A link comes from someone else's browser: everything in it is checked and rebuilt before it's shown.
-import { TIERS, PATTERNS } from './data.js?v=17';
-import { ART } from './card.js?v=17';
+import { TIERS, PATTERNS } from './data.js?v=18';
+import { ART } from './card.js?v=18';
 
 const FIELDS = ['tier', 'name', 'kind', 'art', 'tint', 'dice', 'stats', 'affixes', 'made', 'lore', 'worth', 'pattern', 'maker'];
 function toB64url(bytes) { let s = ''; bytes.forEach(b => { s += String.fromCharCode(b); }); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
