@@ -18,7 +18,7 @@ export const TIERS = [
   { id: 'mythic', name: 'Mythic', c: '#e4505e', glow: .85, mult: 1.7, worth: 50, affixes: 3, foil: true },
 ];
 // THE NINE (docs/RARITY-PLAN.md): each a Relic reforged with its shard of Veric and parts from three other stations. shard: where its
-// shard is found once the trail is open (OF THE REACH) and its Relic is made: below the deep doors, a Court order, or a fallen star.
+// shard is found once the trail is open (OF THE REACH): below the deep doors, a Court order, or a fallen star.
 export const MYTHICS = {
   vericsedge: { name: 'Veric\'s Edge', relic: 'gatewarden', shard: 'court', parts: [['glass', 'a starglass edge'], ['kettle', 'a moonwell quench'], ['stretcher', 'a wyrm-hide grip']],
     powers: [['Holds the line', 'a parry breaks a charge'], ['Cuts the dark', 'it shines where there is no light'], ['Never dulls', 'it has never needed a stone']], lore: 'The first of the Nine, carried by Veric at the gate of the world.' },

@@ -48,3 +48,8 @@ holds blueprints for and keeps their Old-Blood back; `CHASE=0` for the old bot).
 
 The plan's target (the first Relic in about four weeks, all Nine in about three months) is met for the first Relic in some runs and
 not for the Nine. See docs/RARITY-PLAN.md, milestone 18, for why and what would change it.
+
+## Release 37: every clue at OF THE REACH
+
+All 9 shards and 27 parts by day 150 in every run (seeds 1–6); 3–6 of the Nine by day 150, the first on day 52–101. The Relics (5–8 of
+11 by day 150) are what's slow now.

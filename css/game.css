@@ -564,3 +564,31 @@ h1, .tname, .screenbar .t { font-family: var(--carve); font-weight: 900; letter-
 .ninelist { list-style: none; padding: 0; margin: 14px 0 4px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; }
 .ninelist li { font: 700 13px var(--carve); color: var(--t-mythic); border-left: 3px solid var(--t-mythic); background: rgba(228,80,94,.07); padding: 6px 8px; text-align: left; }
 #trailWord .seg { margin-left: 6px; }
+
+/* ---------- the cards, forged to match: iron corner caps riveted over the rarity frame, carved names, a stone-cut art panel ---------- */
+.cd { border-radius: .3em; }
+.cd::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 3;
+  --cap: 1.5em; --plate: #4a4642; --edge: #9a948c;
+  background:
+    radial-gradient(circle at .46em .46em, #c4bab0 0 .1em, #6d6660 .16em, #1d1a18 .24em, transparent .27em) 0 0 / var(--cap) var(--cap) no-repeat,
+    radial-gradient(circle at calc(100% - .46em) .46em, #c4bab0 0 .1em, #6d6660 .16em, #1d1a18 .24em, transparent .27em) 100% 0 / var(--cap) var(--cap) no-repeat,
+    radial-gradient(circle at .46em calc(100% - .46em), #c4bab0 0 .1em, #6d6660 .16em, #1d1a18 .24em, transparent .27em) 0 100% / var(--cap) var(--cap) no-repeat,
+    radial-gradient(circle at calc(100% - .46em) calc(100% - .46em), #c4bab0 0 .1em, #6d6660 .16em, #1d1a18 .24em, transparent .27em) 100% 100% / var(--cap) var(--cap) no-repeat,
+    linear-gradient(135deg, var(--plate) 0 calc(50% - 1.5px), var(--edge) calc(50% - 1.5px) 50%, transparent 50%) 0 0 / var(--cap) var(--cap) no-repeat,
+    linear-gradient(225deg, var(--plate) 0 calc(50% - 1.5px), var(--edge) calc(50% - 1.5px) 50%, transparent 50%) 100% 0 / var(--cap) var(--cap) no-repeat,
+    linear-gradient(45deg, var(--plate) 0 calc(50% - 1.5px), var(--edge) calc(50% - 1.5px) 50%, transparent 50%) 0 100% / var(--cap) var(--cap) no-repeat,
+    linear-gradient(315deg, var(--plate) 0 calc(50% - 1.5px), var(--edge) calc(50% - 1.5px) 50%, transparent 50%) 100% 100% / var(--cap) var(--cap) no-repeat; }
+.cd-short::after { --cap: 1.2em; }
+.cd-in { border-radius: .15em; border: 2px solid rgba(0,0,0,.7); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tc) 35%, transparent); }
+.cd-tier { font-family: var(--carve); font-weight: 900; letter-spacing: .14em; }
+.cd-name { font-family: var(--carve); font-weight: 800; font-size: 1.65em; letter-spacing: .01em; line-height: 1.1; }
+.cd-short .cd-name { font-size: 1.28em; min-height: 2.3em; }
+.cd-art { border-radius: 0; border: 0; outline: 0; margin: 4px 0;
+  box-shadow: inset 0 0 0 2px #24170d, inset 0 0 0 3px color-mix(in srgb, var(--tc) 55%, transparent), inset 0 10px 18px rgba(0,0,0,.45);
+  clip-path: polygon(.6em 0, calc(100% - .6em) 0, 100% .6em, 100% calc(100% - .6em), calc(100% - .6em) 100%, .6em 100%, 0 calc(100% - .6em), 0 .6em); }
+.cd-dice { border-radius: 0; clip-path: polygon(.25em 0, calc(100% - .25em) 0, 100% .25em, 100% calc(100% - .25em), calc(100% - .25em) 100%, .25em 100%, 0 calc(100% - .25em), 0 .25em); }
+.cd-sec { font-family: var(--carve); font-weight: 900; letter-spacing: .16em; }
+.cd-worth b, .cd-price { font-family: var(--carve); font-weight: 900; }
+/* the strip's tiles: a carved edge on the fired clay */
+.tile { box-shadow: inset 0 -3px 0 rgba(0,0,0,.35), inset 0 2px 0 rgba(255,230,200,.3), inset 0 0 0 1px rgba(60,30,10,.45), inset 0 0 0 3px rgba(255,236,210,.08), 0 2px 0 #000; }
+.cd-art .cd-dice { right: .75em; top: .5em; } .cd-art .cd-count { left: .75em; right: auto; }

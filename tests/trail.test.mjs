@@ -29,12 +29,14 @@ test('the Mythic tier and the Nine: red, after the Relic; nine of them, each fro
   assert.deepEqual(decodeCard(encodeCard(c)).powers, MYTHICS.vericsedge.powers);
 });
 
-test('the trail: closed until OF THE REACH; a clue opens with its Relic made', () => {
+test('the trail: closed until OF THE REACH; then every clue is open, Relic made or not', () => {
   assert.ok(!Trail.open(reach({ renown: 2000 }))); assert.ok(Trail.open(reach()));
-  const s = reach({ relicsMade: ['gatewarden'] });
-  const cl = Trail.clues(s); assert.equal(cl.filter(c => c.open).length, 1); assert.equal(cl.find(c => c.open).id, 'vericsedge');
-  assert.deepEqual(Trail.pending(s, 'court'), ['vericsedge']); assert.deepEqual(Trail.pending(s, 'deep'), []);
-  assert.ok(Trail.give(s, 'vericsedge')); assert.ok(!Trail.give(s, 'vericsedge'), 'one shard each'); assert.deepEqual(Trail.pending(s, 'court'), []);
+  assert.equal(Trail.clues(reach({ renown: 2000 })).filter(c => c.open).length, 0);
+  const s = reach({ relicsMade: [] });
+  const cl = Trail.clues(s); assert.equal(cl.filter(c => c.open).length, 9);
+  const court = Object.keys(MYTHICS).filter(k => MYTHICS[k].shard === 'court');
+  assert.deepEqual(Trail.pending(s, 'court'), court);
+  assert.ok(Trail.give(s, 'vericsedge')); assert.ok(!Trail.give(s, 'vericsedge'), 'one shard each'); assert.ok(!Trail.pending(s, 'court').includes('vericsedge'));
 });
 
 test('shards: below the deep doors now and then; the Court\'s orders; the fallen star, once on its day', () => {

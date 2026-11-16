@@ -1,26 +1,26 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE } from './data.js?v=36';
-import * as R from './rules.js?v=36';
-import * as Sh from './shop.js?v=36';
-import * as St from './staff.js?v=36';
-import * as Rm from './room.js?v=36';
-import * as G from './growth.js?v=36';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=36';
-import * as Snd from './sound.js?v=36';
-import * as Town from './town.js?v=36';
-import * as V from './visit.js?v=36';
-import * as Br from './branch.js?v=36';
-import * as Hl from './hall.js?v=36';
-import * as Trail from './trail.js?v=36';
-import { ICONS, emblem, watch } from './icons.js?v=36';
-import { drawFlyer, flyerBlob } from './flyer.js?v=36';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=36';
-import { card, ART } from './card.js?v=36';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=36';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=36';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE } from './data.js?v=37';
+import * as R from './rules.js?v=37';
+import * as Sh from './shop.js?v=37';
+import * as St from './staff.js?v=37';
+import * as Rm from './room.js?v=37';
+import * as G from './growth.js?v=37';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=37';
+import * as Snd from './sound.js?v=37';
+import * as Town from './town.js?v=37';
+import * as V from './visit.js?v=37';
+import * as Br from './branch.js?v=37';
+import * as Hl from './hall.js?v=37';
+import * as Trail from './trail.js?v=37';
+import { ICONS, emblem, watch } from './icons.js?v=37';
+import { drawFlyer, flyerBlob } from './flyer.js?v=37';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=37';
+import { card, ART } from './card.js?v=37';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=37';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=37';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 36;
+const VERSION = 37;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayFORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -273,7 +273,7 @@ function renderTrail() {
   nineMarks();
   if (G.isNine(save)) { $('trailWord').innerHTML = 'All Nine are made, and every one carries your mark. You are the Maker of the Nine. <button class="seg" id="endAgain">READ THE ENDING AGAIN</button>'; $('endAgain').onclick = showEnding; }
   else $('trailWord').textContent = !Trail.open(save) ? 'The Nine of Veric: nine pieces of legend, each a Relic reforged. The trail opens when the shop is ' + RENOWN[TRAIL.rung].word + '.'
-    : found + ' of 9 shards of Veric found. A Mythic\'s shard can be found once you\'ve made its Relic.';
+    : found + ' of 9 shards of Veric found. Every shard can be looked for now; a Mythic is worked on its Relic, once all three parts are made.';
   $('trail').innerHTML = cl.map(c => {
     const m = MYTHICS[c.id], r = RELICS[c.relic];
     if ((save.mythicsMade || []).includes(c.id)) return '<div class="fi have"><b style="color:var(--t-mythic)">' + esc(m.name) + '</b><span>Made: one of the Nine, and yours.</span></div>';
@@ -281,8 +281,8 @@ function renderTrail() {
       + m.parts.map((p, i) => { const g = Trail.partGate(save, c.id, i); return Trail.hasPart(save, c.id, i) ? '<span>✓ ' + esc(p[1]) + ' (the ' + p[0] + ')</span>'
         : '<button class="seg" data-part="' + c.id + ':' + i + '"' + (g.ok ? '' : ' disabled') + '>' + esc(p[1].toUpperCase()) + ' · AT THE ' + p[0].toUpperCase() + '</button>' + (g.ok ? '' : '<span>Needs ' + g.why.join(', ') + '.</span>'); }).join('')
       + (Trail.partsDone(save, c.id) ? '<span>All three made: the Mythic working waits on ' + esc(r.name) + ', from the back room.</span>' : '') + '</div>';
-    if (!c.open) return '<div class="fi unknown"><b>' + esc(m.name) + '</b><span>' + (Trail.open(save) ? 'Make ' + esc(r.name) + ' first; then its clue opens.' : 'Grows from ' + esc(r.name) + '.') + '</span></div>';
-    return '<div class="fi"><b style="color:var(--t-mythic)">' + esc(m.name) + '</b><span>A clue: its shard lies with ' + SHARD_WHERE[c.source] + '.</span></div>';
+    if (!c.open) return '<div class="fi unknown"><b>' + esc(m.name) + '</b><span>Grows from ' + esc(r.name) + '.</span></div>';
+    return '<div class="fi"><b style="color:var(--t-mythic)">' + esc(m.name) + '</b><span>A clue: its shard lies with ' + SHARD_WHERE[c.source] + '. It grows from ' + esc(r.name) + ((save.relicsMade || []).includes(c.relic) ? ', which you\'ve made' : ', not made yet') + '.</span></div>';
   }).join('');
   $('trail').querySelectorAll('[data-part]').forEach(b => b.onclick = () => { const [id, i] = b.dataset.part.split(':'); partStart(id, +i); });
 }
@@ -326,7 +326,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=36').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=37').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -792,7 +792,8 @@ function backOpen(id) {
   const c = c0, free = save.shelf.findIndex(e => !e);
   const sv = Sh.salvageOf(c), cost = Sh.reworkCost(c), canRw = Sh.canRework(save, c) && Rm.owns(save, R.stationOf(c.pattern).id), haveRw = Sh.canMake(save.mats, cost);
   const toTier = TIERS[R.reworkTo(TIERS.findIndex(t => t.id === c.tier))];
-  let acts = free >= 0 ? '<button class="seg go" id="putUp">PUT IT ON THE SHELF · FAIR ' + Sh.priceAt(c, 'fair') + ' c</button>' : '<p>The shelf is full. Take something down, or buy another shelf.</p>';
+  let acts = c.tier === 'mythic' ? '<p>One of the Nine isn\'t for ordinary buyers: the Court asks for it, once. Show it in the Hall, or hang it.</p>'
+    : free >= 0 ? '<button class="seg go" id="putUp">PUT IT ON THE SHELF · FAIR ' + Sh.priceAt(c, 'fair') + ' c</button>' : '<p>The shelf is full. Take something down, or buy another shelf.</p>';
   acts += (save.wall || []).length < G.wallSlots(save) ? '<button class="seg" id="hangIt">HANG IT ON THE WALL</button>' : '';
   if (save.order && Sh.fills(save.order, c)) acts += '<button class="seg go" id="deliverIt">DELIVER TO ' + esc(save.order.who.toUpperCase()) + ' · ' + save.order.pays + ' c</button>';
   acts += '<div class="row2">'
@@ -803,7 +804,7 @@ function backOpen(id) {
     + relicActs(c);
   openLook(card(c), acts, false, c);
   if ($('hangIt')) $('hangIt').onclick = () => { if (G.hang(save, id)) { store(save); $('look').hidden = true; renderShop(); } };
-  if (free >= 0) $('putUp').onclick = () => { Sh.place(save, id, free); store(save); $('look').hidden = true; renderShop(); };
+  if ($('putUp')) $('putUp').onclick = () => { Sh.place(save, id, free); store(save); $('look').hidden = true; renderShop(); };
   if ($('deliverIt')) $('deliverIt').onclick = () => { const o = save.order; { const e = Sh.deliver(save, id, Date.now()); if (e) { store(save); coins(); $('look').hidden = true; renderShop(); filledToast(o, e); } } };
   if ($('reworkIt')) $('reworkIt').onclick = () => toRework(id);
   const rb = $('lookActs').querySelector('[data-relic]'); if (rb) rb.onclick = () => toRelic(id, rb.dataset.relic);
@@ -1492,7 +1493,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=36').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=37').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -1571,7 +1572,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=36').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=37').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }

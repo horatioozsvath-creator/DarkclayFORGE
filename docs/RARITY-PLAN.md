@@ -233,3 +233,11 @@ Each milestone ends in a release, as before: rules and tests first, then the scr
   further did little: shards keep pace with Relics; the tail is each Relic's chain (trade 6 in its own pattern, a Rare, the Old-Blood
   rework, then the Relic working), and the sim's success rates for the workings are fixed guesses. Faster would need a structural change,
   for example every clue open OF THE REACH (shards and parts gathered alongside the Relics), or a Relic piece that needn't be Old-Blood.
+
+## Release 37: every clue at OF THE REACH
+
+- **Every clue of the Nine opens with the trail** (OF THE REACH), not after its Relic, so shards and parts are gathered alongside the
+  Relics. The Mythic working still waits on its Relic. The trail lists each Mythic's Relic and whether it's made.
+- **Sim (150 days, seeds 1–6):** all 9 shards and all 27 parts by day 150 in every run; the first Mythic on day 52–101; **3–6 of the
+  Nine by day 150** (was 3–5). The Relics are the bottleneck now (5–8 of 11 by day 150): each needs trade 6 in its own pattern and an
+  Old-Blood piece. Letting a Relic be worked from a Rare would be the next lever.
