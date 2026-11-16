@@ -3,12 +3,12 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS } from './data.js?v=33';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf } from './town.js?v=33';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=33';
-import { charmGap, placeGift } from './room.js?v=33';
-import * as Trail from './trail.js?v=33';
-import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=33';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS } from './data.js?v=34';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf } from './town.js?v=34';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=34';
+import { charmGap, placeGift } from './room.js?v=34';
+import * as Trail from './trail.js?v=34';
+import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=34';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -86,6 +86,17 @@ export function place(save, id, slot, tag = 'fair') {
   return slot;
 }
 export function takeDown(save, slot) { save.shelf[slot] = null; }
+// what "fill the shelves" leaves in the back: one-of-a-kind pieces (Relics, Mythics), and an Old-Blood piece ready to become a Relic
+export const keepBack = (save, c) => c.tier === 'relic' || c.tier === 'mythic' || relicFor(save, c).ok;
+// every empty place filled from the back room, best piece first, at the tag given; returns the cards put up
+export function fillShelf(save, tag = 'fair') {
+  const put = [];
+  for (const c of inBack(save).filter(c => !keepBack(save, c)).sort((a, b) => b.worth - a.worth)) {
+    if (!save.shelf.some(e => !e)) break;
+    if (place(save, c.id, null, tag) >= 0) put.push(c);
+  }
+  return put;
+}
 export function setTag(save, slot, tag) { if (save.shelf[slot] && TAGS[tag]) save.shelf[slot].tag = tag; }
 export const nextSlotCost = save => SLOT_COSTS[save.slots - START_SLOTS];
 export function buySlot(save) {

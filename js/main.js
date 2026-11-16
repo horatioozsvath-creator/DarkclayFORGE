@@ -1,26 +1,26 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=33';
-import * as R from './rules.js?v=33';
-import * as Sh from './shop.js?v=33';
-import * as St from './staff.js?v=33';
-import * as Rm from './room.js?v=33';
-import * as G from './growth.js?v=33';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=33';
-import * as Snd from './sound.js?v=33';
-import * as Town from './town.js?v=33';
-import * as V from './visit.js?v=33';
-import * as Br from './branch.js?v=33';
-import * as Hl from './hall.js?v=33';
-import * as Trail from './trail.js?v=33';
-import { ICONS, emblem, watch } from './icons.js?v=33';
-import { drawFlyer, flyerBlob } from './flyer.js?v=33';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=33';
-import { card, ART } from './card.js?v=33';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=33';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=33';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=34';
+import * as R from './rules.js?v=34';
+import * as Sh from './shop.js?v=34';
+import * as St from './staff.js?v=34';
+import * as Rm from './room.js?v=34';
+import * as G from './growth.js?v=34';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=34';
+import * as Snd from './sound.js?v=34';
+import * as Town from './town.js?v=34';
+import * as V from './visit.js?v=34';
+import * as Br from './branch.js?v=34';
+import * as Hl from './hall.js?v=34';
+import * as Trail from './trail.js?v=34';
+import { ICONS, emblem, watch } from './icons.js?v=34';
+import { drawFlyer, flyerBlob } from './flyer.js?v=34';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=34';
+import { card, ART } from './card.js?v=34';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=34';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=34';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 33;
+const VERSION = 34;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayFORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -306,7 +306,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=33').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=34').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -628,6 +628,7 @@ function renderShop() {
       + card(c, { short: true, price: Sh.priceAt(c, e.tag) + ' c<span class="tagword">' + TAGS[e.tag].word + '</span>' }) + '</button>';
   }).join('');
   $('slots2').querySelectorAll('button').forEach(b => b.onclick = () => slotOpen(+b.dataset.slot));
+  fillBtn($('fillShelf'), save);
   renderShelfUps();
   const cost = Rm.shelfCost(save.room);
   $('buySlot').hidden = cost == null;
@@ -665,6 +666,13 @@ function renderShelfUps() {
   }).join('') + (shelfNote ? '<p class="note">' + esc(shelfNote) + '</p>' : '');
   $('shelfUps').querySelectorAll('[data-upshelf]').forEach(b => b.onclick = () => doUpgrade(b.dataset.upshelf));
 }
+// FILL FROM THE BACK: every empty place, best piece first, at FAIR (Relics, Mythics and an Old-Blood piece ready for its Relic stay back)
+function fillBtn(b, s) {
+  const empty = s.shelf.filter(e => !e).length, can = Sh.inBack(s).filter(c => !Sh.keepBack(s, c) && (!c.sample || s.made)).length;
+  b.hidden = !empty; b.disabled = !can;
+  b.textContent = can ? 'FILL FROM THE BACK · ' + Math.min(empty, can) + (Math.min(empty, can) === 1 ? ' PIECE' : ' PIECES') : 'NOTHING IN THE BACK TO PUT UP';
+}
+$('fillShelf').onclick = () => { if (Sh.fillShelf(save).length) { store(save); Snd.play('chime'); } renderShop(); };
 $('buySlot').onclick = () => { const r = Rm.buy(save, 'shelf'); furnNote = r.why ? 'No shelf: ' + r.why + '.' : 'A new shelf: two more places.'; if (r.item) { store(save); coins(); if (dio) dio.setRoom(viewRoom(), save); } renderShop(); };
 function tagSegs(slot) {
   const e = save.shelf[slot], c = save.cards.find(x => x.id === e.id);
@@ -1443,7 +1451,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=33').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=34').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -1461,6 +1469,7 @@ function renderBranch() {
     return '<button data-bslot="' + i + '" aria-label="' + esc(c.name) + '">' + card(c, { short: true, price: Sh.priceAt(c, e.tag) + ' c<span class="tagword">' + TAGS[e.tag].word + '</span>' }) + '</button>';
   }).join('');
   $('branchSlots').querySelectorAll('[data-bslot]').forEach(x => x.onclick = () => branchSlotOpen(+x.dataset.bslot));
+  fillBtn($('branchFill'), v);
   const cost = Rm.shelfCost(b.room);
   $('branchBuySlot').hidden = cost == null; if (cost != null) { $('branchBuySlot').textContent = 'ANOTHER SHELF · ' + cost + ' c'; $('branchBuySlot').disabled = save.coins < cost; }
   const next = Rm.nextSize(b.room); $('branchExpand').hidden = !next; if (next) { $('branchExpand').textContent = 'BIGGER · ' + next.w + ' × ' + next.d + ' · ' + next.cost + ' c'; $('branchExpand').disabled = save.coins < next.cost; }
@@ -1476,6 +1485,7 @@ function renderBranch() {
     + (e.sold ? '<span class="amt">+' + e.sold.price + ' c</span>' : '<span class="amt no">NO SALE</span>') + '<span class="ln">' + (e.sold ? 'Bought the ' + esc(e.sold.name) + '. ' : '') + esc(e.line) + '</span></li>').join('')
     : '<li class="empty">No one yet. Customers come in through the day.</li>';
 }
+$('branchFill').onclick = () => { const n = Sh.fillShelf(bview()).length; branchNote = n ? n + (n === 1 ? ' piece' : ' pieces') + ' sent to ' + BRANCH.town + ', at FAIR.' : ''; branchChanged(); };
 function branchChanged() { store(save); coins(); renderBranch(); if (branchDio) { branchDio.setRoom(save.branch.room, { staff: [] }); branchDio.setShelf(branchShown()); } }
 function branchSlotOpen(slot) {
   const v = bview(), e = v.shelf[slot];
@@ -1520,7 +1530,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=33').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=34').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }
