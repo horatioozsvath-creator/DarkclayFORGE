@@ -22,6 +22,7 @@ const H = 3600000, lvl = id => R.levelOf((save.trades[id] || {}).xp || 0).level,
 function choose(hour) {
   let best = null;
   for (const id of Object.keys(PATTERNS)) {
+    if (!Rm.owns(save, PATTERNS[id].station || 'forge')) continue;
     const metals = R.partOptions(id)[0].opts;
     metals.forEach((m, mi) => {
       if ((m.level || 1) > lvl(id)) return;
@@ -58,6 +59,7 @@ function spend(hour) {
   if (cost != null && save.coins - cost > reserve && Sh.inBack(save).length >= 2) { const r = Rm.buy(save, 'shelf'); if (r.item) { spent.room += cost; note('a shelf (' + save.slots + ' places), ' + cost + ' c'); } }
   if (!St.clerkOf(save)) { const c = St.candidates(save, Math.floor(t / H)).find(x => x.role === 'clerk'); if (c && save.coins - St.hireFee(c) > reserve + 60) { St.hire(save, c); spent.staff += St.hireFee(c); note('hired ' + c.name + ' (clerk), ' + St.hireFee(c) + ' c'); } }
   for (const id of ['anvil', 'hammer1', 'bellows', 'gloves', 'firebrick', 'hammer2']) if (G.canBuyTool(save, id).ok && save.coins - TOOLS[id].cost > reserve + 100) { G.buyTool(save, id); spent.tools += TOOLS[id].cost; note('tool: ' + TOOLS[id].name); }
+  if (!Rm.owns(save, 'stretcher') && save.coins > 1200 + reserve + 300) { if (Rm.buyStation(save, 'stretcher').item) { spent.room += 1200; note('set up the stretcher'); } }
   const next = Rm.nextSize(save.room); if (next && save.coins - next.cost > reserve + 200) { Rm.expand(save); spent.room += next.cost; note('a bigger shop: ' + next.w + '×' + next.d); }
   for (const k of ['lamp', 'rug', 'bench', 'table', 'workbench']) if (Rm.costOf(save.room, k) && save.coins - Rm.costOf(save.room, k) > reserve + 300 && Rm.charm(save.room, save) < 20) { const r = Rm.buy(save, k); if (r.item) spent.room += Rm.costOf(save.room, k); }
   while (G.pointsLeft(save) > 0) { const order = [['craft', 0], ['house', 0], ['craft', 1], ['house', 2], ['craft', 2], ['counter', 0], ['house', 1], ['counter', 1], ['counter', 2]]; const n = order.find(([b, i]) => G.canTake(save, b, i).ok); if (!n) break; G.takePerk(save, ...n); note('skill: ' + n.join(' ')); }

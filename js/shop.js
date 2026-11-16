@@ -81,15 +81,23 @@ export function buySlot(save) {
 // ---------- customers ----------
 const pick = (list, rng) => list[Math.floor(rng() * list.length)];
 function weighted(items, w, rng) { let r = rng() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < items.length; i++) { r -= w[i]; if (r < 0) return items[i]; } return items[items.length - 1]; }
-export const richer = (save, c) => ({ ...c, purse: Math.round(c.purse * purseMult(save)) });
+// what this shop can make: a customer who wanted something only an absent station makes wants something else (a want of any kind
+// it can make, else anything at all), and purses grow with renown
+const makes = (save, want) => {
+  const own = st => !st || st === 'forge' || (save.stations || []).includes(st);
+  if (PATTERNS[want]) return own(PATTERNS[want].station);
+  return want === 'any' || Object.values(PATTERNS).some(p => p.want === want && own(p.station));
+};
+export const richer = (save, c) => ({ ...c, want: makes(save, c.want) ? c.want : 'any', purse: Math.round(c.purse * purseMult(save)) });
 export function newCustomer(rng) {
   const t = weighted(CUSTOMERS, CUSTOMERS.map(c => c.weight), rng);
   return { type: t.id, who: pick(t.names, rng), want: pick(t.wants, rng), purse: Math.round(t.purse[0] + rng() * (t.purse[1] - t.purse[0])),
     mood: weighted(MOODS, t.moods, rng), least: t.least || 0, fig: t.fig };
 }
+const PAIRS = ['gloves', 'boots'];
 export const wants = (want, card) => want === 'any' || want === card.pattern || PATTERNS[card.pattern].want === want;
 export function wantWord(want) {
-  if (PATTERNS[want]) { const n = PATTERNS[want].name.toLowerCase(); return (/^[aeiou]/.test(n) ? 'an ' : 'a ') + n; }
+  if (PATTERNS[want]) { const n = PATTERNS[want].name.toLowerCase(); return PAIRS.includes(want) ? 'a pair of ' + n : (/^[aeiou]/.test(n) ? 'an ' : 'a ') + n; }
   return { weapon: 'a weapon', helm: 'something for the head', ring: 'a ring', armour: 'something to wear', any: 'something good' }[want];
 }
 export const takeOdds = (mood, tag) => mood === 'PINCHED' && tag === 'dear' ? 0 : Math.min(0.95, MOOD_ODDS[mood] * TAGS[tag].odds);
@@ -310,7 +318,7 @@ export function postOrder(save, rng, now) {
 }
 export function orderWord(o) {
   const rest = (o.metal ? MATS[o.metal].name.replace(' bar', '').toLowerCase() + ' ' : '') + PATTERNS[o.pattern].name.toLowerCase();
-  return o.least ? TIERS[o.least].name + ' or better ' + rest : (/^[aeiou]/.test(rest) ? 'an ' : 'a ') + rest;
+  return o.least ? TIERS[o.least].name + ' or better ' + rest : PAIRS.includes(o.pattern) ? 'a pair of ' + rest : (/^[aeiou]/.test(rest) ? 'an ' : 'a ') + rest;
 }
 export const fills = (o, card) => !!o && card.pattern === o.pattern && TIER_N[card.tier] >= o.least && (!o.metal || card.metal === o.metal) && !card.flawed;
 export function deliver(save, cardId, now) {

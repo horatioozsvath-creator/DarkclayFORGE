@@ -86,6 +86,7 @@ const HINTS = {
   home: 'Welcome to your forge. <i>Pick a pattern</i> to make your first piece: the dagger takes the least.',
   prepare: 'This is your <i>strip</i>: the clay tiles you\'ll turn over as you strike. GOOD and GREAT shape the piece, a CRACK marks it. When you\'re ready, <i>WORK IT</i>.',
   work: 'Put it <i>INTO THE FIRE</i> (R), wait for the <i>gold band</i>, then <i>STRIKE</i> (Space, or tap). Fill SHAPE, then <i>QUENCH</i> (Q).',
+  'work-stretcher': 'Put the hide <i>IN THE SOAK</i> (R) until it\'s <i>supple</i>, then <i>STITCH</i> (Space, or tap). Too dry does nothing, too wet tears; it dries as you work. Fill SHAPE, then <i>SET</i> (Q).',
   result: 'Every piece becomes a card. Put it <i>ON THE SHELF</i> and customers will buy it.',
   shop: 'While you\'re on this screen, customers come to the <i>counter</i>: show them a piece and choose your price. Away from it, they buy from the shelf at its tag: <i>CHEAP, FAIR or DEAR</i>.',
   supp: 'Materials for the forge. <i>Prices change on the hour</i>: the arrows show which way.',
@@ -719,7 +720,7 @@ function toWork() {
   $('bStrike').innerHTML = st.strike + '<small>SPACE · TAP THE STAGE</small>';
   popLabel({ label: st.heatIt, gain: st.fire, why: 'then ' + st.strike.toLowerCase() + ' in the ' + st.band_, colour: '#e8c464' });
   render();
-  tip('work', null, $('vWork'));
+  tip(st.id === 'forge' ? 'work' : 'work-' + st.id, null, $('vWork'));
 }
 function setFireBtn() {
   $('bFire').innerHTML = (S.inFire ? S.station.out : S.station.fire) + '<small>' + (S.inFire ? 'R' : 'R · RESHUFFLES THE STRIP') + '</small>';

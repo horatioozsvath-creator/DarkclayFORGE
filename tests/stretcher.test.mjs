@@ -55,3 +55,15 @@ test('customers want leather too', () => {
   assert.ok(Sh.wants('armour', card)); assert.ok(Sh.wants('gloves', card)); assert.ok(!Sh.wants('weapon', card));
   assert.equal(Sh.wantWord('armour'), 'something to wear');
 });
+
+test('a shop without a stretcher: no one walks in wanting what it can\'t make', () => {
+  const s = { stations: [], renown: 0 };
+  for (let i = 0; i < 400; i++) {
+    const c = Sh.richer(s, Sh.newCustomer(seeded(i)));
+    assert.ok(c.want === 'any' || c.want === 'weapon' || c.want === 'helm' || c.want === 'ring' || (PATTERNS[c.want] && !PATTERNS[c.want].station), c.want);
+  }
+  const t = { stations: ['stretcher'], renown: 0 }; let leather = 0;
+  for (let i = 0; i < 400; i++) { const c = Sh.richer(t, Sh.newCustomer(seeded(i))); if (c.want === 'armour' || (PATTERNS[c.want] && PATTERNS[c.want].station)) leather++; }
+  assert.ok(leather > 40);
+  assert.equal(Sh.wantWord('gloves'), 'a pair of gloves');
+});

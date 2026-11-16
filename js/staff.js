@@ -32,7 +32,7 @@ export function candidates(save, hour) {
   for (let i = 0; i < 3; i++) {
     const role = i === 0 ? 'clerk' : i === 1 ? 'runner' : pick(['clerk', 'runner'], rng);
     const names = NAMES.filter(n => !taken.has(n)); const name = pick(names, rng); taken.add(name);
-    const xp = [0, 0, 4, 4, 10][Math.floor(rng() * 5)];
+    const xp = [0, 0, 5, 5, 20][Math.floor(rng() * 5)];   // level 1, 1, 2, 2, 3
     const c = { id: 'h' + hour + '-' + i, role, name, trait: pick(TRAITS[role], rng).id, xp };
     if (!(save.hiredIds || []).includes(c.id)) out.push(c);
   }

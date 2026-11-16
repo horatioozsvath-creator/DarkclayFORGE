@@ -75,4 +75,5 @@ export const patienceOf = (save, base) => base + (perked(save, 'patient') ? 20 :
 export const haggleMult = save => perked(save, 'tongue') ? 1.05 : 1;
 export const wageMult = save => perked(save, 'wages') ? 0.8 : 1;
 export const capBonus = save => perked(save, 'hours') ? 2 : 0;
-export const readLevels = save => perked(save, 'read') ? { mood: 1, purse: 3 } : { mood: 3, purse: 6 };
+// on the slower curve (milestone 7): the mood at Haggling 3 (about twenty haggles), the purse at 4 (about as many as Haggling 6 took before)
+export const readLevels = save => perked(save, 'read') ? { mood: 1, purse: 2 } : { mood: 3, purse: 4 };

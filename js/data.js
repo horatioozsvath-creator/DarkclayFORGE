@@ -307,7 +307,7 @@ export const PERKS = {
     { id: 'eye', word: 'An eye for quality', line: 'Fine odds +5 % before the cap', kit: { fine: 5 } },
   ] },
   counter: { word: 'THE COUNTER', perks: [
-    { id: 'read', word: 'Read the room', line: 'their mood shows from the start, their purse from Haggling 3' },
+    { id: 'read', word: 'Read the room', line: 'their mood shows from the start, their purse from Haggling 2' },
     { id: 'patient', word: 'A patient counter', line: 'customers wait 20 s longer to be served' },
     { id: 'tongue', word: 'Silver tongue', line: 'haggled prices 5 % higher (never past the purse)' },
   ] },

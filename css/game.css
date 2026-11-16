@@ -320,7 +320,7 @@ canvas.dio { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 @media (max-width: 520px) { .hintcard { grid-template-columns: minmax(0, 1fr); } .hintcard .btns { justify-content: flex-start; } }
 @keyframes hintin { from { opacity: 0; transform: translateY(-6px); } }
 #vWork .hintcard { position: absolute; left: 10px; right: 10px; top: 52px; z-index: 6; }
-#vWork { position: relative; }
+@media (min-width: 601px) { #vWork { position: relative; } }
 @media (prefers-reduced-motion: reduce) { .hintcard { animation: none; } }
 .floor.loading::after { content: 'Lighting the lamps…'; position: absolute; right: 12px; bottom: 10px; font: 700 12px var(--sans); letter-spacing: .1em; color: var(--bone-faint); }
 @media (display-mode: standalone) { body { padding-top: max(20px, env(safe-area-inset-top, 0px)); } .nav { top: env(safe-area-inset-top, 0px); } }
