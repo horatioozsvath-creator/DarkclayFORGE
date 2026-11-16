@@ -1,6 +1,6 @@
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { KINDS, KC, TIERS, FORGE, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS } from './data.js?v=6';
+import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS } from './data.js?v=6';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -40,8 +40,9 @@ export function partOptions(patternId) {
 export function chosenParts(patternId, picks) {
   return partOptions(patternId).map((p, i) => p.opts[(picks && picks[i]) || 0] || p.opts[0]);
 }
-export function bandFor(metal) {
-  let band = (metal.band || FORGE.band).slice();
+export const stationOf = patternId => STATIONS[PATTERNS[patternId].station || 'forge'];
+export function bandFor(metal, station = FORGE) {
+  let band = (metal.band || station.band).slice();
   if (metal.widen) { const mid = (band[0] + band[1]) / 2, half = (band[1] - band[0]) / 2 * metal.widen; band = [Math.max(0, Math.round(mid - half)), Math.min(100, Math.round(mid + half))]; }
   return band;
 }
@@ -87,11 +88,11 @@ export const left = S => S.rack.filter(x => !x.up);
 // cfg: { patternId, picks, level, found, kit }
 export function newWorking(cfg, rng) {
   const parts = chosenParts(cfg.patternId, cfg.picks), metal = parts[0];
-  const kit = cfg.kit || {}, b0 = bandFor(metal);
+  const kit = cfg.kit || {}, st = stationOf(cfg.patternId), b0 = bandFor(metal, st);
   let band = b0;
   if (kit.widen && kit.widen !== 1) { const mid = (b0[0] + b0[1]) / 2, half = (b0[1] - b0[0]) / 2 * kit.widen; band = [Math.max(0, Math.round(mid - half)), Math.min(100, Math.round(mid + half))]; }
-  const S = { cfg, parts, metal, level: cfg.level, rng,
-    band, cool: FORGE.cool * (metal.coolX || 1) * (kit.coolX || 1), drain: FORGE.drain, rise: FORGE.rise, over: FORGE.over,
+  const S = { cfg, parts, metal, level: cfg.level, rng, station: st,
+    band, cool: st.cool * (metal.coolX || 1) * (kit.coolX || 1), drain: st.drain, rise: st.rise, over: st.over,
     phase: 'prepare', meter: 30, inFire: false, shape: 0, worked: 0, cracks: 0, notches: [], crackMarks: [],
     streak: 0, white: 0, whiteHeat: false, earned: false, scaled: 0, overT: 0, strikes: 0, heats: 1, done: false, dropped: false,
     twin: false, warden: false, frost: false, rack: [], lines: [], heatLines: [], slipN: 0 };
@@ -120,14 +121,18 @@ export function strike(S) {
   S.strikes++; S.inFire = false;
   S.meter = Math.max(0, S.meter - S.drain);
 
+  const st = S.station || FORGE;
   if (m < lo) {
-    if (S.level < 3) { S.streak = 0; pop({ label: 'NOTHING', why: 'TOO COLD · IT DOESN\'T MOVE', size: 'bad', colour: KC.HOLD }); return { k: 'HOLD', dead: true, pops }; }
+    // the stretcher: too dry, a stitch turns nothing over (no tear); the forge: a learner's cold strike does nothing, a CRACK slips in after
+    if (st.dryDead || S.level < 3) { S.streak = 0; pop({ label: 'NOTHING', why: st.dryDead ? st.cold : 'TOO COLD · IT DOESN\'T MOVE', size: 'bad', colour: KC.HOLD }); return { k: 'HOLD', dead: true, pops }; }
     slipIn(S, 'CRACK', 'COLD', 'Struck cold (strike ' + S.strikes + ')');
   }
+  const tore = st.wetTear && m > hi && S.level >= 3;
+  if (tore) slipIn(S, 'CRACK', 'WET', 'Too wet: it tore (stitch ' + S.strikes + ')');
   if (!left(S).length) { deal(S); pop({ label: 'SHUFFLED', gain: 'THE STRIP RAN OUT · EVERY TILE BACK IN', size: 'bigpop', colour: KC.FOUND }); }
   const tk = S.rack.find(x => !x.up);
   tk.up = true; tk.n = S.strikes; tk.peek = false;
-  let k = tk.k, why = m < lo ? 'STRUCK COLD · A CRACK SLIPPED IN' : '', gain = '', size = '', colour = null, drop = false;
+  let k = tk.k, why = m < lo ? 'STRUCK COLD · A CRACK SLIPPED IN' : tore ? 'TOO WET · A TEAR SLIPPED IN' : '', gain = '', size = '', colour = null, drop = false;
   if (k === 'CRACK' && (S.white > 0 || S.warden)) { why = S.warden ? 'THE WARDEN\'S TILE HOLDS IT' : 'WHITE HEAT · NO CRACK'; S.warden = false; k = 'HOLD'; }
   const mult = S.twin && k !== 'CRACK' ? 2 : 1;
   if (S.twin && k !== 'CRACK') { S.twin = false; why = why || 'TWIN · IT COUNTS TWICE'; }
@@ -144,7 +149,7 @@ export function strike(S) {
     if (k === 'FOUND') {
       const f = tk.f; gk = f === 'hollow' ? 'GREAT' : 'GOOD';
       size = 'bigpop'; colour = FOUND[f].glaze;
-      if (f === 'ember') { S.meter = Math.min(S.band[1] - 2, S.meter + 28); why = 'EMBER · THE HEAT JUMPS BACK'; }
+      if (f === 'ember') { S.meter = st.wetTear ? (S.band[0] + S.band[1]) / 2 : Math.min(S.band[1] - 2, S.meter + 28); why = st.wetTear ? 'EMBER · JUST SUPPLE AGAIN' : 'EMBER · THE HEAT JUMPS BACK'; }
       if (f === 'mender') { if (S.cracks) { S.cracks--; S.crackMarks.pop(); if (S.notches.length) S.notches.pop(); why = 'MENDER · A CRACK\'S MARK CLEARED'; } else why = 'MENDER · NOTHING TO MEND'; }
       if (f === 'twin') { S.twin = true; why = 'TWIN · THE NEXT TILE COUNTS TWICE'; }
       if (f === 'warden') { S.warden = true; why = 'WARDEN · THE NEXT CRACK IS A HOLD'; }
@@ -166,7 +171,7 @@ export function strike(S) {
     if (k === 'GREAT') size = 'bigpop';
     if (k === 'TRUE') { size = 'bigpop'; S.earned = true; S.whiteHeat = true; S.white = 4; why = why || 'WHITE HEAT · THE PICK IS YOURS'; }
     pop({ tile: tk, gain, why, size, colour, ring: k === 'TRUE' ? '#fff2c4' : null });
-    if (shaping && S.shape >= 100) pop({ label: 'IT\'S MADE', gain: 'NOW EVERY STRIKE PUSHES IT', why: 'QUENCH WHENEVER YOU CHOOSE', size: 'bigpop', colour: '#e8c464', delay: 700, ring: '#e8c464', made: true });
+    if (shaping && S.shape >= 100) pop({ label: 'IT\'S MADE', gain: 'NOW EVERY STRIKE PUSHES IT', why: st.close + ' WHENEVER YOU CHOOSE', size: 'bigpop', colour: '#e8c464', delay: 700, ring: '#e8c464', made: true });
     if (S.level >= 5 && S.streak >= 8 && S.white <= 0) { S.white = 4; S.earned = true; S.whiteHeat = true; S.streak = 0; pop({ label: 'WHITE HEAT', gain: 'NO CRACK FOR 4 s', why: 'THE PICK IS YOURS', size: 'bigpop', colour: '#fff2c4', delay: 600, ring: '#fff2c4' }); }
   }
   return { k, dead: false, pops, drop };
@@ -288,7 +293,7 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now, k
   if (reworked) made.push('back in the fire' + (reworked > 1 ? ' ×' + reworked : ''));
   made.push(parts.map(o => o.name.toLowerCase()).filter(n => n !== 'none' && n !== 'plain').join(' · '));
   return { id: now.toString(36) + Math.floor(rng() * 1e6).toString(36), at: now, pattern: patternId, metal: metal.id, tier: tier.id,
-    name: metal.name + ' ' + p.name, kind: p.kind, art: p.art, tint: metal.tint, dice, stats, affixes: affixes.map(a => [a[0], a[1]]),
+    name: (metal.adj || metal.name) + ' ' + p.name, kind: p.kind, art: p.art, tint: metal.tint, dice, stats, affixes: affixes.map(a => [a[0], a[1]]),
     made, lore: p.lore[result.tier], worth, flawed: result.flawed, maker,
     src: { picks: (picks || []).slice(), worked, strikes: result.strikes || 0, heats: result.heats || 0, cracks: result.cracks || 0,
       whiteHeat: !!result.whiteHeat, frost: !!result.frost, instant: !!result.instant, reworked } };

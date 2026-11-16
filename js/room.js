@@ -1,5 +1,5 @@
 // The shop's room, with no page access: the grid, what stands on it, buying, moving, selling back, and making the room bigger.
-import { FURNITURE, ROOM_SIZES, DOOR_Z, SHELF_COSTS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS } from './data.js?v=6';
+import { FURNITURE, ROOM_SIZES, DOOR_Z, SHELF_COSTS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=6';
 import { wallCharm } from './growth.js?v=6';
 
 export const sizeOf = room => ROOM_SIZES[room.size || 0];
@@ -66,6 +66,7 @@ export function valid(room) {
   if (!room || !Array.isArray(room.items) || !ROOM_SIZES[room.size || 0]) return false;
   if (!room.items.every(i => FURNITURE[i.kind])) return false;
   for (const k of ['forge', 'anvil', 'counter']) if (room.items.filter(i => i.kind === k).length !== 1) return false;
+  if (room.items.filter(i => i.kind === 'stretcher').length > 1) return false;
   return room.items.every(i => fits(room, i, i.id));
 }
 export function fixRoom(save) {
@@ -76,6 +77,23 @@ export function fixRoom(save) {
     save.room = room;
   }
   save.slots = Math.max(START_SLOTS, shelvesOf(save.room) * 2);
+  // a station the shop has set up always stands in the room
+  for (const id of save.stations || []) if (!save.room.items.some(i => i.kind === id)) {
+    let it = firstFree(save.room, id, id);
+    while (!it && (save.room.size || 0) < ROOM_SIZES.length - 1) { save.room.size++; it = firstFree(save.room, id, id); }
+    if (it) save.room.items.push(it);
+  }
+}
+// ---------- stations: set one up, and it stands in the room ----------
+export const owns = (save, id) => id === 'forge' || (save.stations || []).includes(id);
+export function buyStation(save, id) {
+  const st = STATIONS[id];
+  if (!st || owns(save, id)) return { why: 'yours already' };
+  if (save.coins < st.cost) return { why: 'not enough coin' };
+  const it = firstFree(save.room, id, id);
+  if (!it) return { why: 'no room: move things, or make the shop bigger' };
+  save.coins -= st.cost; save.room.items.push(it); save.stations = (save.stations || []).concat(id);
+  return { item: it };
 }
 
 // ---------- buying, moving, selling back, growing ----------

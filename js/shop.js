@@ -90,7 +90,7 @@ export function newCustomer(rng) {
 export const wants = (want, card) => want === 'any' || want === card.pattern || PATTERNS[card.pattern].want === want;
 export function wantWord(want) {
   if (PATTERNS[want]) { const n = PATTERNS[want].name.toLowerCase(); return (/^[aeiou]/.test(n) ? 'an ' : 'a ') + n; }
-  return { weapon: 'a weapon', helm: 'a helm', ring: 'a ring', any: 'something good' }[want];
+  return { weapon: 'a weapon', helm: 'something for the head', ring: 'a ring', armour: 'something to wear', any: 'something good' }[want];
 }
 export const takeOdds = (mood, tag) => mood === 'PINCHED' && tag === 'dear' ? 0 : Math.min(0.95, MOOD_ODDS[mood] * TAGS[tag].odds);
 const LINES = {
@@ -297,8 +297,10 @@ export function orderPays(pattern, metal, least) {
   return p.worth * ORDER_PAYS;
 }
 export function postOrder(save, rng, now) {
-  const r = REGULARS[Math.floor(rng() * REGULARS.length)];
-  const pattern = r.wants[Math.floor(rng() * r.wants.length)];
+  // a regular asks only for what this shop's stations can make
+  const owns = p => !PATTERNS[p].station || PATTERNS[p].station === 'forge' || (save.stations || []).includes(PATTERNS[p].station);
+  const regs = REGULARS.filter(x => x.wants.some(owns)), r = regs[Math.floor(rng() * regs.length)], can = r.wants.filter(owns);
+  const pattern = can[Math.floor(rng() * can.length)];
   const least = r.least != null ? r.least : (rng() < 0.35 ? 1 : 0);
   let metal = r.metal && metalIndex(pattern, r.metal) >= 0 ? r.metal : null;
   if (!metal && rng() < 0.3) { const ok = ['iron', 'bronze', 'steel'].filter(m => metalIndex(pattern, m) >= 0); metal = ok[Math.floor(rng() * ok.length)]; }

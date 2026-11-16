@@ -5,7 +5,7 @@ import { GLTFLoader } from '../vendor/three/loaders/GLTFLoader.js';
 import { FURNITURE, DOOR_Z } from './data.js?v=6';
 import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=6';
 
-const MODELS = 'assets/models/', M = '?m=1';   // bump m when tools/models.sh rebuilds them
+const MODELS = 'assets/models/', M = '?m=2';   // bump m when tools/models.sh rebuilds them
 const FIGURES = { folk: 'folk', guard: 'dwarf', traveller: 'carter', delver: 'bard', factor: 'chandler', collector: 'herbalist', seller: 'carter', maker: 'smith', clerk: 'chandler' };
 const WALK = 1.5;   // metres a second
 

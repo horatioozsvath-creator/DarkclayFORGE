@@ -12,13 +12,26 @@ export const TIERS = [
 ];
 
 export const FORGE = {
-  name: 'FORGE', tool: 'HAMMER', meter: 'HEAT', fire: 'INTO THE FIRE', out: 'OUT OF THE FIRE', close: 'QUENCH', place: 'the fire',
+  id: 'forge', name: 'FORGE', word: 'THE FORGE', tool: 'HAMMER', meter: 'HEAT', fire: 'INTO THE FIRE', out: 'OUT OF THE FIRE', close: 'QUENCH', place: 'the fire',
+  heatIt: 'HEAT IT', band_: 'gold band', strike: 'STRIKE',
   band: [45, 86], drain: 8, cool: 3, rise: 36, over: 95,
   colours: ['#3a3634', '#7a1e10', '#c8401a', '#f08a2a', '#ffd25a', '#fff6dc'],
   labels: [[0, 'BLACK'], [30, 'DULL RED'], [45, 'CHERRY'], [70, 'YELLOW'], [86, 'WHITE']],
   cold: 'STRUCK COLD',
   twist: 'Strike it hot: yellow to cherry. Struck cold, a CRACK slips in. Left in past white, it scales.',
 };
+// the stretcher (Darkclay Zero's THE-WORKING §4, tuned there: drain 8, cool 3): keep the hide supple. Too dry, a stitch turns
+// nothing over; too wet, a stitch tears (a CRACK slips in, from trade 3). Nothing scales: a hide can soak as long as it likes.
+export const STRETCHER = {
+  id: 'stretcher', name: 'STRETCHER', word: 'THE STRETCHER', tool: 'AWL', meter: 'DAMP', fire: 'SOAK IT', out: 'OUT OF THE SOAK', close: 'SET', place: 'the soak',
+  heatIt: 'SOAK IT', band_: 'supple band', strike: 'STITCH',
+  band: [35, 80], drain: 8, cool: 3, rise: 32, over: 101, dryDead: true, wetTear: true, cost: 1200,
+  colours: ['#d8c098', '#b89060', '#8a6a44', '#6a5a4a', '#4a5a6a', '#2a4a6a'],
+  labels: [[0, 'DRY'], [35, 'SUPPLE'], [80, 'SOAKED']],
+  cold: 'TOO DRY · IT STIFFENS',
+  twist: 'Keep it supple. Too dry: a stitch turns nothing over. Too wet: a stitch tears (a CRACK slips in, from trade 3). It dries as you work: SOAK IT again.',
+};
+export const STATIONS = { forge: FORGE, stretcher: STRETCHER };
 
 // strip: [GOOD, GREAT, CRACK, HOLD]. level: the trade level that opens the metal (a stand-in until suppliers sell it, milestone 2).
 export const METALS = {
@@ -27,13 +40,21 @@ export const METALS = {
   steel: { name: 'Steel', strip: [9, 4, 5, 2], band: [55, 92], line: 'a hotter heat: the band sits higher', dmg: 1.15, val: 1.4, tint: '#dfe4ea', level: 2 },
   silver: { name: 'Silver', strip: [7, 5, 6, 2], coolX: 1.7, line: 'it cools fast: strike quickly; +25 % on the dead', dmg: .95, val: 2, tint: '#eef0f4', level: 3, affix: ['Silvered', '+25 % on the dead'] },
   darkclay: { name: 'Darkclay steel', strip: [7, 6, 6, 1], widen: .7, line: 'a narrow band, for more: GREATs and cracks both', dmg: 1.3, val: 2.8, tint: '#8a6a78', level: 4 },
+  // the stretcher's hides (Zero's working.json stuffs: deer the baseline, goat easy, shark hard)
+  deer: { name: 'Deer hide', adj: 'Deerskin', strip: [10, 3, 4, 3], line: 'the baseline: keep it supple', dmg: 1, val: 1, tint: '#a07850', level: 1 },
+  goat: { name: 'Goat hide', adj: 'Goatskin', strip: [11, 2, 2, 5], widen: 1.15, line: 'easy: a wider supple band, few tears', dmg: .9, val: .9, tint: '#c8a878', level: 1 },
+  sharkhide: { name: 'Shark hide', adj: 'Sharkskin', strip: [9, 4, 5, 2], widen: .85, line: 'tough: a narrower band, more GREATs and more tears', dmg: 1.3, val: 1.6, tint: '#6a7a80', level: 3 },
 };
 const BLADE_METALS = ['iron', 'bronze', 'steel', 'silver', 'darkclay'];
+const HIDES = ['deer', 'goat', 'sharkhide'];
 const RARE_LEVEL = 5;   // the trade level that opens a pattern's rare part
 
 const weaponAffixes = ['keen', 'biting', 'balanced', 'parrying', 'crushing', 'steady', 'hallowed', 'deepborn', 'sundering'];
 const helmAffixes = ['warmlined', 'turning', 'quiet', 'lightstrapped', 'weatherproof', 'graveward', 'unyielding'];
 const ringAffixes = ['coinsense', 'learned', 'startouched', 'moonlit', 'spiritsighted'];
+const wearAffixes = ['warmlined', 'turning', 'quiet', 'lightstrapped', 'weatherproof', 'graveward', 'unyielding', 'steady'];
+const LINING = [{ name: 'Wool', mat: 'wool' }, { name: 'Linen', mat: 'linen', val: 1.05 }, { name: 'Winter fox', mat: 'winterfox', rare: true }];
+const THREAD = [{ name: 'Gut', mat: 'gut' }, { name: 'Waxed cord', mat: 'cord' }, { name: 'Silver thread', mat: 'silverthread', rare: true }];
 
 // parts[0] takes a metal and sets the strip; the others are named options, a rare one turning a GOOD into a TRUE
 export const PATTERNS = {
@@ -62,6 +83,19 @@ export const PATTERNS = {
       { part: 'Stone', opts: [{ name: 'None' }, { name: 'Rough gem', mat: 'gem', val: 1.6 }, { name: 'Starglass', mat: 'starglass', rare: true }] },
       { part: 'Setting', opts: [{ name: 'Plain' }, { name: 'Claw' }] }],
     affixes: ringAffixes, lore: ['A plain band, honestly round.', 'It catches the light and a little luck.', 'Small work is the hardest work. This is small work done right.'] },
+  // the stretcher's
+  jerkin: { name: 'Jerkin', trade: 'Jerkins', kind: 'COAT · CHEST', art: 'jerkin', armour: 3, weight: 4, value: 55, bars: 3, want: 'armour', station: 'stretcher',
+    parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
+    affixes: wearAffixes, lore: ['It keeps the wind out and the shape in.', 'Stitched close: it moves when you move.', 'The seams are the work: not one of them will give.'] },
+  hood: { name: 'Hood', trade: 'Hoods', kind: 'HOOD · HEAD', art: 'hood', armour: 1, weight: 1, value: 22, bars: 1, want: 'helm', station: 'stretcher',
+    parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
+    affixes: wearAffixes, lore: ['Rain off, ears warm.', 'It sits close and keeps out more than weather.', 'A hood a scout would trade a horse for.'] },
+  gloves: { name: 'Gloves', trade: 'Gloves', kind: 'GLOVES · HANDS', art: 'gloves', armour: 1, weight: 1, value: 24, bars: 1, want: 'armour', station: 'stretcher',
+    parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
+    affixes: wearAffixes, lore: ['Work gloves: the work is yours.', 'They fit like they were measured. They were.', 'Ten fingers of good leather and not a seam that rubs.'] },
+  boots: { name: 'Boots', trade: 'Boots', kind: 'BOOTS · FEET', art: 'boots', armour: 2, weight: 2, value: 40, bars: 2, want: 'armour', station: 'stretcher',
+    parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
+    affixes: wearAffixes, lore: ['Dry feet are half of any road.', 'Broken in before they leave the shop.', 'They\'ll outlast the roads they walk.'] },
 };
 for (const p of Object.values(PATTERNS)) for (const part of p.parts) for (const o of part.opts || []) if (o.rare) { o.level = RARE_LEVEL; o.line = 'rare: a GOOD becomes a TRUE'; }
 
@@ -111,6 +145,8 @@ export const BARS = { damage: 16, speed: 2.3, reach: 3.0, armour: 12, weight: 8 
 export const MATS = {
   iron: { name: 'Iron bar', price: 8, unit: 'bar' }, bronze: { name: 'Bronze bar', price: 7, unit: 'bar' }, steel: { name: 'Steel bar', price: 14, unit: 'bar' },
   silver: { name: 'Silver bar', price: 30, unit: 'bar' }, darkclay: { name: 'Darkclay steel bar', price: 40, unit: 'bar' },
+  deer: { name: 'Deer hide', price: 6 }, goat: { name: 'Goat hide', price: 5 }, linen: { name: 'Linen', price: 3 }, gut: { name: 'Gut', price: 1 },
+  silverthread: { name: 'Silver thread', price: 40, rare: true },
   wrap: { name: 'Leather wrap', price: 3 }, cord: { name: 'Cord', price: 1 }, sharkhide: { name: 'Shark hide', price: 9 }, horn: { name: 'Horn', price: 4 },
   ash: { name: 'Ash haft', price: 2 }, rowan: { name: 'Rowan haft', price: 4 }, wool: { name: 'Wool', price: 2 }, silk: { name: 'Silk', price: 10 }, strap: { name: 'Leather strap', price: 2 },
   gem: { name: 'Rough gem', price: 14 },
@@ -120,8 +156,8 @@ export const MATS = {
 // pick: how many of its rare lines a pack carries in an hour (0: all of them, always)
 export const SUPPLIERS = [
   { id: 'yard', name: 'Dougal\'s Yard', kind: 'THE SMELTER', line: 'Bars from the smelter, iron to darkclay steel.', lines: ['iron', 'bronze', 'steel', 'silver', 'darkclay'] },
-  { id: 'tannery', name: 'The Tannery on the Ford', kind: 'HIDES, HAFTS AND CLOTH', line: 'Wraps, cord, hafts, linings and straps.', lines: ['wrap', 'cord', 'sharkhide', 'horn', 'ash', 'rowan', 'wool', 'silk', 'strap'] },
-  { id: 'pack', name: 'Nell Quarry\'s Pack', kind: 'A PEDLAR', line: 'Gems always; rare things, two at a time, changing on the hour.', lines: ['gem'], rare: ['blackwater', 'bogoak', 'winterfox', 'starglass'], pick: 2 },
+  { id: 'tannery', name: 'The Tannery on the Ford', kind: 'HIDES, HAFTS AND CLOTH', line: 'Wraps, cord, hafts, linings and straps.', lines: ['deer', 'goat', 'sharkhide', 'wrap', 'cord', 'gut', 'horn', 'ash', 'rowan', 'wool', 'linen', 'silk', 'strap'] },
+  { id: 'pack', name: 'Nell Quarry\'s Pack', kind: 'A PEDLAR', line: 'Gems always; rare things, two at a time, changing on the hour.', lines: ['gem'], rare: ['blackwater', 'bogoak', 'winterfox', 'starglass', 'silverthread'], pick: 2 },
 ];
 
 // ---------- the shop ----------
@@ -132,13 +168,13 @@ export const START_SLOTS = 4;
 // who comes in (Darkclay Zero, docs/CRAFT-AAA.md §5.2): a want, a purse, a mood. wants: a pattern id, 'weapon', 'helm', 'ring' or 'any'.
 // least: the lowest tier they'll look at. moods: weights for EAGER, WARY, PINCHED.
 export const CUSTOMERS = [
-  { id: 'folk', weight: 30, purse: [6, 45], wants: ['dagger', 'ring', 'any', 'dagger', 'axe'], moods: [15, 35, 50], fig: '#a08a6a',
+  { id: 'folk', weight: 30, purse: [6, 45], wants: ['dagger', 'ring', 'any', 'dagger', 'axe', 'armour', 'gloves'], moods: [15, 35, 50], fig: '#a08a6a',
     names: ['a miner off the shift', 'a carter', 'a farmer\'s wife', 'a ferryman', 'a charcoal burner', 'a boy with his savings', 'a widow from the lane'] },
-  { id: 'guard', weight: 25, purse: [40, 170], wants: ['falchion', 'axe', 'helm', 'weapon', 'dagger'], moods: [35, 50, 15], fig: '#7a8aa0',
+  { id: 'guard', weight: 25, purse: [40, 170], wants: ['falchion', 'axe', 'helm', 'weapon', 'dagger', 'armour', 'jerkin'], moods: [35, 50, 15], fig: '#7a8aa0',
     names: ['a warden\'s man', 'a gate guard', 'a sergeant of the pikes', 'a drover riding out armed', 'a watchman'] },
-  { id: 'traveller', weight: 20, purse: [30, 240], wants: ['any', 'ring', 'weapon', 'dagger'], moods: [30, 45, 25], fig: '#8a9a6a',
+  { id: 'traveller', weight: 20, purse: [30, 240], wants: ['any', 'ring', 'weapon', 'dagger', 'boots', 'armour'], moods: [30, 45, 25], fig: '#8a9a6a',
     names: ['a caravan master', 'a pilgrim to the abbey', 'a tinker', 'a hedge-knight\'s squire', 'a ferry-bound merchant'] },
-  { id: 'delver', weight: 15, purse: [80, 420], wants: ['weapon', 'helm', 'axe', 'falchion', 'any'], moods: [50, 40, 10], fig: '#9a6a5a',
+  { id: 'delver', weight: 15, purse: [80, 420], wants: ['weapon', 'helm', 'axe', 'falchion', 'any', 'armour', 'boots'], moods: [50, 40, 10], fig: '#9a6a5a',
     names: ['a delver of the Reach', 'one of Osk\'s Four', 'a door-breaker', 'a lamp-carrier back from the deep'] },
   { id: 'factor', weight: 7, purse: [200, 750], wants: ['ring', 'helm', 'any'], least: 1, moods: [30, 55, 15], fig: '#b89a5a',
     names: ['a guild factor', 'a reeve\'s steward', 'a lord\'s buyer'] },
@@ -168,9 +204,9 @@ export const QUEUE_MAX = 3;    // one at the counter, two waiting
 export const SELLER_ODDS = 0.14;   // of those who come in while you're at the counter, how many have something to sell
 // the named regulars who leave special orders (Darkclay Zero's regulars, §5.2): wants, a least tier, a metal they insist on
 export const REGULARS = [
-  { who: 'Sergeant Ollo Vance', wants: ['falchion', 'axe', 'helm'], line: 'For the gate. The pikes need better than they\'ve got.', fig: '#7a8aa0' },
+  { who: 'Sergeant Ollo Vance', wants: ['falchion', 'axe', 'helm', 'jerkin'], line: 'For the gate. The pikes need better than they\'ve got.', fig: '#7a8aa0' },
   { who: 'Lady Ysmay Corrow', wants: ['ring', 'falchion', 'helm'], least: 1, line: 'Something with a maker\'s mark worth the name.', fig: '#a07ab8' },
-  { who: 'Bram Oakes, a drover', wants: ['dagger', 'axe'], line: 'Knives for my drovers. Good ones, mind.', fig: '#8a9a6a' },
+  { who: 'Bram Oakes, a drover', wants: ['dagger', 'axe', 'boots'], line: 'For my drovers. Good ones, mind.', fig: '#8a9a6a' },
   { who: 'Ketty Moss, a widow', wants: ['ring'], metal: 'silver', line: 'A silver ring, for his grave.', fig: '#a08a6a' },
   { who: 'Tib Harrow', wants: ['dagger'], line: 'A knife. My own. I\'ve saved for it.', fig: '#a08a6a' },
 ];
@@ -229,6 +265,7 @@ export const FURNITURE = {
   forge: { name: 'Forge', fp: [2, 2], fixed: true, model: 'forge' },
   anvil: { name: 'Anvil', fp: [1, 1], fixed: true, model: 'anvil' },
   counter: { name: 'Counter', fp: [2, 1], fixed: true, model: 'counter' },
+  stretcher: { name: 'Stretcher', fp: [2, 1], fixed: true, model: 'stretcher', station: 'stretcher' },
   shelf: { name: 'Shelf', fp: [2, 1], slots: 2, model: 'shelf', line: 'Two places for pieces to sell.' },
   rug: { name: 'Rug', fp: [2, 2], charm: 2, cost: 180, model: 'rug', line: 'Warm underfoot.' },
   barrels: { name: 'Barrels', fp: [1, 1], charm: 1, cost: 90, model: 'barrels' },
