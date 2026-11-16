@@ -1,5 +1,5 @@
 // THE CARD: a piece of gear drawn as a collector's card framed by its tier (Darkclay Zero, docs/THE-CARD.md).
-import { TIERS } from './data.js?v=14';
+import { TIERS } from './data.js?v=15';
 
 const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
 // the picture of each kind of piece; m is the metal's tint
@@ -39,7 +39,7 @@ export function card(p, o = {}) {
   const stats = (p.stats || []).map(r => '<div class="cd-st"><span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b>' + (r[2] != null ? bar(r[2]) : '<span></span>') + '</div>').join('');
   const aff = (p.affixes || []).map(a => '<div class="cd-af"><b style="color:' + t.c + '">' + esc(a[0]) + '</b> ' + esc(a[1]) + '</div>').join('');
   const made = '<div class="cd-sec">THE MAKING</div><div class="cd-made">' + (p.made || []).map(m => '<span>' + esc(m) + '</span>').join('') + '</div>';
-  return '<div class="cd' + (o.short ? ' cd-short' : '') + '" style="--tc:' + t.c + ';--tg:' + t.glow + '">' +
+  return '<div class="cd' + (o.short ? ' cd-short' : '') + (t.foil ? ' cd-foil' : '') + '" style="--tc:' + t.c + ';--tg:' + t.glow + '">' +
     '<div class="cd-in">' +
     '<div class="cd-top"><span class="cd-tier">' + t.name.toUpperCase() + '</span><span class="cd-kind">' + esc(p.kind) + '</span></div>' +
     '<div class="cd-name">' + esc(p.name) + '</div>' +

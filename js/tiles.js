@@ -1,6 +1,6 @@
 // Handmade clay tiles: every tile its own shape, tilt, clay and thumbprint, the marks scratched in.
 // A tile's look is made once and kept, so it looks the same every time it turns over.
-import { KC, FOUND } from './data.js?v=14';
+import { KC, FOUND } from './data.js?v=15';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 const j = (v, n) => (v + rnd(-n, n)).toFixed(1);

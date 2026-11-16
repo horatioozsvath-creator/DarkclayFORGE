@@ -1,6 +1,6 @@
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS } from './data.js?v=14';
+import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD } from './data.js?v=15';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -91,11 +91,14 @@ export function newWorking(cfg, rng) {
   const kit = cfg.kit || {}, st = stationOf(cfg.patternId), b0 = bandFor(metal, st);
   let band = b0;
   if (kit.widen && kit.widen !== 1) { const mid = (b0[0] + b0[1]) / 2, half = (b0[1] - b0[0]) / 2 * kit.widen; band = [Math.max(0, Math.round(mid - half)), Math.min(100, Math.round(mid + half))]; }
+  // the last rework, toward Old-Blood: the band narrower about its middle, WHITE HEAT later
+  const old = !!(cfg.rework && reworkTo(cfg.rework.from) === OLD_BLOOD.tier);
+  if (old) { const mid = (band[0] + band[1]) / 2, half = (band[1] - band[0]) / 2 * OLD_BLOOD.band; band = [Math.round(mid - half), Math.round(mid + half)]; }
   const S = { cfg, parts, metal, level: cfg.level, rng, station: st,
     band, cool: st.cool * (metal.coolX || 1) * (kit.coolX || 1), drain: st.drain, rise: st.rise, over: st.over,
     phase: 'prepare', meter: st.start || 30, inFire: false, shape: 0, worked: 0, cracks: 0, notches: [], crackMarks: [],
     streak: 0, white: 0, whiteHeat: false, earned: false, scaled: 0, overT: 0, strikes: 0, heats: 1, done: false, dropped: false,
-    twin: false, warden: false, frost: false, rack: [], lines: [], heatLines: [], slipN: 0 };
+    twin: false, warden: false, frost: false, rack: [], lines: [], heatLines: [], slipN: 0, oldBlood: old, whiteStreak: old ? OLD_BLOOD.whiteStreak : 0 };
   deal(S);
   return S;
 }
@@ -156,7 +159,8 @@ export function strike(S) {
   if (k === 'CRACK') {
     S.cracks++; S.streak = 0; S.crackMarks.push(S.rng());
     if (shaping) { S.notches.push(S.shape); S.shape = Math.max(0, S.shape - 5); gain = '−5 SHAPE · A MARK ON IT'; }
-    else gain = S.cracks >= 2 ? 'IT DROPS A TIER' : 'A MARK ON IT · ONE MORE DROPS A TIER';
+    else gain = S.cracks >= 2 ? (S.oldBlood ? 'IT STAYS RARE' : 'IT DROPS A TIER') : S.oldBlood ? 'A CRACK · IT WON\'T TAKE OLD-BLOOD' : 'A MARK ON IT · ONE MORE DROPS A TIER';
+    if (S.oldBlood && shaping) gain += ' · IT WON\'T TAKE OLD-BLOOD';
     pop({ tile: tk, gain, why, size: 'bad' });
     if (S.cracks >= 2 && !shaping) drop = true;
   } else {
@@ -188,7 +192,7 @@ export function strike(S) {
     if (k === 'TRUE') { size = 'bigpop'; S.earned = true; S.whiteHeat = true; S.white = 4; why = why || 'WHITE HEAT · THE PICK IS YOURS'; }
     pop({ tile: tk, gain, why, size, colour, ring: k === 'TRUE' ? '#fff2c4' : null });
     if (shaping && S.shape >= 100) pop({ label: 'IT\'S MADE', gain: 'NOW EVERY STRIKE PUSHES IT', why: st.close + ' WHENEVER YOU CHOOSE', size: 'bigpop', colour: '#e8c464', delay: 700, ring: '#e8c464', made: true });
-    if (S.level >= 5 && S.streak >= (st.whiteStreak || 8) && S.white <= 0) { S.white = 4; S.earned = true; S.whiteHeat = true; S.streak = 0; pop({ label: 'WHITE HEAT', gain: 'NO CRACK FOR 4 s', why: 'THE PICK IS YOURS', size: 'bigpop', colour: '#fff2c4', delay: 600, ring: '#fff2c4' }); }
+    if (S.level >= 5 && S.streak >= (S.whiteStreak || st.whiteStreak || 8) && S.white <= 0) { S.white = 4; S.earned = true; S.whiteHeat = true; S.streak = 0; pop({ label: 'WHITE HEAT', gain: 'NO CRACK FOR 4 s', why: 'THE PICK IS YOURS', size: 'bigpop', colour: '#fff2c4', delay: 600, ring: '#fff2c4' }); }
   }
   return { k, dead: false, pops, drop };
 }
@@ -227,7 +231,7 @@ export function tick(S, dt) {
 }
 
 export function odds(S) {
-  if (S.cfg.rework) { const t = reworkTo(S.cfg.rework.from); return { c: t === 0 ? 100 : 0, f: t === 1 ? 100 : 0, r: t === 2 ? 100 : 0 }; }
+  if (S.cfg.rework) { const t = reworkTo(S.cfg.rework.from); return { c: t === 0 ? 100 : 0, f: t === 1 ? 100 : 0, r: t === 2 ? 100 : 0, o: t === 3 ? 100 : 0 }; }
   const w = S.worked, l = S.level;
   let r = Math.max(0, Math.min(40, 5 + w * 0.35 + (l - 3))), f = Math.max(0, Math.min(70, 20 + w * 0.9 + (l - 3) * 2 + ((S.cfg.kit || {}).fine || 0)));
   if (S.cracks >= 1 && S.shape >= 100) { f *= 0.85; r *= 0.85; }
@@ -237,13 +241,31 @@ export const PLAIN_ODDS = { f: 20, r: 5 };
 
 // The end of a working. how: 'quench' | 'dropped' | 'instant' (MAKE IT, at the plain odds).
 // A second crack after it was made drops it a tier; a Common piece that drops is flawed (worth less), never lost.
-// Back in the fire (rework): no roll. It takes (the bar filled, quenched): a tier up, Rare at most.
+// Back in the fire (rework): no roll. It takes (the bar filled, quenched): a tier up.
 // A second crack after it took: a tier down (a Common piece stays Common, flawed). A rework teaches, but turns up no found tile.
+// The last rework, Rare to Old-Blood, takes only with not one crack; else it stays Rare (never lower), the materials spent.
 export const reworkTo = from => Math.min(TIERS.length - 1, from + 1);
+// can this piece go toward Old-Blood at this trade level? { ok, why: [what's missing] }
+export function oldBloodGate(card, level) {
+  const p = PATTERNS[card.pattern], why = [];
+  if (!p || p.batch || p.makes) return { ok: false, why: ['brews and bottles stop at Rare'] };
+  if (card.tier !== TIERS[OLD_BLOOD.tier - 1].id) return { ok: false, why: ['Rare first'] };
+  if (card.flawed) why.push('not a flawed piece');
+  if (level < OLD_BLOOD.level) why.push('trade ' + OLD_BLOOD.level + ' in ' + p.trade.toLowerCase());
+  const src = srcOf(card), rare = chosenParts(card.pattern, src.picks).some(o => o.rare);
+  if (!rare && !src.whiteHeat) why.push('a ✶ part or WHITE HEAT in its making');
+  return { ok: !why.length, why };
+}
 export function finish(S, how) {
   S.done = true; S.phase = 'done';
   if (S.cfg.rework) {
     const from = S.cfg.rework.from, dropped = how === 'dropped';
+    if (S.oldBlood) {   // not one crack, or it stays as it was
+      const took = !dropped && S.cracks === 0;
+      S.dropped = dropped;
+      return { rework: true, oldBlood: true, from, tier: took ? reworkTo(from) : from, failed: !took, flawed: false, dropped, instant: false, odds: odds(S),
+        worked: Math.round(S.worked), strikes: S.strikes, heats: S.heats, cracks: S.cracks, whiteHeat: S.whiteHeat, earned: took && S.earned, clean: false, frost: S.frost };
+    }
     const tier = dropped ? Math.max(0, from - 1) : reworkTo(from);
     S.dropped = dropped;
     return { rework: true, from, tier, flawed: dropped && from === 0, dropped, instant: false, odds: odds(S), worked: Math.round(S.worked), strikes: S.strikes, heats: S.heats,

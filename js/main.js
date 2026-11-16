@@ -1,16 +1,16 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=14';
-import * as R from './rules.js?v=14';
-import * as Sh from './shop.js?v=14';
-import * as St from './staff.js?v=14';
-import * as Rm from './room.js?v=14';
-import * as G from './growth.js?v=14';
-import { decodeCard, linkFor } from './share.js?v=14';
-import * as Snd from './sound.js?v=14';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=14';
-import { card, ART } from './card.js?v=14';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=14';
-import { load, store } from './save.js?v=14';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=15';
+import * as R from './rules.js?v=15';
+import * as Sh from './shop.js?v=15';
+import * as St from './staff.js?v=15';
+import * as Rm from './room.js?v=15';
+import * as G from './growth.js?v=15';
+import { decodeCard, linkFor } from './share.js?v=15';
+import * as Snd from './sound.js?v=15';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=15';
+import { card, ART } from './card.js?v=15';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=15';
+import { load, store } from './save.js?v=15';
 
 const $ = id => document.getElementById(id);
 const rng = Math.random;
@@ -20,7 +20,7 @@ save.queue = [];   // whoever was at the counter when the page closed has gone
 let awaySum = St.catchUp(save, Date.now(), rng);   // the shop while the page was closed
 store(save);
 const phoneQ = window.matchMedia('(max-width: 600px)');
-const TIERC = ['var(--t-common)', 'var(--t-fine)', 'var(--t-rare)'];
+const TIERC = ['var(--t-common)', 'var(--t-fine)', 'var(--t-rare)', 'var(--t-oldblood)'];
 
 let screen = 'home';       // home | shop | supp | prepare | work
 let pat = 'falchion';      // the pattern on the bench
@@ -240,7 +240,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=14').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=15').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(shelfShown()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -524,6 +524,12 @@ function slotOpen(slot) {
     } else if (b.id === 'takeDown') { Sh.takeDown(save, slot); store(save); $('look').hidden = true; renderShop(); }
   };
 }
+// a Rare piece that can't go toward Old-Blood yet: what it lacks
+function oldBloodNeeds(c) {
+  const g = R.oldBloodGate(c, levelFor(c.pattern).level);
+  if (g.ok || /^brews/.test(g.why[0] || '')) return '';
+  return '<p class="note"><b style="color:var(--t-oldblood)">TOWARD OLD-BLOOD</b> · a master\'s last working. It needs ' + g.why.join(', ') + '.</p>';
+}
 function backOpen(id) {
   const c = save.cards.find(x => x.id === id), free = save.shelf.findIndex(e => !e);
   const sv = Sh.salvageOf(c), cost = Sh.reworkCost(c), canRw = Sh.canRework(save, c) && Rm.owns(save, R.stationOf(c.pattern).id), haveRw = Sh.canMake(save.mats, cost);
@@ -534,7 +540,8 @@ function backOpen(id) {
   acts += '<div class="row2">'
     + (canRw ? '<button class="seg" id="reworkIt"' + (haveRw ? '' : ' disabled') + '>' + R.stationOf(c.pattern).again + ' · TO ' + toTier.name.toUpperCase() + ' · ' + cost.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') + '</button>' : '')
     + '<button class="seg" id="breakIt">BREAK IT DOWN · ' + (sv.length ? sv.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') : 'nothing worth keeping') + '</button></div>'
-    + (canRw && !haveRw ? '<p>Back in the fire takes ' + cost.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') + '. You have ' + (save.mats[cost[0].mat] || 0) + '.</p>' : '');
+    + (canRw && !haveRw ? '<p>Back in the fire takes ' + cost.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') + '. You have ' + cost.map(r => (save.mats[r.mat] || 0) + ' ' + MATS[r.mat].name.toLowerCase()).join(', ') + '.</p>' : '')
+    + (c.tier === 'rare' && !canRw && Rm.owns(save, R.stationOf(c.pattern).id) ? oldBloodNeeds(c) : '');
   openLook(card(c), acts, false, c);
   if ($('hangIt')) $('hangIt').onclick = () => { if (G.hang(save, id)) { store(save); $('look').hidden = true; renderShop(); } };
   if (free >= 0) $('putUp').onclick = () => { Sh.place(save, id, free); store(save); $('look').hidden = true; renderShop(); };
@@ -685,6 +692,15 @@ function toRework(id) {
 }
 function pieceKv() {
   const l = lvl(), o = R.odds(S);
+  if (rw && R.reworkTo(rw.from) === OLD_BLOOD.tier) {
+    $('pieceKv').innerHTML = '<span>Now</span><b style="color:' + TIERC[rw.from] + '">' + TIERS[rw.from].name + '</b>'
+      + '<span>To Old-Blood</span><b style="color:var(--t-oldblood)">fill the bar and quench with not one crack: it goes up to Old-Blood and takes a third affix.</b>'
+      + '<span>The risk</span><b>one crack, or dropped, and it stays Rare; the materials are spent. It never goes lower.</b>'
+      + '<span>' + stn().meter.replace('THE ', '') + '</span><b>narrower for a master: the band now ' + S.band[0] + '–' + S.band[1] + '. ' + stn().twist + '</b>'
+      + '<span>White heat</span><b>after ' + OLD_BLOOD.whiteStreak + ' clean in a row (not 8): it holds off a crack for 4 s.</b>'
+      + '<span>Walk away</span><b>the piece comes out as it was; the materials are spent</b>';
+    return;
+  }
   if (rw) {
     const to = TIERS[R.reworkTo(rw.from)].name;
     $('pieceKv').innerHTML = '<span>Now</span><b style="color:' + TIERC[rw.from] + '">' + TIERS[rw.from].name + '</b>'
@@ -927,6 +943,7 @@ function finish(how) {
   const res = R.finish(S, how);
   if (screen === 'work') { $('cDone').className = 'on'; $('cPush').className = 'done'; render(); }
   $('result').hidden = false; document.body.style.overflow = 'hidden';
+  $('result').classList.toggle('oldblood', !!(res.oldBlood && !res.failed));
   if (res.earned) {
     const two = R.rollAffixes(pat, 2, rng, rw ? R.affixIds(rwCard().affixes) : []);
     $('rDone').hidden = true; $('rPick').hidden = false;
@@ -945,8 +962,9 @@ function complete(res, picked) {
     piece = { name: yields.n + ' ' + MATS[yields.mat].name.toLowerCase() + 's', tier: TIERS[res.tier].id, worth: 0, id: null };
   } else if (res.rework) {   // the same piece, out of the fire: in the back where it was
     const old = rwCard(), i = save.cards.indexOf(old);
-    piece = R.remakePiece({ card: old, res, picked, rng, now: Date.now() });
-    save.cards[i] = piece; rw = null;
+    if (res.failed) piece = old;   // the last working didn't take: the piece exactly as it was (its cracks aren't its)
+    else { piece = R.remakePiece({ card: old, res, picked, rng, now: Date.now() }); save.cards[i] = piece; }
+    rw = null;
   } else {
     piece = R.makePiece({ patternId: pat, picks: picks(), result: res, picked, maker: save.maker, rng, now: Date.now() });
     save.cards.unshift(piece); save.made++;
@@ -956,7 +974,9 @@ function complete(res, picked) {
   const after = levelFor(pat), p = PATTERNS[pat];
   $('rPick').hidden = true; $('rDone').hidden = false;
   $('rCard').innerHTML = yields ? '<div class="yield"><div class="tier" style="color:' + TIERC[res.tier] + '">' + TIERS[res.tier].name.toUpperCase() + ' BLOWING</div><div class="cd-art">' + ART.draught('#cfe8e8') + '</div><h3>' + yields.n + ' bottles</h3><p>Into the store room for the kettle. You have ' + save.mats[yields.mat] + '.</p></div>' : card(piece);
-  $('rLine').innerHTML = res.rework ? (res.dropped ? 'A second crack after it took. It came out ' + TIERS[res.tier].name + (res.flawed ? ', flawed.' : '.') : 'It took. ' + TIERS[res.from].name + ' to ' + TIERS[res.tier].name + '.')
+  if (res.oldBlood && !res.failed) { $('rCard').insertAdjacentHTML('afterbegin', '<div class="oldword">OLD-BLOOD · ' + esc(piece.name.toUpperCase()) + '</div>'); Snd.play('level'); }
+  $('rLine').innerHTML = res.oldBlood ? (res.failed ? (res.dropped ? 'Dropped. ' : 'A crack in the last working. ') + 'It wouldn\'t take Old-Blood: it stays Rare, and the materials are spent.' : 'It took. Rare to Old-Blood: a master\'s piece.')
+    : res.rework ? (res.dropped ? 'A second crack after it took. It came out ' + TIERS[res.tier].name + (res.flawed ? ', flawed.' : '.') : 'It took. ' + TIERS[res.from].name + ' to ' + TIERS[res.tier].name + '.')
     : res.instant ? 'Made at once at the plain odds: Fine ' + res.odds.f + ' % · Rare ' + res.odds.r + ' %.'
     : res.dropped ? (res.flawed ? 'A second crack after it was made. It holds together, flawed, and is worth less.' : 'A second crack after it was made dropped it a tier.')
     : 'WORKED +' + res.worked + ' % · it had Fine ' + Math.round(res.odds.f) + ' % · Rare ' + Math.round(res.odds.r) + ' %';

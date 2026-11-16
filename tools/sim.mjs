@@ -7,7 +7,7 @@ import * as Sh from '../js/shop.js';
 import * as St from '../js/staff.js';
 import * as Rm from '../js/room.js';
 import * as G from '../js/growth.js';
-import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS } from '../js/data.js';
+import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD } from '../js/data.js';
 
 const days = +process.argv[2] || 7, seed0 = +process.argv[3] || 1, SESSION_MIN = +process.argv[4] || 45;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -15,7 +15,8 @@ const rng = seeded(seed0);
 const save = { v: 1, maker: 'Bot', trades: {}, found: ['ember'], chosen: [], picks: {}, cards: [], made: 0,
   coins: 60, mats: { iron: 5, bronze: 2, cord: 3, wrap: 1, ash: 1, wool: 1, strap: 1 }, slots: 4, shelf: [], ledger: [], sold: 0, earned: 0, shopNext: 6, queue: [] };
 Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
-let t = Date.UTC(2026, 10, 1, 9), log = [], made = 0, spent = { mats: 0, staff: 0, tools: 0, room: 0 };
+const OLD = process.env.OLD !== '0';   // OLD=0: a run without Old-Blood, to compare
+let t = Date.UTC(2026, 10, 1, 9), log = [], made = 0, oldTried = 0, oldMade = 0, spent = { mats: 0, staff: 0, tools: 0, room: 0 };
 const H = 3600000, lvl = id => R.levelOf((save.trades[id] || {}).xp || 0).level, note = m => log.push('  ' + m);
 
 // which piece to make: the best worth over materials the bot can make or buy, at its trade
@@ -51,6 +52,29 @@ function makeOne(hour) {
   const tag = p.worth > 400 ? 'fair' : 'fair';
   if (Sh.place(save, p.id, null, tag) < 0) { /* the shelf is full: it waits in the back */ }
   return true;
+}
+// a master's last working: a Rare that qualifies (on the shelf or in the back), its materials bought if they're for sale this hour.
+// A steady player finishes it with no crack about half the time at trade 6, better with each level after.
+function tryOldBlood(hour) {
+  if (!OLD) return;
+  for (const c of save.cards.filter(x => x.tier === 'rare')) {
+    const slot = Sh.onShelf(save, c.id); if (slot >= 0) Sh.takeDown(save, slot);
+    if (!Sh.canRework(save, c)) { if (slot >= 0) Sh.place(save, c.id, slot); continue; }
+    const cost = Sh.reworkCost(c), short = Sh.short(save.mats, cost);
+    const coins = short.reduce((n, x) => n + Sh.priceOf(x.mat, hour) * (x.n - x.have), 0);
+    if (short.some(x => !Sh.sells(x.mat, hour)) || save.coins - coins < 300) { if (slot >= 0) Sh.place(save, c.id, slot); continue; }
+    short.forEach(x => { const b = save.coins; Sh.buy(save, x.mat, x.n - x.have, hour); spent.mats += b - save.coins; });
+    Sh.takeMats(save, cost); oldTried++;
+    const took = rng() < Math.min(0.75, 0.45 + 0.06 * (lvl(c.pattern) - OLD_BLOOD.level));
+    (save.trades[c.pattern] = save.trades[c.pattern] || { xp: 0 }).xp += took ? 6 : 2;
+    if (took) {
+      const res = { tier: OLD_BLOOD.tier, flawed: false, worked: 10, strikes: 24, heats: 2, cracks: 0, whiteHeat: true };
+      const p = R.remakePiece({ card: c, res, picked: null, rng, now: t }); save.cards[save.cards.indexOf(c)] = p; oldMade++;
+      note('OLD-BLOOD: ' + p.name + ' (' + p.worth + ' c)');
+    }
+    if (slot >= 0) Sh.place(save, (took ? save.cards.find(x => x.id === c.id) : c).id, slot);
+    return;
+  }
 }
 // spending, with a reserve kept for materials
 function spend(hour) {
@@ -89,7 +113,7 @@ for (let d = 1; d <= days; d++) {
     Sh.shopStep(save, 50, rng, t, false, clerk);
     St.payWages(save, 50); St.resolveTrips(save, t, rng);
     t += 50000; save.lastSeen = t;
-    if (s % 600 === 0) spend(hour);
+    if (s % 600 === 0) { spend(hour); tryOldBlood(hour); }
     if (Sh.rescue(save, hour)) note('scrap bin');
   }
   // the night: away for 14 hours
@@ -101,4 +125,5 @@ for (let d = 1; d <= days; d++) {
   log.forEach(l => console.log(l)); log = [];
 }
 const tiers = {}; save.ledger.forEach(e => { if (e.sold) tiers[e.sold.tier] = (tiers[e.sold.tier] || 0) + 1; });
+console.log('old-blood: tried', oldTried, 'made', oldMade, ' sold by tier:', tiers);
 console.log('spent:', spent, ' trades:', Object.fromEntries(Object.entries(save.trades).map(([k, v]) => [k, lvl(k)])), ' in the back:', Sh.inBack(save).length);

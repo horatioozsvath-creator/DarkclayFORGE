@@ -2,10 +2,10 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS } from './data.js?v=14';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf } from './rules.js?v=14';
-import { charmGap } from './room.js?v=14';
-import { fame, purseMult, patienceOf, haggleMult, onWall } from './growth.js?v=14';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RENOWN } from './data.js?v=15';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=15';
+import { charmGap } from './room.js?v=15';
+import { fame, purseMult, patienceOf, haggleMult, onWall, rung } from './growth.js?v=15';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -316,7 +316,9 @@ export function postOrder(save, rng, now) {
   const owns = p => !PATTERNS[p].station || PATTERNS[p].station === 'forge' || (save.stations || []).includes(PATTERNS[p].station);
   const regs = REGULARS.filter(x => x.wants.some(owns)), r = regs[Math.floor(rng() * regs.length)], can = r.wants.filter(owns);
   const pattern = can[Math.floor(rng() * can.length)];
-  const least = r.least != null ? r.least : (rng() < 0.35 ? 1 : 0);
+  let least = r.least != null ? r.least : (rng() < 0.35 ? 1 : 0);
+  // a famed shop: now and then a regular asks for Old-Blood (only a piece that can be reworked that far)
+  if (rung(save) === RENOWN.length - 1 && !PATTERNS[pattern].batch && !PATTERNS[pattern].makes && rng() < 0.2) least = OLD_BLOOD.tier;
   let metal = r.metal && metalIndex(pattern, r.metal) >= 0 ? r.metal : null;
   if (!metal && rng() < 0.3) { const ok = ['iron', 'bronze', 'steel'].filter(m => metalIndex(pattern, m) >= 0); metal = ok[Math.floor(rng() * ok.length)]; }
   save.order = { who: r.who, fig: r.fig, pattern, least, metal, line: r.line, posted: save.clock || 0,
@@ -358,8 +360,17 @@ export function salvage(save, cardId) {
   return got;
 }
 // back in the fire: half the bars (rounded up) of its own metal; Common to Fine, Fine to Rare
-export const reworkCost = card => [{ mat: card.metal, n: Math.ceil(PATTERNS[card.pattern].bars / 2) }];
-export const canRework = (save, card) => !PATTERNS[card.pattern].batch && !PATTERNS[card.pattern].makes && TIER_N[card.tier] < TIERS.length - 1 && onShelf(save, card.id) < 0 && !onWall(save, card.id);
+// back in the fire: half the bars again; toward Old-Blood three times that and one rare thing of the station's
+export const reworkCost = card => {
+  const n = Math.ceil(PATTERNS[card.pattern].bars / 2);
+  if (TIER_N[card.tier] !== OLD_BLOOD.tier - 1) return [{ mat: card.metal, n }];
+  const rare = OLD_BLOOD.rare[stationOf(card.pattern).id];
+  return [{ mat: card.metal, n: n * OLD_BLOOD.costX }].concat(rare ? [{ mat: rare, n: 1 }] : []);
+};
+export const tradeLevel = (save, pattern) => levelOf(((save.trades || {})[pattern] || {}).xp || 0).level;
+// Common and Fine go up a tier; Rare only toward Old-Blood, for a master with the right piece (rules.js oldBloodGate)
+export const canRework = (save, card) => !PATTERNS[card.pattern].batch && !PATTERNS[card.pattern].makes && TIER_N[card.tier] < TIERS.length - 1
+  && onShelf(save, card.id) < 0 && !onWall(save, card.id) && (TIER_N[card.tier] < OLD_BLOOD.tier - 1 || oldBloodGate(card, tradeLevel(save, card.pattern)).ok);
 
 // ---------- parts for other stations, forged at once ----------
 export function forgePart(save, id, n = 1) {

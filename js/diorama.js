@@ -2,9 +2,9 @@
 // in to the counter. Loaded only when the shop is opened. Three.js comes through the page's import map as 'three'.
 import * as THREE from 'three';
 import { GLTFLoader } from '../vendor/three/loaders/GLTFLoader.js';
-import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=14';
-import { ART } from './card.js?v=14';
-import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=14';
+import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=15';
+import { ART } from './card.js?v=15';
+import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=15';
 
 const MODELS = 'assets/models/', M = '?m=9';   // bump m when tools/models.sh rebuilds them
 const FIGURES = { folk: 'folk', guard: 'dwarf', traveller: 'carter', delver: 'bard', factor: 'chandler', collector: 'herbalist', seller: 'carter', maker: 'smith', clerk: 'chandler' };
@@ -105,6 +105,12 @@ export async function cardFace(c, price) {
     }
     if (c.count > 0) { g.fillStyle = '#0e0b09'; g.fillRect(CW - 86, ay + 4, 56, 38); g.fillStyle = '#ece0c6'; g.font = '800 30px Alegreya, Georgia, serif'; g.fillText('×' + c.count, CW - 58, ay + 24); }
     g.fillStyle = '#e8c464'; fitText(g, price + ' c', CW - 44, 62, 800); g.fillText(price + ' c', CW / 2, 302);
+    if (t.foil) {   // Old-Blood's foil, still: a sheen across the frame (only the frame)
+      g.save(); g.beginPath(); g.roundRect(6, 6, CW - 12, CH - 12, 18); g.roundRect(16, 16, CW - 32, CH - 32, 12); g.clip('evenodd');
+      const sh = g.createLinearGradient(0, 0, CW, CH);
+      sh.addColorStop(0.25, 'rgba(255,255,255,0)'); sh.addColorStop(0.42, 'rgba(255,255,255,.75)'); sh.addColorStop(0.5, 'rgba(225,205,255,.5)'); sh.addColorStop(0.62, 'rgba(255,255,255,0)');
+      g.fillStyle = sh; g.fillRect(0, 0, CW, CH); g.restore();
+    }
     tex.needsUpdate = true;
   };
   draw(null);

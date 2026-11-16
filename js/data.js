@@ -9,7 +9,13 @@ export const TIERS = [
   { id: 'common', name: 'Common', c: '#b8b0a2', glow: 0, mult: 1.00, worth: 1, affixes: 0 },
   { id: 'fine', name: 'Fine', c: '#8fc46a', glow: .35, mult: 1.10, worth: 2, affixes: 1 },
   { id: 'rare', name: 'Rare', c: '#6fb1ec', glow: .45, mult: 1.22, worth: 4, affixes: 2 },
+  // Darkclay Zero's Old-Blood (data/zero/tiers.json: violet, foil, ×1.36, three affixes): never rolled, only a master's last rework
+  { id: 'oldblood', name: 'Old-Blood', c: '#b48cf0', glow: .55, mult: 1.36, worth: 8, affixes: 3, foil: true },
 ];
+// the last rework, Rare to Old-Blood: a master of the trade, a piece with a rare part or WHITE HEAT in its making, three times the
+// rework's bars and one rare thing of the station's; a narrower band, WHITE HEAT later, and not one crack (a crack: it stays Rare)
+export const OLD_BLOOD = { tier: 3, level: 6, costX: 3, band: 0.8, whiteStreak: 12,
+  rare: { forge: 'blackwater', stretcher: 'winterfox', bowbench: 'sinew', glass: 'starglass', kettle: 'moonwater' } };
 
 export const FORGE = {
   id: 'forge', name: 'FORGE', word: 'THE FORGE', tool: 'HAMMER', meter: 'HEAT', fire: 'INTO THE FIRE', out: 'OUT OF THE FIRE', close: 'QUENCH', place: 'the fire',
@@ -123,79 +129,79 @@ export const PATTERNS = {
     parts: [{ part: 'Blade', metals: BLADE_METALS },
       { part: 'Guard', opts: [{ name: 'Iron', mat: 'iron' }, { name: 'Bronze', mat: 'bronze' }, { name: 'Blackwater iron', mat: 'blackwater', rare: true }] },
       { part: 'Grip', opts: [{ name: 'Leather wrap', mat: 'wrap' }, { name: 'Shark hide', mat: 'sharkhide', val: 1.1 }, { name: 'Cord', mat: 'cord' }] }],
-    affixes: weaponAffixes, lore: ['Sound work. It does what a blade does.', 'Sound work, and a little more. It does what a blade does, and it does it first.', 'The curve runs true from guard to point. Folk will ask who made it.'] },
+    affixes: weaponAffixes, lore: ['Sound work. It does what a blade does.', 'Sound work, and a little more. It does what a blade does, and it does it first.', 'The curve runs true from guard to point. Folk will ask who made it.', 'Old blood in the steel: it remembers every hand that ever held a sword.'] },
   dagger: { name: 'Dagger', trade: 'Daggers', kind: 'DAGGER · ONE HAND', art: 'dagger', dice: [1, 4], dmg: [1, 4], speed: 2.0, reach: 1.0, skill: 'DAGGERS', value: 24, bars: 1, want: 'weapon',
     parts: [{ part: 'Blade', metals: BLADE_METALS },
       { part: 'Guard', opts: [{ name: 'None' }, { name: 'Iron', mat: 'iron', val: 1.15 }, { name: 'Blackwater iron', mat: 'blackwater', rare: true }] },
       { part: 'Grip', opts: [{ name: 'Cord', mat: 'cord' }, { name: 'Leather wrap', mat: 'wrap' }, { name: 'Horn', mat: 'horn', val: 1.1 }] }],
-    affixes: weaponAffixes, lore: ['A plain knife for plain work.', 'It sits in the hand as if it grew there.', 'Thin as a reed and twice as patient.'] },
+    affixes: weaponAffixes, lore: ['A plain knife for plain work.', 'It sits in the hand as if it grew there.', 'Thin as a reed and twice as patient.', 'It was a knife once. Now it is the knife, and it knows it.'] },
   axe: { name: 'Axe', trade: 'Axe heads', kind: 'AXE · ONE HAND', art: 'axe', dice: [1, 8], dmg: [3, 10], speed: 1.0, reach: 1.5, skill: 'AXEWORK', value: 44, bars: 2, want: 'weapon',
     parts: [{ part: 'Head', metals: BLADE_METALS },
       { part: 'Haft', opts: [{ name: 'Ash', mat: 'ash' }, { name: 'Rowan', mat: 'rowan', val: 1.05 }, { name: 'Bog oak', mat: 'bogoak', rare: true }] },
       { part: 'Wrap', opts: [{ name: 'Leather wrap', mat: 'wrap' }, { name: 'Cord', mat: 'cord' }] }],
-    affixes: weaponAffixes.concat('bleeding'), lore: ['It splits wood and it splits shields.', 'The beard hooks, the edge bites, the haft forgives.', 'A head like this outlives three hafts and two owners.'] },
+    affixes: weaponAffixes.concat('bleeding'), lore: ['It splits wood and it splits shields.', 'The beard hooks, the edge bites, the haft forgives.', 'A head like this outlives three hafts and two owners.', 'Kings have been crowned for less than the stroke this was made for.'] },
   helm: { name: 'Helm', trade: 'Helms', kind: 'HELM', art: 'helm', armour: 4, weight: 3, value: 56, bars: 3, want: 'helm',
     parts: [{ part: 'Plate', metals: BLADE_METALS },
       { part: 'Lining', opts: [{ name: 'Wool', mat: 'wool' }, { name: 'Silk', mat: 'silk', val: 1.15 }, { name: 'Winter fox', mat: 'winterfox', rare: true }] },
       { part: 'Strap', opts: [{ name: 'Leather', mat: 'strap' }, { name: 'Cord', mat: 'cord' }] }],
-    affixes: helmAffixes, lore: ['It keeps the rain off and most of the rest.', 'Raised true: no seam for a blade to find.', 'The dome rings like a bell when struck, and the wearer stands.'] },
+    affixes: helmAffixes, lore: ['It keeps the rain off and most of the rest.', 'Raised true: no seam for a blade to find.', 'The dome rings like a bell when struck, and the wearer stands.', 'Struck once, it sings; struck twice, the striker thinks again.'] },
   ring: { name: 'Ring', trade: 'Rings', kind: 'RING', art: 'ring', value: 20, bars: 1, want: 'ring',
     parts: [{ part: 'Band', metals: ['bronze', 'iron', 'silver', 'darkclay'] },
       { part: 'Stone', opts: [{ name: 'None' }, { name: 'Rough gem', mat: 'gem', val: 1.6 }, { name: 'Starglass', mat: 'starglass', rare: true }] },
       { part: 'Setting', opts: [{ name: 'Plain' }, { name: 'Claw' }] }],
-    affixes: ringAffixes, lore: ['A plain band, honestly round.', 'It catches the light and a little luck.', 'Small work is the hardest work. This is small work done right.'] },
+    affixes: ringAffixes, lore: ['A plain band, honestly round.', 'It catches the light and a little luck.', 'Small work is the hardest work. This is small work done right.', 'It fits whoever it chooses, and it does not choose often.'] },
   // the stretcher's
   jerkin: { name: 'Jerkin', trade: 'Jerkins', kind: 'COAT · CHEST', art: 'jerkin', armour: 3, weight: 4, value: 55, bars: 3, want: 'armour', station: 'stretcher',
     parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
-    affixes: wearAffixes, lore: ['It keeps the wind out and the shape in.', 'Stitched close: it moves when you move.', 'The seams are the work: not one of them will give.'] },
+    affixes: wearAffixes, lore: ['It keeps the wind out and the shape in.', 'Stitched close: it moves when you move.', 'The seams are the work: not one of them will give.', 'Leather like this was a beast that never lost a fight.'] },
   hood: { name: 'Hood', trade: 'Hoods', kind: 'HOOD · HEAD', art: 'hood', armour: 1, weight: 1, value: 22, bars: 1, want: 'helm', station: 'stretcher',
     parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
-    affixes: wearAffixes, lore: ['Rain off, ears warm.', 'It sits close and keeps out more than weather.', 'A hood a scout would trade a horse for.'] },
+    affixes: wearAffixes, lore: ['Rain off, ears warm.', 'It sits close and keeps out more than weather.', 'A hood a scout would trade a horse for.', 'Pull it up and the road forgets your face.'] },
   // the glass's: lenses, goblets and panes are pieces; bottles go to the store room for the kettle (makes: what a working yields)
   lens: { name: 'Lens', trade: 'Lenses', kind: 'LENS', art: 'lens', clarity: 10, value: 40, bars: 2, want: 'glass', station: 'glass',
     parts: [{ part: 'Sand', metals: SANDS }, { part: 'Flux', opts: FLUX }, { part: 'Colour', opts: COLOUR }],
-    affixes: glassAffixes, lore: ['It brings the far thing near.', 'Ground true: not a ripple in it.', 'Through it a scholar reads what the page forgot.'] },
+    affixes: glassAffixes, lore: ['It brings the far thing near.', 'Ground true: not a ripple in it.', 'Through it a scholar reads what the page forgot.', 'It shows what is there, and a little of what was.'] },
   goblet: { name: 'Goblet', trade: 'Goblets', kind: 'GOBLET', art: 'goblet', clarity: 8, value: 34, bars: 2, want: 'glass', station: 'glass',
     parts: [{ part: 'Sand', metals: SANDS }, { part: 'Flux', opts: FLUX }, { part: 'Colour', opts: COLOUR }],
-    affixes: glassAffixes, lore: ['It holds wine and catches the fire.', 'A stem as thin as a reed, and it stands.', 'Lords drink from worse.'] },
+    affixes: glassAffixes, lore: ['It holds wine and catches the fire.', 'A stem as thin as a reed, and it stands.', 'Lords drink from worse.', 'Wine poured in it tastes of the year the vine was planted.'] },
   pane: { name: 'Pane', trade: 'Panes', kind: 'PANE · A WINDOW', art: 'pane', clarity: 6, value: 34, bars: 2, want: 'glass', station: 'glass', windowed: true,
     parts: [{ part: 'Sand', metals: SANDS }, { part: 'Flux', opts: FLUX }, { part: 'Colour', opts: COLOUR }],
-    affixes: glassAffixes, lore: ['Daylight, let in.', 'Flat as still water.', 'The light through it looks like it\'s been somewhere better.'] },
+    affixes: glassAffixes, lore: ['Daylight, let in.', 'Flat as still water.', 'The light through it looks like it\'s been somewhere better.', 'Look through it at dusk and the street is the way it was a hundred years ago.'] },
   bottles: { name: 'Bottles', trade: 'Bottles', kind: 'BOTTLES · FOR THE KETTLE', art: 'draught', value: 4, bars: 1, station: 'glass', makes: { mat: 'bottle', n: [6, 8, 10] },
     parts: [{ part: 'Sand', metals: SANDS }, { part: 'Flux', opts: FLUX }, { part: 'Colour', opts: [{ name: 'Clear' }] }],
-    affixes: [], lore: ['', '', ''] },
+    affixes: [], lore: ['', '', '', ''] },
   // the kettle's: a batch of three, each bottle sold on its own (every batch takes three bottles: bought, or blown at the glass)
   draught: { name: 'Draught', trade: 'Draughts', kind: 'DRAUGHT · A BATCH', art: 'draught', potency: 10, value: 14, bars: 2, batch: 3, want: 'brew', station: 'kettle',
     parts: [{ part: 'Herb', metals: HERBS }, { part: 'Water', opts: WATER }, { part: 'Binder', opts: BINDER }],
-    affixes: brewAffixes, lore: ['It tastes of the hedge and works anyway.', 'Clear as a stream, and it mends like one.', 'A dram of this and the road looks shorter.'] },
+    affixes: brewAffixes, lore: ['It tastes of the hedge and works anyway.', 'Clear as a stream, and it mends like one.', 'A dram of this and the road looks shorter.', 'One swallow, and the wound forgets it was ever there.'] },
   salve: { name: 'Salve', trade: 'Salves', kind: 'SALVE · A BATCH', art: 'salve', potency: 8, value: 12, bars: 2, batch: 3, want: 'brew', station: 'kettle',
     parts: [{ part: 'Herb', metals: HERBS }, { part: 'Water', opts: WATER }, { part: 'Binder', opts: BINDER }],
-    affixes: brewAffixes, lore: ['For cuts, scrapes and the things you don\'t mention.', 'It smells of honey and it stings for a moment.', 'A wound dressed with this closes by morning.'] },
+    affixes: brewAffixes, lore: ['For cuts, scrapes and the things you don\'t mention.', 'It smells of honey and it stings for a moment.', 'A wound dressed with this closes by morning.', 'Old scars fade under it, and some of the stories with them.'] },
   oil: { name: 'Blade oil', trade: 'Oils', kind: 'OIL · A BATCH', art: 'oil', potency: 6, value: 16, bars: 2, batch: 3, want: 'brew', station: 'kettle',
     parts: [{ part: 'Herb', metals: HERBS }, { part: 'Water', opts: WATER }, { part: 'Binder', opts: BINDER }],
-    affixes: ['keen', 'biting', 'hallowed', 'weatherproof', 'balanced'], lore: ['Keeps an edge from going to rust.', 'A wipe of this and the blade sings.', 'Whatever it\'s rubbed on bites deeper.'] },
+    affixes: ['keen', 'biting', 'hallowed', 'weatherproof', 'balanced'], lore: ['Keeps an edge from going to rust.', 'A wipe of this and the blade sings.', 'Whatever it\'s rubbed on bites deeper.', 'An edge oiled with this has never once been sorry.'] },
   tonic: { name: 'Tonic', trade: 'Tonics', kind: 'TONIC · A BATCH', art: 'tonic', potency: 14, value: 22, bars: 3, batch: 3, want: 'brew', station: 'kettle',
     parts: [{ part: 'Herb', metals: HERBS }, { part: 'Water', opts: WATER }, { part: 'Binder', opts: BINDER }],
-    affixes: brewAffixes, lore: ['Bitter, and worth it.', 'Two sips and the night is shorter.', 'They\'ll sing of the night they drank this.'] },
+    affixes: brewAffixes, lore: ['Bitter, and worth it.', 'Two sips and the night is shorter.', 'They\'ll sing of the night they drank this.', 'Drink it and sleep like the hills do.'] },
   // the bench's (arrows need forged heads, a staff a forged ferrule: made at the forge, or bought dearer)
   shortbow: { name: 'Shortbow', trade: 'Shortbows', kind: 'BOW · TWO HANDS', art: 'shortbow', dice: [1, 6], dmg: [3, 8], speed: 1.5, range: 30, skill: 'ARCHERY', value: 45, bars: 2, want: 'bow', station: 'bowbench',
     parts: [{ part: 'Stave', metals: WOODS }, { part: 'String', opts: STRINGS }, { part: 'Nocks', opts: NOCKS }],
-    affixes: bowAffixes, lore: ['It draws, it looses, it flies true enough.', 'Quick to the string and quicker to the mark.', 'It bends like it remembers the tree.'] },
+    affixes: bowAffixes, lore: ['It draws, it looses, it flies true enough.', 'Quick to the string and quicker to the mark.', 'It bends like it remembers the tree.', 'The string hums before the arrow leaves, as if it already knows.'] },
   longbow: { name: 'Longbow', trade: 'Longbows', kind: 'BOW · TWO HANDS', art: 'longbow', dice: [1, 8], dmg: [5, 12], speed: 1.0, range: 60, skill: 'ARCHERY', value: 90, bars: 3, want: 'bow', station: 'bowbench',
     parts: [{ part: 'Stave', metals: WOODS }, { part: 'String', opts: STRINGS }, { part: 'Nocks', opts: NOCKS }],
-    affixes: bowAffixes, lore: ['A long pull and a long way.', 'The kind of bow that wins a field.', 'Heartwood and sapwood, and the arrow goes where it\'s told.'] },
+    affixes: bowAffixes, lore: ['A long pull and a long way.', 'The kind of bow that wins a field.', 'Heartwood and sapwood, and the arrow goes where it\'s told.', 'Old yew and old blood: the arrow arrives before the sound.'] },
   staff: { name: 'Staff', trade: 'Staves', kind: 'STAFF · FOCUS', art: 'staff', dice: [1, 6], dmg: [2, 6], speed: 1.2, reach: 2.0, skill: 'STAVES', value: 60, bars: 2, want: 'weapon', station: 'bowbench',
     parts: [{ part: 'Stave', metals: WOODS }, { part: 'Ferrule', opts: [{ name: 'Forged ferrule', mat: 'ferrule' }] }, { part: 'Head', opts: [{ name: 'Plain' }, { name: 'Rough gem', mat: 'gem', val: 1.5 }, { name: 'Starglass', mat: 'starglass', rare: true }] }],
-    affixes: ['startouched', 'learned', 'moonlit', 'spiritsighted', 'hallowed', 'balanced', 'steady'], lore: ['A walking stick with ambitions.', 'It hums a little in the hand.', 'The grain spirals, and so does whatever passes through it.'] },
+    affixes: ['startouched', 'learned', 'moonlit', 'spiritsighted', 'hallowed', 'balanced', 'steady'], lore: ['A walking stick with ambitions.', 'It hums a little in the hand.', 'The grain spirals, and so does whatever passes through it.', 'It was a branch of something older than the forest.'] },
   arrows: { name: 'Arrows', trade: 'Arrows', kind: 'ARROWS · A SHEAF OF 20', art: 'arrows', dice: [1, 6], dmg: [2, 5], speed: 1.8, range: 40, skill: 'ARCHERY', value: 24, bars: 1, want: 'arrows', station: 'bowbench',
     parts: [{ part: 'Shafts', metals: WOODS }, { part: 'Heads', opts: [{ name: 'Forged heads', mat: 'arrowheads' }] }, { part: 'Fletching', opts: [{ name: 'Goose', mat: 'goose' }, { name: 'Raven', mat: 'raven', val: 1.1 }] }],
-    affixes: ['strongdrawn', 'farflying', 'biting', 'hallowed', 'bleeding'], lore: ['Twenty of them, all alike, which is the point.', 'Straight shafts and honest heads.', 'Each one fletched as if it were the only one.'] },
+    affixes: ['strongdrawn', 'farflying', 'biting', 'hallowed', 'bleeding'], lore: ['Twenty of them, all alike, which is the point.', 'Straight shafts and honest heads.', 'Each one fletched as if it were the only one.', 'Twenty arrows, and every one of them comes home.'] },
   gloves: { name: 'Gloves', trade: 'Gloves', kind: 'GLOVES · HANDS', art: 'gloves', armour: 1, weight: 1, value: 24, bars: 1, want: 'armour', station: 'stretcher',
     parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
-    affixes: wearAffixes, lore: ['Work gloves: the work is yours.', 'They fit like they were measured. They were.', 'Ten fingers of good leather and not a seam that rubs.'] },
+    affixes: wearAffixes, lore: ['Work gloves: the work is yours.', 'They fit like they were measured. They were.', 'Ten fingers of good leather and not a seam that rubs.', 'Put them on and your hands remember a craft you never learned.'] },
   boots: { name: 'Boots', trade: 'Boots', kind: 'BOOTS · FEET', art: 'boots', armour: 2, weight: 2, value: 40, bars: 2, want: 'armour', station: 'stretcher',
     parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
-    affixes: wearAffixes, lore: ['Dry feet are half of any road.', 'Broken in before they leave the shop.', 'They\'ll outlast the roads they walk.'] },
+    affixes: wearAffixes, lore: ['Dry feet are half of any road.', 'Broken in before they leave the shop.', 'They\'ll outlast the roads they walk.', 'They have walked to the edge of the map and come back with stories.'] },
 };
 for (const p of Object.values(PATTERNS)) for (const part of p.parts) for (const o of part.opts || []) if (o.rare) { o.level = RARE_LEVEL; o.line = 'rare: a GOOD becomes a TRUE'; }
 
@@ -446,7 +452,7 @@ export const RENOWN = [
   { at: 0, word: 'UNKNOWN' }, { at: 15, word: 'NOTED' }, { at: 50, word: 'KNOWN' }, { at: 150, word: 'SOUGHT' }, { at: 400, word: 'FAMED' },
 ];
 export const PURSE_STEP = 0.1;   // purses grow this much a rung
-export const WALL_RENOWN = { common: 2, fine: 5, rare: 12 };
+export const WALL_RENOWN = { common: 2, fine: 5, rare: 12, oldblood: 30 };
 export const WALL_SLOTS = 3;     // +1 for each bigger room
 // the maker's skills: a point each maker level; each branch's perks in order
 export const PERKS = {
