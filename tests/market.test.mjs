@@ -4,7 +4,7 @@ import * as Sh from '../js/shop.js';
 import * as R from '../js/rules.js';
 import * as Town from '../js/town.js';
 import { toCode, fromCode } from '../js/save.js';
-import { PATIENCE, TOWN_HOT, TOWN_COLD, DEMAND, OPENING } from '../js/data.js';
+import { PATIENCE, TOWN_HOT, TOWN_COLD, DEMAND, OPENING, CUSTOMERS } from '../js/data.js';
 
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const blank = (o = {}) => { const s = { coins: 0, mats: {}, cards: [], shelf: [], slots: 4, ledger: [], queue: [], clock: 0, ...o }; Sh.fixShelf(s); return s; };
@@ -111,4 +111,22 @@ test('a save code carries the whole game and refuses anything else', () => {
   assert.equal(fromCode('hello'), null); assert.equal(fromCode(''), null); assert.equal(fromCode(null), null);
   assert.equal(fromCode(toCode({ v: 1, hello: 'world' })), null, 'not a save');
   assert.equal(fromCode(toCode({ ...s, v: 2 })), null, 'a version this game doesn\'t know');
+});
+
+// ---------- the wealthy ----------
+test('the wealthy come with renown: none to an unknown shop, more as it grows; a master collector for Old-Blood on show', () => {
+  const ids = CUSTOMERS.map(c => c.id), share = (save, id) => { const w = Sh.customerWeights(save); return w[ids.indexOf(id)] / w.reduce((a, b) => a + b, 0); };
+  const at = (renown, extra = {}) => ({ renown, wall: [], cards: [], shelf: [], ...extra });
+  assert.equal(share(at(0), 'steward'), 0); assert.equal(share(at(20), 'steward'), 0); assert.equal(share(at(0), 'master'), 0);
+  assert.ok(share(at(60), 'steward') > 0, 'KNOWN: stewards'); assert.equal(share(at(60), 'master'), 0, 'KNOWN: no master yet');
+  assert.ok(share(at(500), 'steward') > share(at(200), 'steward')); assert.ok(share(at(200), 'master') > 0, 'SOUGHT: masters');
+  const ob = make('falchion', 3, 'ob'), withOb = at(60, { cards: [ob], shelf: [{ id: 'ob', tag: 'fair' }] });
+  assert.ok(share(withOb, 'master') > 0, 'Old-Blood on the shelf draws a master to a KNOWN shop');
+  assert.equal(share(at(20, { cards: [ob], shelf: [{ id: 'ob', tag: 'fair' }] }), 'master'), 0, 'not to a merely NOTED one');
+  // drawn, they carry real money and look only at good work
+  const rng = seeded(5), seen = {};
+  for (let i = 0; i < 3000; i++) { const c = Sh.newCustomer(rng, at(500)); (seen[c.type] = seen[c.type] || []).push(c); }
+  assert.ok(seen.steward.length > 100 && seen.master.length > 30, JSON.stringify(Object.fromEntries(Object.entries(seen).map(([k, v]) => [k, v.length]))));
+  assert.ok(seen.master.every(c => c.purse >= 3000 && c.least === 2)); assert.ok(seen.steward.every(c => c.purse >= 1500 && c.least === 1));
+  assert.equal(Sh.newCustomer(seeded(1)).type !== undefined, true, 'without a save, as before');
 });

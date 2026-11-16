@@ -303,6 +303,12 @@ export const CUSTOMERS = [
     names: ['a guild factor', 'a reeve\'s steward', 'a lord\'s buyer'] },
   { id: 'collector', weight: 3, purse: [500, 1600], wants: ['any'], least: 1, moods: [55, 40, 5], fig: '#a07ab8',
     names: ['a collector of maker\'s marks', 'Lady Ysmay Corrow\'s man'] },
+  // the wealthy: none come to an unknown shop. rich: { from: the renown rung they start at, step: weight added a rung from there,
+  // oldBlood: weight added for each Old-Blood piece on the shelf or the wall (two at most), counted from the rung before `from` }
+  { id: 'steward', weight: 0, rich: { from: 2, step: 3 }, purse: [1500, 4000], wants: ['any', 'falchion', 'helm', 'ring', 'longbow', 'goblet', 'lens', 'staff', 'jerkin'],
+    least: 1, moods: [35, 50, 15], fig: '#c9a24a', names: ['a lord\'s steward', 'a merchant prince', 'a guildmaster', 'a bishop\'s chamberlain'] },
+  { id: 'master', weight: 0, rich: { from: 3, step: 1, oldBlood: 1.5 }, purse: [3000, 8000], wants: ['any'], least: 2, moods: [50, 45, 5], fig: '#b48cf0',
+    names: ['a master collector', 'a duke\'s cabinet-keeper', 'a collector from over the sea'] },
 ];
 export const MOODS = ['EAGER', 'WARY', 'PINCHED'];
 export const MOOD_ODDS = { EAGER: 0.9, WARY: 0.6, PINCHED: 0.45 };
@@ -477,7 +483,7 @@ export const TOOLS = {
 export const RENOWN = [
   { at: 0, word: 'UNKNOWN' }, { at: 15, word: 'NOTED' }, { at: 50, word: 'KNOWN' }, { at: 150, word: 'SOUGHT' }, { at: 400, word: 'FAMED' },
 ];
-export const PURSE_STEP = 0.1;   // purses grow this much a rung
+export const PURSE_STEP = 0.2;   // purses grow this much a rung
 export const WALL_RENOWN = { common: 2, fine: 5, rare: 12, oldblood: 30 };
 export const WALL_SLOTS = 3;     // +1 for each bigger room
 // the maker's skills: a point each maker level; each branch's perks in order

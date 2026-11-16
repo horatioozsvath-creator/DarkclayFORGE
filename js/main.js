@@ -1,17 +1,17 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=16';
-import * as R from './rules.js?v=16';
-import * as Sh from './shop.js?v=16';
-import * as St from './staff.js?v=16';
-import * as Rm from './room.js?v=16';
-import * as G from './growth.js?v=16';
-import { decodeCard, linkFor } from './share.js?v=16';
-import * as Snd from './sound.js?v=16';
-import * as Town from './town.js?v=16';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=16';
-import { card, ART } from './card.js?v=16';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=16';
-import { load, store as storeRaw, toCode, fromCode } from './save.js?v=16';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=17';
+import * as R from './rules.js?v=17';
+import * as Sh from './shop.js?v=17';
+import * as St from './staff.js?v=17';
+import * as Rm from './room.js?v=17';
+import * as G from './growth.js?v=17';
+import { decodeCard, linkFor } from './share.js?v=17';
+import * as Snd from './sound.js?v=17';
+import * as Town from './town.js?v=17';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=17';
+import { card, ART } from './card.js?v=17';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=17';
+import { load, store as storeRaw, toCode, fromCode } from './save.js?v=17';
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
 let replacing = false;
 const store = s => replacing ? false : storeRaw(s);
@@ -247,7 +247,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=16').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=17').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(shelfShown()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -366,7 +366,7 @@ let lastSig = '', counterNote = '', counterNoteBad = false, counterNoteAt = 0;
 const counterSig = () => { const c = save.queue[0]; return save.queue.length + '|' + (c ? c.who + c.shows + (c.counter ? c.counter.price : '') : '') + '|' + (save.order ? save.order.posted : ''); };
 function tickCounter() {
   const c = save.queue[0];
-  if (c) $('patience').style.width = (c.counter ? 100 : Math.max(0, c.wait / PATIENCE * 100)) + '%';
+  if (c) $('patience').style.width = (c.counter ? 100 : Math.max(0, Math.min(100, c.wait / G.patienceOf(save, PATIENCE) * 100))) + '%';
   if (save.order) { const left = Math.max(0, Math.ceil(save.order.due - save.clock)); $('orderDue').textContent = 'DUE IN ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0') + ' OF OPEN SHOP'; }
 }
 function renderCounter() {
@@ -378,7 +378,8 @@ function renderCounter() {
   $('queueWord').textContent = save.queue.length > 1 ? (save.queue.length - 1) + ' WAITING BEHIND' : 'NO ONE BEHIND';
   const head = '<div class="cust">' + figure(c.fig).replace('class="fig in"', 'class="fig"') + '<div class="nm">' + esc(c.who) + '</div>'
     + (c.tell ? '<div class="tell">' + esc(c.tell) + '</div>' : '')
-    + '<div class="meta">' + (c.kind === 'buyer' ? 'Wants <b>' + Sh.wantWord(c.want) + (c.least ? ', Fine or better' : '') + '</b>' : 'Has something to sell')
+    + '<div class="meta">' + (c.kind === 'buyer' ? 'Wants <b>' + Sh.wantWord(c.want) + (c.least ? ', ' + TIERS[c.least].name + ' or better' : '') + '</b>' : 'Has something to sell')
+    + (c.type === 'steward' || c.type === 'master' ? '<span class="wealthy">WEALTHY</span>' : '')
     + (c.kind === 'buyer' && hl >= rd.mood ? '<span class="mood ' + c.mood + '">' + c.mood + '</span>' : '')
     + (c.kind === 'buyer' && hl >= rd.purse ? '<span>Purse <b>' + c.purse + ' c</b></span>' : '') + '</div></div>';
   let body = '';

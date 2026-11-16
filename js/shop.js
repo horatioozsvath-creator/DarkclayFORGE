@@ -2,11 +2,11 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RENOWN, OPENING, DEMAND } from './data.js?v=16';
-import { refreshTown, hotPatterns, demandOf, purseMultFor } from './town.js?v=16';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=16';
-import { charmGap } from './room.js?v=16';
-import { fame, purseMult, patienceOf, haggleMult, onWall, rung } from './growth.js?v=16';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RENOWN, OPENING, DEMAND } from './data.js?v=17';
+import { refreshTown, hotPatterns, demandOf, purseMultFor } from './town.js?v=17';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=17';
+import { charmGap } from './room.js?v=17';
+import { fame, purseMult, patienceOf, haggleMult, onWall, rung } from './growth.js?v=17';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -112,8 +112,18 @@ export function richer(save, c, rng) {
 }
 // what they'll part with for this piece: their purse, more for what the town wants, less for what it doesn't
 export const purseFor = (save, c, card) => Math.round(c.purse * purseMultFor(save.town, card.pattern));
-export function newCustomer(rng) {
-  const t = weighted(CUSTOMERS, CUSTOMERS.map(c => c.weight), rng);
+// who comes in: with a save, the wealthy too, by renown (and a master collector for Old-Blood on show)
+export function customerWeights(save) {
+  const r = save ? rung(save) : 0, ob = save ? Math.min(2, save.cards.filter(c => c.tier === 'oldblood' && (onShelf(save, c.id) >= 0 || onWall(save, c.id))).length) : 0;
+  return CUSTOMERS.map(c => {
+    if (!c.rich) return c.weight;
+    let w = r >= c.rich.from ? c.rich.step * (r - c.rich.from + 1) : 0;
+    if (c.rich.oldBlood && r >= c.rich.from - 1) w += c.rich.oldBlood * ob;
+    return w;
+  });
+}
+export function newCustomer(rng, save) {
+  const t = weighted(CUSTOMERS, customerWeights(save), rng);
   return { type: t.id, who: pick(t.names, rng), want: pick(t.wants, rng), purse: Math.round(t.purse[0] + rng() * (t.purse[1] - t.purse[0])),
     mood: weighted(MOODS, t.moods, rng), least: t.least || 0, fig: t.fig };
 }
@@ -133,12 +143,12 @@ const LINES = {
 // One customer comes in, looks at the shelf and buys or goes. Returns the ledger entry.
 // o: { rate: the share of the price that reaches the till (a clerk's cut taken, away), boost: on the odds they take it (a clerk minding
 // the shop), by: who sold it, quiet: a visit with no sale goes uncounted in the ledger (away: only sales are written down) }
-export function visit(save, rng, now, c = richer(save, newCustomer(rng), rng), o = {}) {
+export function visit(save, rng, now, c = richer(save, newCustomer(rng, save), rng), o = {}) {
   const shown = onOffer(save, c);
   const afford = shown.filter(e => priceAt(e.card, e.tag) <= purseFor(save, c, e.card))
     .sort((a, b) => TIER_N[b.card.tier] - TIER_N[a.card.tier] || priceAt(b.card, b.tag) - priceAt(a.card, a.tag));
   const entry = { at: now, who: c.who, type: c.type, fig: c.fig, mood: c.mood, want: c.want, purse: c.purse, sold: null, line: '' };
-  if (!shown.length) entry.line = 'Nothing on the shelf for them' + (c.least ? ' (Fine or better only).' : '.');
+  if (!shown.length) entry.line = 'Nothing on the shelf for them' + (c.least ? ' (' + TIERS[c.least].name + ' or better only).' : '.');
   else if (!afford.length) { const e = shown.sort((a, b) => priceAt(a.card, a.tag) - priceAt(b.card, b.tag))[0]; entry.line = 'Looked at the ' + e.card.name + ' at ' + priceAt(e.card, e.tag) + ' c, but carried ' + c.purse + '.'; entry.near = e.card.id; }
   else {
     const e = afford[0], price = Math.max(1, Math.round(priceAt(e.card, e.tag) * (o.rate || 1)));
@@ -207,7 +217,7 @@ export function awayStep(save, dt, rng, at, clerk) {
 export function arrive(save, rng, now, present, clerk = null) {
   if (!save.order && (save.clock || 0) >= (save.orderNext ?? 180) && rng() < 0.2) return [postOrder(save, rng, now)];
   if (present && save.queue.length < QUEUE_MAX) {
-    const c = rng() < SELLER_ODDS ? newSeller(rng, Math.floor(now / 3600000), now) : { ...richer(save, newCustomer(rng), rng), kind: 'buyer' };
+    const c = rng() < SELLER_ODDS ? newSeller(rng, Math.floor(now / 3600000), now) : { ...richer(save, newCustomer(rng, save), rng), kind: 'buyer' };
     c.tell = c.kind === 'buyer' ? TELLS[c.mood][Math.floor(rng() * TELLS[c.mood].length)] : '';
     c.wait = patienceOf(save, PATIENCE); c.shows = 0; c.id = 'v' + Math.floor(rng() * 1e9).toString(36);
     save.queue.push(c);

@@ -54,6 +54,9 @@ function makeOne(hour) {
   if (Sh.place(save, p.id, null, tag) < 0) { /* the shelf is full: it waits in the back */ }
   return true;
 }
+// the big sales: a piece over 1,000 c, an Old-Blood piece, and who bought them
+const big = { over1000: 0, oldBlood: 0, by: {} };
+function tally(entries) { (entries || []).forEach(e => { if (!e.sold) return; if (e.sold.price >= 1000) big.over1000++; if (e.sold.tier === 'oldblood') big.oldBlood++; if (e.sold.price >= 1000 || e.sold.tier === 'oldblood') big.by[e.type] = (big.by[e.type] || 0) + 1; }); }
 // a master's last working: a Rare that qualifies (on the shelf or in the back), its materials bought if they're for sale this hour.
 // A steady player finishes it with no crack about half the time at trade 6, better with each level after.
 function tryOldBlood(hour) {
@@ -126,14 +129,14 @@ for (let d = 1; d <= days; d++) {
     const hour = Math.floor(t / H);
     makeOne(hour);
     const c = St.clerkOf(save), clerk = c && !save.unpaid ? St.clerkTerms(c) : null;
-    Sh.shopStep(save, 50, rng, t, false, clerk);
+    tally(Sh.shopStep(save, 50, rng, t, false, clerk));
     St.payWages(save, 50); St.resolveTrips(save, t, rng);
     t += 50000; save.lastSeen = t;
     if (s % 600 === 0) { spend(hour); tryOldBlood(hour); restock(); }
     if (Sh.rescue(save, hour)) note('scrap bin');
   }
   // the night: away for 14 hours
-  const a = St.catchUp(save, t + 14 * H, rng); t += 14 * H; save.lastSeen = t;
+  const a = St.catchUp(save, t + 14 * H, rng); if (a) tally(a.sold); t += 14 * H; save.lastSeen = t;
   const day = (save.earned || 0) - start;
   console.log(String(d).padStart(3), String(save.coins).padStart(6), String(day).padStart(7), String(made).padStart(5), String(save.sold || 0).padStart(4),
     String(save.slots).padStart(6), String((save.staff || []).length).padStart(6), String(G.makerLevel(save).level).padStart(6), String(G.renownOf(save)).padStart(6),
@@ -141,5 +144,6 @@ for (let d = 1; d <= days; d++) {
   log.forEach(l => console.log(l)); log = [];
 }
 const tiers = {}; save.ledger.forEach(e => { if (e.sold) tiers[e.sold.tier] = (tiers[e.sold.tier] || 0) + 1; });
+console.log('big sales:', JSON.stringify(big));
 console.log('old-blood: tried', oldTried, 'made', oldMade, ' sold by tier:', tiers);
 console.log('spent:', spent, ' trades:', Object.fromEntries(Object.entries(save.trades).map(([k, v]) => [k, lvl(k)])), ' in the back:', Sh.inBack(save).length);

@@ -2,12 +2,12 @@
 // in to the counter. Loaded only when the shop is opened. Three.js comes through the page's import map as 'three'.
 import * as THREE from 'three';
 import { GLTFLoader } from '../vendor/three/loaders/GLTFLoader.js';
-import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=16';
-import { ART } from './card.js?v=16';
-import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=16';
+import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=17';
+import { ART } from './card.js?v=17';
+import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=17';
 
 const MODELS = 'assets/models/', M = '?m=9';   // bump m when tools/models.sh rebuilds them
-const FIGURES = { folk: 'folk', guard: 'dwarf', traveller: 'carter', delver: 'bard', factor: 'chandler', collector: 'herbalist', seller: 'carter', maker: 'smith', clerk: 'chandler' };
+const FIGURES = { folk: 'folk', guard: 'dwarf', traveller: 'carter', delver: 'bard', factor: 'chandler', collector: 'herbalist', steward: 'chandler', master: 'herbalist', seller: 'carter', maker: 'smith', clerk: 'chandler' };
 const WALK = 1.5;   // metres a second
 
 // ---------- the cel look (Darkclay Zero's celkit: three bands, a glow, the baked inverted-hull outline drawn black) ----------
