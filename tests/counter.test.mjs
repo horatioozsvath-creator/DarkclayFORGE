@@ -55,9 +55,10 @@ test('a haggled price never passes the purse, ASK MORE on DEAR included', () => 
   Sh.place(s, card.id); Sh.setTag(s, 0, 'dear');
   const ask = Sh.hagglePrice(card, 'dear', 'ask');
   s.queue = [buyer({ purse: ask - 1 })];
-  assert.equal(Sh.haggle(s, card.id, 'ask', 1).outcome, 'over');
+  const r = Sh.haggle(s, card.id, 'ask', 1);
+  assert.equal(r.outcome, 'counter'); assert.ok(r.over); assert.ok(r.price <= ask - 1, 'their offer is within their purse');
   assert.equal(s.coins, 0); assert.equal(s.queue.length, 1);
-  s.queue[0].purse = ask; assert.equal(Sh.haggle(s, card.id, 'ask', 1).outcome, 'sold'); assert.equal(s.coins, ask);
+  s.queue[0].counter = null; s.queue[0].purse = ask; assert.equal(Sh.haggle(s, card.id, 'ask', 1).outcome, 'sold'); assert.equal(s.coins, ask);
 });
 
 test('a refused counter-offer, and they go', () => {

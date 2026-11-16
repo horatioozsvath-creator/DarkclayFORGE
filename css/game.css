@@ -363,3 +363,22 @@ canvas.dio { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 .linkish:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .wrap > main, .wrap > nav, .wrap > div { min-width: 0; }
 .tabbar { min-width: 0; max-width: 100%; }
+
+/* the save code */
+.savebox textarea { width: 100%; box-sizing: border-box; background: var(--panel-2); color: var(--bone); border: 1px solid var(--line-soft); padding: 8px; font: 500 12px/1.4 ui-monospace, Menlo, monospace; resize: vertical; }
+.savebox .subhead { margin: 14px 0 6px; font: 800 12px var(--sans); letter-spacing: .2em; color: var(--bone-dim); }
+
+/* the town's wants: the notice board, and the badge on a pattern */
+.notices { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 8px; }
+.notice { background: #e8dcc0; color: #2a1c12; padding: 10px 12px; border: 1px solid #b8a37a; box-shadow: 2px 3px 0 rgba(0,0,0,.35); transform: rotate(-.6deg); min-width: 0; }
+.notice:nth-child(2n) { transform: rotate(.7deg); }
+.notice b { font: 800 11px var(--sans); letter-spacing: .2em; color: #7a3a10; }
+.notice.cold b { color: #4a5a6a; }
+.notice p { margin: 4px 0; font: 600 italic 17px/1.25 var(--display); }
+.notice span { font: 700 12px var(--sans); color: #5a4630; }
+.notice .cant { text-decoration: line-through; opacity: .6; }
+.notices .note { grid-column: 1 / -1; }
+.pat .art { position: relative; }
+.demand { position: absolute; top: 4px; right: 4px; font: 800 10px var(--sans); letter-spacing: .12em; padding: 2px 5px; border-radius: 3px; }
+.demand.hot { background: var(--gold); color: #1a0e06; }
+.demand.cold { background: #4a5a6a; color: #e8eef2; }

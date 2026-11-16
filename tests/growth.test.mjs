@@ -73,7 +73,7 @@ test('perks the shop reads: patience, a silver tongue never past the purse, wage
   const ask = Sh.hagglePrice(c, 'fair', 'ask', G.haggleMult(s));
   assert.ok(ask > Sh.hagglePrice(c, 'fair', 'ask'));
   s.queue = [{ kind: 'buyer', who: 'x', want: 'any', purse: ask - 1, mood: 'EAGER', least: 0, wait: 45, shows: 0 }];
-  assert.equal(Sh.haggle(s, c.id, 'ask', 1).outcome, 'over');
+  const r = Sh.haggle(s, c.id, 'ask', 1); assert.equal(r.outcome, 'counter'); assert.ok(r.price <= ask - 1);
   assert.equal(G.patienceOf(s, 45), 65);
   const st = blank({ staff: [{ id: 'c', role: 'clerk', name: 'W', trait: 'quick', xp: 0 }], perks: ['wages', 'hours'] });
   assert.equal(St.wages(st), 4 * 0.8); assert.equal(St.awayCap(st), 10);

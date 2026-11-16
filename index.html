@@ -13,8 +13,8 @@
 <title>Darkclay Forge</title>
 <meta name="description" content="Work iron at the forge, tile by tile, and keep every piece you make as a card.">
 <link rel="stylesheet" href="css/fonts.css">
-<link rel="stylesheet" href="css/working.css?v=15">
-<link rel="stylesheet" href="css/game.css?v=15">
+<link rel="stylesheet" href="css/working.css?v=16">
+<link rel="stylesheet" href="css/game.css?v=16">
 </head>
 <body>
 <div class="wrap">
@@ -54,6 +54,7 @@
       <button class="tab" data-tabbtn="skills">SKILLS <span class="badge" id="tabSkills" hidden></span></button>
       <button class="tab" data-tabbtn="workshop">WORKSHOP</button>
       <button class="tab" data-tabbtn="tiles">FOUND TILES</button>
+      <button class="tab" data-tabbtn="save">SAVE</button>
     </nav>
     <section data-group="forge" data-tab="patterns" class="card">
       <h2><span>THE PATTERNS</span><b>EACH IS A TRADE · PRACTICE RAISES IT</b></h2>
@@ -79,6 +80,15 @@
     <section data-group="forge" data-tab="tiles" class="card">
       <h2><span>FOUND TILES</span><b id="homeFound"></b></h2>
       <div class="bag" id="homeBag"></div>
+    </section>
+    <section data-group="forge" data-tab="save" class="card savebox">
+      <h2><span>YOUR SAVE</span><b>KEPT IN THIS BROWSER ONLY</b></h2>
+      <p class="note">Your forge, shop and pieces live in this browser. Clearing its site data, or playing on another device, starts afresh. A save code keeps a copy: paste it somewhere safe, or keep the file.</p>
+      <div class="rbtns left"><button class="seg go" id="saveCopy">COPY SAVE CODE</button><button class="seg" id="saveFile">SAVE AS A FILE</button></div>
+      <h3 class="subhead">LOAD A SAVE</h3>
+      <textarea id="loadText" rows="3" spellcheck="false" autocomplete="off" placeholder="Paste a save code here (it starts DCF1.)" aria-label="A save code to load"></textarea>
+      <div class="rbtns left"><button class="seg" id="loadBtn">LOAD THIS CODE</button><button class="seg" id="loadPick">OPEN A SAVE FILE</button><input type="file" id="loadFile" accept=".txt,text/plain" hidden></div>
+      <p class="note" id="saveNote" aria-live="polite"></p>
     </section>
 
     <section data-group="forge" data-tab="patterns" class="card">
@@ -117,6 +127,7 @@
       <button class="tab" data-tabbtn="wall">THE WALL</button>
       <button class="tab" data-tabbtn="furnish">FURNISH</button>
       <button class="tab" data-tabbtn="ledger">LEDGER <span class="badge" id="tabLedger" hidden></span></button>
+      <button class="tab" data-tabbtn="town">IN TOWN</button>
     </nav>
     <section data-group="shop" data-tab="shelf" class="card">
       <h2><span>THE SHELF</span><b id="shelfWord"></b></h2>
@@ -142,6 +153,10 @@
     <section data-group="shop" data-tab="ledger" class="card">
       <h2><span>THE LEDGER</span><b>WHO CAME IN</b></h2>
       <ul class="ledger" id="ledger"></ul>
+    </section>
+    <section data-group="shop" data-tab="town" class="card">
+      <h2><span>THE NOTICE BOARD</span><b id="townWord"></b></h2>
+      <div class="notices" id="townBody"></div>
     </section>
   </main>
 
@@ -290,6 +305,6 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js" } }</script>
-<script type="module" src="js/main.js?v=15"></script>
+<script type="module" src="js/main.js?v=16"></script>
 </body>
 </html>

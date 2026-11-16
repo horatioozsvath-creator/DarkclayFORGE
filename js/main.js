@@ -1,20 +1,25 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=15';
-import * as R from './rules.js?v=15';
-import * as Sh from './shop.js?v=15';
-import * as St from './staff.js?v=15';
-import * as Rm from './room.js?v=15';
-import * as G from './growth.js?v=15';
-import { decodeCard, linkFor } from './share.js?v=15';
-import * as Snd from './sound.js?v=15';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=15';
-import { card, ART } from './card.js?v=15';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=15';
-import { load, store } from './save.js?v=15';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=16';
+import * as R from './rules.js?v=16';
+import * as Sh from './shop.js?v=16';
+import * as St from './staff.js?v=16';
+import * as Rm from './room.js?v=16';
+import * as G from './growth.js?v=16';
+import { decodeCard, linkFor } from './share.js?v=16';
+import * as Snd from './sound.js?v=16';
+import * as Town from './town.js?v=16';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=16';
+import { card, ART } from './card.js?v=16';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=16';
+import { load, store as storeRaw, toCode, fromCode } from './save.js?v=16';
+// once a loaded save is in storage, nothing writes this game back over it before the page reloads
+let replacing = false;
+const store = s => replacing ? false : storeRaw(s);
 
 const $ = id => document.getElementById(id);
 const rng = Math.random;
 const save = load();
+Town.refreshTown(save, Date.now());
 R.convertSave(save); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save); G.fixWall(save);
 save.queue = [];   // whoever was at the counter when the page closed has gone
 let awaySum = St.catchUp(save, Date.now(), rng);   // the shop while the page was closed
@@ -143,11 +148,13 @@ function tip(key, before, parent) {
 
 // ---------- THE FORGE (home) ----------
 function toHome() {
-  clearTimers(); S = null; rescueCheck(); show('home'); coins();
+  clearTimers(); S = null; rescueCheck(); show('home'); coins(); backupReminder();
   $('maker').value = save.maker;
   const patBtn = ([id, p]) => {
     const l = levelFor(id), n = save.cards.filter(c => c.pattern === id).length;
-    return '<button class="pat" data-p="' + id + '"><div class="art">' + ART[p.art](p.station ? '#a07850' : '#c9c5be') + '</div><b>' + p.name + '</b>'
+    const d = Town.demandOf(save.town, id);
+    return '<button class="pat" data-p="' + id + '"><div class="art">' + ART[p.art](p.station ? '#a07850' : '#c9c5be')
+      + (d ? '<span class="demand ' + (d > 0 ? 'hot' : 'cold') + '">' + (d > 0 ? 'IN DEMAND' : 'OUT OF FAVOUR') + '</span>' : '') + '</div><b>' + p.name + '</b>'
       + '<div class="lv">TRADE ' + l.level + '<span>' + (l.need ? l.into + ' / ' + l.need : 'MASTERED') + '</span></div>'
       + '<div class="xp"><i style="width:' + (l.need ? Math.round(l.into / l.need * 100) : 100) + '%"></i></div>'
       + '<div class="lv"><span>' + n + ' MADE</span></div></button>';
@@ -240,7 +247,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=15').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=16').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(shelfShown()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -384,8 +391,11 @@ function renderCounter() {
     body += '<div class="rbtns left"><button class="hbtn go" data-act="buy"' + (save.coins < o.price ? ' disabled' : '') + '>BUY IT<small>' + o.price + ' c</small></button><button class="hbtn" data-act="away">NO THANKS</button></div>';
   } else if (c.counter) {
     const cd = save.cards.find(x => x.id === c.counter.id);
-    body = '<div class="note">You asked ' + c.counter.asked + ' c for the ' + esc(cd ? cd.name : 'piece') + '. <b>They offer ' + c.counter.price + ' c.</b> Refuse, and they go.</div>'
-      + '<div class="rbtns left"><button class="hbtn go" data-act="take">TAKE IT<small>' + c.counter.price + ' c</small></button><button class="hbtn" data-act="refuse">REFUSE</button></div>';
+    const k = c.counter, said = k.final ? (k.price >= c.purse ? '"That\'s everything I\'ve got."' : '"' + k.price + ' c, and that\'s my last word."') : k.over ? '"' + k.asked + ' c? I can do ' + k.price + ' c. No more."' : '"Not ' + k.asked + ' c. ' + k.price + ' c?"';
+    body = '<div class="note">' + esc(cd ? cd.name : 'The piece') + ': you asked ' + k.asked + ' c. <b>' + said + '</b>' + (k.final ? ' Take it, or they look elsewhere.' : '') + '</div>'
+      + '<div class="rbtns left"><button class="hbtn go" data-act="take">TAKE IT<small>' + k.price + ' c</small></button>'
+      + (k.final ? '' : '<button class="hbtn" data-act="split">SPLIT THE DIFFERENCE<small>' + Sh.splitPrice(k) + ' c</small></button>')
+      + '<button class="hbtn" data-act="refuse">NO</button></div>';
   } else {
     const list = Sh.showable(save);
     if (!list.length) body = '<div class="note">Nothing on the shelf for them.' + (Sh.inBack(save).some(x => Sh.wants(c.want, x)) ? ' Something in the back would do: put it on the shelf.' : '') + '</div>'
@@ -409,12 +419,12 @@ $('counterBody').onclick = ev => {
   if (a === 'buy') { const e = Sh.buyOffer(save, now); if (e) { counterNote = 'Bought: ' + esc(e.bought.what) + '.'; Snd.play('coin'); } }
   else if (a === 'away') Sh.sendAway(save, now);
   else if (a === 'another') c.shows++;
-  else if (a === 'take' || a === 'refuse') { const r = Sh.answerCounter(save, a === 'take', now); if (r) { counterNote = r.outcome === 'sold' ? 'Sold for ' + r.price + ' c.' : 'They went.'; counterNoteBad = r.outcome !== 'sold'; if (r.outcome === 'sold') { Snd.play('coin'); if (dio) dio.sold(r.entry); } } }
+  else if (a === 'take' || a === 'refuse') { const r = Sh.answerCounter(save, a === 'take', now); if (r) { counterNote = r.outcome === 'sold' ? 'Sold for ' + r.price + ' c.' : r.outcome === 'another' ? 'They look at something else.' : 'They went.'; counterNoteBad = r.outcome === 'gone'; if (r.outcome === 'sold') { Snd.play('coin'); if (dio) dio.sold(r.entry); } } }
+  else if (a === 'split') { const r = Sh.split(save, now); if (r) { if (r.outcome === 'sold') { counterNote = 'Met halfway: sold for ' + r.price + ' c.'; Snd.play('coin'); if (dio) dio.sold(r.entry); } else counterNote = 'They came up to ' + r.price + ' c.'; } }
   else if (a.startsWith('h:')) {
     const r = Sh.haggle(save, b.dataset.id, a.slice(2), now);
     if (r) {
       if (r.outcome === 'sold') { counterNote = 'Sold for ' + r.price + ' c.'; Snd.play('coin'); if (dio) dio.sold(r.entry); }
-      else if (r.outcome === 'over') { counterNote = '"' + r.price + ' c? That\'s more than I carry." Show another, or meet them.'; counterNoteBad = true; }
       else if (r.outcome === 'gone') { counterNote = 'They went.'; counterNoteBad = true; }
     }
   }
@@ -443,7 +453,17 @@ function renderOrder() {
   };
 }
 
-const HOW = { meet: 'MET THEM', hold: 'HELD THE PRICE', ask: 'ASKED MORE', counter: 'THEIR OFFER', order: 'SPECIAL ORDER' };
+// the notice board: today's wants in town
+function renderTown() {
+  const t = Town.refreshTown(save, Date.now()), n = Town.notices(t);
+  const can = id => PATTERNS[id] && Rm.owns(save, PATTERNS[id].station || 'forge');
+  const names = list => list.map(id => '<span class="' + (can(id) ? 'can' : 'cant') + '">' + PATTERNS[id].name.toLowerCase() + '</span>').join(', ');
+  $('townWord').textContent = new Date(t.day * 86400000).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).toUpperCase();
+  $('townBody').innerHTML = n.hot.map(h => '<div class="notice hot"><b>IN DEMAND</b><p>' + esc(h.line) + '</p><span>' + names(h.patterns) + '</span></div>').join('')
+    + (n.cold ? '<div class="notice cold"><b>OUT OF FAVOUR</b><p>' + esc(n.cold.line) + '</p><span>' + names(n.cold.patterns) + '</span></div>' : '')
+    + '<p class="note">In demand: buyers ask for it more often, are keener, and carry a quarter more for it (DEAR sells). Out of favour: no one asks for it and purses for it are thinner. The board changes every day at midnight (UTC), the same in every shop. Struck through: a station you haven\'t set up.</p>';
+}
+const HOW = { meet: 'MET THEM', hold: 'HELD THE PRICE', ask: 'ASKED MORE', counter: 'THEIR OFFER', split: 'MET HALFWAY', order: 'SPECIAL ORDER' };
 const howWord = t => TAGS[t] ? TAGS[t].word : HOW[t] || '';
 function renderShop() {
   if (screen !== 'shop') return;
@@ -463,7 +483,7 @@ function renderShop() {
   const cost = Rm.shelfCost(save.room);
   $('buySlot').hidden = cost == null;
   if (cost != null) { $('buySlot').textContent = 'ANOTHER SHELF · TWO PLACES · ' + cost + ' COINS'; $('buySlot').disabled = save.coins < cost; }
-  renderFurnish(); renderWall(); tabBadges();
+  renderFurnish(); renderWall(); renderTown(); tabBadges();
   if (dio) dio.setShelf(shelfShown());
   const back = Sh.inBack(save);
   $('backWord').textContent = back.length + (back.length === 1 ? ' PIECE' : ' PIECES') + ' · NOT FOR SALE YET';
@@ -637,8 +657,8 @@ function returning(nowMs) {
   showAway(a);
 }
 // on the way out, the time is written down
-document.addEventListener('visibilitychange', () => { if (document.hidden) { save.lastSeen = Date.now(); store(save); } });
-window.addEventListener('pagehide', () => { save.lastSeen = Date.now(); store(save); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && !replacing) { save.lastSeen = Date.now(); store(save); } });
+window.addEventListener('pagehide', () => { if (!replacing) { save.lastSeen = Date.now(); store(save); } });
 
 // ---------- SUPPLIERS ----------
 let suppHour = null;
@@ -1106,6 +1126,40 @@ document.addEventListener('keydown', e => {
 if (!phoneQ.matches && !save.made) $('howd').open = true;
 
 // for testing: open the page with ?debug to reach the save from the console
+// ---------- THE SAVE CODE: a backup, and loading one ----------
+const saveNote = (t, bad) => { $('saveNote').textContent = t; $('saveNote').classList.toggle('bad', !!bad); };
+const backedUp = () => { save.backupAt = Date.now(); store(save); };
+$('saveCopy').onclick = async () => {
+  save.lastSeen = Date.now(); const code = toCode(save);
+  try { await navigator.clipboard.writeText(code); backedUp(); saveNote('Copied: ' + Math.round(code.length / 1024) + ' KB of save code. Paste it somewhere safe (a note, an email to yourself).'); }
+  catch (e) { $('loadText').value = code; $('loadText').select(); saveNote('Couldn\'t reach the clipboard: the code is in the box below, selected. Copy it from there.'); }
+};
+$('saveFile').onclick = () => {
+  save.lastSeen = Date.now();
+  const url = URL.createObjectURL(new Blob([toCode(save)], { type: 'text/plain' })), a = document.createElement('a');
+  a.href = url; a.download = 'darkclay-forge-' + new Date().toISOString().slice(0, 10) + '.txt'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000); backedUp(); saveNote('Saved as a file. Keep it somewhere safe.');
+};
+function loadFrom(text) {
+  const next = fromCode(text);
+  if (!next) { saveNote('That code won\'t read: it may be cut short, or not a Darkclay Forge save.', true); return; }
+  const lv = s => (s.cards || []).length + ' pieces, ' + s.coins + ' coins';
+  if (!confirm('Load the save from ' + (next.lastSeen ? new Date(next.lastSeen).toLocaleString() : 'the code') + ' (' + esc(next.maker || 'the Maker') + ': ' + lv(next) + ')?\n\nIt replaces this game (' + lv(save) + '). Copy a code of this one first if you want to keep it.')) return;
+  next.backupAt = Date.now();
+  if (!storeRaw(next)) { saveNote('This browser won\'t store it (a private window?).', true); return; }
+  replacing = true; location.reload();
+}
+$('loadBtn').onclick = () => loadFrom($('loadText').value);
+$('loadPick').onclick = () => $('loadFile').click();
+$('loadFile').onchange = () => { const f = $('loadFile').files[0]; if (f) f.text().then(loadFrom); $('loadFile').value = ''; };
+// once a week of play, a quiet word about keeping a code
+let backupHinted = false;
+function backupReminder() {
+  if (backupHinted || save.made < 5) return;
+  if (!save.backupAt) { save.backupAt = Date.now(); return; }
+  if (Date.now() - save.backupAt > 7 * 86400000) { backupHinted = true; toast('<b>Keep a save code somewhere safe</b><br>THE FORGE › SAVE copies your whole game.'); }
+}
+
 if (new URLSearchParams(location.search).has('debug')) window.forge = { save, Sh, R, St, renderShop, toShop, toStaff, showAway, dio: () => dio, store: () => store(save), wipe: () => { save.v = 0; store(save); location.reload(); } };
 
 toHome();

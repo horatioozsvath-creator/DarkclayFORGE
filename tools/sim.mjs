@@ -7,6 +7,7 @@ import * as Sh from '../js/shop.js';
 import * as St from '../js/staff.js';
 import * as Rm from '../js/room.js';
 import * as G from '../js/growth.js';
+import * as Town from '../js/town.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD } from '../js/data.js';
 
 const days = +process.argv[2] || 7, seed0 = +process.argv[3] || 1, SESSION_MIN = +process.argv[4] || 45;
@@ -15,7 +16,7 @@ const rng = seeded(seed0);
 const save = { v: 1, maker: 'Bot', trades: {}, found: ['ember'], chosen: [], picks: {}, cards: [], made: 0,
   coins: 60, mats: { iron: 5, bronze: 2, cord: 3, wrap: 1, ash: 1, wool: 1, strap: 1 }, slots: 4, shelf: [], ledger: [], sold: 0, earned: 0, shopNext: 6, queue: [] };
 Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
-const OLD = process.env.OLD !== '0';   // OLD=0: a run without Old-Blood, to compare
+const OLD = process.env.OLD !== '0', TOWN = process.env.TOWN !== '0';   // TOWN=0: the bot ignores the notice board   // OLD=0: a run without Old-Blood, to compare
 let t = Date.UTC(2026, 10, 1, 9), log = [], made = 0, oldTried = 0, oldMade = 0, spent = { mats: 0, staff: 0, tools: 0, room: 0 };
 const H = 3600000, lvl = id => R.levelOf((save.trades[id] || {}).xp || 0).level, note = m => log.push('  ' + m);
 
@@ -49,7 +50,7 @@ function makeOne(hour) {
   const p = R.makePiece({ patternId: c.id, picks: c.picks, result: res, picked: null, maker: 'Bot', rng, now: t });
   save.cards.unshift(p); made++;
   (save.trades[c.id] = save.trades[c.id] || { xp: 0 }).xp += R.xpFor(res);
-  const tag = p.worth > 400 ? 'fair' : 'fair';
+  const tag = 'fair';
   if (Sh.place(save, p.id, null, tag) < 0) { /* the shelf is full: it waits in the back */ }
   return true;
 }
@@ -75,6 +76,21 @@ function tryOldBlood(hour) {
     if (slot >= 0) Sh.place(save, (took ? save.cards.find(x => x.id === c.id) : c).id, slot);
     return;
   }
+}
+// following the notice board: what the town wants goes on the shelf at DEAR, in place of what it doesn't (from the back room)
+function restock() {
+  if (!TOWN || !save.town) return;
+  const hot = c => Town.demandOf(save.town, c.pattern) > 0;
+  const back = Sh.inBack(save).filter(hot).sort((a, b) => b.worth - a.worth);
+  save.shelf.forEach((e, i) => {
+    const c = e && save.cards.find(x => x.id === e.id);
+    if (c && hot(c)) { if (e.tag !== 'dear') Sh.setTag(save, i, 'dear'); return; }
+    if (!back.length) return;
+    if (e) Sh.takeDown(save, i);
+    Sh.place(save, back.shift().id, i, 'dear');
+  });
+  // yesterday's DEAR pieces the town no longer wants go back to FAIR
+  save.shelf.forEach((e, i) => { const c = e && save.cards.find(x => x.id === e.id); if (c && !hot(c) && e.tag === 'dear') Sh.setTag(save, i, 'fair'); });
 }
 // spending, with a reserve kept for materials
 function spend(hour) {
@@ -113,7 +129,7 @@ for (let d = 1; d <= days; d++) {
     Sh.shopStep(save, 50, rng, t, false, clerk);
     St.payWages(save, 50); St.resolveTrips(save, t, rng);
     t += 50000; save.lastSeen = t;
-    if (s % 600 === 0) { spend(hour); tryOldBlood(hour); }
+    if (s % 600 === 0) { spend(hour); tryOldBlood(hour); restock(); }
     if (Sh.rescue(save, hour)) note('scrap bin');
   }
   // the night: away for 14 hours

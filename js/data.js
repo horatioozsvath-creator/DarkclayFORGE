@@ -305,7 +305,33 @@ export const CUSTOMERS = [
     names: ['a collector of maker\'s marks', 'Lady Ysmay Corrow\'s man'] },
 ];
 export const MOODS = ['EAGER', 'WARY', 'PINCHED'];
-export const MOOD_ODDS = { EAGER: 0.9, WARY: 0.6, PINCHED: 0.45 };   // the odds they take a piece at FAIR they can afford
+export const MOOD_ODDS = { EAGER: 0.9, WARY: 0.6, PINCHED: 0.45 };
+// over their purse, a buyer names a price: this share of it, by mood (EAGER all of it, WARY 90 %, PINCHED 80 %)
+export const OPENING = { EAGER: 1, WARY: 0.9, PINCHED: 0.8 };
+// the town's wants (js/town.js): each real day, two things in demand and one out of favour, the same for every player that day.
+// In demand: buyers who want it come half as often again, are a step keener and carry a quarter more for it; out of favour: no one
+// asks for it and purses for it are thinner.
+export const DEMAND = { want: 0.35, purse: 1.25, cold: 0.85 };
+export const TOWN_HOT = [
+  { id: 'watch', line: 'The watch is buying helms for the new men.', patterns: ['helm'] },
+  { id: 'muster', line: 'The muster is called: blades and axes.', patterns: ['falchion', 'axe', 'dagger'] },
+  { id: 'frost', line: 'A frost is coming down off the Reach.', patterns: ['hood', 'gloves', 'boots'] },
+  { id: 'fair', line: 'The fair\'s on in the square.', patterns: ['ring', 'goblet'] },
+  { id: 'hunt', line: 'The autumn hunt rides out.', patterns: ['shortbow', 'longbow', 'arrows'] },
+  { id: 'fever', line: 'A fever in the low lanes.', patterns: ['draught', 'salve', 'tonic'] },
+  { id: 'abbey', line: 'Scholars have come to the abbey.', patterns: ['lens', 'pane', 'staff'] },
+  { id: 'caravan', line: 'The caravans are setting out.', patterns: ['boots', 'jerkin', 'hood'] },
+  { id: 'wet', line: 'A wet month: every edge is rusting.', patterns: ['oil'] },
+  { id: 'delve', line: 'A new door found in the deep: the delvers are buying.', patterns: ['axe', 'helm', 'jerkin', 'draught'] },
+];
+export const TOWN_COLD = [
+  { id: 'barges', line: 'Arrows are cheap off the river barges.', patterns: ['arrows'] },
+  { id: 'pedlar', line: 'A pedlar is selling tin rings at the gate.', patterns: ['ring'] },
+  { id: 'armoury', line: 'The armoury sold off its old helms.', patterns: ['helm'] },
+  { id: 'almoner', line: 'The almoner is handing out draughts.', patterns: ['draught'] },
+  { id: 'glut', line: 'A glut of knives from the coast.', patterns: ['dagger'] },
+  { id: 'cobbler', line: 'A new cobbler on the bridge.', patterns: ['boots'] },
+];   // the odds they take a piece at FAIR they can afford
 
 // ---------- the counter (milestone 3) ----------
 // Darkclay Zero's OPEN THE SHOP (docs/CRAFT-AAA.md §5.3): what each choice asks of the shelf's price
