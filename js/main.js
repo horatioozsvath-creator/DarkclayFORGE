@@ -312,7 +312,7 @@ function renderStaff() {
   $('booksWord').textContent = staff.length ? staff.length + ' OF 2' : 'NO ONE YET';
   $('staffList').innerHTML = staff.length ? staff.map(p => {
     let status = '';
-    if (save.unpaid) status = '<div class="status bad">Unpaid: not working until the wages can be paid.</div>';
+    if (save.unpaid && p.role === 'runner') status = '<div class="status bad">Wages behind: won\'t set out until they\'re paid.</div>';
     else if (p.role === 'clerk') status = '<div class="status">Minds the shop while you\'re at the forge (customers buy more readily) and keeps it while you\'re away.</div>';
     else if (p.trip) status = '<div class="status">' + ROUTES[p.trip.route].name + ' · back in <b data-back="' + p.trip.back + '">' + hm((p.trip.back - now) / 1000) + '</b></div>';
     else status = '<div class="status">Ready to go out. Send them on a road:</div><div class="routes">' + Object.entries(ROUTES).map(([id, r]) =>
@@ -351,7 +351,7 @@ function awayHtml(a) {
   } else if (St.clerkOf(save)) h += '<p>' + esc(St.clerkOf(save).name.split(' ')[0]) + ' kept the shop' + (a.missed ? '; ' + a.missed + ' came in and found nothing for them' : '') + '.</p>';
   else if (a.missed) h += '<p>No one minded the shop: ' + a.missed + ' customer' + (a.missed > 1 ? 's' : '') + ' came and went. A counter clerk sells while you\'re away (Staff).</p>';
   if (a.wages) h += '<p>Wages paid: <b>' + a.wages + ' c</b>.</p>';
-  if (a.unpaid) h += '<p class="bad">The purse ran dry: the staff went unpaid and stopped work.</p>';
+  if (a.unpaid) h += '<p class="bad">The wages are behind. The clerk works on for the takings; the runner won\'t set out until they\'re paid.</p>';
   a.trips.forEach(t => { h += '<p>' + esc(t.who) + ' came back from ' + ROUTES[t.route].from + ' with ' + esc(haulWords(t)) + '.</p>'; });
   return h + '</div>';
 }
@@ -363,17 +363,19 @@ function showAway(a) {
   }
   openLook(awayHtml(a), '', true);
 }
-// the page hidden and shown again: read the save afresh (another tab may have played), clear the counter, catch up
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { save.lastSeen = Date.now(); store(save); return; }
+// Back after a gap (a hidden tab, a sleeping phone, a page restored from the back button): the first frame finds lastSeen
+// seconds behind. Read the save afresh (another tab may have played meanwhile), clear the counter, catch up.
+function returning(nowMs) {
   const fresh = load();
   if (fresh.lastSeen && fresh.lastSeen > (save.lastSeen || 0)) { Object.keys(save).forEach(k => delete save[k]); Object.assign(save, fresh); Sh.fixShelf(save); }
   save.queue = [];
-  const a = St.catchUp(save, Date.now(), rng);
-  store(save); coins(); lastT = performance.now();
+  const a = St.catchUp(save, nowMs, rng);
+  store(save); coins();
   if (screen === 'shop') renderShop(); else if (screen === 'staff') renderStaff(); else if (screen === 'home') toHome(); else if (screen === 'supp') renderSupp();
   showAway(a);
-});
+}
+// on the way out, the time is written down
+document.addEventListener('visibilitychange', () => { if (document.hidden) { save.lastSeen = Date.now(); store(save); } });
 window.addEventListener('pagehide', () => { save.lastSeen = Date.now(); store(save); });
 
 // ---------- SUPPLIERS ----------
@@ -734,7 +736,9 @@ function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
   // the shop's clock: only while this page is in front (a hidden tab gets no frames, so no time passes)
   // present: at the counter (the shop screen); customers queue to be served, sellers come in
-  const present = screen === 'shop' && !document.hidden, nowMs = Date.now();
+  const nowMs = Date.now();
+  if (save.lastSeen && nowMs - save.lastSeen > 3000) returning(nowMs);
+  const present = screen === 'shop' && !document.hidden;
   const clerk = St.clerkOf(save), clerkOn = clerk && !save.unpaid ? St.clerkTerms(clerk) : null;
   const visits = Sh.shopStep(save, dt, rng, nowMs, present, clerkOn);
   visits.forEach(e => { if (e.by && e.sold && clerk) St.gain(clerk, 1); });
@@ -800,7 +804,7 @@ document.addEventListener('keydown', e => {
 if (!phoneQ.matches && !save.made) $('howd').open = true;
 
 // for testing: open the page with ?debug to reach the save from the console
-if (new URLSearchParams(location.search).has('debug')) window.forge = { save, Sh, R, St, renderShop, toShop, toStaff, showAway, store: () => store(save) };
+if (new URLSearchParams(location.search).has('debug')) window.forge = { save, Sh, R, St, renderShop, toShop, toStaff, showAway, store: () => store(save), wipe: () => { save.v = 0; store(save); location.reload(); } };
 
 toHome();
 showAway(awaySum); awaySum = null;

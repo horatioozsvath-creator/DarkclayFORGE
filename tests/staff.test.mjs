@@ -52,11 +52,11 @@ test('a full shelf lasts a good part of the away cap', () => {
 });
 
 test('away counts no more than the cap, wages included', () => {
-  const s = stocked(0, { lastSeen: T0, staff: [clerk()], coins: 1000 });
+  const s = stocked(4, { lastSeen: T0, staff: [clerk()], coins: 1000 });
   const r = St.catchUp(s, T0 + 7 * 24 * H, seeded(4));
   assert.equal(r.counted, AWAY_CAP_H * 3600); assert.ok(r.capped);
   assert.ok(r.wages <= St.wages(s) * AWAY_CAP_H + 1, 'a week away pays the cap\'s wages, not a week\'s');
-  const e = stocked(0, { lastSeen: T0, staff: [clerk({ trait: 'early' })] });
+  const e = stocked(4, { lastSeen: T0, staff: [clerk({ trait: 'early' })] });
   assert.equal(St.catchUp(e, T0 + 99 * H, seeded(4)).counted, (AWAY_CAP_H + 2) * 3600);
 });
 
@@ -67,19 +67,25 @@ test('away time doesn\'t run the order clock', () => {
   assert.ok(s.order); assert.equal(s.clock, 100);
 });
 
-test('wages: paid by the coin; short of coin, the staff stop work', () => {
+test('wages: paid as the purse allows; an hour behind, the staff are unpaid', () => {
   const s = blank({ coins: 3, staff: [clerk()] });
   assert.equal(St.wages(s), 4);
-  assert.equal(St.payWages(s, 1800), 2); assert.equal(s.coins, 1);
-  St.payWages(s, 1800); assert.ok(s.unpaid);
-  s.coins = 50; St.payWages(s, 3600); assert.ok(!s.unpaid);
+  assert.equal(St.payWages(s, 1800), 2); assert.equal(s.coins, 1); assert.ok(!s.unpaid);
+  St.payWages(s, 7200); assert.equal(s.coins, 0); assert.ok(s.unpaid, 'over an hour behind');
+  s.coins = 50; St.payWages(s, 1); assert.ok(!s.unpaid); assert.ok(s.coins < 50);
+  const t = blank({ coins: 0, staff: [clerk()] }); St.payWages(t, 30 * 24 * 3600);
+  assert.ok(t.owed <= St.wages(t) * St.awayCap(t), 'what is owed stops at the cap\'s worth');
 });
 
-test('a broke shop with stock: the clerk sells first, then is paid', () => {
-  const s = stocked(4, { lastSeen: T0, staff: [clerk()], coins: 0 });
-  const r = St.catchUp(s, T0 + 8 * H, seeded(7));
-  if (r.sold.length) assert.ok(r.wages > 0);
-  assert.ok(s.coins >= 0);
+test('a broke shop with stock: the clerk still sells while away, and is paid from the takings', () => {
+  let sold = 0;
+  for (let seed = 1; seed <= 30; seed++) {
+    const s = stocked(4, { lastSeen: T0, staff: [clerk(), runner()], coins: 0 });
+    const r = St.catchUp(s, T0 + 8 * H, seeded(seed));
+    if (r.sold.length) { sold++; assert.ok(r.wages > 0); }
+    assert.ok(s.coins >= 0);
+  }
+  assert.ok(sold >= 25, sold + ' of 30 nights sold something');
 });
 
 test('hiring: three candidates, one of each role at least; fees; none hired twice', () => {

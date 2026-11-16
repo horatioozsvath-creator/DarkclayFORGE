@@ -49,15 +49,16 @@ export function hire(save, c) {
 export function letGo(save, id) { save.staff = (save.staff || []).filter(p => p.id !== id); if (!save.staff.length) { save.owed = 0; save.unpaid = false; } }
 
 // ---------- wages ----------
-// owed by the second, paid by the coin. Short of coin when it falls due: the staff go unpaid and stop work until it can be paid.
+// Owed by the second, paid by the coin as the purse allows. More than an hour's wages behind, the staff are unpaid: the runner
+// won't set out. The clerk keeps selling (the takings pay what's owed). What's owed never runs past the away cap's worth.
 export function payWages(save, dt) {
   if (!(save.staff || []).length) return 0;
-  save.owed = (save.owed || 0) + wages(save) * dt / 3600;
-  if (save.owed < 1) return 0;
-  const n = Math.floor(save.owed);
-  if (save.coins >= n) { save.coins -= n; save.owed -= n; save.unpaid = false; return n; }
-  save.owed = 0; save.unpaid = true;
-  return 0;
+  const w = wages(save);
+  save.owed = Math.min(w * awayCap(save), (save.owed || 0) + w * dt / 3600);
+  const n = Math.min(Math.floor(save.owed), Math.max(0, save.coins));
+  if (n > 0) { save.coins -= n; save.owed -= n; }
+  save.unpaid = save.owed >= w;
+  return n;
 }
 export const working = save => !save.unpaid;
 
@@ -117,7 +118,7 @@ export function catchUp(save, to, rng) {
   const c = clerkOf(save);
   for (let t = 0; t < counted; t += 60) {
     const dt = Math.min(60, counted - t), at = from + (t + dt) * 1000;
-    const terms = c && !save.unpaid ? clerkTerms(c) : null;   // sales first: a broke shop's clerk can earn the wage
+    const terms = c ? clerkTerms(c) : null;   // sales first: a broke shop's clerk earns the wage
     const r = awayStep(save, dt, rng, at, terms);
     sum.sold.push(...r.sold); sum.missed += r.missed; sum.cut += r.cut;
     if (terms) { sum.clerk = terms.name; r.sold.forEach(() => gain(c, 1)); }
@@ -127,6 +128,7 @@ export function catchUp(save, to, rng) {
   sum.coins = sum.sold.reduce((a, e) => a + e.sold.price, 0);
   save.sold = (save.sold || 0); save.earned = (save.earned || 0);
   sum.trips = resolveTrips(save, to, rng);
-  if (elapsed < 60 && !sum.sold.length && !sum.trips.length) return null;
+  // worth telling: a sale, a trip home, wages behind, or customers who found no one to serve them
+  if (!sum.sold.length && !sum.trips.length && !sum.unpaid && !(sum.missed && !c)) return null;
   return sum;
 }

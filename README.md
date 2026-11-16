@@ -49,6 +49,6 @@ sed -i '' -E 's/\?v=[0-9]+/?v=5/g' index.html js/*.js
 
 Milestones 1 to 4 of 7: the forge; the shelf and the till; the counter; the staff and the clock. See `docs/PLAN.md`.
 
-Open the game with `?debug` on the address to reach the save from the browser console as `forge.save`.
+Open the game with `?debug` on the address to reach the save from the browser console as `forge.save`; `forge.wipe()` starts a fresh save.
 
 Fonts: Alegreya and Alegreya Sans, SIL Open Font License.
