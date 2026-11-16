@@ -1,5 +1,5 @@
 // The stage: the fire, the anvil, the piece taking shape, the hammer and the heat meter, drawn on a 1280 × 720 canvas.
-import { FORGE, KC } from './data.js?v=11';
+import { FORGE, KC } from './data.js?v=12';
 
 // two layouts: wide (a desktop, a phone on its side) and tall (a phone held upright), the same drawing moved and scaled
 export const LAYOUTS = {

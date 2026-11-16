@@ -1,16 +1,16 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=11';
-import * as R from './rules.js?v=11';
-import * as Sh from './shop.js?v=11';
-import * as St from './staff.js?v=11';
-import * as Rm from './room.js?v=11';
-import * as G from './growth.js?v=11';
-import { decodeCard, linkFor } from './share.js?v=11';
-import * as Snd from './sound.js?v=11';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=11';
-import { card, ART } from './card.js?v=11';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=11';
-import { load, store } from './save.js?v=11';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=12';
+import * as R from './rules.js?v=12';
+import * as Sh from './shop.js?v=12';
+import * as St from './staff.js?v=12';
+import * as Rm from './room.js?v=12';
+import * as G from './growth.js?v=12';
+import { decodeCard, linkFor } from './share.js?v=12';
+import * as Snd from './sound.js?v=12';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=12';
+import { card, ART } from './card.js?v=12';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=12';
+import { load, store } from './save.js?v=12';
 
 const $ = id => document.getElementById(id);
 const rng = Math.random;
@@ -81,6 +81,38 @@ function rescueCheck() {
   if (Sh.rescue(save, hour())) { store(save); toast('<b>The yard\'s scrap bin.</b> Dougal leaves you a bar and a cord, enough for a dagger.'); }
 }
 
+// ---------- tabs: the forge's and the shop's pages, one at a time (the chosen one remembered on this device) ----------
+const TABKEY = 'darkclayforge.tab.';
+let seenLedger = Date.now();
+function openTab(group, tab) {
+  document.querySelectorAll('[data-group="' + group + '"]').forEach(s => s.toggleAttribute('data-off', s.dataset.tab !== tab));
+  document.querySelectorAll('[data-tabs="' + group + '"] [data-tabbtn]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tabbtn === tab)));
+  try { localStorage.setItem(TABKEY + group, tab); } catch (e) { /* no storage */ }
+  if (group === 'shop' && tab === 'ledger') { seenLedger = (save.ledger[0] || {}).at || 0; tabBadges(); }
+}
+document.querySelectorAll('[data-tabs]').forEach(bar => {
+  bar.setAttribute('role', 'tablist');
+  bar.querySelectorAll('[data-tabbtn]').forEach(b => { b.setAttribute('role', 'tab'); b.onclick = () => openTab(bar.dataset.tabs, b.dataset.tabbtn); });
+  let t = null; try { t = localStorage.getItem(TABKEY + bar.dataset.tabs); } catch (e) { /* no storage */ }
+  openTab(bar.dataset.tabs, t && bar.querySelector('[data-tabbtn="' + t + '"]') ? t : bar.querySelector('[data-tabbtn]').dataset.tabbtn);
+});
+// the tab bars stick just under the bar at the top, however tall it wraps
+new ResizeObserver(() => document.documentElement.style.setProperty('--navh', $('nav').offsetHeight + 'px')).observe($('nav'));
+// bring a section into view: its tab first
+function reveal(el) {
+  const sec = el.closest('[data-tab]');
+  if (sec && sec.hasAttribute('data-off')) openTab(sec.dataset.group, sec.dataset.tab);
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function tabBadges() {
+  const pts = G.pointsLeft(save);
+  $('tabSkills').hidden = !pts; $('tabSkills').textContent = pts;
+  const fresh = save.ledger.filter(e => e.at > seenLedger && e.sold).length;
+  const onLedger = !$('vShop').hidden && $('tabLedger').closest('[data-tabbtn]').getAttribute('aria-selected') === 'true';
+  if (onLedger) seenLedger = (save.ledger[0] || {}).at || seenLedger;
+  $('tabLedger').hidden = !fresh || onLedger; $('tabLedger').textContent = fresh;
+}
+
 // ---------- first-time hints: each shown once, in place; all can be turned off ----------
 const HINTS = {
   home: 'Welcome to your forge. <i>Pick a pattern</i> to make your first piece: the dagger takes the least.',
@@ -94,7 +126,7 @@ const HINTS = {
   shop: 'While you\'re on this screen, customers come to the <i>counter</i>: show them a piece and choose your price. Away from it, they buy from the shelf at its tag: <i>CHEAP, FAIR or DEAR</i>.',
   supp: 'Materials for the forge. <i>Prices change on the hour</i>: the arrows show which way.',
   staff: 'A <i>counter clerk</i> sells while you\'re away (the game closed). A <i>runner</i> goes out for materials.',
-  points: 'You have a <i>skill point</i>. Spend it in THE MAKER below.',
+  points: 'You have a <i>skill point</i>. Spend it under <i>SKILLS</i>.',
 };
 function tip(key, before, parent) {
   document.querySelectorAll('.hintcard[data-h="' + key + '"]').forEach(x => x.remove());
@@ -137,9 +169,9 @@ function toHome() {
   $('homeBag').innerHTML = Object.entries(FOUND).map(([id, f]) => save.found.includes(id)
     ? '<button tabindex="-1" title="' + f.name + ': ' + f.line + '"><div style="aspect-ratio:3/4">' + bagLook(id).face + '</div>' + f.short + '</button>'
     : '<button class="unk" disabled><div style="aspect-ratio:3/4">' + unknownLook(id).face + '</div>NOT FOUND</button>').join('');
-  renderMaker(); renderTools();
+  renderMaker(); renderTools(); tabBadges();
   if (!save.made && !save.cards.length) tip('home', $('patterns').closest('section'));
-  if (G.pointsLeft(save) > 0) tip('points', document.querySelector('.maker-card'));
+  if (G.pointsLeft(save) > 0) tip('points', document.querySelector('[data-tabs="forge"]'));
   const have = Object.entries(save.mats).filter(([, n]) => n > 0);
   $('storeWord').textContent = have.length ? have.reduce((a, [, n]) => a + n, 0) + ' THINGS' : 'EMPTY';
   $('store').innerHTML = have.length ? have.map(([id, n]) => '<span>' + MATS[id].name + '<b>' + n + '</b></span>').join('')
@@ -167,7 +199,7 @@ function renderMaker() {
     if (b.getAttribute('aria-disabled') === 'true') { const w = G.canTake(save, b.dataset.b, +b.dataset.i).why; if (w && w !== 'yours already') { perkNote = 'Not yet: ' + w + '.'; renderMaker(); } return; }
     const r = G.takePerk(save, b.dataset.b, +b.dataset.i);
     perkNote = r.ok ? 'Learned: ' + PERKS[b.dataset.b].perks[+b.dataset.i].word + '.' : 'Not yet: ' + r.why + '.';
-    store(save); renderMaker();
+    store(save); renderMaker(); tabBadges();
   });
 }
 function renderTools() {
@@ -205,7 +237,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=11').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=12').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -232,9 +264,9 @@ function dioTap(t) {
     renderDioBar(); return;
   }
   if (t.kind && Rm.homeOf(t.kind) === 'work') toHome();
-  else if (t.kind === 'shelf') $('slots2').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  else if (t.kind === 'counter' || t.person) (save.queue.length ? $('counterBox') : $('ledger')).scrollIntoView({ behavior: 'smooth', block: 'center' });
-  else if (t.item) $('furnish').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  else if (t.kind === 'shelf') reveal($('slots2'));
+  else if (t.kind === 'counter' || t.person) reveal(save.queue.length ? $('counterBox') : $('ledger'));
+  else if (t.item) reveal($('furnish'));
 }
 function renderDioBar() {
   if (!dio) return;
@@ -268,7 +300,7 @@ function renderWall() {
     openLook(card(c), '<button class="seg" id="unhang">TAKE IT DOWN</button>', false, c);
     $('unhang').onclick = () => { G.unhang(save, c.id); store(save); $('look').hidden = true; renderShop(); };
   });
-  $('wall').querySelectorAll('[data-wallempty]').forEach(b => b.onclick = () => $('back').scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  $('wall').querySelectorAll('[data-wallempty]').forEach(b => b.onclick = () => reveal($('back')));
 }
 let furnNote = '';
 function renderFurnish() {
@@ -423,7 +455,7 @@ function renderShop() {
   const cost = Rm.shelfCost(save.room);
   $('buySlot').hidden = cost == null;
   if (cost != null) { $('buySlot').textContent = 'ANOTHER SHELF · TWO PLACES · ' + cost + ' COINS'; $('buySlot').disabled = save.coins < cost; }
-  renderFurnish(); renderWall();
+  renderFurnish(); renderWall(); tabBadges();
   const back = Sh.inBack(save);
   $('backWord').textContent = back.length + (back.length === 1 ? ' PIECE' : ' PIECES') + ' · NOT FOR SALE YET';
   $('back').innerHTML = back.length ? back.map(c => '<button data-id="' + c.id + '" aria-label="' + esc(c.name) + '">' + card(c, { short: true }) + '</button>').join('')
@@ -972,7 +1004,7 @@ function frame(now) {
       if (e.sold) { coins(); Snd.play('coin'); if (screen !== 'shop') { toast('<b>Sold: ' + esc(e.sold.name) + ' · +' + e.sold.price + ' c</b><br>to ' + esc(e.who)); $('navSold').hidden = false; } }
       if (e.order === 'posted' && screen !== 'shop') { toast('<b>A special order</b><br>' + esc(e.who) + ': ' + esc(Sh.orderWord(save.order)) + '.'); $('navSold').hidden = false; }
     });
-    if (screen === 'shop') renderShop();
+    if (screen === 'shop') renderShop(); else tabBadges();
   } else if (screen === 'shop' && floorShown && save.ledger[0] && Date.now() - save.ledger[0].at > 30000) renderFloor();
   if (screen === 'shop' && save.queue.length > lastQ) Snd.play('bell');
   lastQ = save.queue.length;

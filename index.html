@@ -13,8 +13,8 @@
 <title>Darkclay Forge</title>
 <meta name="description" content="Work iron at the forge, tile by tile, and keep every piece you make as a card.">
 <link rel="stylesheet" href="css/fonts.css">
-<link rel="stylesheet" href="css/working.css?v=11">
-<link rel="stylesheet" href="css/game.css?v=11">
+<link rel="stylesheet" href="css/working.css?v=12">
+<link rel="stylesheet" href="css/game.css?v=12">
 </head>
 <body>
 <div class="wrap">
@@ -26,9 +26,8 @@
       <button class="seg" data-go="shop">THE SHOP <span class="dot" id="navSold" hidden></span></button>
       <button class="seg" data-go="supp">SUPPLIERS</button>
       <button class="seg" data-go="staff">STAFF</button>
-      <button class="seg mute" id="muteBtn" aria-label="Sound"></button>
     </div>
-    <div class="purse" aria-live="polite"><span>PURSE</span><b id="coins">0</b><span>COINS</span></div>
+    <div class="purse"><span aria-live="polite"><span>PURSE</span> <b id="coins">0</b> <span>COINS</span></span><button class="seg mute" id="muteBtn" aria-label="Sound"></button></div>
   </nav>
 
   <!-- THE FORGE: the patterns, the found tiles, the store room -->
@@ -50,12 +49,18 @@
       </section>
     </details>
 
-    <section class="card">
+    <nav class="tabbar" data-tabs="forge" aria-label="The forge's pages">
+      <button class="tab" data-tabbtn="patterns">PATTERNS</button>
+      <button class="tab" data-tabbtn="skills">SKILLS <span class="badge" id="tabSkills" hidden></span></button>
+      <button class="tab" data-tabbtn="workshop">WORKSHOP</button>
+      <button class="tab" data-tabbtn="tiles">FOUND TILES</button>
+    </nav>
+    <section data-group="forge" data-tab="patterns" class="card">
       <h2><span>THE PATTERNS</span><b>EACH IS A TRADE · PRACTICE RAISES IT</b></h2>
       <div class="patterns" id="patterns"></div>
     </section>
 
-    <section class="card maker-card">
+    <section data-group="forge" data-tab="skills" class="card maker-card">
       <h2><span>THE MAKER</span><b id="makerWord"></b></h2>
       <div class="makerrow">
         <div><div class="mk-l" id="mkLevel"></div><div class="xp"><i id="mkXp"></i></div><div class="mk-s" id="mkPoints"></div></div>
@@ -65,18 +70,18 @@
       <p class="note" id="perkNote"></p>
     </section>
 
-    <section class="card">
+    <section data-group="forge" data-tab="workshop" class="card">
       <h2><span>THE WORKSHOP</span><b>TOOLS FOR THE FORGE</b></h2>
       <div class="furn" id="tools"></div>
       <p class="note" id="toolNote"></p>
     </section>
 
-    <section class="card">
+    <section data-group="forge" data-tab="tiles" class="card">
       <h2><span>FOUND TILES</span><b id="homeFound"></b></h2>
       <div class="bag" id="homeBag"></div>
     </section>
 
-    <section class="card">
+    <section data-group="forge" data-tab="patterns" class="card">
       <h2><span>THE STORE ROOM</span><b id="storeWord"></b></h2>
       <div class="store" id="store"></div>
       <div class="rbtns left"><button class="seg" data-go="supp">TO THE SUPPLIERS</button><button class="seg" data-go="shop" id="toBack"></button></div>
@@ -107,27 +112,33 @@
       <h2><span>SPECIAL ORDER</span><b id="orderDue"></b></h2>
       <div id="orderBody"></div>
     </section>
-    <section class="card">
+    <nav class="tabbar" data-tabs="shop" aria-label="The shop's pages">
+      <button class="tab" data-tabbtn="shelf">SHELF</button>
+      <button class="tab" data-tabbtn="wall">THE WALL</button>
+      <button class="tab" data-tabbtn="furnish">FURNISH</button>
+      <button class="tab" data-tabbtn="ledger">LEDGER <span class="badge" id="tabLedger" hidden></span></button>
+    </nav>
+    <section data-group="shop" data-tab="shelf" class="card">
       <h2><span>THE SHELF</span><b id="shelfWord"></b></h2>
       <div class="shelf slots" id="slots2"></div>
       <div class="rbtns left"><button class="seg" id="buySlot"></button></div>
     </section>
-    <section class="card">
+    <section data-group="shop" data-tab="shelf" class="card">
       <h2><span>IN THE BACK</span><b id="backWord"></b></h2>
       <div class="shelf" id="back"></div>
     </section>
-    <section class="card" id="wallBox">
+    <section data-group="shop" data-tab="wall" class="card" id="wallBox">
       <h2><span>THE WALL</span><b id="wallWord"></b></h2>
       <div class="shelf slots" id="wall"></div>
       <p class="note">Pieces you keep. Not for sale: they add to your renown and the shop's charm.</p>
     </section>
-    <section class="card" id="furnish">
+    <section data-group="shop" data-tab="furnish" class="card" id="furnish">
       <h2><span>FURNISH AND GROW</span><b id="charmWord"></b></h2>
       <div class="furn" id="furnList"></div>
       <p class="note" id="furnNote"></p>
       <div class="rbtns left"><button class="seg" id="expandBtn"></button><button class="seg" id="expandWork"></button></div>
     </section>
-    <section class="card">
+    <section data-group="shop" data-tab="ledger" class="card">
       <h2><span>THE LEDGER</span><b>WHO CAME IN</b></h2>
       <ul class="ledger" id="ledger"></ul>
     </section>
@@ -266,6 +277,6 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js" } }</script>
-<script type="module" src="js/main.js?v=11"></script>
+<script type="module" src="js/main.js?v=12"></script>
 </body>
 </html>
