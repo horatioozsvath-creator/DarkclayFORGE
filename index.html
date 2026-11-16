@@ -13,8 +13,8 @@
 <title>Darkclay Forge</title>
 <meta name="description" content="Work iron at the forge, tile by tile, and keep every piece you make as a card.">
 <link rel="stylesheet" href="css/fonts.css">
-<link rel="stylesheet" href="css/working.css?v=10">
-<link rel="stylesheet" href="css/game.css?v=10">
+<link rel="stylesheet" href="css/working.css?v=11">
+<link rel="stylesheet" href="css/game.css?v=11">
 </head>
 <body>
 <div class="wrap">
@@ -93,7 +93,8 @@
       <div class="counter" aria-hidden="true"></div>
     </section>
     <div class="diobar" id="dioBar" hidden>
-      <button class="seg" id="arrangeBtn">ARRANGE THE SHOP</button>
+      <span class="views"><button class="seg" data-view="shop">THE SHOP FRONT</button><button class="seg" data-view="work">THE WORKSHOP</button></span>
+      <button class="seg" id="arrangeBtn">ARRANGE</button>
       <span class="diohint" id="dioHint"></span>
       <span class="dioacts" id="dioActs"></span>
     </div>
@@ -124,7 +125,7 @@
       <h2><span>FURNISH AND GROW</span><b id="charmWord"></b></h2>
       <div class="furn" id="furnList"></div>
       <p class="note" id="furnNote"></p>
-      <div class="rbtns left"><button class="seg" id="expandBtn"></button></div>
+      <div class="rbtns left"><button class="seg" id="expandBtn"></button><button class="seg" id="expandWork"></button></div>
     </section>
     <section class="card">
       <h2><span>THE LEDGER</span><b>WHO CAME IN</b></h2>
@@ -265,6 +266,6 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js" } }</script>
-<script type="module" src="js/main.js?v=10"></script>
+<script type="module" src="js/main.js?v=11"></script>
 </body>
 </html>

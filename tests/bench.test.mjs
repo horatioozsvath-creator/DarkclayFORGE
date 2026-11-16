@@ -54,8 +54,8 @@ test('strong links: arrows need forged heads, a staff a forged ferrule; forged a
 });
 
 test('setting up the bench; hunters want bows only where a bench stands', () => {
-  const s = { coins: 5000, room: Rm.defaultRoom(), slots: 4, shelf: [null, null, null, null], cards: [], stations: [] };
-  assert.ok(Rm.buyStation(s, 'bowbench').item); assert.ok(Rm.valid(s.room)); assert.equal(s.coins, 5000 - BENCH.cost);
+  const s = { coins: 5000, room: Rm.defaultRoom(), workshop: Rm.defaultWorkshop(), slots: 4, shelf: [null, null, null, null], cards: [], stations: [] };
+  assert.ok(Rm.buyStation(s, 'bowbench').item); assert.ok(Rm.valid(s.workshop)); assert.equal(s.coins, 5000 - BENCH.cost);
   const none = { stations: [] }, bench = { stations: ['bowbench'] };
   let bows = 0;
   for (let i = 0; i < 400; i++) {

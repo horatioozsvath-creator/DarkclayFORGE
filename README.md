@@ -32,9 +32,10 @@ npm test
 - `js/growth.js` — tools, the maker's level and skills, renown, the display wall
 - `js/share.js` — a card as a link (`#card=`), checked before it's shown
 - `js/sound.js` — the sounds, made with WebAudio
-- `js/room.js` — the shop's grid room: furniture, moving, buying, selling back, growing
+- `js/room.js` — the shop front and the workshop: grids, furniture, moving, buying, selling back, growing
 - `js/diorama.js` — the shop in 3D (Three.js, loaded when the shop opens)
 - `assets/models/` — Darkclay Zero's props and townsfolk as GLB, rebuilt by `tools/models.sh` (needs Blender and the DarkclayZERO folder)
+- `tools/station_props.py` — the bending bench and glass furnace, built in Blender with Zero's own kit so they match its props
 - `vendor/three/` — Three.js 0.170 (MIT)
 - `tools/sim.mjs` — the economy played by a bot (`node tools/sim.mjs 14 1 45`: 14 days, seed 1, 45-minute sessions)
 - `manifest.webmanifest`, `assets/icons/` — so the game can be added to a phone's home screen
@@ -51,7 +52,7 @@ npm test
 Browsers and GitHub Pages cache files for a few minutes. Each release bumps the `?v=` number on every script import and stylesheet link (in `index.html` and `js/*.js`), so a player never runs a new file against an old one:
 
 ```bash
-sed -i '' -E 's/\?v=[0-9]+/?v=11/g' index.html js/*.js
+sed -i '' -E 's/\?v=[0-9]+/?v=12/g' index.html js/*.js
 ```
 
 ## Status

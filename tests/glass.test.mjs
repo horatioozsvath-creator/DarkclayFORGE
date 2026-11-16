@@ -55,9 +55,9 @@ test('glass pieces: clarity on the card, blown by their maker; a pane in the win
 });
 
 test('setting up the glass; customers want glass only where it stands', () => {
-  const s = { coins: 9000, room: Rm.defaultRoom(), slots: 4, shelf: [null, null, null, null], cards: [], stations: [], ledger: [], clock: 0 };
+  const s = { coins: 9000, room: Rm.defaultRoom(), workshop: Rm.defaultWorkshop(), slots: 4, shelf: [null, null, null, null], cards: [], stations: [], ledger: [], clock: 0 };
   for (let i = 0; i < 200; i++) { const c = Sh.richer(s, Sh.newCustomer(seeded(i))); assert.ok(c.want !== 'glass' && !(PATTERNS[c.want] && PATTERNS[c.want].station === 'glass'), c.want); }
-  assert.ok(Rm.buyStation(s, 'glass').item); assert.ok(Rm.valid(s.room));
+  assert.ok(Rm.buyStation(s, 'glass').item); assert.ok(Rm.valid(s.workshop));
   let g = 0; for (let i = 0; i < 400; i++) { const c = Sh.richer(s, Sh.newCustomer(seeded(i))); if (c.want === 'glass' || (PATTERNS[c.want] && PATTERNS[c.want].station === 'glass')) g++; }
   assert.ok(g > 15, g + ' glass customers in 400');
   assert.equal(Sh.wantWord('glass'), 'something of glass');

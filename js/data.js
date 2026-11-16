@@ -373,6 +373,13 @@ export const ROUTES = {
 // The shop is a grid of one-metre tiles, the back wall at z = 0, the left wall at x = 0, open to the front (the camera's side).
 // The door is in the left wall at DOOR_Z; that tile and the tiles in front of the counter are kept clear for customers.
 export const DOOR_Z = 3;
+export const WORK_DOOR_X = 1;   // the way through to the workshop, in the shop front's back wall
+// the workshop behind the shop front: its own size, grown on its own (it doesn't change the away cap)
+export const WORK_SIZES = [
+  { w: 6, d: 5, cost: 0, word: 'A SMALL WORKSHOP' },
+  { w: 8, d: 6, cost: 2000, word: 'A GOOD WORKSHOP' },
+  { w: 10, d: 7, cost: 6000, word: 'A GREAT WORKSHOP' },
+];
 export const ROOM_SIZES = [
   { w: 6, d: 5, cost: 0, capH: 0, word: 'A SMALL SHOP' },
   { w: 8, d: 6, cost: 3000, capH: 1, word: 'A GOOD SHOP' },
@@ -380,14 +387,14 @@ export const ROOM_SIZES = [
 ];
 // fp: the footprint in tiles [x, z] before turning; fixed: can be moved, never sold; slots: shelf places; charm: draws customers
 export const FURNITURE = {
-  forge: { name: 'Forge', fp: [2, 2], fixed: true, model: 'forge' },
-  anvil: { name: 'Anvil', fp: [1, 1], fixed: true, model: 'anvil' },
-  counter: { name: 'Counter', fp: [2, 1], fixed: true, model: 'counter' },
-  stretcher: { name: 'Stretcher', fp: [2, 1], fixed: true, model: 'stretcher', station: 'stretcher' },
-  bowbench: { name: 'Bending bench', fp: [2, 1], fixed: true, model: 'bowbench', station: 'bowbench' },
-  kettle: { name: 'Kettle', fp: [2, 1], fixed: true, model: 'kettle', station: 'kettle' },
-  glass: { name: 'Glass furnace', fp: [2, 2], fixed: true, model: 'glass', station: 'glass' },
-  shelf: { name: 'Shelf', fp: [2, 1], slots: 2, model: 'shelf', line: 'Two places for pieces to sell.' },
+  forge: { name: 'Forge', fp: [2, 2], fixed: true, model: 'forge', room: 'work' },
+  anvil: { name: 'Anvil', fp: [1, 1], fixed: true, model: 'anvil', room: 'work' },
+  counter: { name: 'Counter', fp: [2, 1], fixed: true, model: 'counter', room: 'shop' },
+  stretcher: { name: 'Stretcher', fp: [2, 1], fixed: true, model: 'stretcher', station: 'stretcher', room: 'work' },
+  bowbench: { name: 'Bending bench', fp: [2, 1], fixed: true, model: 'bowbench', station: 'bowbench', room: 'work' },
+  kettle: { name: 'Kettle', fp: [2, 1], fixed: true, model: 'kettle', station: 'kettle', room: 'work' },
+  glass: { name: 'Glass furnace', fp: [2, 2], fixed: true, model: 'glass', station: 'glass', room: 'work' },
+  shelf: { name: 'Shelf', fp: [2, 1], slots: 2, model: 'shelf', room: 'shop', line: 'Two places for pieces to sell.' },
   rug: { name: 'Rug', fp: [2, 2], charm: 2, cost: 180, model: 'rug', line: 'Warm underfoot.' },
   barrels: { name: 'Barrels', fp: [1, 1], charm: 1, cost: 90, model: 'barrels' },
   crates: { name: 'Crates', fp: [2, 1], charm: 1, cost: 105, model: 'crates' },
@@ -397,6 +404,19 @@ export const FURNITURE = {
   table: { name: 'Table', fp: [2, 2], charm: 3, cost: 270, model: 'table' },
   rack: { name: 'Pelt rack', fp: [2, 1], charm: 3, cost: 360, model: 'rack' },
   workbench: { name: 'Workbench', fp: [2, 1], charm: 3, cost: 330, model: 'workbench', line: 'Folk like to see the work.' },
+  // more decor (Darkclay Zero's props); scale: drawn smaller than Zero's own, for a room with a low ceiling
+  banner: { name: 'Banner', fp: [1, 1], charm: 2, cost: 150, model: 'banner', scale: 0.6, line: 'Your mark, hung high.' },
+  armorstand: { name: 'Armour stand', fp: [1, 1], charm: 3, cost: 300, model: 'armorstand', line: 'A coat of mail on show.' },
+  bookshelf: { name: 'Bookshelf', fp: [2, 1], charm: 2, cost: 210, model: 'bookshelf', line: 'Ledgers, patterns and a few old tales.' },
+  candlestand: { name: 'Candle stand', fp: [1, 1], charm: 2, cost: 120, model: 'candlestand' },
+  candles: { name: 'Candle shelf', fp: [2, 1], charm: 2, cost: 120, model: 'candles' },
+  brazier: { name: 'Brazier', fp: [1, 1], charm: 2, cost: 180, model: 'brazier', line: 'Warm hands come back.' },
+  statue: { name: 'Statue', fp: [1, 1], charm: 4, cost: 600, model: 'statue', scale: 0.5, line: 'An old king in stone. Folk stop to look.' },
+  urn: { name: 'Urn', fp: [1, 1], charm: 1, cost: 80, model: 'urn' },
+  basket: { name: 'Basket', fp: [1, 1], charm: 1, cost: 60, model: 'basket' },
+  flowers: { name: 'Flowers', fp: [1, 1], charm: 2, cost: 90, model: 'flowers', line: 'Something growing, for once.' },
+  sacks: { name: 'Sacks', fp: [1, 1], charm: 1, cost: 60, model: 'sacks' },
+  herbrail: { name: 'Herb rail', fp: [2, 1], charm: 2, cost: 150, model: 'herbrail', line: 'Herbs drying: the shop smells of summer.' },
 };
 export const SHELF_COSTS = [800, 1800, 3600, 6400, 10000, 14400];   // the 3rd shelf to the 8th
 export const MAX_SHELVES = 8;

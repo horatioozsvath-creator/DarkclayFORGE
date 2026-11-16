@@ -40,14 +40,14 @@ test('a stretcher\'s piece: its hide in its name, armour on its card', () => {
 });
 
 test('setting up the stretcher: paid, placed, owned; orders follow it', () => {
-  const s = { coins: 5000, room: Rm.defaultRoom(), slots: 4, shelf: [null, null, null, null], cards: [], ledger: [], clock: 0 };
+  const s = { coins: 5000, room: Rm.defaultRoom(), workshop: Rm.defaultWorkshop(), slots: 4, shelf: [null, null, null, null], cards: [], ledger: [], clock: 0 };
   for (let i = 0; i < 60; i++) { Sh.postOrder(s, seeded(i), 1); assert.ok(!PATTERNS[s.order.pattern].station, 'no stretcher orders before it\'s set up'); }
   assert.ok(Rm.buyStation(s, 'stretcher').item); assert.equal(s.coins, 5000 - STRETCHER.cost); assert.ok(Rm.owns(s, 'stretcher'));
-  assert.equal(Rm.buyStation(s, 'stretcher').why, 'yours already'); assert.ok(Rm.valid(s.room));
+  assert.equal(Rm.buyStation(s, 'stretcher').why, 'yours already'); assert.ok(Rm.valid(s.workshop));
   assert.equal(Rm.sellBack(s, 'stretcher').why, 'it stays');
   let leather = 0; for (let i = 0; i < 200; i++) { Sh.postOrder(s, seeded(i), 1); if (PATTERNS[s.order.pattern].station) leather++; }
   assert.ok(leather > 0);
-  const t = { slots: 4, stations: ['stretcher'], room: null }; Rm.fixRoom(t); assert.ok(t.room.items.some(i => i.kind === 'stretcher'), 'a rebuilt room keeps it');
+  const t = { slots: 4, stations: ['stretcher'], room: null }; Rm.fixRoom(t); assert.ok(t.workshop.items.some(i => i.kind === 'stretcher'), 'a rebuilt workshop keeps it');
 });
 
 test('customers want leather too', () => {

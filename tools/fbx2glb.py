@@ -33,7 +33,7 @@ for spec in specs:
     name, files = spec.split('=', 1)
     bpy.ops.wm.read_factory_settings(use_empty=True)
     for f in files.split('+'):
-        bpy.ops.import_scene.fbx(filepath=os.path.join(src, f + '.fbx'))
+        bpy.ops.import_scene.fbx(filepath=(f if os.path.isabs(f) else os.path.join(src, f)) + '.fbx')   # a full path: one of ours
     for m in bpy.data.materials:
         key, p = slot_of(m.name)
         m.name = key

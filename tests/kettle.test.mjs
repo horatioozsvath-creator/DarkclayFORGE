@@ -56,9 +56,9 @@ test('a brew can\'t be broken down or sent back to the fire', () => {
 });
 
 test('setting up the kettle; brews wanted only where a kettle stands; a regular asks for one', () => {
-  const s = { coins: 5000, room: Rm.defaultRoom(), slots: 4, shelf: [null, null, null, null], cards: [], stations: [], ledger: [], clock: 0 };
+  const s = { coins: 5000, room: Rm.defaultRoom(), workshop: Rm.defaultWorkshop(), slots: 4, shelf: [null, null, null, null], cards: [], stations: [], ledger: [], clock: 0 };
   for (let i = 0; i < 80; i++) { const c = Sh.richer(s, Sh.newCustomer(seeded(i))); assert.ok(c.want !== 'brew' && !(PATTERNS[c.want] && PATTERNS[c.want].batch), c.want); }
-  assert.ok(Rm.buyStation(s, 'kettle').item); assert.ok(Rm.valid(s.room));
+  assert.ok(Rm.buyStation(s, 'kettle').item); assert.ok(Rm.valid(s.workshop));
   let brews = 0; for (let i = 0; i < 400; i++) { const c = Sh.richer(s, Sh.newCustomer(seeded(i))); if (c.want === 'brew' || (PATTERNS[c.want] && PATTERNS[c.want].batch)) brews++; }
   assert.ok(brews > 30, brews + ' brew customers in 400');
   let asked = 0; for (let i = 0; i < 300; i++) { Sh.postOrder(s, seeded(i), 1); if (PATTERNS[s.order.pattern].batch) asked++; }

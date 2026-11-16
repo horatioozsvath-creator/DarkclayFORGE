@@ -2,10 +2,10 @@
 // in to the counter. Loaded only when the shop is opened. Three.js comes through the page's import map as 'three'.
 import * as THREE from 'three';
 import { GLTFLoader } from '../vendor/three/loaders/GLTFLoader.js';
-import { FURNITURE, DOOR_Z } from './data.js?v=10';
-import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=10';
+import { FURNITURE, DOOR_Z, WORK_DOOR_X } from './data.js?v=11';
+import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=11';
 
-const MODELS = 'assets/models/', M = '?m=5';   // bump m when tools/models.sh rebuilds them
+const MODELS = 'assets/models/', M = '?m=7';   // bump m when tools/models.sh rebuilds them
 const FIGURES = { folk: 'folk', guard: 'dwarf', traveller: 'carter', delver: 'bard', factor: 'chandler', collector: 'herbalist', seller: 'carter', maker: 'smith', clerk: 'chandler' };
 const WALK = 1.5;   // metres a second
 
@@ -58,7 +58,7 @@ export async function create(host, { onTap } = {}) {
   const camera = new THREE.OrthographicCamera(-5, 5, 3, -3, 0.1, 100);
   const roomG = new THREE.Group(), itemsG = new THREE.Group(), peopleG = new THREE.Group(), markG = new THREE.Group();
   scene.add(roomG, itemsG, peopleG, markG);
-  let room = null, dirty = true, arranging = false, selected = null, size = { w: 6, d: 5 };
+  let room = null, dirty = true, arranging = false, selected = null, size = { w: 6, d: 5 }, view = 'shop';
   const itemObjs = new Map();   // item id → its group
   const people = new Map();     // customer id → { obj, path, at, gone }
 
@@ -83,20 +83,32 @@ export async function create(host, { onTap } = {}) {
   }
   new ResizeObserver(fitCamera).observe(host);
 
-  // the floor, the back and left walls with the doorway, a grid for arranging
+  // the floor, the back and left walls with their doorways, a grid for arranging. The shop front: boards, plastered walls, the
+  // street door at the left and the way through to the workshop in the back wall; the workshop: flagstones, bare stone, its door
+  // at the left back through to the shop.
   function buildRoom() {
     roomG.clear();
-    const { w, d } = size;
-    const floor = toonBox(w, 0.12, d, '#4a3424'); floor.position.set(w / 2, -0.06, d / 2); floor.userData.floor = true; roomG.add(floor);
-    for (let x = 0; x < w; x++) for (let z = 0; z < d; z++) if ((x + z) % 2) { const t = toonBox(0.98, 0.01, 0.98, '#54392a'); t.position.set(x + 0.5, 0.005, z + 0.5); roomG.add(t); }
-    const back = toonBox(w + 0.2, 2.6, 0.2, '#6a5040'); back.position.set(w / 2, 1.3, -0.1); roomG.add(back);
+    const { w, d } = size, work = view === 'work';
+    const [f1, f2, wb, wl] = work ? ['#3e3a36', '#48433e', '#5a524a', '#524a42'] : ['#4a3424', '#54392a', '#6a5040', '#5e4636'];
+    const floor = toonBox(w, 0.12, d, f1); floor.position.set(w / 2, -0.06, d / 2); floor.userData.floor = true; roomG.add(floor);
+    for (let x = 0; x < w; x++) for (let z = 0; z < d; z++) if ((x + z) % 2) { const t = toonBox(0.98, 0.01, 0.98, f2); t.position.set(x + 0.5, 0.005, z + 0.5); roomG.add(t); }
+    if (work) { const back = toonBox(w + 0.2, 2.6, 0.2, wb); back.position.set(w / 2, 1.3, -0.1); roomG.add(back); }
+    else {   // the back wall, cut for the way through at WORK_DOOR_X; the workshop's glow beyond it
+      const a = WORK_DOOR_X, b = w - WORK_DOOR_X - 1;
+      if (a > 0) { const s1 = toonBox(a + 0.1, 2.6, 0.2, wb); s1.position.set((a - 0.1) / 2, 1.3, -0.1); roomG.add(s1); }
+      if (b > 0) { const s2 = toonBox(b + 0.1, 2.6, 0.2, wb); s2.position.set(a + 1 + (b + 0.1) / 2 - 0.05, 1.3, -0.1); roomG.add(s2); }
+      const l2 = toonBox(1.1, 0.5, 0.24, '#3b2414'); l2.position.set(a + 0.5, 2.35, -0.1); roomG.add(l2);
+      const glowIn = new THREE.Mesh(new THREE.PlaneGeometry(1, 2.1), new THREE.MeshBasicMaterial({ color: 0x5a2a12 })); glowIn.position.set(a + 0.5, 1.05, -0.2); glowIn.userData.door = 'work'; roomG.add(glowIn);
+    }
     const beam = toonBox(w + 0.2, 0.18, 0.26, '#3b2414'); beam.position.set(w / 2, 2.62, -0.1); roomG.add(beam);
     // the left wall, cut for the door at DOOR_Z
-    const segA = toonBox(0.2, 2.6, DOOR_Z, '#5e4636'); segA.position.set(-0.1, 1.3, DOOR_Z / 2); roomG.add(segA);
-    const restD = d - DOOR_Z - 1; if (restD > 0) { const segB = toonBox(0.2, 2.6, restD, '#5e4636'); segB.position.set(-0.1, 1.3, DOOR_Z + 1 + restD / 2); roomG.add(segB); }
+    const segA = toonBox(0.2, 2.6, DOOR_Z, wl); segA.position.set(-0.1, 1.3, DOOR_Z / 2); roomG.add(segA);
+    const restD = d - DOOR_Z - 1; if (restD > 0) { const segB = toonBox(0.2, 2.6, restD, wl); segB.position.set(-0.1, 1.3, DOOR_Z + 1 + restD / 2); roomG.add(segB); }
+    if (work) { const through = new THREE.Mesh(new THREE.PlaneGeometry(1, 2.1), new THREE.MeshBasicMaterial({ color: 0x3a2414 })); through.rotation.y = Math.PI / 2; through.position.set(-0.22, 1.05, DOOR_Z + 0.5); through.userData.door = 'shop'; roomG.add(through); }
     const lintel = toonBox(0.24, 0.5, 1.1, '#3b2414'); lintel.position.set(-0.1, 2.35, DOOR_Z + 0.5); roomG.add(lintel);
     const step = toonBox(0.6, 0.06, 1, '#2a1c12'); step.position.set(-0.3, 0.03, DOOR_Z + 0.5); roomG.add(step);
-    ember.position.set(1, 1.2, 1.2);
+    ember.position.set(work ? 1 : WORK_DOOR_X + 0.5, 1.2, work ? 1.2 : 0.4);
+    ember.intensity = work ? 6 : 2.5;
   }
   function drawMarks() {
     markG.clear();
@@ -124,7 +136,7 @@ export async function create(host, { onTap } = {}) {
       let o = itemObjs.get(it.id);
       if (!o) {
         o = new THREE.Group(); o.userData.item = it.id; itemObjs.set(it.id, o); itemsG.add(o);
-        model(FURNITURE[it.kind].model).then(src => { const p = placed(src, FURNITURE[it.kind].fp); p.traverse(m => { m.userData.item = it.id; }); o.add(p); dirty = true; }).catch(() => {});
+        model(FURNITURE[it.kind].model).then(src => { const p = placed(src, FURNITURE[it.kind].fp); if (FURNITURE[it.kind].scale) p.scale.setScalar(FURNITURE[it.kind].scale); p.traverse(m => { m.userData.item = it.id; }); o.add(p); dirty = true; }).catch(() => {});
       }
       const [fx, fz] = fpOf(it);
       o.position.set(it.x + fx / 2, 0, it.z + fz / 2);
@@ -135,7 +147,8 @@ export async function create(host, { onTap } = {}) {
   }
 
   // ---------- people ----------
-  const counterFront = () => { const k = [...kept(room)].filter(t => t !== '0,' + DOOR_Z).map(t => t.split(',').map(Number)); return k.length ? k : [[2, DOOR_Z]]; };
+  // where a customer stands: the kept tiles before the counter (not the doorways)
+  const counterFront = () => { const k = [...kept(room)].filter(t => t !== '0,' + DOOR_Z && t !== WORK_DOOR_X + ',0').map(t => t.split(',').map(Number)); return k.length ? k : [[2, DOOR_Z]]; };
   const doorIn = () => [[-1.2, DOOR_Z + 0.5], [0.6, DOOR_Z + 0.5]];
   function spawn(id, kind, to, stay) {
     if (people.has(id)) return;
@@ -153,6 +166,7 @@ export async function create(host, { onTap } = {}) {
   let lastQueue = [];
   function setQueue(queue) {
     lastQueue = queue.map(c => ({ id: c.id, type: c.type }));
+    if (view !== 'shop') queue = [];   // customers are in the shop front
     const front = counterFront(), ids = new Set(queue.map(c => c.id));
     for (const id of people.keys()) if (!id.startsWith('staff:') && !ids.has(id)) leave(id);
     queue.forEach((c, i) => {
@@ -163,6 +177,7 @@ export async function create(host, { onTap } = {}) {
   }
   // a walk-in who served themselves: in to a shelf, a moment, out again
   function walkIn(entry) {
+    if (view !== 'shop') return;
     const shelves = room.items.filter(i => i.kind === 'shelf'); if (!shelves.length) return;
     const s = shelves[Math.floor(Math.random() * shelves.length)], [fx, fz] = fpOf(s), id = 'walk:' + entry.at + Math.random();
     const to = [Math.min(size.w - 0.5, Math.max(0.5, s.x + fx / 2)), Math.min(size.d - 0.5, s.z + fz + 0.4)];
@@ -179,6 +194,8 @@ export async function create(host, { onTap } = {}) {
       if (!p) { p = { obj: new THREE.Group(), path: null, stay: true }; people.set(id, p); peopleG.add(p.obj); model(FIGURES[want[id]]).then(src => { p.obj.add(placed(src)); dirty = true; }).catch(() => {}); }
       p.obj.position.set(x, 0, z); p.obj.rotation.y = face; dirty = true;
     };
+    if (!anvil) { const m = people.get('staff:maker'); if (m) { peopleG.remove(m.obj); people.delete('staff:maker'); } }
+    if (!counter) { const k = people.get('staff:clerk'); if (k) { peopleG.remove(k.obj); people.delete('staff:clerk'); } }
     if (anvil) place('staff:maker', anvil.x + 0.5, anvil.z + 1.25, Math.PI);
     if (c && counter) { const [fx] = fpOf(counter); place('staff:clerk', counter.x + fx / 2, Math.max(0.4, counter.z - 0.45), 0); }
   }
@@ -213,16 +230,21 @@ export async function create(host, { onTap } = {}) {
     // the floor tile under the tap: where the ray meets y = 0
     const t = ray.ray.origin.y / -ray.ray.direction.y, fx = ray.ray.origin.x + ray.ray.direction.x * t, fz = ray.ray.origin.z + ray.ray.direction.z * t;
     const tile = fx >= 0 && fz >= 0 && fx < size.w && fz < size.d ? [Math.floor(fx), Math.floor(fz)] : null;
-    if (onTap) onTap({ item: item && item.object.userData.item, kind: item && room.items.find(i => i.id === item.object.userData.item)?.kind, person: !!person && !item, tile });
+    const door = hits.find(h => h.object.userData.door);
+    if (onTap) onTap({ door: door && !item ? door.object.userData.door : null, item: item && item.object.userData.item, kind: item && room.items.find(i => i.id === item.object.userData.item)?.kind, person: !!person && !item, tile });
   });
 
   let last = performance.now();
   return {
+    // show the shop front or the workshop: everything in view rebuilt for that room
     setRoom(r, save) {
-      room = r; const s = sizeOf(r);
-      if (s.w !== size.w || s.d !== size.d || !roomG.children.length) { size = { w: s.w, d: s.d }; buildRoom(); fitCamera(); }
+      const v = r.kind === 'work' ? 'work' : 'shop', changed = v !== view || r !== room;
+      if (changed) { for (const o of itemObjs.values()) itemsG.remove(o); itemObjs.clear(); for (const [id, p] of [...people]) { peopleG.remove(p.obj); people.delete(id); } }
+      view = v; room = r; const s = sizeOf(r);
+      if (changed || s.w !== size.w || s.d !== size.d || !roomG.children.length) { size = { w: s.w, d: s.d }; buildRoom(); fitCamera(); }
       syncItems(); setStaff(save); drawMarks(); setQueue(lastQueue);
     },
+    get view() { return view; },
     setQueue, walkIn,
     arrange(on, sel = null) { arranging = on; selected = sel; drawMarks(); dirty = true; },
     canPlace(it) { return fits(room, it, it.id); },

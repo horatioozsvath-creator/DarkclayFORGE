@@ -1,16 +1,16 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=10';
-import * as R from './rules.js?v=10';
-import * as Sh from './shop.js?v=10';
-import * as St from './staff.js?v=10';
-import * as Rm from './room.js?v=10';
-import * as G from './growth.js?v=10';
-import { decodeCard, linkFor } from './share.js?v=10';
-import * as Snd from './sound.js?v=10';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=10';
-import { card, ART } from './card.js?v=10';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=10';
-import { load, store } from './save.js?v=10';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=11';
+import * as R from './rules.js?v=11';
+import * as Sh from './shop.js?v=11';
+import * as St from './staff.js?v=11';
+import * as Rm from './room.js?v=11';
+import * as G from './growth.js?v=11';
+import { decodeCard, linkFor } from './share.js?v=11';
+import * as Snd from './sound.js?v=11';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=11';
+import { card, ART } from './card.js?v=11';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=11';
+import { load, store } from './save.js?v=11';
 
 const $ = id => document.getElementById(id);
 const rng = Math.random;
@@ -130,7 +130,7 @@ function toHome() {
   $('patterns').querySelectorAll('[data-fp]').forEach(b => b.onclick = () => { if (Sh.forgePart(save, b.dataset.fp)) { store(save); Snd.play('GOOD'); toHome(); } });
   $('patterns').querySelectorAll('[data-station]').forEach(b => b.onclick = () => {
     const r = Rm.buyStation(save, b.dataset.station);
-    if (r.item) { store(save); coins(); Snd.play('level'); if (dio) dio.setRoom(save.room, save); toHome(); }
+    if (r.item) { store(save); coins(); Snd.play('level'); if (dio) dio.setRoom(viewRoom(), save); toHome(); }
     else $('stNote-' + b.dataset.station).textContent = 'Not yet: ' + r.why + '.';
   });
   $('homeFound').textContent = save.found.length + ' OF ' + Object.keys(FOUND).length + ' FOUND';
@@ -205,17 +205,21 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=10').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=11').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
-    if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(save.room, save); d.setQueue(save.queue); renderDioBar(); }
+    if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setQueue(save.queue); renderDioBar(); }
     return d;
   }); }
-  else if (dio) { dio.setRoom(save.room, save); dio.setQueue(save.queue); dio.redraw(); }
+  else if (dio) { dio.setRoom(viewRoom(), save); dio.setQueue(save.queue); dio.redraw(); }
 }
 
 // ---------- THE SHOP IN 3D ----------
-let dioP = null, dio = null, arranging = false, picked = null, dioMsg = '';
+let dioP = null, dio = null, arranging = false, picked = null, dioMsg = '', dioView = 'shop';
+const viewRoom = () => dioView === 'work' ? save.workshop : save.room;
+function setView(v) { if (v === dioView) return; dioView = v; picked = null; dioMsg = ''; if (dio) { dio.setRoom(viewRoom(), save); dio.setQueue(save.queue); } renderDioBar(); renderFurnish(); }
+document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => setView(b.dataset.view));
 function dioTap(t) {
+  if (t.door && !arranging) { setView(t.door); return; }
   if (arranging) {
     if (t.item && t.item !== picked) { picked = t.item; dioMsg = ''; }
     else if (picked && t.tile) {
@@ -223,11 +227,11 @@ function dioTap(t) {
       let ok = false;
       for (let ox = 0; ox < fx && !ok; ox++) for (let oz = 0; oz < fz && !ok; oz++) ok = Rm.move(save, picked, t.tile[0] - ox, t.tile[1] - oz);
       dioMsg = ok ? '' : 'It won\'t fit there.';
-      if (ok) { store(save); dio.setRoom(save.room, save); }
+      if (ok) { store(save); dio.setRoom(viewRoom(), save); }
     } else if (t.item === picked) picked = null;
     renderDioBar(); return;
   }
-  if (t.kind === 'forge' || t.kind === 'anvil' || t.kind === 'stretcher') toHome();
+  if (t.kind && Rm.homeOf(t.kind) === 'work') toHome();
   else if (t.kind === 'shelf') $('slots2').scrollIntoView({ behavior: 'smooth', block: 'center' });
   else if (t.kind === 'counter' || t.person) (save.queue.length ? $('counterBox') : $('ledger')).scrollIntoView({ behavior: 'smooth', block: 'center' });
   else if (t.item) $('furnish').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -235,16 +239,17 @@ function dioTap(t) {
 function renderDioBar() {
   if (!dio) return;
   $('floor').classList.toggle('arranging', arranging);
+  document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === dioView)));
   dio.arrange(arranging, picked);
-  $('arrangeBtn').textContent = arranging ? 'DONE' : 'ARRANGE THE SHOP';
+  $('arrangeBtn').textContent = arranging ? 'DONE' : 'ARRANGE';
   $('arrangeBtn').classList.toggle('go', arranging);
   const it = picked && save.room.items.find(i => i.id === picked), f = it && FURNITURE[it.kind];
-  $('dioHint').textContent = !arranging ? 'Tap the counter, a shelf or the forge.' : dioMsg || (it ? f.name + ': tap a free tile to move it there.' : 'Tap a piece to pick it up. Blue tiles stay clear for customers.');
+  $('dioHint').textContent = !arranging ? (dioView === 'work' ? 'The forge and every station. Tap one to work; the doorway leads back to the shop.' : 'Tap the counter or a shelf; the doorway at the back leads to the workshop.') : dioMsg || (it ? f.name + ': tap a free tile to move it there.' : 'Tap a piece to pick it up. Blue tiles stay clear for customers.');
   $('dioActs').innerHTML = arranging && it ? '<button class="seg" id="dioTurn">TURN</button>' + (f.fixed ? '' : '<button class="seg" id="dioSell">SELL BACK</button>') : '';
-  if ($('dioTurn')) $('dioTurn').onclick = () => { if (!Rm.turn(save, picked)) dioMsg = 'No room to turn it there.'; else { dioMsg = ''; store(save); dio.setRoom(save.room, save); } renderDioBar(); };
+  if ($('dioTurn')) $('dioTurn').onclick = () => { if (!Rm.turn(save, picked)) dioMsg = 'No room to turn it there.'; else { dioMsg = ''; store(save); dio.setRoom(viewRoom(), save); } renderDioBar(); };
   if ($('dioSell')) $('dioSell').onclick = () => {
     const r = Rm.sellBack(save, picked);
-    if (r.why) dioMsg = 'It can\'t go: ' + r.why + '.'; else { dioMsg = 'Sold back for ' + r.refund + ' c.'; picked = null; store(save); coins(); dio.setRoom(save.room, save); renderShop(); }
+    if (r.why) dioMsg = 'It can\'t go: ' + r.why + '.'; else { dioMsg = 'Sold back for ' + r.refund + ' c.'; picked = null; store(save); coins(); dio.setRoom(viewRoom(), save); renderShop(); }
     renderDioBar();
   };
 }
@@ -267,24 +272,27 @@ function renderWall() {
 }
 let furnNote = '';
 function renderFurnish() {
-  const room = save.room, size = Rm.sizeOf(room), next = Rm.nextSize(room);
-  $('charmWord').textContent = size.word + ' · ' + size.w + ' × ' + size.d + ' · CHARM ' + Rm.charm(room);
+  const room = save.room, size = Rm.sizeOf(room), next = Rm.nextSize(room), ws = Rm.sizeOf(save.workshop), wnext = Rm.nextSize(save.workshop);
+  $('charmWord').textContent = size.word + ' · ' + size.w + ' × ' + size.d + ' · CHARM ' + Rm.charm(room, save) + ' · ' + ws.word + ' ' + ws.w + ' × ' + ws.d;
   $('furnList').innerHTML = Object.entries(FURNITURE).filter(([, f]) => !f.fixed).map(([k, f]) => {
     const cost = Rm.costOf(room, k), n = room.items.filter(i => i.kind === k).length;
     return '<div class="fi"><b>' + f.name + (n ? ' · ' + n : '') + '</b><span>' + (f.slots ? 'Two places on the shelf.' : f.line || '') + (f.charm ? ' Charm ' + f.charm + '.' : '') + '</span>'
       + (cost == null ? '<span>As many as a shop can use.</span>' : '<button class="seg" data-buyf="' + k + '"' + (save.coins < cost ? ' disabled' : '') + '>BUY · ' + cost + ' c</button>') + '</div>';
   }).join('');
-  $('furnNote').textContent = furnNote || 'Charm brings customers in sooner. New things go where they first fit: arrange the shop to move them.';
+  $('furnNote').textContent = furnNote || 'New decor goes in the room in view (' + (dioView === 'work' ? 'the workshop' : 'the shop front') + '). Charm in the shop front brings customers in sooner; the workshop\'s is for you. Arrange to move things.';
+  $('expandWork').hidden = !wnext;
+  if (wnext) { $('expandWork').textContent = 'MAKE THE WORKSHOP BIGGER · ' + wnext.w + ' × ' + wnext.d + ' · ' + wnext.cost + ' c'; $('expandWork').disabled = save.coins < wnext.cost; }
   $('expandBtn').hidden = !next;
-  if (next) { $('expandBtn').textContent = 'MAKE THE SHOP BIGGER · ' + next.w + ' × ' + next.d + ' · +' + next.capH + ' h AWAY · ' + next.cost + ' c'; $('expandBtn').disabled = save.coins < next.cost; }
+  if (next) { $('expandBtn').textContent = 'MAKE THE SHOP FRONT BIGGER · ' + next.w + ' × ' + next.d + ' · +' + next.capH + ' h AWAY · ' + next.cost + ' c'; $('expandBtn').disabled = save.coins < next.cost; }
   $('furnList').querySelectorAll('[data-buyf]').forEach(b => b.onclick = () => {
-    const r = Rm.buy(save, b.dataset.buyf);
+    const r = Rm.buy(save, b.dataset.buyf, dioView);
     furnNote = r.why ? 'Not bought: ' + r.why + '.' : 'Bought: ' + FURNITURE[b.dataset.buyf].name + '.';
-    if (r.item) { store(save); coins(); if (dio) dio.setRoom(save.room, save); }
+    if (r.item) { store(save); coins(); if (dio) dio.setRoom(viewRoom(), save); }
     renderShop();
   });
 }
-$('expandBtn').onclick = () => { if (Rm.expand(save)) { furnNote = 'The shop is bigger: ' + Rm.sizeOf(save.room).word.toLowerCase() + '.'; store(save); coins(); if (dio) dio.setRoom(save.room, save); renderShop(); } };
+$('expandWork').onclick = () => { if (Rm.expand(save, 'work')) { furnNote = 'The workshop is bigger: ' + Rm.sizeOf(save.workshop).word.toLowerCase() + '.'; store(save); coins(); if (dio) dio.setRoom(viewRoom(), save); renderShop(); } };
+$('expandBtn').onclick = () => { if (Rm.expand(save)) { furnNote = 'The shop is bigger: ' + Rm.sizeOf(save.room).word.toLowerCase() + '.'; store(save); coins(); if (dio) dio.setRoom(viewRoom(), save); renderShop(); } };
 function figure(colour) {
   return '<svg class="fig in" viewBox="0 0 46 110" aria-hidden="true"><circle cx="23" cy="14" r="11" fill="' + colour + '" stroke="#000" stroke-width="3"/>'
     + '<path d="M8,32 Q23,24 38,32 L42,78 L33,78 L31,108 L15,108 L13,78 L4,78 Z" fill="' + colour + '" stroke="#000" stroke-width="3"/></svg>';
@@ -426,7 +434,7 @@ function renderShop() {
     : '<li class="empty">No one yet. Customers come in every half a minute or so while the game is open.</li>';
   renderFloor();
 }
-$('buySlot').onclick = () => { const r = Rm.buy(save, 'shelf'); furnNote = r.why ? 'No shelf: ' + r.why + '.' : 'A new shelf: two more places.'; if (r.item) { store(save); coins(); if (dio) dio.setRoom(save.room, save); } renderShop(); };
+$('buySlot').onclick = () => { const r = Rm.buy(save, 'shelf'); furnNote = r.why ? 'No shelf: ' + r.why + '.' : 'A new shelf: two more places.'; if (r.item) { store(save); coins(); if (dio) dio.setRoom(viewRoom(), save); } renderShop(); };
 function tagSegs(slot) {
   const e = save.shelf[slot], c = save.cards.find(x => x.id === e.id);
   return '<p>The price on it. Cheaper sells sooner; dearer waits for the right purse.</p><div class="group">'
@@ -550,7 +558,7 @@ function showAway(a) {
 // seconds behind. Read the save afresh (another tab may have played meanwhile), clear the counter, catch up.
 function returning(nowMs) {
   const fresh = load();
-  if (fresh.lastSeen && fresh.lastSeen > (save.lastSeen || 0)) { Object.keys(save).forEach(k => delete save[k]); Object.assign(save, fresh); R.convertSave(save); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save); if (dio) dio.setRoom(save.room, save); }
+  if (fresh.lastSeen && fresh.lastSeen > (save.lastSeen || 0)) { Object.keys(save).forEach(k => delete save[k]); Object.assign(save, fresh); R.convertSave(save); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save); if (dio) dio.setRoom(viewRoom(), save); }
   save.queue = [];
   const a = St.catchUp(save, nowMs, rng);
   store(save); coins();
@@ -1013,7 +1021,7 @@ document.addEventListener('keydown', e => {
 if (!phoneQ.matches && !save.made) $('howd').open = true;
 
 // for testing: open the page with ?debug to reach the save from the console
-if (new URLSearchParams(location.search).has('debug')) window.forge = { save, Sh, R, St, renderShop, toShop, toStaff, showAway, store: () => store(save), wipe: () => { save.v = 0; store(save); location.reload(); } };
+if (new URLSearchParams(location.search).has('debug')) window.forge = { save, Sh, R, St, renderShop, toShop, toStaff, showAway, dio: () => dio, store: () => store(save), wipe: () => { save.v = 0; store(save); location.reload(); } };
 
 toHome();
 // a card shared by link: shown view only, never added to this save; the away summary waits for it to close

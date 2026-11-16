@@ -4,6 +4,10 @@
    "hex": "#9a7238",
    "kind": "toon"
   },
+  "CanvasLight": {
+   "hex": "#e2d6b8",
+   "kind": "toon"
+  },
   "Clay": {
    "hex": "#a8643e",
    "kind": "toon"
@@ -36,6 +40,22 @@
    "hex": "#6e6050",
    "kind": "toon"
   },
+  "Fern": {
+   "hex": "#3f6a2c",
+   "kind": "toon"
+  },
+  "FlowerViolet": {
+   "hex": "#8f6fa8",
+   "kind": "toon"
+  },
+  "FlowerWhite": {
+   "hex": "#e6e0cc",
+   "kind": "toon"
+  },
+  "FlowerYellow": {
+   "hex": "#d9b84a",
+   "kind": "toon"
+  },
   "Glow": {
    "hex": "#ffd9a0",
    "kind": "glow"
@@ -52,8 +72,24 @@
    "hex": "#a8e4ff",
    "kind": "glow"
   },
+  "GlowRed": {
+   "hex": "#ff7a52",
+   "kind": "glow"
+  },
   "Gold": {
    "hex": "#d0a63e",
+   "kind": "toon"
+  },
+  "Grass": {
+   "hex": "#7f8f42",
+   "kind": "toon"
+  },
+  "GreatTan": {
+   "hex": "#ad9780",
+   "kind": "toon"
+  },
+  "GreatTanDark": {
+   "hex": "#8c7863",
    "kind": "toon"
   },
   "Hair": {
@@ -62,6 +98,10 @@
   },
   "Hay": {
    "hex": "#a98c4e",
+   "kind": "toon"
+  },
+  "Heartwood": {
+   "hex": "#b8925e",
    "kind": "toon"
   },
   "Hide": {
@@ -82,6 +122,14 @@
   },
   "Iron": {
    "hex": "#6e6b70",
+   "kind": "toon"
+  },
+  "Leaf": {
+   "hex": "#466a30",
+   "kind": "toon"
+  },
+  "LeafLight": {
+   "hex": "#6f7f36",
    "kind": "toon"
   },
   "Leather": {
@@ -108,20 +156,16 @@
    "hex": "#c9b896",
    "kind": "toon"
   },
-  "Prop_bench_meshy": {
-   "hex": "#ffffff",
-   "kind": "tex"
-  },
-  "Prop_glass_meshy": {
-   "hex": "#ffffff",
-   "kind": "tex"
-  },
   "Rag": {
    "hex": "#6a5a48",
    "kind": "toon"
   },
   "RedCloth": {
    "hex": "#8c3326",
+   "kind": "toon"
+  },
+  "SandHeap": {
+   "hex": "#c8b384",
    "kind": "toon"
   },
   "Seat": {
@@ -160,12 +204,20 @@
    "hex": "#c9b896",
    "kind": "toon"
   },
+  "Tint2": {
+   "hex": "#8c7a5a",
+   "kind": "toon"
+  },
   "Trousers": {
    "hex": "#4a3f33",
    "kind": "toon"
   },
   "Water": {
    "hex": "#3d6680",
+   "kind": "toon"
+  },
+  "Wattle": {
+   "hex": "#7a6040",
    "kind": "toon"
   },
   "Wax": {

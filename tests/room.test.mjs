@@ -33,9 +33,12 @@ test('every older save keeps its pieces on the shelf and gets a valid room', () 
   }
 });
 
-test('placing: inside the room, no overlap, not on kept tiles', () => {
-  const s = { room: Rm.defaultRoom() };
-  assert.ok(!Rm.fits(s.room, { id: 'x', kind: 'barrels', x: 0, z: 0, rot: 0 }), 'on the forge');
+test('placing: inside the room, no overlap, not on kept tiles, in the right room', () => {
+  const s = { room: Rm.defaultRoom(), workshop: Rm.defaultWorkshop() };
+  assert.ok(!Rm.fits(s.workshop, { id: 'x', kind: 'barrels', x: 0, z: 0, rot: 0 }), 'on the forge');
+  assert.ok(!Rm.fits(s.room, { id: 'x', kind: 'barrels', x: 1, z: 0, rot: 0 }), 'in the way through to the workshop');
+  assert.ok(!Rm.fits(s.room, { id: 'x', kind: 'forge', x: 0, z: 0, rot: 0 }), 'no forge in the shop front');
+  assert.ok(!Rm.fits(s.workshop, { id: 'x', kind: 'shelf', x: 3, z: 3, rot: 0 }), 'no shelves in the workshop');
   assert.ok(!Rm.fits(s.room, { id: 'x', kind: 'barrels', x: 0, z: DOOR_Z, rot: 0 }), 'in the doorway');
   assert.ok(!Rm.fits(s.room, { id: 'x', kind: 'barrels', x: 6, z: 0, rot: 0 }), 'outside');
   assert.ok(!Rm.fits(s.room, { id: 'x', kind: 'barrels', x: 3, z: 3, rot: 0 }), 'in front of the counter');
@@ -54,13 +57,13 @@ test('buying furniture: paid only when it fits; shelves add two places', () => {
   const poor = { coins: 0, room: Rm.defaultRoom(), slots: 4, shelf: [] }; assert.equal(Rm.buy(poor, 'lamp').why, 'not enough coin');
 });
 
-test('moving and turning keep the room valid', () => {
-  const s = { room: Rm.defaultRoom() };
-  assert.ok(!Rm.move(s, 'forge', 4, 0), 'onto a shelf');
-  assert.ok(Rm.move(s, 'anvil', 0, 4));
-  assert.ok(Rm.valid(s.room));
-  assert.ok(!Rm.move(s, 'counter', 0, 4), 'onto the anvil');
-  const before = JSON.stringify(s.room); Rm.turn(s, 'forge'); assert.ok(Rm.valid(s.room)); if (JSON.stringify(s.room) === before) assert.ok(true);
+test('moving and turning keep both rooms valid', () => {
+  const s = { room: Rm.defaultRoom(), workshop: Rm.defaultWorkshop() };
+  assert.ok(!Rm.move(s, 'forge', 2, 1), 'onto the anvil');
+  assert.ok(Rm.move(s, 'anvil', 4, 4)); assert.ok(Rm.valid(s.workshop));
+  assert.ok(!Rm.move(s, 'counter', 3, 0), 'onto a shelf');
+  assert.ok(Rm.move(s, 'counter', 0, 1)); assert.ok(Rm.valid(s.room));
+  Rm.turn(s, 'forge'); assert.ok(Rm.valid(s.workshop));
 });
 
 test('selling back: half the price; never the forge; a shelf only when its places are empty', () => {
@@ -104,4 +107,34 @@ test('even at the most charm, four pieces on the shelf last a good while away', 
   }
   hours.sort((a, b) => a - b);
   assert.ok(hours[15] >= 1.5, 'median ' + hours[15] + ' h');
+});
+
+test('an older one-room shop: the forge, the anvil and the stations go through to a workshop; nothing is lost', () => {
+  const old = { size: 1, items: [
+    { id: 'forge', kind: 'forge', x: 0, z: 0, rot: 0 }, { id: 'anvil', kind: 'anvil', x: 2, z: 1, rot: 0 }, { id: 'counter', kind: 'counter', x: 3, z: 2, rot: 0 },
+    { id: 'shelf-0', kind: 'shelf', x: 3, z: 0, rot: 0 }, { id: 'shelf-1', kind: 'shelf', x: 5, z: 1, rot: 1 },
+    { id: 'stretcher', kind: 'stretcher', x: 6, z: 0, rot: 0 }, { id: 'lamp-a', kind: 'lamp', x: 0, z: 4, rot: 0 } ] };
+  const cards = [piece('a')], s = { slots: 4, shelf: [], cards, stations: ['stretcher'], room: old };
+  Sh.fixShelf(s); Sh.place(s, 'a');
+  Rm.fixRoom(s); Sh.fixShelf(s);
+  assert.equal(s.room.kind, 'shop'); assert.equal(s.workshop.kind, 'work');
+  assert.ok(Rm.valid(s.room)); assert.ok(Rm.valid(s.workshop));
+  assert.equal(s.room.size, 1, 'the shop front keeps its size');
+  assert.deepEqual(s.room.items.map(i => i.kind).sort(), ['counter', 'lamp', 'shelf', 'shelf']);
+  assert.deepEqual(s.workshop.items.map(i => i.kind).sort(), ['anvil', 'forge', 'stretcher']);
+  assert.equal(s.slots, 4); assert.equal(Sh.onShelf(s, 'a'), 0);
+  const again = JSON.stringify([s.room, s.workshop]); Rm.fixRoom(s); assert.equal(JSON.stringify([s.room, s.workshop]), again, 'a second load changes nothing');
+});
+
+test('every station fits a small workshop, with the forge and anvil', () => {
+  const w = Rm.defaultWorkshop(['stretcher', 'bowbench', 'kettle', 'glass'], 0);
+  assert.ok(w && Rm.valid(w), 'all four stations in 6 x 5');
+});
+
+test('the workshop grows on its own, and stations go there', () => {
+  const s = { coins: 50000, room: Rm.defaultRoom(), workshop: Rm.defaultWorkshop(), slots: 4, shelf: [null, null, null, null], stations: [] };
+  assert.ok(Rm.expand(s, 'work')); assert.equal(Rm.sizeOf(s.workshop).w, 8); assert.equal(Rm.sizeOf(s.room).w, 6);
+  Rm.buyStation(s, 'glass'); assert.ok(s.workshop.items.some(i => i.kind === 'glass')); assert.ok(!s.room.items.some(i => i.kind === 'glass'));
+  assert.ok(Rm.buy(s, 'lamp', 'work').item); assert.ok(s.workshop.items.some(i => i.kind === 'lamp'));
+  const c = Rm.charm(s.room, s); assert.equal(c, 0, 'workshop decor brings no customers');
 });
