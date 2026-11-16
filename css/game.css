@@ -193,3 +193,38 @@ button, input { font-family: inherit; }
   .buyrow { grid-template-columns: minmax(0, 1fr) auto auto; }
   .buyrow .b5 { display: none; }
 }
+
+/* ---------- milestone 3: the counter, the order, the back room's choices ---------- */
+.counterbox { border-color: var(--gold); box-shadow: 0 0 22px rgba(232,196,100,.12); }
+.patience { height: 4px; background: #0b0807; margin: -2px 0 10px; }
+.patience i { display: block; height: 100%; background: var(--gold); transition: width .3s linear; }
+.cust { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; align-items: start; }
+.cust .fig { width: 40px; height: 96px; grid-row: span 3; }
+.cust .nm { font: 800 18px var(--display); color: var(--bone); }
+.cust .tell { font: italic 500 15px/1.35 var(--display); color: var(--bone-dim); }
+.cust .meta { font: 700 13px var(--sans); color: var(--bone-faint); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.cust .meta b { color: var(--bone); }
+.offer { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 14px; margin-top: 12px; align-items: start; }
+.offer .cd { font-size: 10px; }
+.offer .choices { display: grid; gap: 8px; }
+.offer .choices .row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.hbtn { min-height: 54px; display: grid; align-content: center; justify-items: center; gap: 2px; font: 800 13px var(--sans); letter-spacing: .08em; color: var(--bone);
+  background: var(--panel-2); border: 2px solid var(--line); cursor: pointer; padding: 6px; }
+.hbtn small { font: 800 16px var(--sans); color: var(--gold); letter-spacing: 0; }
+.hbtn:hover, .hbtn:focus-visible { border-color: var(--gold); background: #2e2214; }
+.hbtn:disabled { opacity: .4; cursor: not-allowed; }
+.hbtn.go { background: var(--ember-hot); color: #1a0e06; border-color: #fff0d0; }
+.hbtn.go small { color: #1a0e06; }
+.note { margin: 8px 0 0; font: 600 13px var(--sans); color: var(--bone-dim); }
+.note.bad { color: var(--k-crack); }
+.orderbox { border-color: rgba(143,184,216,.5); }
+.orderbox .ask { font: 800 18px var(--display); color: var(--bone); margin: 4px 0; }
+.orderbox .who { font: 700 13px var(--sans); color: var(--bone-faint); }
+.orderbox .pays { color: var(--gold); font-weight: 800; }
+.lookacts .row2 { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+@media (max-width: 600px) {
+  .offer { grid-template-columns: 110px minmax(0, 1fr); gap: 10px; }
+  .offer .cd { font-size: 8px; }
+  .offer .choices .row3 { grid-template-columns: minmax(0, 1fr); }
+  .hbtn { min-height: 46px; grid-auto-flow: column; justify-content: space-between; padding: 6px 10px; }
+}

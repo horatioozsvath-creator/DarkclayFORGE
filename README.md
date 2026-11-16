@@ -41,11 +41,13 @@ npm test
 Browsers and GitHub Pages cache files for a few minutes. Each release bumps the `?v=` number on every script import and stylesheet link (in `index.html` and `js/*.js`), so a player never runs a new file against an old one:
 
 ```bash
-sed -i '' -E 's/\?v=[0-9]+/?v=3/g' index.html js/*.js
+sed -i '' -E 's/\?v=[0-9]+/?v=4/g' index.html js/*.js
 ```
 
 ## Status
 
-Milestones 1 and 2 of 7: the forge, and the shelf and the till. See `docs/PLAN.md`.
+Milestones 1 to 3 of 7: the forge; the shelf and the till; the counter. See `docs/PLAN.md`.
+
+Open the game with `?debug` on the address to reach the save from the browser console as `forge.save`.
 
 Fonts: Alegreya and Alegreya Sans, SIL Open Font License.

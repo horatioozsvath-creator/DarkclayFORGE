@@ -1,15 +1,16 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS } from './data.js?v=2';
-import * as R from './rules.js?v=2';
-import * as Sh from './shop.js?v=2';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=2';
-import { card, ART } from './card.js?v=2';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=2';
-import { load, store } from './save.js?v=2';
+import { KINDS, KC, TIERS, FORGE, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE } from './data.js?v=3';
+import * as R from './rules.js?v=3';
+import * as Sh from './shop.js?v=3';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=3';
+import { card, ART } from './card.js?v=3';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=3';
+import { load, store } from './save.js?v=3';
 
 const $ = id => document.getElementById(id);
 const save = load();
 Sh.fixShelf(save);
+save.queue = [];   // whoever was at the counter when the page closed has gone
 const rng = Math.random;
 const phoneQ = window.matchMedia('(max-width: 600px)');
 const TIERC = ['var(--t-common)', 'var(--t-fine)', 'var(--t-rare)'];
@@ -17,6 +18,7 @@ const TIERC = ['var(--t-common)', 'var(--t-fine)', 'var(--t-rare)'];
 let screen = 'home';       // home | shop | supp | prepare | work
 let pat = 'falchion';      // the pattern on the bench
 let S = null;              // the working
+let rw = null;             // back in the fire: { id, from } of the piece on the anvil, or null for a new piece
 let paused = false, lastStrike = 0, fresh = null, prevOdds = null;
 const view = { flash: 0, ring: 0, ringC: '#fff', sparks: [] };
 const timers = [];
@@ -26,6 +28,9 @@ const clearTimers = () => { timers.forEach(clearTimeout); timers.length = 0; };
 const levelFor = id => R.levelOf((save.trades[id] || {}).xp || 0);
 const lvl = () => levelFor(pat).level;
 const picks = () => save.picks[pat] || (save.picks[pat] = PATTERNS[pat].parts.map(() => 0));
+const rwCard = () => rw && save.cards.find(c => c.id === rw.id);
+const benchPicks = () => rw ? R.srcOf(rwCard()).picks : picks();
+const benchName = () => rw ? TIERS[rw.from].name + ' ' + rwCard().name : S.metal.name + ' ' + PATTERNS[pat].name;
 const HUBS = ['home', 'shop', 'supp'];
 const hour = () => Sh.hourOf(Date.now());
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -73,7 +78,7 @@ function toHome() {
       + '<div class="xp"><i style="width:' + (l.need ? Math.round(l.into / l.need * 100) : 100) + '%"></i></div>'
       + '<div class="lv"><span>' + n + ' MADE</span></div></button>';
   }).join('');
-  $('patterns').querySelectorAll('button').forEach(b => b.onclick = () => { pat = b.dataset.p; toPrepare(); });
+  $('patterns').querySelectorAll('button').forEach(b => b.onclick = () => { rw = null; pat = b.dataset.p; toPrepare(); });
   $('homeFound').textContent = save.found.length + ' OF ' + Object.keys(FOUND).length + ' FOUND';
   $('homeBag').innerHTML = Object.entries(FOUND).map(([id, f]) => save.found.includes(id)
     ? '<button tabindex="-1" title="' + f.name + ': ' + f.line + '"><div style="aspect-ratio:3/4">' + bagLook(id).face + '</div>' + f.short + '</button>'
@@ -101,7 +106,13 @@ function figure(colour) {
     + '<path d="M8,32 Q23,24 38,32 L42,78 L33,78 L31,108 L15,108 L13,78 L4,78 Z" fill="' + colour + '" stroke="#000" stroke-width="3"/></svg>';
 }
 function renderFloor() {
-  const e = save.ledger[0], v = $('visitor');
+  const e = save.ledger[0], v = $('visitor'), q = save.queue[0];
+  if (q) {
+    if (floorShown === 'q' + q.who) return;
+    floorShown = 'q' + q.who;
+    v.innerHTML = figure(q.fig) + '<div class="say"><b>' + esc(q.who) + '</b>' + (q.kind === 'seller' ? 'Has something to sell.' : esc(q.tell || '')) + ' <span class="sold">At the counter.</span></div>';
+    return;
+  }
   if (!e || Date.now() - e.at > 30000) {
     const n = save.shelf.filter(Boolean).length;
     v.innerHTML = '<div class="idle">The door\'s open. ' + (n ? n + ' on the shelf.' : 'The shelf is bare: put something out.') + '</div>';
@@ -112,9 +123,102 @@ function renderFloor() {
   v.innerHTML = figure(e.fig) + '<div class="say"><b><span class="mood ' + e.mood + '">' + e.mood + '</span>' + esc(e.who) + '</b>'
     + 'Wants ' + Sh.wantWord(e.want) + '. ' + esc(e.line) + (e.sold ? ' <span class="sold">Sold: ' + esc(e.sold.name) + ', ' + e.sold.price + ' c.</span>' : '') + '</div>';
 }
+// ---------- THE COUNTER ----------
+let lastSig = '', counterNote = '', counterNoteBad = false, counterNoteAt = 0;
+const counterSig = () => { const c = save.queue[0]; return save.queue.length + '|' + (c ? c.who + c.shows + (c.counter ? c.counter.price : '') : '') + '|' + (save.order ? save.order.posted : ''); };
+function tickCounter() {
+  const c = save.queue[0];
+  if (c) $('patience').style.width = (c.counter ? 100 : Math.max(0, c.wait / PATIENCE * 100)) + '%';
+  if (save.order) { const left = Math.max(0, Math.ceil(save.order.due - save.clock)); $('orderDue').textContent = 'DUE IN ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0') + ' OF OPEN SHOP'; }
+}
+function renderCounter() {
+  const c = save.queue[0], box = $('counterBox');
+  lastSig = counterSig();
+  box.hidden = !c;
+  if (!c) return;
+  const hl = Sh.haggleLevel(save);
+  $('queueWord').textContent = save.queue.length > 1 ? (save.queue.length - 1) + ' WAITING BEHIND' : 'NO ONE BEHIND';
+  const head = '<div class="cust">' + figure(c.fig).replace('class="fig in"', 'class="fig"') + '<div class="nm">' + esc(c.who) + '</div>'
+    + (c.tell ? '<div class="tell">' + esc(c.tell) + '</div>' : '')
+    + '<div class="meta">' + (c.kind === 'buyer' ? 'Wants <b>' + Sh.wantWord(c.want) + (c.least ? ', Fine or better' : '') + '</b>' : 'Has something to sell')
+    + (c.kind === 'buyer' && hl >= 3 ? '<span class="mood ' + c.mood + '">' + c.mood + '</span>' : '')
+    + (c.kind === 'buyer' && hl >= 6 ? '<span>Purse <b>' + c.purse + ' c</b></span>' : '') + '</div></div>';
+  let body = '';
+  if (c.kind === 'seller') {
+    const o = c.offer, h = hour();
+    if (o.type === 'mats') body = '<div class="note">' + MATS[o.mat].name + (MATS[o.mat].rare ? ' ✶' : '') + ' × ' + o.n + ' for <b>' + o.price + ' c</b>'
+      + (Sh.sells(o.mat, h) ? ' (the suppliers ask ' + Sh.priceOf(o.mat, h) * o.n + ' c)' : ' (no supplier has it this hour)') + '. You have ' + (save.mats[o.mat] || 0) + '.</div>';
+    else body = '<div class="offer"><div>' + card(o.card, { short: true, price: o.price + ' c' }) + '</div><div class="choices"><div class="note">' + esc(o.card.name) + ', ' + TIERS.find(t => t.id === o.card.tier).name
+      + ', worth ' + o.card.worth + ' c. They\'ll take <b>' + o.price + ' c</b>. It goes in the back: sell it, break it down, or rework it.</div></div></div>';
+    body += '<div class="rbtns left"><button class="hbtn go" data-act="buy"' + (save.coins < o.price ? ' disabled' : '') + '>BUY IT<small>' + o.price + ' c</small></button><button class="hbtn" data-act="away">NO THANKS</button></div>';
+  } else if (c.counter) {
+    const cd = save.cards.find(x => x.id === c.counter.id);
+    body = '<div class="note">You asked ' + c.counter.asked + ' c for the ' + esc(cd ? cd.name : 'piece') + '. <b>They offer ' + c.counter.price + ' c.</b> Refuse, and they go.</div>'
+      + '<div class="rbtns left"><button class="hbtn go" data-act="take">TAKE IT<small>' + c.counter.price + ' c</small></button><button class="hbtn" data-act="refuse">REFUSE</button></div>';
+  } else {
+    const list = Sh.showable(save);
+    if (!list.length) body = '<div class="note">Nothing on the shelf for them.' + (Sh.inBack(save).some(x => Sh.wants(c.want, x)) ? ' Something in the back would do: put it on the shelf.' : '') + '</div>'
+      + '<div class="rbtns left"><button class="hbtn" data-act="away">NOTHING FOR THEM</button></div>';
+    else {
+      const e = list[c.shows % list.length];
+      body = '<div class="offer"><div>' + card(e.card, { short: true, price: Sh.priceAt(e.card, e.tag) + ' c<span class="tagword">' + TAGS[e.tag].word + '</span>' }) + '</div><div class="choices">'
+        + '<div class="row3">' + Object.entries(HAGGLE).map(([k, h]) => { const pr = Sh.hagglePrice(e.card, e.tag, k); return '<button class="hbtn' + (k === 'hold' ? ' go' : '') + '" data-act="h:' + k + '" data-id="' + e.card.id + '">' + h.word + '<small>' + pr + ' c</small></button>'; }).join('') + '</div>'
+        + '<div class="rbtns left">' + (list.length > 1 && c.shows < 2 ? '<button class="seg" data-act="another">SHOW ANOTHER</button>' : '') + '<button class="seg" data-act="away">NOTHING FOR THEM</button></div></div></div>';
+    }
+  }
+  if (Date.now() - counterNoteAt > 6000) counterNote = '';
+  $('counterBody').innerHTML = head + body + (counterNote ? '<p class="note' + (counterNoteBad ? ' bad' : '') + '">' + counterNote + '</p>' : '')
+    + (hl < 6 ? '<p class="note" style="color:var(--bone-faint)">Haggling ' + hl + (hl < 3 ? ': read their mood from their words. It shows at Haggling 3, their purse at 6.' : ': their purse shows at Haggling 6.') + '</p>' : '');
+  tickCounter();
+}
+$('counterBody').onclick = ev => {
+  const b = ev.target.closest('button'); if (!b || b.disabled) return;
+  const a = b.dataset.act, now = Date.now(), c = save.queue[0]; if (!c) return;
+  counterNote = ''; counterNoteBad = false; counterNoteAt = Date.now();
+  if (a === 'buy') { const e = Sh.buyOffer(save, now); if (e) counterNote = 'Bought: ' + esc(e.bought.what) + '.'; }
+  else if (a === 'away') Sh.sendAway(save, now);
+  else if (a === 'another') c.shows++;
+  else if (a === 'take' || a === 'refuse') { const r = Sh.answerCounter(save, a === 'take', now); if (r) { counterNote = r.outcome === 'sold' ? 'Sold for ' + r.price + ' c.' : 'They went.'; counterNoteBad = r.outcome !== 'sold'; } }
+  else if (a.startsWith('h:')) {
+    const r = Sh.haggle(save, b.dataset.id, a.slice(2), now);
+    if (r) {
+      if (r.outcome === 'sold') counterNote = 'Sold for ' + r.price + ' c.';
+      else if (r.outcome === 'over') { counterNote = '"' + r.price + ' c? That\'s more than I carry." Show another, or meet them.'; counterNoteBad = true; }
+      else if (r.outcome === 'gone') { counterNote = 'They went.'; counterNoteBad = true; }
+    }
+  }
+  store(save); coins(); renderShop();
+  const first = $('counterBody').querySelector('button:not(:disabled)'); if (first) first.focus({ preventScroll: true });
+};
+function renderOrder() {
+  const o = save.order;
+  $('orderBox').hidden = !o;
+  if (!o) return;
+  const fit = save.cards.filter(c => Sh.fills(o, c));
+  $('orderBody').innerHTML = '<div class="who">FROM ' + esc(o.who.toUpperCase()) + ' · "' + esc(o.line) + '"</div>'
+    + '<div class="ask">' + esc(Sh.orderWord(o)).replace(/^./, x => x.toUpperCase()) + '</div>'
+    + '<div class="note">Pays <span class="pays">' + o.pays + ' c</span>, twice what such a piece is worth, whatever you hand in.</div>'
+    + (fit.length ? '<div class="pickgrid" style="margin-top:10px">' + fit.map(c => '<button data-deliver="' + c.id + '" aria-label="Deliver ' + esc(c.name) + '">' + card(c, { short: true, price: 'DELIVER' }) + '</button>').join('') + '</div>'
+      : '<div class="rbtns left"><button class="seg go" id="orderMake">MAKE ONE AT THE FORGE</button></div>');
+  $('orderBody').querySelectorAll('[data-deliver]').forEach(b => b.onclick = () => {
+    const c = save.cards.find(x => x.id === b.dataset.deliver);
+    if (c.worth * 2 > o.pays * 1.5 && !confirm('The ' + c.name + ' is worth ' + c.worth + ' c. The order pays ' + o.pays + ' c. Hand it over?')) return;
+    if (Sh.deliver(save, b.dataset.deliver, Date.now())) { store(save); coins(); renderShop(); toast('<b>Order filled · +' + o.pays + ' c</b><br>' + esc(o.who)); }
+  });
+  if (!fit.length) $('orderMake').onclick = () => {
+    rw = null; pat = o.pattern;
+    if (o.metal) { const m = R.partOptions(pat)[0].opts.findIndex(x => x.id === o.metal); picks()[0] = m; }
+    toPrepare();
+  };
+}
+
+const HOW = { meet: 'MET THEM', hold: 'HELD THE PRICE', ask: 'ASKED MORE', counter: 'THEIR OFFER', order: 'SPECIAL ORDER' };
+const howWord = t => TAGS[t] ? TAGS[t].word : HOW[t] || '';
 function renderShop() {
   if (screen !== 'shop') return;
-  $('tally').innerHTML = '<b>' + (save.sold || 0) + '</b> sold · <b>' + (save.earned || 0) + '</b> coins taken';
+  renderCounter(); renderOrder();
+  const hlv = R.levelOf((save.haggle || {}).xp || 0);
+  $('tally').innerHTML = '<b>' + (save.sold || 0) + '</b> sold · <b>' + (save.earned || 0) + '</b> coins taken<br>Haggling <b>' + hlv.level + '</b>' + (hlv.need ? ' · ' + hlv.into + ' / ' + hlv.need : '');
   const filled = save.shelf.filter(Boolean).length;
   $('shelfWord').textContent = filled + ' OF ' + save.slots + ' · CUSTOMERS BUY FROM HERE';
   $('slots2').innerHTML = save.shelf.map((e, i) => {
@@ -133,7 +237,7 @@ function renderShop() {
     : '<div class="empty">Nothing in the back. What you make at the forge comes here.</div>';
   $('back').querySelectorAll('button').forEach(b => b.onclick = () => backOpen(b.dataset.id));
   $('ledger').innerHTML = save.ledger.length ? save.ledger.slice(0, 12).map(e => '<li><span><span class="mood ' + e.mood + '">' + e.mood + '</span><b>' + esc(e.who) + '</b> · wants ' + Sh.wantWord(e.want) + '</span>'
-    + (e.sold ? '<span class="amt">+' + e.sold.price + ' c</span>' : '<span class="amt no">NO SALE</span>') + '<span class="ln">' + (e.sold ? 'Bought the ' + esc(e.sold.name) + ' (' + TAGS[e.sold.tag].word + '). ' : '') + esc(e.line) + '</span></li>').join('')
+    + (e.sold ? '<span class="amt">+' + e.sold.price + ' c</span>' : e.bought ? '<span class="amt no">−' + e.bought.price + ' c</span>' : '<span class="amt no">' + (e.order === 'posted' ? 'ORDER' : 'NO SALE') + '</span>') + '<span class="ln">' + (e.sold ? 'Bought the ' + esc(e.sold.name) + ' (' + howWord(e.sold.tag) + '). ' : '') + esc(e.line) + '</span></li>').join('')
     : '<li class="empty">No one yet. Customers come in every half a minute or so while the game is open.</li>';
   renderFloor();
 }
@@ -167,8 +271,22 @@ function slotOpen(slot) {
 }
 function backOpen(id) {
   const c = save.cards.find(x => x.id === id), free = save.shelf.findIndex(e => !e);
-  openLook(card(c), free >= 0 ? '<button class="seg go" id="putUp">PUT IT ON THE SHELF · FAIR ' + Sh.priceAt(c, 'fair') + ' c</button>' : '<p>The shelf is full. Take something down, or buy another shelf.</p>');
+  const sv = Sh.salvageOf(c), cost = Sh.reworkCost(c), canRw = Sh.canRework(save, c), haveRw = Sh.canMake(save.mats, cost);
+  const toTier = TIERS[R.reworkTo(TIERS.findIndex(t => t.id === c.tier))];
+  let acts = free >= 0 ? '<button class="seg go" id="putUp">PUT IT ON THE SHELF · FAIR ' + Sh.priceAt(c, 'fair') + ' c</button>' : '<p>The shelf is full. Take something down, or buy another shelf.</p>';
+  if (save.order && Sh.fills(save.order, c)) acts += '<button class="seg go" id="deliverIt">DELIVER TO ' + esc(save.order.who.toUpperCase()) + ' · ' + save.order.pays + ' c</button>';
+  acts += '<div class="row2">'
+    + (canRw ? '<button class="seg" id="reworkIt"' + (haveRw ? '' : ' disabled') + '>BACK IN THE FIRE · TO ' + toTier.name.toUpperCase() + ' · ' + cost.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') + '</button>' : '')
+    + '<button class="seg" id="breakIt">BREAK IT DOWN · ' + (sv.length ? sv.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') : 'nothing worth keeping') + '</button></div>'
+    + (canRw && !haveRw ? '<p>Back in the fire takes ' + cost.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') + '. You have ' + (save.mats[cost[0].mat] || 0) + '.</p>' : '');
+  openLook(card(c), acts);
   if (free >= 0) $('putUp').onclick = () => { Sh.place(save, id, free); store(save); $('look').hidden = true; renderShop(); };
+  if ($('deliverIt')) $('deliverIt').onclick = () => { const o = save.order; if (Sh.deliver(save, id, Date.now())) { store(save); coins(); $('look').hidden = true; renderShop(); toast('<b>Order filled · +' + o.pays + ' c</b><br>' + esc(o.who)); } };
+  if ($('reworkIt')) $('reworkIt').onclick = () => toRework(id);
+  $('breakIt').onclick = () => {
+    if (!confirm('Break down the ' + c.name + ' (worth ' + c.worth + ' c)? It gives ' + (sv.length ? sv.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') : 'nothing worth keeping') + '. It can\'t be undone.')) return;
+    if (Sh.salvage(save, id)) { store(save); $('look').hidden = true; renderShop(); }
+  };
 }
 
 // ---------- SUPPLIERS ----------
@@ -197,20 +315,39 @@ function renderSupp() {
 function newWorking() {
   const n = R.slotsFor(lvl());
   save.chosen = save.chosen.filter(id => save.found.includes(id)).slice(0, n);
-  S = R.newWorking({ patternId: pat, picks: picks().slice(), level: lvl(), found: save.chosen.slice(), kit: {} }, rng);
+  S = R.newWorking({ patternId: pat, picks: benchPicks().slice(), level: lvl(), found: save.chosen.slice(), kit: {}, rework: rw ? { from: rw.from } : null }, rng);
 }
 function toPrepare() {
   clearTimers(); paused = false;
+  if (rw && !rwCard()) rw = null;
   const p = PATTERNS[pat], l = levelFor(pat), opts = R.partOptions(pat);
   // a part that the trade hasn't opened yet falls back to the first
-  save.picks[pat] = picks().map((k, i) => (opts[i].opts[k] && (opts[i].opts[k].level || 1) <= l.level) ? k : 0);
+  if (!rw) save.picks[pat] = picks().map((k, i) => (opts[i].opts[k] && (opts[i].opts[k].level || 1) <= l.level) ? k : 0);
   newWorking(); show('prepare');
-  $('prepT').textContent = S.metal.name + ' ' + p.name;
+  $('prepK').textContent = rw ? 'THE FORGE · BACK IN THE FIRE' : 'THE FORGE · PREPARE';
+  $('prepT').textContent = benchName();
   $('tradeWord').textContent = p.trade.toUpperCase() + ' · TRADE ' + l.level + (l.need ? ' · ' + l.into + ' / ' + l.need : '');
+  $('makeIt').innerHTML = rw ? '<b>LEAVE IT</b>Keep it ' + TIERS[rw.from].name + '. Back to the shop.' : '<b>MAKE IT</b>At once, at the plain odds. It teaches nothing.';
+  $('workIt').innerHTML = rw ? '<b>WORK IT AGAIN</b>The tiles turn face down and shuffle.' : '<b>WORK IT</b>The tiles turn face down and shuffle.';
   partSegs(); renderPrep();
+}
+function toRework(id) {
+  const c = save.cards.find(x => x.id === id);
+  if (!c || !Sh.canRework(save, c)) return;
+  rw = { id, from: TIERS.findIndex(t => t.id === c.tier) }; pat = c.pattern;
+  $('look').hidden = true; toPrepare();
 }
 function pieceKv() {
   const l = lvl(), o = R.odds(S);
+  if (rw) {
+    const to = TIERS[R.reworkTo(rw.from)].name;
+    $('pieceKv').innerHTML = '<span>Now</span><b style="color:' + TIERC[rw.from] + '">' + TIERS[rw.from].name + '</b>'
+      + '<span>To ' + to + '</span><b>fill the bar and quench: it goes up to ' + to + ', no roll. It keeps what it carries and takes one more.</b>'
+      + '<span>The risk</span><b>a second crack after it takes drops it a tier' + (rw.from === 0 ? ' (a Common piece comes out flawed)' : '') + '</b>'
+      + '<span>Heat</span><b>' + FORGE.twist + ' The band now ' + S.band[0] + '–' + S.band[1] + '.</b>'
+      + '<span>Walk away</span><b>the piece comes out as it was; the bars are spent</b>';
+    return;
+  }
   $('pieceKv').innerHTML = '<span>Plain odds</span><b><span style="color:var(--t-fine)">Fine ' + Math.round(o.f) + ' %</span> · <span style="color:var(--t-rare)">Rare ' + Math.round(o.r) + ' %</span></b>'
     + '<span>Worked</span><b>up to Fine 70 % · Rare 40 %</b>'
     + '<span>Heat</span><b>' + FORGE.twist + ' The band now ' + S.band[0] + '–' + S.band[1] + '.</b>'
@@ -220,6 +357,12 @@ function pieceKv() {
 }
 function partSegs() {
   const box = $('parts'); box.innerHTML = '';
+  if (rw) {
+    $('partsHead').textContent = 'THE PIECE\'S OWN';
+    box.innerHTML = '<div class="found-lines">' + S.parts.map((o, i) => '<div><b>' + R.partOptions(pat)[i].part + '</b> · ' + o.name + '</div>').join('') + '</div>';
+    $('partLine').innerHTML = S.parts.filter(o => o.line).map(o => '<div><b>' + o.name + '</b> · ' + o.line + '</div>').join('');
+    return;
+  }
   const P = R.partOptions(pat), ch = picks(), l = lvl();
   $('partsHead').textContent = 'THE ' + P[0].part.toUpperCase() + ' SETS YOUR STRIP';
   P.forEach((p, i) => {
@@ -275,12 +418,12 @@ function renderPrep() {
 }
 
 // what this pattern with these parts takes, against the store room
-const rec = () => Sh.recipe(pat, picks());
+const rec = () => rw ? Sh.reworkCost(rwCard()) : Sh.recipe(pat, picks());
 function renderTakes() {
   const r = rec(), h = hour(), sh = Sh.short(save.mats, r), ok = !sh.length;
   $('takesWord').textContent = ok ? 'IN THE STORE ROOM' : 'SHORT';
   $('takes').innerHTML = r.map(x => { const have = save.mats[x.mat] || 0; return '<li><b>' + MATS[x.mat].name + ' × ' + x.n + '</b><em class="' + (have >= x.n ? 'ok' : 'short') + '">have ' + have + '</em></li>'; }).join('');
-  $('makeIt').disabled = !ok; $('workIt').disabled = !ok;
+  $('makeIt').disabled = !ok && !rw; $('workIt').disabled = !ok;
   $('takesCard').style.borderColor = ok ? '' : 'var(--blood)';
   if (ok) { $('takesBtns').innerHTML = '<span class="small" style="color:var(--bone-faint)">Taken when you begin. Walk away from a working and they\'re spent.</span>'; return; }
   const gone = sh.filter(x => !Sh.sells(x.mat, h));
@@ -301,7 +444,8 @@ function toWork() {
   R.begin(S); paused = false; prevOdds = null; lastStrike = 0;
   view.flash = 0; view.ring = 0; view.sparks = [];
   show('work');
-  $('workT').textContent = S.metal.name + ' ' + PATTERNS[pat].name;
+  $('workT').textContent = benchName();
+  $('cShape').textContent = rw ? '1 · TO ' + TIERS[R.reworkTo(rw.from)].name.toUpperCase() : '1 · SHAPE';
   setFireBtn();
   popLabel({ label: 'HEAT IT', gain: FORGE.fire, why: 'then strike in the gold band', colour: '#e8c464' });
   render();
@@ -372,7 +516,7 @@ function render() {
   if (screen !== 'work' || !S) return;
   const shaping = S.shape < 100;
   if (!S.done) { $('cShape').className = shaping ? 'on' : 'done'; $('cPush').className = shaping ? '' : 'on'; $('cDone').className = ''; }
-  $('barLabel').textContent = shaping ? 'SHAPE' : 'WORKED';
+  $('barLabel').textContent = shaping ? (rw ? 'TO ' + TIERS[R.reworkTo(rw.from)].name.toUpperCase() : 'SHAPE') : 'WORKED';
   $('barVal').textContent = shaping ? Math.round(S.shape) + ' %' : '+' + Math.round(S.worked) + ' %';
   $('bar').classList.toggle('worked', !shaping);
   $('barFill').style.width = (shaping ? S.shape : Math.min(100, S.worked * 2)) + '%';
@@ -382,7 +526,7 @@ function render() {
   $('oCommon').textContent = Math.round(o.c); $('oFine').textContent = Math.round(o.f); $('oRare').textContent = Math.round(o.r); $('oCracks').textContent = S.cracks;
   $('flags').textContent = [S.twin ? 'TWIN READY' : '', S.warden ? 'WARDEN READY' : '', S.frost ? 'FROST SIDE' : ''].filter(Boolean).join(' · ');
   $('bQuench').disabled = shaping || S.done;
-  $('bQuench').innerHTML = FORGE.close + '<small>' + (shaping ? 'ONCE IT\'S SHAPED' : 'Q · WHENEVER YOU CHOOSE') + '</small>';
+  $('bQuench').innerHTML = FORGE.close + '<small>' + (shaping ? (rw ? 'ONCE IT TAKES' : 'ONCE IT\'S SHAPED') : 'Q · WHENEVER YOU CHOOSE') + '</small>';
   const L = R.left(S), cn = R.counts(L), tot = L.length;
   $('leftWord').textContent = tot + ' OF ' + S.rack.length + ' FACE DOWN';
   const nowOdds = {}; KINDS.forEach(k => nowOdds[k] = tot ? Math.round(cn[k] / tot * 100) : 0);
@@ -423,9 +567,9 @@ function finish(how) {
   if (screen === 'work') { $('cDone').className = 'on'; $('cPush').className = 'done'; render(); }
   $('result').hidden = false; document.body.style.overflow = 'hidden';
   if (res.earned) {
-    const two = R.rollAffixes(pat, 2, rng);
+    const two = R.rollAffixes(pat, 2, rng, rw ? R.affixIds(rwCard().affixes) : []);
     $('rDone').hidden = true; $('rPick').hidden = false;
-    $('rPickWhy').textContent = (res.whiteHeat ? 'WHITE HEAT' : 'A TRUE') + ' earned it. It came out ' + TIERS[res.tier].name + '.';
+    $('rPickWhy').textContent = (res.whiteHeat ? 'WHITE HEAT' : 'A TRUE') + ' earned it. It ' + (res.rework ? 'took: now ' : 'came out ') + TIERS[res.tier].name + '.';
     $('rPicks').innerHTML = two.map((a, i) => '<button data-i="' + i + '"><b>' + a[0] + '</b>' + a[1] + '</button>').join('');
     $('rPicks').querySelectorAll('button').forEach(b => b.onclick = () => complete(res, two[+b.dataset.i]));
     $('rPicks').querySelector('button').focus({ preventScroll: true }); $('result').scrollTop = 0;
@@ -433,14 +577,22 @@ function finish(how) {
 }
 function complete(res, picked) {
   const before = levelFor(pat);
-  const piece = R.makePiece({ patternId: pat, picks: picks(), result: res, picked, maker: save.maker, rng, now: Date.now() });
-  save.cards.unshift(piece); save.made++;
+  let piece;
+  if (res.rework) {   // the same piece, out of the fire: in the back where it was
+    const old = rwCard(), i = save.cards.indexOf(old);
+    piece = R.remakePiece({ card: old, res, picked, rng, now: Date.now() });
+    save.cards[i] = piece; rw = null;
+  } else {
+    piece = R.makePiece({ patternId: pat, picks: picks(), result: res, picked, maker: save.maker, rng, now: Date.now() });
+    save.cards.unshift(piece); save.made++;
+  }
   const xp = R.xpFor(res);
   const tr = save.trades[pat] || (save.trades[pat] = { xp: 0 }); tr.xp += xp;
   const after = levelFor(pat), p = PATTERNS[pat];
   $('rPick').hidden = true; $('rDone').hidden = false;
   $('rCard').innerHTML = card(piece);
-  $('rLine').innerHTML = res.instant ? 'Made at once at the plain odds: Fine ' + res.odds.f + ' % · Rare ' + res.odds.r + ' %.'
+  $('rLine').innerHTML = res.rework ? (res.dropped ? 'A second crack after it took. It came out ' + TIERS[res.tier].name + (res.flawed ? ', flawed.' : '.') : 'It took. ' + TIERS[res.from].name + ' to ' + TIERS[res.tier].name + '.')
+    : res.instant ? 'Made at once at the plain odds: Fine ' + res.odds.f + ' % · Rare ' + res.odds.r + ' %.'
     : res.dropped ? (res.flawed ? 'A second crack after it was made. It holds together, flawed, and is worth less.' : 'A second crack after it was made dropped it a tier.')
     : 'WORKED +' + res.worked + ' % · it had Fine ' + Math.round(res.odds.f) + ' % · Rare ' + Math.round(res.odds.r) + ' %';
   $('rWhy').textContent = res.instant ? 'No working, no pick, no found tile, no practice.'
@@ -478,7 +630,7 @@ function complete(res, picked) {
   if (!store(save)) $('rWhy').textContent += ' · This browser would not save it.';
   $('rAgain').focus({ preventScroll: true }); $('result').scrollTop = 0;
 }
-$('rAgain').onclick = toPrepare;
+$('rAgain').onclick = () => { rw = null; toPrepare(); };
 $('rHome').onclick = toHome;
 
 // ---------- the clock ----------
@@ -494,12 +646,19 @@ let lastT = performance.now();
 function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
   // the shop's clock: only while this page is in front (a hidden tab gets no frames, so no time passes)
-  const visits = Sh.shopStep(save, dt, rng, Date.now());
-  if (visits.length) {
-    store(save);
-    visits.forEach(e => { if (e.sold) { coins(); if (screen !== 'shop') { toast('<b>Sold: ' + esc(e.sold.name) + ' · +' + e.sold.price + ' c</b><br>to ' + esc(e.who)); $('navSold').hidden = false; } } });
+  // present: at the counter (the shop screen); customers queue to be served, sellers come in
+  const present = screen === 'shop' && !document.hidden;
+  const visits = Sh.shopStep(save, dt, rng, Date.now(), present);
+  const sig = counterSig();
+  if (visits.length || sig !== lastSig) {
+    if (visits.length || save.queue.length) store(save);
+    visits.forEach(e => {
+      if (e.sold) { coins(); if (screen !== 'shop') { toast('<b>Sold: ' + esc(e.sold.name) + ' · +' + e.sold.price + ' c</b><br>to ' + esc(e.who)); $('navSold').hidden = false; } }
+      if (e.order === 'posted' && screen !== 'shop') { toast('<b>A special order</b><br>' + esc(e.who) + ': ' + esc(Sh.orderWord(save.order)) + '.'); $('navSold').hidden = false; }
+    });
     if (screen === 'shop') renderShop();
   } else if (screen === 'shop' && floorShown && save.ledger[0] && Date.now() - save.ledger[0].at > 30000) renderFloor();
+  if (screen === 'shop') tickCounter();
   if (screen === 'supp' && suppHour !== hour()) renderSupp();
   if (S && screen === 'work') {
     if (!paused && !S.done) {
@@ -516,11 +675,11 @@ function frame(now) {
 
 // ---------- wiring ----------
 $('workIt').onclick = toWork;
-$('makeIt').onclick = () => { if (spend()) finish('instant'); };
-$('bHome').onclick = toHome;
+$('makeIt').onclick = () => { if (rw) { rw = null; toShop(); } else if (spend()) finish('instant'); };
+$('bHome').onclick = () => { if (rw) { rw = null; toShop(); } else toHome(); };
 $('bLeave').onclick = () => {
-  if (S && !S.done && !confirm('Walk away from this working? The materials are spent.')) return;
-  toPrepare();
+  if (S && !S.done && !confirm(rw ? 'Walk away? The piece comes out as it was, and the bars are spent.' : 'Walk away from this working? The materials are spent.')) return;
+  if (rw) { rw = null; toShop(); } else toPrepare();
 };
 $('bStrike').onclick = strike;
 $('bFire').onclick = toggleFire;
@@ -542,6 +701,9 @@ document.addEventListener('keydown', e => {
   } else if (screen === 'prepare' && e.code === 'Space' && !onButton) { if (!$('workIt').disabled) toWork(); e.preventDefault(); }
 });
 if (!phoneQ.matches && !save.made) $('howd').open = true;
+
+// for testing: open the page with ?debug to reach the save from the console
+if (new URLSearchParams(location.search).has('debug')) window.forge = { save, Sh, R, renderShop, toShop, store: () => store(save) };
 
 toHome();
 requestAnimationFrame(frame);

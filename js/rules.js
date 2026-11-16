@@ -1,6 +1,6 @@
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { KINDS, KC, TIERS, FORGE, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS } from './data.js?v=2';
+import { KINDS, KC, TIERS, FORGE, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS } from './data.js?v=3';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -226,6 +226,7 @@ export function rollAffixes(patternId, n, rng, not = []) {
 export const WORKED_CAP = 50;
 // keep: affixes the piece already carries ([word, line]), kept as far as the tier has room; reworked: how many times back in the fire
 const AFFIX_BY_WORD = Object.fromEntries(Object.entries(AFFIXES).map(([id, a]) => [a.word, id]));
+export const affixIds = list => list.map(a => AFFIX_BY_WORD[a[0]]).filter(Boolean);
 export function makePiece({ patternId, picks, result, picked, maker, rng, now, keep = [], reworked = 0 }) {
   const p = PATTERNS[patternId], parts = chosenParts(patternId, picks), metal = parts[0], tier = TIERS[result.tier];
   let affixes = keep.filter(a => AFFIX_BY_WORD[a[0]]).map(a => [a[0], a[1], AFFIX_BY_WORD[a[0]]]);
