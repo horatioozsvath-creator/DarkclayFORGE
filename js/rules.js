@@ -175,6 +175,7 @@ export function tick(S, dt) {
 }
 
 export function odds(S) {
+  if (S.cfg.rework) { const t = reworkTo(S.cfg.rework.from); return { c: t === 0 ? 100 : 0, f: t === 1 ? 100 : 0, r: t === 2 ? 100 : 0 }; }
   const w = S.worked, l = S.level;
   let r = Math.max(0, Math.min(40, 5 + w * 0.35 + (l - 3))), f = Math.max(0, Math.min(70, 20 + w * 0.9 + (l - 3) * 2));
   if (S.cracks >= 1 && S.shape >= 100) { f *= 0.85; r *= 0.85; }
@@ -184,8 +185,18 @@ export const PLAIN_ODDS = { f: 20, r: 5 };
 
 // The end of a working. how: 'quench' | 'dropped' | 'instant' (MAKE IT, at the plain odds).
 // A second crack after it was made drops it a tier; a Common piece that drops is flawed (worth less), never lost.
+// Back in the fire (rework): no roll. It takes (the bar filled, quenched): a tier up, Rare at most.
+// A second crack after it took: a tier down (a Common piece stays Common, flawed). A rework teaches, but turns up no found tile.
+export const reworkTo = from => Math.min(TIERS.length - 1, from + 1);
 export function finish(S, how) {
   S.done = true; S.phase = 'done';
+  if (S.cfg.rework) {
+    const from = S.cfg.rework.from, dropped = how === 'dropped';
+    const tier = dropped ? Math.max(0, from - 1) : reworkTo(from);
+    S.dropped = dropped;
+    return { rework: true, from, tier, flawed: dropped && from === 0, dropped, instant: false, odds: odds(S), worked: Math.round(S.worked), strikes: S.strikes, heats: S.heats,
+      cracks: S.cracks, whiteHeat: S.whiteHeat, earned: S.earned && !dropped, clean: false, frost: S.frost };
+  }
   const instant = how === 'instant', dropped = how === 'dropped';
   const o = instant ? { f: PLAIN_ODDS.f, r: PLAIN_ODDS.r } : odds(S);
   const roll = S.rng() * 100;
@@ -213,9 +224,13 @@ export function rollAffixes(patternId, n, rng, not = []) {
 
 // ---------- the card: a finished piece, kept as plain data ----------
 export const WORKED_CAP = 50;
-export function makePiece({ patternId, picks, result, picked, maker, rng, now }) {
+// keep: affixes the piece already carries ([word, line]), kept as far as the tier has room; reworked: how many times back in the fire
+const AFFIX_BY_WORD = Object.fromEntries(Object.entries(AFFIXES).map(([id, a]) => [a.word, id]));
+export function makePiece({ patternId, picks, result, picked, maker, rng, now, keep = [], reworked = 0 }) {
   const p = PATTERNS[patternId], parts = chosenParts(patternId, picks), metal = parts[0], tier = TIERS[result.tier];
-  let affixes = picked ? [picked] : [];
+  let affixes = keep.filter(a => AFFIX_BY_WORD[a[0]]).map(a => [a[0], a[1], AFFIX_BY_WORD[a[0]]]);
+  if (picked && affixes.length < tier.affixes && !affixes.some(a => a[2] === picked[2])) affixes.push(picked);
+  affixes = affixes.slice(0, tier.affixes);
   affixes = affixes.concat(rollAffixes(patternId, Math.max(0, tier.affixes - affixes.length), rng, affixes.map(a => a[2])));
   if (metal.affix) affixes.push(metal.affix);
   if (result.frost) affixes.push(['Frost-kissed', 'a small frost side on the piece']);
@@ -248,8 +263,30 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now })
       result.cracks ? result.cracks + ' crack' + (result.cracks > 1 ? 's' : '') : 'no crack');
     if (result.whiteHeat) made.push('WHITE HEAT');
   }
+  if (reworked) made.push('back in the fire' + (reworked > 1 ? ' ×' + reworked : ''));
   made.push(parts.map(o => o.name.toLowerCase()).filter(n => n !== 'none' && n !== 'plain').join(' · '));
   return { id: now.toString(36) + Math.floor(rng() * 1e6).toString(36), at: now, pattern: patternId, metal: metal.id, tier: tier.id,
     name: metal.name + ' ' + p.name, kind: p.kind, art: p.art, tint: metal.tint, dice, stats, affixes: affixes.map(a => [a[0], a[1]]),
-    made, lore: p.lore[result.tier], worth, flawed: result.flawed };
+    made, lore: p.lore[result.tier], worth, flawed: result.flawed, maker,
+    src: { picks: (picks || []).slice(), worked, strikes: result.strikes || 0, heats: result.heats || 0, cracks: result.cracks || 0,
+      whiteHeat: !!result.whiteHeat, frost: !!result.frost, instant: !!result.instant, reworked } };
+}
+
+// How an older piece was made, for one from before cards kept it (milestone 1 and 2): its metal, plain parts, WORKED from its making line.
+export function srcOf(card) {
+  if (card.src) return card.src;
+  const m = Math.max(0, partOptions(card.pattern)[0].opts.findIndex(o => o.id === card.metal));
+  const line = (card.made || []).find(x => /^WORKED \+\d+/.test(x)), worked = line ? +line.match(/\d+/)[0] : 0;
+  const cr = (card.made || []).find(x => /^\d+ crack/.test(x)), cracks = cr ? +cr.match(/\d+/)[0] : 0;
+  return { picks: [m, 0, 0], worked, strikes: 0, heats: 0, cracks, whiteHeat: (card.made || []).includes('WHITE HEAT'), frost: card.affixes.some(a => a[0] === 'Frost-kissed'), instant: false, reworked: 0 };
+}
+export const makerOf = card => card.maker || ((card.made || [])[0] || '').replace(/^Forged by /, '') || 'an old maker';
+// A piece out of the fire again: the same piece (its id, its maker, the affixes it carried), its tier and its making moved on.
+export function remakePiece({ card, res, picked, rng, now }) {
+  const src = srcOf(card);
+  const result = { tier: res.tier, flawed: res.flawed, worked: src.worked + res.worked, strikes: src.strikes + res.strikes, heats: src.heats + res.heats,
+    cracks: src.cracks + res.cracks, whiteHeat: src.whiteHeat || res.whiteHeat, frost: src.frost || res.frost, instant: false };
+  const piece = makePiece({ patternId: card.pattern, picks: src.picks, result, picked, maker: makerOf(card), rng, now, keep: card.affixes, reworked: (src.reworked || 0) + 1 });
+  piece.id = card.id; piece.at = card.at;
+  return piece;
 }

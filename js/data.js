@@ -147,3 +147,39 @@ export const CUSTOMERS = [
 ];
 export const MOODS = ['EAGER', 'WARY', 'PINCHED'];
 export const MOOD_ODDS = { EAGER: 0.9, WARY: 0.6, PINCHED: 0.45 };   // the odds they take a piece at FAIR they can afford
+
+// ---------- the counter (milestone 3) ----------
+// Darkclay Zero's OPEN THE SHOP (docs/CRAFT-AAA.md §5.3): what each choice asks of the shelf's price
+export const HAGGLE = { meet: { word: 'MEET THEM', mult: 0.9 }, hold: { word: 'HOLD', mult: 1 }, ask: { word: 'ASK MORE', mult: 1.15 } };
+// what each mood does with each choice: sold, a counter-offer (at HOLD's or MEET's price), or gone
+export const HAGGLE_TABLE = {
+  EAGER: { meet: 'sold', hold: 'sold', ask: 'sold' },
+  WARY: { meet: 'sold', hold: 'sold', ask: 'counter:hold' },
+  PINCHED: { meet: 'sold', hold: 'counter:meet', ask: 'gone' },
+};
+// the tell in their words: read it before the haggle
+export const TELLS = {
+  EAGER: ['"Before the week\'s out, if it\'s any good."', '"Show me the best you\'ve got."', '"I\'ve heard about your work."'],
+  WARY: ['"I\'ve bought ones that bent."', '"Let me see it in the light first."', '"Your sign says maker. We\'ll see."'],
+  PINCHED: ['"It\'s all I have."', '"What\'s the least you\'d take?"', '"I can\'t go far on this purse."'],
+};
+export const PATIENCE = 45;    // seconds a customer waits at the counter to be served before they look for themselves
+export const QUEUE_MAX = 3;    // one at the counter, two waiting
+export const SELLER_ODDS = 0.14;   // of those who come in while you're at the counter, how many have something to sell
+// the named regulars who leave special orders (Darkclay Zero's regulars, §5.2): wants, a least tier, a metal they insist on
+export const REGULARS = [
+  { who: 'Sergeant Ollo Vance', wants: ['falchion', 'axe', 'helm'], line: 'For the gate. The pikes need better than they\'ve got.', fig: '#7a8aa0' },
+  { who: 'Lady Ysmay Corrow', wants: ['ring', 'falchion', 'helm'], least: 1, line: 'Something with a maker\'s mark worth the name.', fig: '#a07ab8' },
+  { who: 'Bram Oakes, a drover', wants: ['dagger', 'axe'], line: 'Knives for my drovers. Good ones, mind.', fig: '#8a9a6a' },
+  { who: 'Ketty Moss, a widow', wants: ['ring'], metal: 'silver', line: 'A silver ring, for his grave.', fig: '#a08a6a' },
+  { who: 'Tib Harrow', wants: ['dagger'], line: 'A knife. My own. I\'ve saved for it.', fig: '#a08a6a' },
+];
+export const ORDER_TIME = [900, 1500];   // seconds of open shop to fill an order in
+export const ORDER_PAYS = 2;             // times the worth of the piece it asks for
+// who comes in with something to sell
+export const SELLERS = [
+  { who: 'Nell Quarry, a pedlar', fig: '#b89a5a', kind: 'mats' },
+  { who: 'a delver back from the deep', fig: '#9a6a5a', kind: 'mats' },
+  { who: 'Hask of Dunmere', fig: '#7a6a5a', kind: 'piece' },
+  { who: 'a widow clearing a forge', fig: '#a08a6a', kind: 'piece' },
+];
