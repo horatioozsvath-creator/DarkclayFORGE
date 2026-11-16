@@ -15,7 +15,7 @@ import { load, store } from './save.js?v=6';
 const $ = id => document.getElementById(id);
 const rng = Math.random;
 const save = load();
-Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save); G.fixWall(save);
+R.convertSave(save); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save); G.fixWall(save);
 save.queue = [];   // whoever was at the counter when the page closed has gone
 let awaySum = St.catchUp(save, Date.now(), rng);   // the shop while the page was closed
 store(save);
@@ -506,7 +506,7 @@ function showAway(a) {
 // seconds behind. Read the save afresh (another tab may have played meanwhile), clear the counter, catch up.
 function returning(nowMs) {
   const fresh = load();
-  if (fresh.lastSeen && fresh.lastSeen > (save.lastSeen || 0)) { Object.keys(save).forEach(k => delete save[k]); Object.assign(save, fresh); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save); if (dio) dio.setRoom(save.room, save); }
+  if (fresh.lastSeen && fresh.lastSeen > (save.lastSeen || 0)) { Object.keys(save).forEach(k => delete save[k]); Object.assign(save, fresh); R.convertSave(save); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save); if (dio) dio.setRoom(save.room, save); }
   save.queue = [];
   const a = St.catchUp(save, nowMs, rng);
   store(save); coins();

@@ -123,7 +123,7 @@ export function visit(save, rng, now, c = richer(save, newCustomer(rng)), o = {}
   if (o.quiet && !entry.sold) return entry;
   return log(save, entry);
 }
-export const gap = rng => 18 + rng() * 22;   // seconds between customers
+export const gap = rng => 22 + rng() * 26;   // seconds between customers
 function log(save, entry) { save.ledger = [entry].concat(save.ledger || []).slice(0, LEDGER_MAX); return entry; }
 
 // ---------- the clock ----------

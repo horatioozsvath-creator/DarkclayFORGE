@@ -221,8 +221,8 @@ export const ROUTES = {
 export const DOOR_Z = 3;
 export const ROOM_SIZES = [
   { w: 6, d: 5, cost: 0, capH: 0, word: 'A SMALL SHOP' },
-  { w: 8, d: 6, cost: 600, capH: 1, word: 'A GOOD SHOP' },
-  { w: 10, d: 7, cost: 1600, capH: 2, word: 'A FINE SHOP' },
+  { w: 8, d: 6, cost: 3000, capH: 1, word: 'A GOOD SHOP' },
+  { w: 10, d: 7, cost: 9000, capH: 2, word: 'A FINE SHOP' },
 ];
 // fp: the footprint in tiles [x, z] before turning; fixed: can be moved, never sold; slots: shelf places; charm: draws customers
 export const FURNITURE = {
@@ -230,17 +230,17 @@ export const FURNITURE = {
   anvil: { name: 'Anvil', fp: [1, 1], fixed: true, model: 'anvil' },
   counter: { name: 'Counter', fp: [2, 1], fixed: true, model: 'counter' },
   shelf: { name: 'Shelf', fp: [2, 1], slots: 2, model: 'shelf', line: 'Two places for pieces to sell.' },
-  rug: { name: 'Rug', fp: [2, 2], charm: 2, cost: 60, model: 'rug', line: 'Warm underfoot.' },
-  barrels: { name: 'Barrels', fp: [1, 1], charm: 1, cost: 30, model: 'barrels' },
-  crates: { name: 'Crates', fp: [2, 1], charm: 1, cost: 35, model: 'crates' },
-  lamp: { name: 'Lamp', fp: [1, 1], charm: 2, cost: 50, model: 'lamp', line: 'A light in the window draws folk in.' },
-  chest: { name: 'Chest', fp: [1, 1], charm: 1, cost: 35, model: 'chest' },
-  bench: { name: 'Bench', fp: [2, 1], charm: 2, cost: 45, model: 'bench', line: 'Somewhere to wait.' },
-  table: { name: 'Table', fp: [2, 2], charm: 3, cost: 90, model: 'table' },
-  rack: { name: 'Pelt rack', fp: [2, 1], charm: 3, cost: 120, model: 'rack' },
-  workbench: { name: 'Workbench', fp: [2, 1], charm: 3, cost: 110, model: 'workbench', line: 'Folk like to see the work.' },
+  rug: { name: 'Rug', fp: [2, 2], charm: 2, cost: 180, model: 'rug', line: 'Warm underfoot.' },
+  barrels: { name: 'Barrels', fp: [1, 1], charm: 1, cost: 90, model: 'barrels' },
+  crates: { name: 'Crates', fp: [2, 1], charm: 1, cost: 105, model: 'crates' },
+  lamp: { name: 'Lamp', fp: [1, 1], charm: 2, cost: 150, model: 'lamp', line: 'A light in the window draws folk in.' },
+  chest: { name: 'Chest', fp: [1, 1], charm: 1, cost: 105, model: 'chest' },
+  bench: { name: 'Bench', fp: [2, 1], charm: 2, cost: 135, model: 'bench', line: 'Somewhere to wait.' },
+  table: { name: 'Table', fp: [2, 2], charm: 3, cost: 270, model: 'table' },
+  rack: { name: 'Pelt rack', fp: [2, 1], charm: 3, cost: 360, model: 'rack' },
+  workbench: { name: 'Workbench', fp: [2, 1], charm: 3, cost: 330, model: 'workbench', line: 'Folk like to see the work.' },
 };
-export const SHELF_COSTS = [200, 450, 900, 1600, 2500, 3600];   // the 3rd shelf to the 8th
+export const SHELF_COSTS = [800, 1800, 3600, 6400, 10000, 14400];   // the 3rd shelf to the 8th
 export const MAX_SHELVES = 8;
 export const CHARM_MAX = 20;          // charm counted, at most
 export const CHARM_STEP = 0.025;      // each point of charm: customers come that much sooner (20 points: half as many again)
@@ -248,12 +248,12 @@ export const CHARM_STEP = 0.025;      // each point of charm: customers come tha
 // ---------- growth (milestone 6) ----------
 // tools for the forge: each changes the strip or the heat. needs: the tool it replaces.
 export const TOOLS = {
-  hammer1: { name: 'A Fine hammer', cost: 150, line: 'one GOOD in the strip becomes a GREAT', kit: { hammer: 1 } },
-  hammer2: { name: 'An Old-Blood hammer', cost: 600, needs: 'hammer1', line: 'two GOODs become GREATs', kit: { hammer: 2 } },
-  gloves: { name: 'Worn gloves', cost: 120, line: 'from trade 3, one CRACK becomes a GOOD', kit: { gloves: 1 } },
-  anvil: { name: 'A good anvil', cost: 250, line: 'one more GOOD in the strip', kit: { good: 1 } },
-  bellows: { name: 'Bellows', cost: 300, line: 'the heat band a seventh wider', kit: { widen: 1.15 } },
-  firebrick: { name: 'A firebrick hearth', cost: 200, line: 'the work cools a fifth slower', kit: { coolX: 0.8 } },
+  hammer1: { name: 'A Fine hammer', cost: 600, line: 'one GOOD in the strip becomes a GREAT', kit: { hammer: 1 } },
+  hammer2: { name: 'An Old-Blood hammer', cost: 2400, needs: 'hammer1', line: 'two GOODs become GREATs', kit: { hammer: 2 } },
+  gloves: { name: 'Worn gloves', cost: 480, line: 'from trade 3, one CRACK becomes a GOOD', kit: { gloves: 1 } },
+  anvil: { name: 'A good anvil', cost: 1000, line: 'one more GOOD in the strip', kit: { good: 1 } },
+  bellows: { name: 'Bellows', cost: 1200, line: 'the heat band a seventh wider', kit: { widen: 1.15 } },
+  firebrick: { name: 'A firebrick hearth', cost: 800, line: 'the work cools a fifth slower', kit: { coolX: 0.8 } },
 };
 // the maker's renown: earned by selling at a fair price and filling orders; the wall adds to it. Each rung brings richer purses.
 export const RENOWN = [

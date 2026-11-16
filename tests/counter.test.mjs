@@ -73,7 +73,7 @@ test('a refused counter-offer, and they go', () => {
 test('haggling is practice', () => {
   const s = blank();
   assert.equal(Sh.haggleLevel(s), 1);
-  s.haggle = { xp: 10 }; assert.equal(Sh.haggleLevel(s), 3);
+  s.haggle = { xp: 20 }; assert.equal(Sh.haggleLevel(s), 3);
 });
 
 test('sellers: buying what they bring', () => {

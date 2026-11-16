@@ -36,8 +36,8 @@ test('every tool and craft perk together: a valid strip, a wider band, odds stil
 });
 
 test('the maker: a level from all practice, a point a level, perks in order', () => {
-  const s = blank({ trades: { falchion: { xp: 40 }, dagger: { xp: 10 } }, haggle: { xp: 6 } });
-  assert.equal(G.practice(s), 56); assert.equal(G.makerLevel(s).level, 5); assert.equal(G.pointsLeft(s), 4);
+  const s = blank({ trades: { falchion: { xp: 150 }, dagger: { xp: 30 } }, haggle: { xp: 10 } });
+  assert.equal(G.practice(s), 190); assert.equal(G.makerLevel(s).level, 5); assert.equal(G.pointsLeft(s), 4);
   assert.match(G.takePerk(s, 'craft', 1).why, /first/);
   assert.ok(G.takePerk(s, 'craft', 0).ok); assert.ok(G.takePerk(s, 'craft', 1).ok); assert.equal(G.pointsLeft(s), 2);
   const none = blank(); assert.equal(G.pointsLeft(none), 0); assert.match(G.takePerk(none, 'house', 0).why, /no points/);

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as Rm from '../js/room.js';
 import * as Sh from '../js/shop.js';
 import * as St from '../js/staff.js';
-import { FURNITURE, ROOM_SIZES, DOOR_Z, MAX_SHELVES, CHARM_MAX } from '../js/data.js';
+import { FURNITURE, ROOM_SIZES, DOOR_Z, MAX_SHELVES, CHARM_MAX, SHELF_COSTS } from '../js/data.js';
 
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const piece = id => ({ id, pattern: 'dagger', tier: 'common', name: 'Dagger', worth: 24, metal: 'iron', affixes: [], made: [] });
@@ -44,7 +44,7 @@ test('placing: inside the room, no overlap, not on kept tiles', () => {
 
 test('buying furniture: paid only when it fits; shelves add two places', () => {
   const s = { coins: 5000, room: Rm.defaultRoom(), slots: 4, shelf: [null, null, null, null] };
-  const r = Rm.buy(s, 'shelf'); assert.ok(r.item); assert.equal(s.slots, 6); assert.equal(s.shelf.length, 6); assert.equal(s.coins, 4800);
+  const r = Rm.buy(s, 'shelf'); assert.ok(r.item); assert.equal(s.slots, 6); assert.equal(s.shelf.length, 6); assert.equal(s.coins, 5000 - SHELF_COSTS[0]);
   assert.ok(Rm.buy(s, 'lamp').item);
   let guard = 0; while (Rm.buy(s, 'barrels').item && guard++ < 50);
   const coins = s.coins, why = Rm.buy(s, 'barrels').why;
@@ -64,13 +64,13 @@ test('moving and turning keep the room valid', () => {
 });
 
 test('selling back: half the price; never the forge; a shelf only when its places are empty', () => {
-  const s = { coins: 1000, room: Rm.defaultRoom(), slots: 4, shelf: [null, null, null, null], cards: [] };
-  const lamp = Rm.buy(s, 'lamp').item; assert.equal(Rm.sellBack(s, lamp.id).refund, 25);
+  const s = { coins: 5000, room: Rm.defaultRoom(), slots: 4, shelf: [null, null, null, null], cards: [] };
+  const lamp = Rm.buy(s, 'lamp').item; assert.equal(Rm.sellBack(s, lamp.id).refund, Math.floor(FURNITURE.lamp.cost / 2));
   assert.equal(Rm.sellBack(s, 'forge').why, 'it stays');
   assert.match(Rm.sellBack(s, 'shelf-0').why, /two shelves/);
   const sh = Rm.buy(s, 'shelf').item; s.cards.push(piece('a')); s.shelf[5] = { id: 'a', tag: 'fair' };
   assert.match(Rm.sellBack(s, sh.id).why, /take the pieces off/);
-  s.shelf[5] = null; assert.equal(Rm.sellBack(s, sh.id).refund, 100); assert.equal(s.slots, 4); assert.equal(s.shelf.length, 4);
+  s.shelf[5] = null; assert.equal(Rm.sellBack(s, sh.id).refund, SHELF_COSTS[0] / 2); assert.equal(s.slots, 4); assert.equal(s.shelf.length, 4);
 });
 
 test('a bigger shop: more room, a longer away cap', () => {

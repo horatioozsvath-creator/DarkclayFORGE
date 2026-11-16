@@ -9,8 +9,10 @@ const cfg = (o = {}) => ({ patternId: 'falchion', picks: [0, 0, 0], level: 3, fo
 
 test('levels come from practice', () => {
   assert.equal(R.levelOf(0).level, 1);
-  assert.equal(R.levelOf(4).level, 2);
-  assert.equal(R.levelOf(10).level, 3);
+  assert.equal(R.levelOf(4).level, 1);
+  assert.equal(R.levelOf(5).level, 2);
+  assert.equal(R.levelOf(20).level, 3);
+  assert.equal(R.levelOf(668).level, R.MAX_LEVEL);
   assert.equal(R.levelOf(1e6).level, R.MAX_LEVEL);
   assert.deepEqual([1, 3, 5, 7].map(R.slotsFor), [0, 1, 2, 3]);
 });
@@ -133,4 +135,14 @@ test('practice teaches, MAKE IT does not', () => {
   assert.equal(R.xpFor({ tier: 0, cracks: 1 }), 2);
   assert.equal(R.xpFor({ tier: 2, cracks: 0 }), 5);
   assert.equal(R.xpFor({ dropped: true, tier: 0, cracks: 2 }), 1);
+});
+
+test('practice from before the slower curve keeps its level', () => {
+  for (let xp = 0; xp <= 200; xp++) {
+    const old = (() => { let l = 1, left = xp; while (l < R.MAX_LEVEL && left >= 4 + 2 * (l - 1)) { left -= 4 + 2 * (l - 1); l++; } return l; })();
+    assert.equal(R.levelOf(R.convertXp(xp)).level, old, 'xp ' + xp);
+  }
+  const s = { trades: { falchion: { xp: 30 } }, haggle: { xp: 10 }, staff: [{ xp: 4 }] };
+  assert.ok(R.convertSave(s)); assert.equal(s.curve, 2); assert.ok(!R.convertSave(s), 'once');
+  assert.equal(R.levelOf(s.trades.falchion.xp).level, 5);
 });

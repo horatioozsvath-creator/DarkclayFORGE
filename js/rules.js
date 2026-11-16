@@ -4,11 +4,28 @@ import { KINDS, KC, TIERS, FORGE, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS,
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
-const xpToNext = lvl => 4 + 2 * (lvl - 1);
+// practice to the next level: a handful of pieces to trade 3, a few dozen to trade 5, a couple of hundred to master it
+export const xpToNext = lvl => Math.round(5 * Math.pow(lvl, 1.6));
 export function levelOf(xp) {
   let lvl = 1, left = xp || 0;
   while (lvl < MAX_LEVEL && left >= xpToNext(lvl)) { left -= xpToNext(lvl); lvl++; }
   return { level: lvl, into: left, need: lvl >= MAX_LEVEL ? 0 : xpToNext(lvl) };
+}
+// Practice from before the slower curve (milestone 7): the same level, the same share of the way to the next
+const oldToNext = lvl => 4 + 2 * (lvl - 1);
+export function convertXp(xp) {
+  let l = 1, left = xp || 0;
+  while (l < MAX_LEVEL && left >= oldToNext(l)) { left -= oldToNext(l); l++; }
+  let out = 0; for (let k = 1; k < l; k++) out += xpToNext(k);
+  return out + (l < MAX_LEVEL ? Math.floor(left / oldToNext(l) * xpToNext(l)) : 0);
+}
+export function convertSave(save) {
+  if (save.curve === 2) return false;
+  Object.values(save.trades || {}).forEach(t => { t.xp = convertXp(t.xp); });
+  if (save.haggle) save.haggle.xp = convertXp(save.haggle.xp);
+  (save.staff || []).forEach(p => { p.xp = convertXp(p.xp); });
+  save.curve = 2;
+  return true;
 }
 export const slotsFor = l => l < 3 ? 0 : l < 5 ? 1 : l < 7 ? 2 : 3;
 // what a finished working teaches: an honest try, more for a better piece and a clean one

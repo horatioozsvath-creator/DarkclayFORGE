@@ -38,7 +38,7 @@ export function candidates(save, hour) {
   }
   return out;
 }
-export const hireFee = c => wageOf(c) * 12;
+export const hireFee = c => wageOf(c) * 20;
 export function hire(save, c) {
   save.staff = save.staff || [];
   if (save.staff.some(p => p.role === c.role) || save.coins < hireFee(c) || (save.hiredIds || []).includes(c.id)) return false;
