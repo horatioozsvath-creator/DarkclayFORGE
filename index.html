@@ -13,8 +13,8 @@
 <title>Darkclay Forge</title>
 <meta name="description" content="Work iron at the forge, tile by tile, and keep every piece you make as a card.">
 <link rel="stylesheet" href="css/fonts.css">
-<link rel="stylesheet" href="css/working.css?v=18">
-<link rel="stylesheet" href="css/game.css?v=18">
+<link rel="stylesheet" href="css/working.css?v=19">
+<link rel="stylesheet" href="css/game.css?v=19">
 </head>
 <body>
 <div class="wrap">
@@ -99,6 +99,19 @@
     <p class="foot">Saved in this browser. Customers come in while the game is open; a counter clerk keeps the shop while you're away.</p>
   </main>
 
+  <!-- A FRIEND'S SHOP: a shop front from a #shop= link, to look at -->
+  <main id="vVisit" hidden>
+    <header class="top visitsign"><div><div class="kicker" id="visitKicker"></div><h1 id="visitName"></h1></div><div class="tally" id="visitTally"></div></header>
+    <div class="stationrow" id="visitStations"></div>
+    <section class="floor has3d" id="visitFloor" aria-label="Their shop front"></section>
+    <p class="note" id="visitHint">Tap a card on a shelf to see it. This is how the shop stood when the link was made: to look at, not to buy from.</p>
+    <section class="card" id="visitWallBox">
+      <h2><span>THEIR WALL</span><b id="visitWallWord"></b></h2>
+      <div class="shelf slots" id="visitWall"></div>
+    </section>
+    <div class="rbtns left"><button class="seg go" id="visitBack"></button></div>
+  </main>
+
   <!-- THE SHOP: the floor, the shelf, the back room, the ledger -->
   <main id="vShop" hidden>
     <header class="top"><div><div class="kicker">THE MAKER'S SHOP · OPEN</div><h1>The Shop</h1></div><div class="tally" id="tally"></div></header>
@@ -110,6 +123,7 @@
     <div class="diobar" id="dioBar" hidden>
       <span class="views"><button class="seg" data-view="shop">THE SHOP FRONT</button><button class="seg" data-view="work">THE WORKSHOP</button></span>
       <button class="seg" id="arrangeBtn">ARRANGE</button>
+      <button class="seg" id="visitMine">VISIT MY SHOP · SHARE</button>
       <span class="diohint" id="dioHint"></span>
       <span class="dioacts" id="dioActs"></span>
     </div>
@@ -143,6 +157,7 @@
       <h2><span>THE WALL</span><b id="wallWord"></b></h2>
       <div class="shelf slots" id="wall"></div>
       <p class="note">Pieces you keep. Not for sale: they add to your renown and the shop's charm.</p>
+      <div class="rbtns left"><button class="seg" id="visitMine2">SHARE MY SHOP · A LINK TO VISIT IT</button></div>
     </section>
     <section data-group="shop" data-tab="furnish" class="card" id="furnish">
       <h2><span>FURNISH AND GROW</span><b id="charmWord"></b></h2>
@@ -305,6 +320,6 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js" } }</script>
-<script type="module" src="js/main.js?v=18"></script>
+<script type="module" src="js/main.js?v=19"></script>
 </body>
 </html>

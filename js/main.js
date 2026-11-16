@@ -1,17 +1,18 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=18';
-import * as R from './rules.js?v=18';
-import * as Sh from './shop.js?v=18';
-import * as St from './staff.js?v=18';
-import * as Rm from './room.js?v=18';
-import * as G from './growth.js?v=18';
-import { decodeCard, linkFor } from './share.js?v=18';
-import * as Snd from './sound.js?v=18';
-import * as Town from './town.js?v=18';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=18';
-import { card, ART } from './card.js?v=18';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=18';
-import { load, store as storeRaw, toCode, fromCode } from './save.js?v=18';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=19';
+import * as R from './rules.js?v=19';
+import * as Sh from './shop.js?v=19';
+import * as St from './staff.js?v=19';
+import * as Rm from './room.js?v=19';
+import * as G from './growth.js?v=19';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=19';
+import * as Snd from './sound.js?v=19';
+import * as Town from './town.js?v=19';
+import * as V from './visit.js?v=19';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=19';
+import { card, ART } from './card.js?v=19';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=19';
+import { load, store as storeRaw, toCode, fromCode } from './save.js?v=19';
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
 let replacing = false;
 const store = s => replacing ? false : storeRaw(s);
@@ -56,7 +57,8 @@ function show(which) {
   $('vShop').hidden = which !== 'shop';
   $('vSupp').hidden = which !== 'supp';
   $('vStaff').hidden = which !== 'staff';
-  $('screen').hidden = HUBS.includes(which);
+  $('vVisit').hidden = which !== 'visit';
+  $('screen').hidden = HUBS.includes(which) || which === 'visit';
   $('vPrep').hidden = which !== 'prepare';
   $('vWork').hidden = which !== 'work';
   $('result').hidden = true; $('look').hidden = true; $('sheet').hidden = true;
@@ -248,7 +250,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=18').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=19').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(shelfShown()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -1105,6 +1107,7 @@ function frame(now) {
   } else if (screen === 'shop' && floorShown && save.ledger[0] && Date.now() - save.ledger[0].at > 30000) renderFloor();
   if (screen === 'shop' && save.queue.length > lastQ) Snd.play('bell');
   lastQ = save.queue.length;
+  if (screen === 'visit' && visitDio) { visitTick(); visitDio.tick(); }
   if (screen === 'shop') { tickCounter(); if (dio) { if (sig !== dioSig) { dioSig = sig; dio.setQueue(save.queue); } visits.forEach(e => { if (!e.served && !e.by && !e.sold) dio.walkIn(e); }); dio.tick(); } }
   if (screen === 'supp' && suppHour !== hour()) renderSupp();
   if (S && screen === 'work') {
@@ -1186,9 +1189,57 @@ function backupReminder() {
 
 if (new URLSearchParams(location.search).has('debug')) window.forge = { save, Sh, R, St, renderShop, toShop, toStaff, showAway, dio: () => dio, store: () => store(save), wipe: () => { save.v = 0; store(save); location.reload(); } };
 
+// ---------- A FRIEND'S SHOP: a #shop= link, to look at; and sharing your own ----------
+let visitDio = null, visitDioP = null, visiting = null, visitNext = 0;
+function toVisit(shop, away) {
+  visiting = shop; show('visit');
+  const d = new Date(shop.at);
+  $('visitKicker').textContent = 'A SHOP SHARED WITH YOU · ' + (isNaN(d) ? '' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase());
+  $('visitName').textContent = shop.maker + (/s$/i.test(shop.maker) ? '\' shop' : '\'s shop');
+  $('visitTally').innerHTML = 'Renown <b>' + esc(shop.renown) + '</b> · ' + esc(shop.size.word.toLowerCase()) + '<br>Charm <b>' + shop.charm + '</b> · <b>' + shop.made + '</b> made · <b>' + shop.sold + '</b> sold';
+  $('visitStations').innerHTML = '<span style="border:0;background:none;padding-left:0">IN THE WORKSHOP</span>' + shop.stations.map(id => '<span>' + esc(STATIONS[id].word.replace(/^THE /, '')) + '</span>').join('');
+  $('visitWallWord').textContent = shop.wall.length ? shop.wall.length + (shop.wall.length === 1 ? ' PIECE' : ' PIECES') + ' · THEIR BEST' : 'NOTHING HUNG YET';
+  $('visitWall').innerHTML = shop.wall.length ? shop.wall.map((c, i) => '<button data-vw="' + i + '" aria-label="' + esc(c.name) + '">' + card(c, { short: true, price: 'ON THE WALL' }) + '</button>').join('')
+    : '<div class="empty">Their wall is bare: pieces they keep would hang here.</div>';
+  $('visitWall').querySelectorAll('[data-vw]').forEach(b => b.onclick = () => openLook(card(shop.wall[+b.dataset.vw]), ''));
+  const mine = save.made > 0 || save.cards.length > 0;
+  $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
+  $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
+  const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
+  if (!visitDioP) visitDioP = import('./diorama.js?v=19').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  visitDioP.then(ready);
+  visitNext = performance.now() + 1500;
+}
+function visitTap(t) {
+  if (!visiting || t.slot == null) return;
+  const st = visiting.stands.find(x => x.slot === t.slot); if (!st) return;
+  openLook(card({ ...st.card, kind: '' }, { short: true, price: st.price + ' c' }), '<p>On their shelf at ' + st.price + ' c.</p>');
+}
+// a few townsfolk wander in and out, so it looks open
+function visitTick() {
+  if (performance.now() < visitNext) return;
+  visitNext = performance.now() + 6000 + Math.random() * 8000;
+  visitDio.walkIn({ at: Date.now(), type: ['folk', 'guard', 'traveller', 'delver'][Math.floor(Math.random() * 4)] });
+}
+async function shareShop() {
+  const url = location.origin + location.pathname + '#shop=' + await packLink(V.packShop(save));
+  if (navigator.share) {
+    try { await navigator.share({ title: save.maker + '\'s shop', text: 'Come and see my shop in Darkclay Forge.', url }); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(url); toast('<b>Link copied</b><br>Send it to a friend: it opens your shop front as it stands now.'); }
+  catch (e) {
+    openLook('<div class="sharedhead"><div class="k">A LINK TO YOUR SHOP</div><p>Copy it and send it. It shows your shop front as it stands now.</p></div><textarea class="linkbox" readonly rows="4"></textarea>', '');
+    const box = $('lookCard').querySelector('textarea'); box.value = url; box.select();
+  }
+}
+$('visitMine').onclick = shareShop; $('visitMine2').onclick = shareShop;
+// a shop or card link opened with the game already open in this tab: open it as a fresh page does (the game saves as it goes)
+window.addEventListener('hashchange', () => { if (/^#(shop|card)=/.test(location.hash)) { save.lastSeen = Date.now(); store(save); location.reload(); } });
+
 toHome();
 // a card shared by link: shown view only, never added to this save; the away summary waits for it to close
-const shared = location.hash.startsWith('#card=') ? decodeCard(location.hash.slice(6)) : null;
+const shared = location.hash.startsWith('#card=') ? decodeCard(location.hash.slice(6)) : null, visitLink = location.hash.startsWith('#shop=');
 if (location.hash.startsWith('#card=')) history.replaceState(null, '', location.pathname + location.search);
 if (shared) {
   openLook('<div class="sharedhead"><div class="k">A PIECE SHARED WITH YOU</div><p>Made by ' + esc(shared.maker || 'a maker') + ' at their forge.</p></div>' + card(shared),
@@ -1196,7 +1247,14 @@ if (shared) {
   $('lookClose').textContent = 'TO MY FORGE';
   const away = awaySum, close = $('lookClose').onclick;
   $('lookClose').onclick = () => { $('look').hidden = true; $('lookClose').textContent = 'CLOSE'; $('lookClose').onclick = close; showAway(away); };
+} else if (location.hash.startsWith('#shop=')) {
+  const token = location.hash.slice(6), away = awaySum;
+  history.replaceState(null, '', location.pathname + location.search);
+  unpackLink(token).then(o => V.unpackShop(o)).then(shop => {
+    if (shop) toVisit(shop, away);
+    else { toast('<b>This shop link won\'t open</b><br>It may be cut short. Ask for it again.'); showAway(away); }
+  });
 } else if (location.hash) history.replaceState(null, '', location.pathname + location.search);
-if (!shared) showAway(awaySum);
+if (!shared && !visitLink) showAway(awaySum);
 awaySum = null;
 requestAnimationFrame(frame);
