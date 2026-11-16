@@ -23,8 +23,8 @@
 <meta property="og:url" content="https://horatioozsvath-creator.github.io/DarkclayFORGE/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="css/fonts.css">
-<link rel="stylesheet" href="css/working.css?v=20">
-<link rel="stylesheet" href="css/game.css?v=20">
+<link rel="stylesheet" href="css/working.css?v=21">
+<link rel="stylesheet" href="css/game.css?v=21">
 </head>
 <body>
 <div class="wrap">
@@ -36,8 +36,9 @@
       <button class="seg" data-go="shop">THE SHOP <span class="dot" id="navSold" hidden></span></button>
       <button class="seg" data-go="supp">SUPPLIERS</button>
       <button class="seg" data-go="staff">STAFF</button>
+      <button class="seg" data-go="branch" id="navBranch" hidden>THE LANDING</button>
     </div>
-    <div class="purse"><span aria-live="polite"><span>PURSE</span> <b id="coins">0</b> <span>COINS</span></span><button class="seg mute" id="muteBtn" aria-label="Sound"></button></div>
+    <div class="purse"><span aria-live="polite"><span>PURSE</span> <b id="coins">0</b> <span>COINS</span></span><button class="seg mute" id="musicBtn" aria-label="Music"></button><button class="seg mute" id="muteBtn" aria-label="Sound"></button></div>
   </nav>
 
   <!-- THE FORGE: the patterns, the found tiles, the store room -->
@@ -107,6 +108,33 @@
       <div class="rbtns left"><button class="seg" data-go="supp">TO THE SUPPLIERS</button><button class="seg" data-go="shop" id="toBack"></button></div>
     </section>
     <p class="foot">Saved in this browser. Customers come in while the game is open; a counter clerk keeps the shop while you're away.</p>
+  </main>
+
+  <!-- THE SECOND SHOP: a shop front in another town, kept by a keeper -->
+  <main id="vBranch" hidden>
+    <header class="top"><div><div class="kicker" id="branchKicker"></div><h1 id="branchName"></h1></div><div class="tally" id="branchTally"></div></header>
+    <section class="floor has3d" id="branchFloor" aria-label="The second shop's floor"></section>
+    <p class="note" id="branchHint"></p>
+    <nav class="tabbar" data-tabs="branch" aria-label="The second shop's pages">
+      <button class="tab" data-tabbtn="shelf">SHELF</button>
+      <button class="tab" data-tabbtn="town">ITS TOWN</button>
+      <button class="tab" data-tabbtn="ledger">LEDGER</button>
+    </nav>
+    <section data-group="branch" data-tab="shelf" class="card">
+      <h2><span>ITS SHELVES</span><b id="branchShelfWord"></b></h2>
+      <div class="shelf slots" id="branchSlots"></div>
+      <div class="rbtns left"><button class="seg" id="branchBuySlot"></button><button class="seg" id="branchExpand"></button></div>
+      <div class="furn" id="branchUps"></div>
+      <p class="note" id="branchNote"></p>
+    </section>
+    <section data-group="branch" data-tab="town" class="card">
+      <h2><span>ITS NOTICE BOARD</span><b id="branchTownWord"></b></h2>
+      <div class="notices" id="branchTown"></div>
+    </section>
+    <section data-group="branch" data-tab="ledger" class="card">
+      <h2><span>ITS LEDGER</span><b>KEPT BY THE KEEPER</b></h2>
+      <ul class="ledger" id="branchLedger"></ul>
+    </section>
   </main>
 
   <!-- A FRIEND'S SHOP: a shop front from a #shop= link, to look at -->
@@ -331,6 +359,6 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js" } }</script>
-<script type="module" src="js/main.js?v=20"></script>
+<script type="module" src="js/main.js?v=21"></script>
 </body>
 </html>

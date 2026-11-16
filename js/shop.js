@@ -2,11 +2,11 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RENOWN, OPENING, DEMAND } from './data.js?v=20';
-import { refreshTown, hotPatterns, demandOf, purseMultFor } from './town.js?v=20';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=20';
-import { charmGap } from './room.js?v=20';
-import { fame, purseMult, patienceOf, haggleMult, onWall, rung } from './growth.js?v=20';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS } from './data.js?v=21';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf } from './town.js?v=21';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=21';
+import { charmGap, placeGift } from './room.js?v=21';
+import { fame, purseMult, patienceOf, haggleMult, onWall, rung } from './growth.js?v=21';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -71,11 +71,14 @@ export function takeOne(save, card) {
 }
 export const priceAt = (card, tag) => Math.max(1, Math.round(card.worth * TAGS[tag].mult));
 export const onShelf = (save, id) => save.shelf.findIndex(e => e && e.id === id);
-export const inBack = save => save.cards.filter(c => onShelf(save, c.id) < 0 && !onWall(save, c.id));
+// the other shop's shelf (the second shop's from the first, the first's from the second): a piece is on one shelf at most
+const otherShelf = save => save.__main ? save.__main.shelf : (save.branch && save.branch.shelf) || [];
+export const onOtherShelf = (save, id) => otherShelf(save).some(e => e && e.id === id);
+export const inBack = save => save.cards.filter(c => onShelf(save, c.id) < 0 && !onWall(save, c.id) && !onOtherShelf(save, c.id));
 export function place(save, id, slot, tag = 'fair') {
   if (slot == null) slot = save.shelf.findIndex(e => !e);
   const card = save.cards.find(c => c.id === id);
-  if (slot < 0 || slot >= save.slots || save.shelf[slot] || onShelf(save, id) >= 0 || onWall(save, id) || !card) return -1;
+  if (slot < 0 || slot >= save.slots || save.shelf[slot] || onShelf(save, id) >= 0 || onWall(save, id) || onOtherShelf(save, id) || !card) return -1;
   if (card.sample && !save.made) return -1;   // a flyer's copy waits in the back until the shop's own first piece is made
   save.shelf[slot] = { id, tag };
   return slot;
@@ -112,18 +115,20 @@ export function richer(save, c, rng) {
   if (save.town && demandOf(save.town, want) < 0) want = 'any';   // no one asks for what's out of favour
   // the town's wants: some come in asking for what's in demand (and settle for what they came for if it isn't on the shelf)
   if (save.town && rng) { const hot = hotPatterns(save.town).filter(p => makes(save, p)); if (hot.length && rng() < DEMAND.want) { was = want; want = hot[Math.floor(rng() * hot.length)]; } }
-  return { ...c, want, was, purse: Math.round(c.purse * purseMult(save)) };
+  const ev = eventOf(save.town);   // the day's event in town: fuller purses, keener buyers
+  return { ...c, want, was, purse: Math.round(c.purse * purseMult(save) * ((ev && ev.purse) || 1)), mood: ev && ev.keen ? LIFT[c.mood] : c.mood };
 }
 // what they'll part with for this piece: their purse, more for what the town wants, less for what it doesn't
 export const purseFor = (save, c, card) => Math.round(c.purse * purseMultFor(save.town, card.pattern));
 // who comes in: with a save, the wealthy too, by renown (and a master collector for Old-Blood on show)
 export function customerWeights(save) {
   const r = save ? rung(save) : 0, ob = save ? Math.min(2, save.cards.filter(c => c.tier === 'oldblood' && (onShelf(save, c.id) >= 0 || onWall(save, c.id))).length) : 0;
+  const ev = save ? eventOf(save.town) : null, tw = (save && save.townWeights) || {}, em = id => ((ev && ev.weights && ev.weights[id]) || 1) * (tw[id] || 1);
   return CUSTOMERS.map(c => {
-    if (!c.rich) return c.weight;
+    if (!c.rich) return c.weight * em(c.id);
     let w = r >= c.rich.from ? c.rich.step * (r - c.rich.from + 1) : 0;
     if (c.rich.oldBlood && r >= c.rich.from - 1) w += c.rich.oldBlood * ob;
-    return w;
+    return w * em(c.id);
   });
 }
 export function newCustomer(rng, save) {
@@ -171,6 +176,7 @@ export function visit(save, rng, now, c = richer(save, newCustomer(rng, save), r
   return log(save, entry);
 }
 export const gap = rng => 22 + rng() * 26;   // seconds between customers
+export const eventGap = save => { const ev = eventOf(save.town); return ((ev && ev.gap) || 1) * (save.townGap || 1); };   // townGap: a smaller town's (the second shop's)
 function log(save, entry) { save.ledger = [entry].concat(save.ledger || []).slice(0, LEDGER_MAX); return entry; }
 
 // ---------- the clock ----------
@@ -191,11 +197,12 @@ export function shopStep(save, dt, rng, now, present = false, clerk = null) {
   if (save.order && save.clock > save.order.due) {
     out.push(log(save, { at: now, who: save.order.who, fig: save.order.fig, mood: 'WARY', want: save.order.pattern, sold: null, order: 'lapsed',
       line: 'The order lapsed. "I went elsewhere in the end."' }));
+    if (save.order.story) { save.stories = save.stories || {}; save.stories[save.order.story] = { step: save.order.step, next: now + 4 * 3600000 }; }   // they'll come back
     save.order = null; save.orderNext = save.clock + 300;
   }
   if (save.shopNext == null) save.shopNext = gap(rng);
   save.shopNext -= dt;
-  while (save.shopNext <= 0) { out.push(...arrive(save, rng, now, present, clerk)); save.shopNext += gap(rng) * charmGap(save); }
+  while (save.shopNext <= 0) { out.push(...arrive(save, rng, now, present, clerk)); save.shopNext += gap(rng) * charmGap(save) * eventGap(save); }
   return out;
 }
 
@@ -210,7 +217,7 @@ export function awayStep(save, dt, rng, at, clerk) {
   save.awayNext -= dt;
   while (save.awayNext <= 0) {
     const when = at + save.awayNext * 1000;   // when they came in, so the ledger keeps the night's times
-    save.awayNext += awayGap(rng) * charmGap(save);
+    save.awayNext += awayGap(rng) * charmGap(save) * eventGap(save);
     if (!clerk) { out.missed++; continue; }
     const e = visit(save, rng, when, undefined, { rate: clerk.rate, by: clerk.name, quiet: true });
     if (e.sold) { out.sold.push(e); out.cut += e.sold.full - e.sold.price; } else out.missed++;
@@ -368,9 +375,37 @@ export function orderPays(pattern, metal, least) {
     result: { tier: least, flawed: false, worked: 0, strikes: 0, heats: 0, cracks: 0 }, maker: '', rng: () => 0, now: 0 });
   return p.worth * ORDER_PAYS;
 }
+// ---------- the regulars' stories ----------
+const ownsPattern = (save, p) => !!PATTERNS[p] && (!PATTERNS[p].station || PATTERNS[p].station === 'forge' || (save.stations || []).includes(PATTERNS[p].station));
+export const storyOf = (save, id) => (save.stories || {})[id] || { step: 0, next: 0 };
+// the stories whose next step can come in now: not finished, rested since the last, with a pattern this shop can make
+export function storiesReady(save, now) {
+  return STORIES.filter(s => { const st = storyOf(save, s.id), step = s.steps[st.step]; return step && now >= (st.next || 0) && step.patterns.some(p => ownsPattern(save, p)); });
+}
+function postStory(save, s, rng, now) {
+  const st = storyOf(save, s.id), step = s.steps[st.step], pattern = step.patterns.find(p => ownsPattern(save, p));
+  const metal = step.metal && metalIndex(pattern, step.metal) >= 0 ? step.metal : null;
+  save.order = { who: s.who, fig: s.fig, pattern, least: step.least, metal, line: step.line, posted: save.clock || 0, story: s.id, step: st.step,
+    due: (save.clock || 0) + ORDER_TIME[0] + rng() * (ORDER_TIME[1] - ORDER_TIME[0]), pays: Math.round(orderPays(pattern, metal, step.least) / ORDER_PAYS * STORY_PAYS) };
+  return log(save, { at: now, who: s.who, fig: s.fig, mood: 'EAGER', want: pattern, sold: null, order: 'posted', line: 'Came back: ' + orderWord(save.order) + '.' });
+}
+// a step filled: the story moves on, and comes back after a rest; the last step leaves its gift and some renown
+function storyFilled(save, o, now) {
+  const s = STORIES.find(x => x.id === o.story); if (!s) return null;
+  save.stories = save.stories || {};
+  const step = o.step + 1, done = step >= s.steps.length;
+  save.stories[s.id] = { step, next: now + STORY_GAP * 3600000 };
+  if (!done) return { thanks: s.steps[o.step].thanks };
+  fame(save, s.renown);
+  const g = placeGift(save, s.gift);
+  return { thanks: s.steps[o.step].thanks, gift: s.gift, stored: !!g.stored };
+}
 export function postOrder(save, rng, now) {
+  // a regular with a story to go on, more often than not
+  const ready = storiesReady(save, now || 0);
+  if (ready.length && rng() < STORY_ODDS) return postStory(save, ready[Math.floor(rng() * ready.length)], rng, now);
   // a regular asks only for what this shop's stations can make
-  const owns = p => !PATTERNS[p].station || PATTERNS[p].station === 'forge' || (save.stations || []).includes(PATTERNS[p].station);
+  const owns = p => ownsPattern(save, p);
   const regs = REGULARS.filter(x => x.wants.some(owns)), r = regs[Math.floor(rng() * regs.length)], can = r.wants.filter(owns);
   const hot = save.town ? can.filter(p => demandOf(save.town, p) > 0) : [];
   const pattern = hot.length && rng() < 0.5 ? hot[Math.floor(rng() * hot.length)] : can[Math.floor(rng() * can.length)];
@@ -394,8 +429,11 @@ export function deliver(save, cardId, now) {
   takeOne(save, card);
   save.coins += o.pays; save.earned = (save.earned || 0) + o.pays; save.sold = (save.sold || 0) + 1;
   save.order = null; save.orderNext = (save.clock || 0) + 240; fame(save, 3);
-  return log(save, { at: now, who: o.who, fig: o.fig, mood: 'EAGER', want: o.pattern, sold: { name: card.name, tier: card.tier, price: o.pays, tag: 'order', id: card.id },
-    order: 'filled', served: true, line: '"Just as I asked. Thank you."' });
+  const story = o.story ? storyFilled(save, o, now) : null;
+  const e = log(save, { at: now, who: o.who, fig: o.fig, mood: 'EAGER', want: o.pattern, sold: { name: card.name, tier: card.tier, price: o.pays, tag: 'order', id: card.id },
+    order: 'filled', served: true, line: '"' + (story ? story.thanks : 'Just as I asked. Thank you.') + '"' });
+  if (story) e.story = story;
+  return e;
 }
 
 // ---------- the back room: break a piece down, or send it back in the fire ----------
@@ -411,7 +449,7 @@ export function salvageOf(card) {
 export const salvageWorth = card => salvageOf(card).reduce((c, r) => c + MATS[r.mat].price * r.n, 0);
 export function salvage(save, cardId) {
   const card = save.cards.find(c => c.id === cardId);
-  if (!card || card.sample || onShelf(save, cardId) >= 0 || onWall(save, cardId)) return null;
+  if (!card || card.sample || onShelf(save, cardId) >= 0 || onWall(save, cardId) || onOtherShelf(save, cardId)) return null;
   const got = salvageOf(card);
   got.forEach(r => { save.mats[r.mat] = (save.mats[r.mat] || 0) + r.n; });
   save.cards = save.cards.filter(c => c.id !== cardId);
@@ -428,7 +466,7 @@ export const reworkCost = card => {
 export const tradeLevel = (save, pattern) => levelOf(((save.trades || {})[pattern] || {}).xp || 0).level;
 // Common and Fine go up a tier; Rare only toward Old-Blood, for a master with the right piece (rules.js oldBloodGate)
 export const canRework = (save, card) => !card.sample && !PATTERNS[card.pattern].batch && !PATTERNS[card.pattern].makes && TIER_N[card.tier] < TIERS.length - 1
-  && onShelf(save, card.id) < 0 && !onWall(save, card.id) && (TIER_N[card.tier] < OLD_BLOOD.tier - 1 || oldBloodGate(card, tradeLevel(save, card.pattern)).ok);
+  && onShelf(save, card.id) < 0 && !onWall(save, card.id) && !onOtherShelf(save, card.id) && (TIER_N[card.tier] < OLD_BLOOD.tier - 1 || oldBloodGate(card, tradeLevel(save, card.pattern)).ok);
 
 // ---------- parts for other stations, forged at once ----------
 export function forgePart(save, id, n = 1) {

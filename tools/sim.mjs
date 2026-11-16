@@ -8,6 +8,8 @@ import * as St from '../js/staff.js';
 import * as Rm from '../js/room.js';
 import * as G from '../js/growth.js';
 import * as Town from '../js/town.js';
+import * as Br from '../js/branch.js';
+import { BRANCH } from '../js/data.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD } from '../js/data.js';
 
 const days = +process.argv[2] || 7, seed0 = +process.argv[3] || 1, SESSION_MIN = +process.argv[4] || 45;
@@ -16,7 +18,7 @@ const rng = seeded(seed0);
 const save = { v: 1, maker: 'Bot', trades: {}, found: ['ember'], chosen: [], picks: {}, cards: [], made: 0,
   coins: 60, mats: { iron: 5, bronze: 2, cord: 3, wrap: 1, ash: 1, wool: 1, strap: 1 }, slots: 4, shelf: [], ledger: [], sold: 0, earned: 0, shopNext: 6, queue: [] };
 Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
-const OLD = process.env.OLD !== '0', TOWN = process.env.TOWN !== '0';   // TOWN=0: the bot ignores the notice board   // OLD=0: a run without Old-Blood, to compare
+const OLD = process.env.OLD !== '0', TOWN = process.env.TOWN !== '0', BRANCHES = process.env.BRANCH !== '0';   // TOWN=0: the bot ignores the notice board   // OLD=0: a run without Old-Blood, to compare
 let t = Date.UTC(2026, 10, 1, 9), log = [], made = 0, oldTried = 0, oldMade = 0, spent = { mats: 0, staff: 0, tools: 0, room: 0 };
 const H = 3600000, lvl = id => R.levelOf((save.trades[id] || {}).xp || 0).level, note = m => log.push('  ' + m);
 
@@ -95,6 +97,23 @@ function restock() {
   // yesterday's DEAR pieces the town no longer wants go back to FAIR
   save.shelf.forEach((e, i) => { const c = e && save.cards.find(x => x.id === e.id); if (c && !hot(c) && e.tag === 'dear') Sh.setTag(save, i, 'fair'); });
 }
+// a special order (a story's step too): delivered from the back room if something there fills it
+let orders = 0, stories = 0;
+function fillOrder() {
+  const o = save.order; if (!o) return;
+  const c = Sh.inBack(save).filter(x => Sh.fills(o, x)).sort((a, b) => a.worth - b.worth)[0];
+  if (c && Sh.deliver(save, c.id, t)) { orders++; if (o.story) stories++; }
+}
+// the second shop: set up once it can be afforded with plenty over, then kept stocked from the back room, best first
+let branchDay = null;
+function runBranch(day) {
+  if (!BRANCHES) return;
+  if (!save.branch && Br.canBuy(save).ok && save.coins > BRANCH.cost + 300) { Br.buy(save); branchDay = day; note('opened the second shop at ' + BRANCH.town); }
+  if (!save.branch) return;
+  const v = Br.viewOf(save), back = Sh.inBack(save).filter(c => !c.sample).sort((a, b) => b.worth - a.worth);
+  v.shelf.forEach((e, i) => { if (!e && back.length) Sh.place(v, back.shift().id, i); });
+  const cost = Rm.shelfCost(v.room); if (cost != null && save.coins - cost > 3000 && back.length > 4) Rm.buy(v, 'shelf');
+}
 // spending, with a reserve kept for materials
 function spend(hour) {
   const reserve = 80;
@@ -132,11 +151,13 @@ for (let d = 1; d <= days; d++) {
     tally(Sh.shopStep(save, 50, rng, t, false, clerk));
     St.payWages(save, 50); St.resolveTrips(save, t, rng);
     t += 50000; save.lastSeen = t;
-    if (s % 600 === 0) { spend(hour); tryOldBlood(hour); restock(); }
+    if (s % 600 === 0) { runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); }   // saving up for the second shop once it may be bought
+    if (save.branch) tally(Br.step(save, 50, rng, t));
     if (Sh.rescue(save, hour)) note('scrap bin');
   }
   // the night: away for 14 hours
-  const a = St.catchUp(save, t + 14 * H, rng); if (a) tally(a.sold); t += 14 * H; save.lastSeen = t;
+  const from = save.lastSeen, a = St.catchUp(save, t + 14 * H, rng); if (a) tally(a.sold);
+  if (save.branch) tally(Br.away(save, from, t + 14 * H, rng, St.awayCap(save)).sold); t += 14 * H; save.lastSeen = t;
   const day = (save.earned || 0) - start;
   console.log(String(d).padStart(3), String(save.coins).padStart(6), String(day).padStart(7), String(made).padStart(5), String(save.sold || 0).padStart(4),
     String(save.slots).padStart(6), String((save.staff || []).length).padStart(6), String(G.makerLevel(save).level).padStart(6), String(G.renownOf(save)).padStart(6),
@@ -144,6 +165,6 @@ for (let d = 1; d <= days; d++) {
   log.forEach(l => console.log(l)); log = [];
 }
 const tiers = {}; save.ledger.forEach(e => { if (e.sold) tiers[e.sold.tier] = (tiers[e.sold.tier] || 0) + 1; });
-console.log('big sales:', JSON.stringify(big));
+console.log('big sales:', JSON.stringify(big), ' orders filled:', orders, '(stories', stories + ')', ' second shop from day', branchDay, save.branch ? 'sold ' + save.branch.sold + ' for ' + save.branch.earned + ' c' : '');
 console.log('old-blood: tried', oldTried, 'made', oldMade, ' sold by tier:', tiers);
 console.log('spent:', spent, ' trades:', Object.fromEntries(Object.entries(save.trades).map(([k, v]) => [k, lvl(k)])), ' in the back:', Sh.inBack(save).length);

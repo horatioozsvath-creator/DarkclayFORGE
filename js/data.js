@@ -330,6 +330,17 @@ export const TOWN_HOT = [
   { id: 'wet', line: 'A wet month: every edge is rusting.', patterns: ['oil'] },
   { id: 'delve', line: 'A new door found in the deep: the delvers are buying.', patterns: ['axe', 'helm', 'jerkin', 'draught'] },
 ];
+// town events: about one day in four, something happens in town for the whole day (the same in every shop). gap: how much sooner or
+// later customers come (×), weights: more of some kinds of buyer (×), purse: what they carry (×), keen: everyone a step keener
+export const EVENT_ODDS = 0.25;
+export const TOWN_EVENTS = [
+  { id: 'fair', name: 'The midsummer fair', line: 'Stalls fill the square and the lanes are full of strangers.', effect: 'More customers, more travellers and folk.', gap: 0.7, weights: { folk: 2, traveller: 2 } },
+  { id: 'muster', name: 'The muster', line: 'The watch is called up and every man wants to be armed by morning.', effect: 'Guards and delvers crowd in, carrying more.', gap: 0.9, weights: { guard: 3, delver: 2 }, purse: 1.15 },
+  { id: 'feast', name: 'Saint Brannoc\'s feast', line: 'Bells, bread and an open hand: it\'s a day for spending.', effect: 'Every buyer a step keener, purses fuller.', purse: 1.2, keen: true },
+  { id: 'caravan', name: 'A spice caravan', line: 'A caravan from the south camps by the river for the night.', effect: 'Factors and travellers with deep purses.', gap: 0.85, weights: { factor: 3, traveller: 2, steward: 2 }, purse: 1.1 },
+  { id: 'siege', name: 'Raiders on the high road', line: 'The gates are shut at noon. Fewer come in, and those who do want steel.', effect: 'Half the customers, but they carry a third more.', gap: 1.8, weights: { guard: 3 }, purse: 1.35 },
+  { id: 'storm', name: 'A three-day storm', line: 'Rain off the Reach. Only the desperate are out.', effect: 'Fewer customers.', gap: 1.4 },
+];
 export const TOWN_COLD = [
   { id: 'barges', line: 'Arrows are cheap off the river barges.', patterns: ['arrows'] },
   { id: 'pedlar', line: 'A pedlar is selling tin rings at the gate.', patterns: ['ring'] },
@@ -366,6 +377,36 @@ export const REGULARS = [
   { who: 'Marrow, the herbalist', wants: ['tonic', 'draught', 'salve'], line: 'My own kettle\'s cracked. Brew for me this once.', fig: '#8a9a6a' },
   { who: 'Tib Harrow', wants: ['dagger'], line: 'A knife. My own. I\'ve saved for it.', fig: '#a08a6a' },
 ];
+// regulars with stories: three orders over days (the next comes back STORY_GAP hours after the last was filled), a gift for the shop
+// at the end. A step names the patterns it can ask for, first the shop can make; it waits while the shop can make none of them.
+export const STORY_GAP = 18, STORY_PAYS = 2.5, STORY_ODDS = 0.6;
+export const STORIES = [
+  { id: 'ketty', who: 'Ketty Moss, a widow', fig: '#a08a6a', gift: 'kettycandles', renown: 10, steps: [
+    { patterns: ['ring'], metal: 'silver', least: 0, line: 'A silver ring, for his grave.', thanks: 'It shines on the stone. He\'d have liked that.' },
+    { patterns: ['dagger'], least: 0, line: 'My boy\'s going out with the drovers. A knife he can trust.', thanks: 'He wears it on his belt like a soldier.' },
+    { patterns: ['helm'], least: 1, line: 'He\'s joined the watch now. Keep his head, would you?', thanks: 'Take these. They burned for his father; let them burn for your shop.' } ] },
+  { id: 'vance', who: 'Sergeant Ollo Vance', fig: '#7a8aa0', gift: 'watchbanner', renown: 15, steps: [
+    { patterns: ['falchion'], least: 0, line: 'For the gate. The pikes need better than they\'ve got.', thanks: 'Held the gate with it twice this week.' },
+    { patterns: ['helm', 'jerkin'], least: 1, line: 'The new men need covering. Good work, not pretty.', thanks: 'Not a scratch on them after the raid.' },
+    { patterns: ['axe', 'falchion'], least: 2, line: 'The captain wants one from you. Your best.', thanks: 'The watch flies your mark now. Hang this where they\'ll see it.' } ] },
+  { id: 'bram', who: 'Bram Oakes, a drover', fig: '#8a9a6a', gift: 'bramsbarrels', renown: 10, steps: [
+    { patterns: ['dagger'], least: 0, line: 'For my drovers. Good ones, mind.', thanks: 'They argue over who gets to carry it.' },
+    { patterns: ['boots', 'axe'], least: 0, line: 'The road\'s long this season.', thanks: 'Not one of them lame by the river.' },
+    { patterns: ['arrows', 'axe', 'longbow'], least: 1, line: 'Wolves on the high road. Something for them.', thanks: 'A barrel of the best from the far valley. Yours.' } ] },
+  { id: 'corrow', who: 'Lady Ysmay Corrow', fig: '#a07ab8', gift: 'corrowstatue', renown: 25, steps: [
+    { patterns: ['ring'], least: 1, line: 'Something with a maker\'s mark worth the name.', thanks: 'It was admired. I said where it came from.' },
+    { patterns: ['falchion', 'longbow', 'staff'], least: 2, line: 'A gift for the duke. It must not shame me.', thanks: 'The duke asked your name.' },
+    { patterns: ['ring', 'goblet', 'lens'], least: 2, line: 'My daughter marries in spring. The finest thing you can make.', thanks: 'My grandmother\'s king, in stone. He belongs in a maker\'s shop.' } ] },
+  { id: 'marrow', who: 'Marrow, the herbalist', fig: '#8a9a6a', gift: 'marrowrail', renown: 10, steps: [
+    { patterns: ['draught'], least: 0, line: 'My own kettle\'s cracked. Brew for me this once.', thanks: 'The lane\'s fever broke on it.' },
+    { patterns: ['salve'], least: 1, line: 'The tannery boys burn their hands. Something kind.', thanks: 'They come to me singing now. Unheard of.' },
+    { patterns: ['tonic'], least: 2, line: 'Old Wenna can\'t sleep. A tonic worth her last nights.', thanks: 'Hang my herbs in your shop. They\'ll do better with you.' } ] },
+];
+// a second shop, in another town: bought once the shop is SOUGHT. A keeper runs it (open or away, up to the away cap), paid by the
+// hour and keeping a share of each sale; its own shop front, shelves and customers (more delvers, travellers and hunters off the river), its own notice board.
+export const BRANCH = { town: 'Osk\'s Landing', keeper: 'Wenna Osk', line: 'A river town at the foot of the Reach: delvers going up, merchants coming down.',
+  // a smaller town: customers come less often (gap); the keeper keeps a fifth of each sale (cut)
+  cost: 30000, rung: 3, wage: 12, cut: 0.2, gap: 1.6, boost: 1, salt: 1, weights: { delver: 2.5, traveller: 1.6, hunter: 1.6, factor: 1.4, folk: 0.6, guard: 0.7 } };
 export const ORDER_TIME = [900, 1500];   // seconds of open shop to fill an order in
 export const ORDER_PAYS = 2;             // times the worth of the piece it asks for
 // who comes in with something to sell
@@ -455,6 +496,12 @@ export const FURNITURE = {
   flowers: { name: 'Flowers', fp: [1, 1], charm: 2, cost: 90, model: 'flowers', line: 'Something growing, for once.' },
   sacks: { name: 'Sacks', fp: [1, 1], charm: 1, cost: 60, model: 'sacks' },
   herbrail: { name: 'Herb rail', fp: [2, 1], charm: 2, cost: 150, model: 'herbrail', line: 'Herbs drying: the shop smells of summer.' },
+  // gifts from the regulars' stories: never for sale, never sold back (fixed), charm a little over the shop's own
+  kettycandles: { name: 'Ketty\'s candles', fp: [1, 1], charm: 4, model: 'candlestand', room: 'shop', fixed: true, gift: true, line: 'They burned for her husband.' },
+  watchbanner: { name: 'The watch\'s banner', fp: [1, 1], charm: 4, model: 'banner', scale: 0.6, room: 'shop', fixed: true, gift: true, line: 'The watch flies your mark.' },
+  bramsbarrels: { name: 'Bram\'s barrels', fp: [1, 1], charm: 3, model: 'barrels', room: 'shop', fixed: true, gift: true, line: 'The best from the far valley.' },
+  corrowstatue: { name: 'The Corrow king', fp: [1, 1], charm: 6, model: 'statue', scale: 0.5, room: 'shop', fixed: true, gift: true, line: 'Lady Corrow\'s grandmother\'s king, in stone.' },
+  marrowrail: { name: 'Marrow\'s herbs', fp: [2, 1], charm: 4, model: 'herbrail', room: 'shop', fixed: true, gift: true, line: 'They do better with you.' },
 };
 export const SHELF_COSTS = [800, 1800, 3600, 6400, 10000, 14400];   // the 3rd shelf to the 8th
 export const MAX_SHELVES = 8;

@@ -1,7 +1,7 @@
 // The shop's two rooms, with no page access: the shop front (counter, shelves, decor; where customers come) and the workshop
 // behind it (the forge, the anvil and every station). A grid each, what stands on it, buying, moving, selling back, growing.
-import { FURNITURE, ROOM_SIZES, WORK_SIZES, DOOR_Z, WORK_DOOR_X, SHELF_COSTS, SHELF_LEVELS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=20';
-import { wallCharm } from './growth.js?v=20';
+import { FURNITURE, ROOM_SIZES, WORK_SIZES, DOOR_Z, WORK_DOOR_X, SHELF_COSTS, SHELF_LEVELS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=21';
+import { wallCharm } from './growth.js?v=21';
 
 export const SIZES = { shop: ROOM_SIZES, work: WORK_SIZES };
 export const sizeOf = room => SIZES[room.kind || 'shop'][room.size || 0];
@@ -104,7 +104,7 @@ export function fixRoom(save) {
     if (!save.workshop) save.workshop = { kind: 'work', size: 0, items: work.map(i => ({ ...i })) };
   }
   if (!valid(save.room)) {
-    const want = Math.max(2, Math.ceil((save.slots || START_SLOTS) / 2)), keep = save.room && valid({ ...save.room, items: [] }) ? save.room.items.filter(i => FURNITURE[i.kind] && !FURNITURE[i.kind].fixed && i.kind !== 'shelf') : [];
+    const want = Math.max(2, Math.ceil((save.slots || START_SLOTS) / 2)), keep = save.room && valid({ ...save.room, items: [] }) ? save.room.items.filter(i => FURNITURE[i.kind] && (!FURNITURE[i.kind].fixed || FURNITURE[i.kind].gift) && i.kind !== 'shelf') : [];
     let size = save.room && SIZES.shop[save.room.size] ? save.room.size : 0, room = defaultShop(want, size);
     while (shelvesOf(room) < want && size < ROOM_SIZES.length - 1) room = defaultShop(want, ++size);   // more shelves than a small shop holds
     keep.forEach(i => place(room, { ...i }));   // the decor goes back where it fits
@@ -180,6 +180,19 @@ export function sellBack(save, id) {
   save.coins += Math.floor(paid / 2);
   if (gone) { save.shelf = save.shelf.filter((_, i) => !gone.has(i)); save.slots = save.shelf.length; }
   return { refund: Math.floor(paid / 2) };
+}
+// a gift from a regular: put out in the shop front where it first fits, else kept in the store room (save.stored) until there's room
+export function placeGift(save, kind) {
+  const it = FURNITURE[kind] && firstFree(save.room, kind, newId(kind));
+  if (it) { save.room.items.push(it); return { item: it }; }
+  save.stored = (save.stored || []).concat(kind);
+  return { stored: true };
+}
+export function putOut(save, kind) {
+  const i = (save.stored || []).indexOf(kind); if (i < 0) return { why: 'not in the store room' };
+  const it = firstFree(save.room, kind, newId(kind)); if (!it) return { why: 'no room: move things, or make the shop front bigger' };
+  save.room.items.push(it); save.stored.splice(i, 1);
+  return { item: it };
 }
 export const nextSize = room => SIZES[room.kind || 'shop'][(room.size || 0) + 1];
 export function expand(save, which = 'shop') {

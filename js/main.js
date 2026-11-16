@@ -1,19 +1,20 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=20';
-import * as R from './rules.js?v=20';
-import * as Sh from './shop.js?v=20';
-import * as St from './staff.js?v=20';
-import * as Rm from './room.js?v=20';
-import * as G from './growth.js?v=20';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=20';
-import * as Snd from './sound.js?v=20';
-import * as Town from './town.js?v=20';
-import * as V from './visit.js?v=20';
-import { drawFlyer, flyerBlob } from './flyer.js?v=20';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=20';
-import { card, ART } from './card.js?v=20';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=20';
-import { load, store as storeRaw, toCode, fromCode } from './save.js?v=20';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=21';
+import * as R from './rules.js?v=21';
+import * as Sh from './shop.js?v=21';
+import * as St from './staff.js?v=21';
+import * as Rm from './room.js?v=21';
+import * as G from './growth.js?v=21';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=21';
+import * as Snd from './sound.js?v=21';
+import * as Town from './town.js?v=21';
+import * as V from './visit.js?v=21';
+import * as Br from './branch.js?v=21';
+import { drawFlyer, flyerBlob } from './flyer.js?v=21';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=21';
+import { card, ART } from './card.js?v=21';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=21';
+import { load, store as storeRaw, toCode, fromCode } from './save.js?v=21';
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
 let replacing = false;
 const store = s => replacing ? false : storeRaw(s);
@@ -24,7 +25,13 @@ const save = load();
 Town.refreshTown(save, Date.now());
 R.convertSave(save); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save); G.fixWall(save);
 save.queue = [];   // whoever was at the counter when the page closed has gone
-let awaySum = St.catchUp(save, Date.now(), rng);   // the shop while the page was closed
+// the first shop's catch-up (staff.js), then the second shop's keeper over the same time
+function catchUpAll(nowMs) {
+  const from = save.lastSeen, a = St.catchUp(save, nowMs, rng);
+  if (a && save.branch) a.branch = Br.away(save, from, nowMs, rng, St.awayCap(save));
+  return a;
+}
+let awaySum = catchUpAll(Date.now());   // the shops while the page was closed
 store(save);
 const phoneQ = window.matchMedia('(max-width: 600px)');
 const TIERC = ['var(--t-common)', 'var(--t-fine)', 'var(--t-rare)', 'var(--t-oldblood)'];
@@ -47,11 +54,11 @@ const rwCard = () => rw && save.cards.find(c => c.id === rw.id);
 const stn = () => S ? S.station : R.stationOf(pat);
 const benchPicks = () => rw ? R.srcOf(rwCard()).picks : picks();
 const benchName = () => rw ? TIERS[rw.from].name + ' ' + rwCard().name : (S.metal.adj || S.metal.name) + ' ' + PATTERNS[pat].name;
-const HUBS = ['home', 'shop', 'supp', 'staff'];
+const HUBS = ['home', 'shop', 'supp', 'staff', 'branch'];
 const hour = () => Sh.hourOf(Date.now());
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function show(which) {
-  screen = which;
+  screen = which; Snd.music(MUSIC_OF[which]);
   $('nav').hidden = !HUBS.includes(which);
   document.querySelectorAll('#nav [data-go]').forEach(b => b.dataset.go === which ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'));
   $('vHome').hidden = which !== 'home';
@@ -59,6 +66,8 @@ function show(which) {
   $('vSupp').hidden = which !== 'supp';
   $('vStaff').hidden = which !== 'staff';
   $('vVisit').hidden = which !== 'visit';
+  $('vBranch').hidden = which !== 'branch';
+  $('navBranch').hidden = !save.branch;
   $('screen').hidden = HUBS.includes(which) || which === 'visit';
   $('vPrep').hidden = which !== 'prepare';
   $('vWork').hidden = which !== 'work';
@@ -80,10 +89,13 @@ function toast(html) {
 }
 // sound: woken by the first tap or key; the mute switch kept apart from the save
 ['pointerdown', 'keydown'].forEach(t => document.addEventListener(t, Snd.unlock, { capture: true }));
+const MUSIC_OF = { home: 'forge', prepare: 'forge', work: 'forge', shop: 'shop', supp: 'shop', staff: 'shop', visit: 'shop', branch: 'shop' };
+function musicLabel() { $('musicBtn').textContent = Snd.isMusicOn() ? '♫ ON' : '♫ OFF'; $('musicBtn').setAttribute('aria-pressed', String(Snd.isMusicOn())); }
+$('musicBtn').onclick = () => { Snd.setMusicOn(!Snd.isMusicOn()); musicLabel(); };
 function muteLabel() { $('muteBtn').textContent = Snd.isMuted() ? '♪ OFF' : '♪ ON'; $('muteBtn').setAttribute('aria-pressed', String(!Snd.isMuted())); }
 $('muteBtn').onclick = () => { Snd.setMuted(!Snd.isMuted()); muteLabel(); Snd.play('coin'); };
-muteLabel();
-const go = where => where === 'home' ? toHome() : where === 'shop' ? toShop() : where === 'staff' ? toStaff() : toSupp();
+muteLabel(); musicLabel();
+const go = where => where === 'home' ? toHome() : where === 'shop' ? toShop() : where === 'staff' ? toStaff() : where === 'branch' ? toBranch() : toSupp();
 document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
 // never stuck: broke, nothing made, nothing to make it from
 function rescueCheck() {
@@ -251,7 +263,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=20').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=21').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(shelfShown()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -329,6 +341,15 @@ function renderFurnish() {
     return '<div class="fi"><b>' + f.name + (n ? ' · ' + n : '') + '</b><span>' + (f.slots ? 'Two places, made better in THE SHELF: three, then six.' : f.line || '') + (f.charm ? ' Charm ' + f.charm + '.' : '') + '</span>'
       + (cost == null ? '<span>As many as a shop can use.</span>' : '<button class="seg" data-buyf="' + k + '"' + (save.coins < cost ? ' disabled' : '') + '>BUY · ' + cost + ' c</button>') + '</div>';
   }).join('');
+  if (!save.branch) {
+    const c = Br.canBuy(save);
+    $('furnList').insertAdjacentHTML('afterbegin', '<div class="fi branchbuy"><b>A second shop · ' + esc(BRANCH.town) + '</b><span>' + esc(BRANCH.line) + ' Kept by ' + esc(BRANCH.keeper) + ' for ' + BRANCH.wage + ' c an hour and a fifth of each sale; it sells while you\'re away too. A smaller town: fewer customers than here.'
+      + (c.ok ? '' : ' Needs ' + esc(c.why) + '.') + '</span><button class="seg go" id="buyBranch"' + (c.ok ? '' : ' disabled') + '>SET IT UP · ' + BRANCH.cost + ' c</button></div>');
+    $('buyBranch').onclick = () => { const r = Br.buy(save); if (r.ok) { store(save); coins(); $('navBranch').hidden = false; toast('<b>' + esc(BRANCH.town) + '</b><br>Your second shop is open. Stock its shelves from your back room.'); Snd.play('level'); toBranch(); } };
+  }
+  const stored = save.stored || [];
+  if (stored.length) $('furnList').insertAdjacentHTML('afterbegin', stored.map(k => '<div class="fi have"><b>' + FURNITURE[k].name + '</b><span>A gift, in the store room. ' + (FURNITURE[k].line || '') + ' Charm ' + FURNITURE[k].charm + '.</span><button class="seg go" data-putout="' + k + '">PUT IT OUT</button></div>').join(''));
+  $('furnList').querySelectorAll('[data-putout]').forEach(b => b.onclick = () => { const r = Rm.putOut(save, b.dataset.putout); furnNote = r.why ? 'Not put out: ' + r.why + '.' : FURNITURE[b.dataset.putout].name + ': in the shop front.'; if (r.item) { store(save); if (dio) dio.setRoom(viewRoom(), save); } renderShop(); });
   $('furnNote').textContent = furnNote || 'New decor goes in the room in view (' + (dioView === 'work' ? 'the workshop' : 'the shop front') + '). Charm in the shop front brings customers in sooner; the workshop\'s is for you. Arrange to move things.';
   $('expandWork').hidden = !wnext;
   if (wnext) { $('expandWork').textContent = 'MAKE THE WORKSHOP BIGGER · ' + wnext.w + ' × ' + wnext.d + ' · ' + wnext.cost + ' c'; $('expandWork').disabled = save.coins < wnext.cost; }
@@ -436,20 +457,28 @@ $('counterBody').onclick = ev => {
   store(save); coins(); renderShop();
   const first = $('counterBody').querySelector('button:not(:disabled)'); if (first) first.focus({ preventScroll: true });
 };
+// an order filled: the coin, and a regular's thanks (and their gift, at a story's end)
+function filledToast(o, e) {
+  const st = e.story;
+  toast('<b>Order filled · +' + o.pays + ' c</b><br>' + esc(o.who) + (st ? ': "' + esc(st.thanks) + '"' : '')
+    + (st && st.gift ? '<br><b>A gift: ' + esc(FURNITURE[st.gift].name) + '</b> ' + (st.stored ? '(in the store room: put it out from FURNISH)' : 'in your shop front') : ''));
+  if (st && st.gift) { Snd.play('level'); if (dio) dio.setRoom(viewRoom(), save); }
+}
 function renderOrder() {
   const o = save.order;
   $('orderBox').hidden = !o;
   if (!o) return;
   const fit = save.cards.filter(c => Sh.fills(o, c));
-  $('orderBody').innerHTML = '<div class="who">FROM ' + esc(o.who.toUpperCase()) + ' · "' + esc(o.line) + '"</div>'
+  const story = o.story && STORIES.find(x => x.id === o.story);
+  $('orderBody').innerHTML = (story ? '<div class="storystep">' + esc(story.who.split(',')[0].toUpperCase()) + '\'S STORY · ' + (o.step + 1) + ' OF ' + story.steps.length + '</div>' : '') + '<div class="who">FROM ' + esc(o.who.toUpperCase()) + ' · "' + esc(o.line) + '"</div>'
     + '<div class="ask">' + esc(Sh.orderWord(o)).replace(/^./, x => x.toUpperCase()) + '</div>'
-    + '<div class="note">Pays <span class="pays">' + o.pays + ' c</span>, twice what such a piece is worth, whatever you hand in.</div>'
+    + '<div class="note">Pays <span class="pays">' + o.pays + ' c</span>, ' + (o.story ? 'two and a half times' : 'twice') + ' what such a piece is worth, whatever you hand in.' + (story && o.step === story.steps.length - 1 ? ' The last of their story: they\'ll leave a gift.' : '') + '</div>'
     + (fit.length ? '<div class="pickgrid" style="margin-top:10px">' + fit.map(c => '<button data-deliver="' + c.id + '" aria-label="Deliver ' + esc(c.name) + '">' + card(c, { short: true, price: 'DELIVER' }) + '</button>').join('') + '</div>'
       : '<div class="rbtns left"><button class="seg go" id="orderMake">MAKE ONE AT ' + R.stationOf(o.pattern).word + '</button></div>');
   $('orderBody').querySelectorAll('[data-deliver]').forEach(b => b.onclick = () => {
     const c = save.cards.find(x => x.id === b.dataset.deliver);
     if (c.worth * 2 > o.pays * 1.5 && !confirm('The ' + c.name + ' is worth ' + c.worth + ' c. The order pays ' + o.pays + ' c. Hand it over?')) return;
-    if (Sh.deliver(save, b.dataset.deliver, Date.now())) { store(save); coins(); renderShop(); toast('<b>Order filled · +' + o.pays + ' c</b><br>' + esc(o.who)); }
+    { const e = Sh.deliver(save, b.dataset.deliver, Date.now()); if (e) { store(save); coins(); renderShop(); filledToast(o, e); } }
   });
   if (!fit.length) $('orderMake').onclick = () => {
     rw = null; pat = o.pattern;
@@ -459,13 +488,28 @@ function renderOrder() {
 }
 
 // the notice board: today's wants in town
+// the regulars and how far along their stories are
+function regularsHtml() {
+  const now = Date.now(), owns = p => PATTERNS[p] && Rm.owns(save, PATTERNS[p].station || 'forge');
+  return '<div class="regulars"><h3 class="subhead">THE REGULARS</h3>' + STORIES.map(s => {
+    const st = Sh.storyOf(save, s.id), done = st.step >= s.steps.length, step = s.steps[st.step];
+    const dots = s.steps.map((_, i) => '<i class="' + (i < st.step ? 'on' : '') + '"></i>').join('');
+    const word = done ? 'Their story is told. Their gift: ' + FURNITURE[s.gift].name + '.'
+      : save.order && save.order.story === s.id ? 'Waiting on their order now.'
+      : !step.patterns.some(owns) ? 'Needs what your shop can\'t make yet.'
+      : (st.next || 0) > now ? 'Back in ' + hm((st.next - now) / 1000) + '.' : 'Could come in any time.';
+    return '<div class="regular"><b>' + esc(s.who) + '</b><span class="dots">' + dots + '</span><span>' + word + '</span></div>';
+  }).join('') + '</div>';
+}
 function renderTown() {
   const t = Town.refreshTown(save, Date.now()), n = Town.notices(t);
   const can = id => PATTERNS[id] && Rm.owns(save, PATTERNS[id].station || 'forge');
   const names = list => list.map(id => '<span class="' + (can(id) ? 'can' : 'cant') + '">' + PATTERNS[id].name.toLowerCase() + '</span>').join(', ');
   $('townWord').textContent = new Date(t.day * 86400000).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).toUpperCase();
-  $('townBody').innerHTML = n.hot.map(h => '<div class="notice hot"><b>IN DEMAND</b><p>' + esc(h.line) + '</p><span>' + names(h.patterns) + '</span></div>').join('')
+  const ev = Town.eventOf(t);
+  $('townBody').innerHTML = (ev ? '<div class="notice event"><b>TODAY IN TOWN</b><p>' + esc(ev.name) + '</p><span>' + esc(ev.line) + '</span><em>' + esc(ev.effect) + '</em></div>' : '') + n.hot.map(h => '<div class="notice hot"><b>IN DEMAND</b><p>' + esc(h.line) + '</p><span>' + names(h.patterns) + '</span></div>').join('')
     + (n.cold ? '<div class="notice cold"><b>OUT OF FAVOUR</b><p>' + esc(n.cold.line) + '</p><span>' + names(n.cold.patterns) + '</span></div>' : '')
+    + regularsHtml()
     + '<p class="note">In demand: buyers ask for it more often, are keener, and carry a quarter more for it (DEAR sells). Out of favour: no one asks for it and purses for it are thinner. The board changes every day at midnight (UTC), the same in every shop. Struck through: a station you haven\'t set up.</p>';
 }
 const HOW = { meet: 'MET THEM', hold: 'HELD THE PRICE', ask: 'ASKED MORE', counter: 'THEIR OFFER', split: 'MET HALFWAY', order: 'SPECIAL ORDER' };
@@ -581,7 +625,7 @@ function backOpen(id) {
   openLook(card(c), acts, false, c);
   if ($('hangIt')) $('hangIt').onclick = () => { if (G.hang(save, id)) { store(save); $('look').hidden = true; renderShop(); } };
   if (free >= 0) $('putUp').onclick = () => { Sh.place(save, id, free); store(save); $('look').hidden = true; renderShop(); };
-  if ($('deliverIt')) $('deliverIt').onclick = () => { const o = save.order; if (Sh.deliver(save, id, Date.now())) { store(save); coins(); $('look').hidden = true; renderShop(); toast('<b>Order filled · +' + o.pays + ' c</b><br>' + esc(o.who)); } };
+  if ($('deliverIt')) $('deliverIt').onclick = () => { const o = save.order; { const e = Sh.deliver(save, id, Date.now()); if (e) { store(save); coins(); $('look').hidden = true; renderShop(); filledToast(o, e); } } };
   if ($('reworkIt')) $('reworkIt').onclick = () => toRework(id);
   $('breakIt').onclick = () => {
     if (!confirm('Break down the ' + c.name + ' (worth ' + c.worth + ' c)? It gives ' + (sv.length ? sv.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') : 'nothing worth keeping') + '. It can\'t be undone.')) return;
@@ -650,6 +694,7 @@ function awayHtml(a) {
   else if (a.missed) h += '<p>No one minded the shop: ' + a.missed + ' customer' + (a.missed > 1 ? 's' : '') + ' came and went. A counter clerk sells while you\'re away (Staff).</p>';
   if (a.wages) h += '<p>Wages paid: <b>' + a.wages + ' c</b>.</p>';
   if (a.unpaid) h += '<p class="bad">The wages are behind. The clerk works on for the takings; the runner won\'t set out until they\'re paid.</p>';
+  if (a.branch && (a.branch.sold.length || a.branch.wages)) h += '<p>At ' + esc(BRANCH.town) + ', ' + esc(BRANCH.keeper) + ' sold <b>' + a.branch.sold.length + '</b> for <b>' + a.branch.coins + ' c</b>' + (a.branch.wages ? ' (wages ' + a.branch.wages + ' c)' : '') + '.</p>';
   a.trips.forEach(t => { h += '<p>' + esc(t.who) + ' came back from ' + ROUTES[t.route].from + ' with ' + esc(haulWords(t)) + '.</p>'; });
   return h + '</div>';
 }
@@ -667,7 +712,7 @@ function returning(nowMs) {
   const fresh = load();
   if (fresh.lastSeen && fresh.lastSeen > (save.lastSeen || 0)) { Object.keys(save).forEach(k => delete save[k]); Object.assign(save, fresh); R.convertSave(save); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save); if (dio) dio.setRoom(viewRoom(), save); }
   save.queue = [];
-  const a = St.catchUp(save, nowMs, rng);
+  const a = catchUpAll(nowMs);
   store(save); coins();
   if (screen === 'shop') renderShop(); else if (screen === 'staff') renderStaff(); else if (screen === 'home') toHome(); else if (screen === 'supp') renderSupp();
   showAway(a);
@@ -1119,6 +1164,11 @@ function frame(now) {
   } else if (screen === 'shop' && floorShown && save.ledger[0] && Date.now() - save.ledger[0].at > 30000) renderFloor();
   if (screen === 'shop' && save.queue.length > lastQ) Snd.play('bell');
   lastQ = save.queue.length;
+  if (save.branch) {
+    const bs = Br.step(save, dt, rng, nowMs);
+    if (bs.some(e => e.sold)) { coins(); if (screen === 'branch') renderBranch(); }
+    if (screen === 'branch' && branchDio) { if (bs.length) branchDio.setShelf(branchShown()); bs.forEach(e => { if (e.sold) branchDio.sold(e); else branchDio.walkIn(e); }); branchDio.tick(); }
+  }
   if (screen === 'visit' && visitDio) { visitTick(); visitDio.tick(); }
   if (screen === 'shop') { tickCounter(); if (dio) { if (sig !== dioSig) { dioSig = sig; dio.setQueue(save.queue); } visits.forEach(e => { if (!e.served && !e.by && !e.sold) dio.walkIn(e); }); dio.tick(); } }
   if (screen === 'supp' && suppHour !== hour()) renderSupp();
@@ -1201,6 +1251,68 @@ function backupReminder() {
 
 if (new URLSearchParams(location.search).has('debug')) window.forge = { save, Sh, R, St, renderShop, toShop, toStaff, showAway, dio: () => dio, store: () => store(save), wipe: () => { save.v = 0; store(save); location.reload(); } };
 
+// ---------- THE SECOND SHOP: Osk's Landing, kept by a keeper ----------
+let branchDio = null, branchDioP = null, branchNote = '';
+const bview = () => Br.viewOf(save);
+const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map((p, i) => { const e = v.shelf[i], c = e && save.cards.find(x => x.id === e.id); return c && { slot: i, shelf: p.shelf, spot: p.spot, lv: p.lv, card: c, price: Sh.priceAt(c, e.tag) }; }).filter(Boolean); };
+function toBranch() {
+  if (!save.branch) { toShop(); return; }
+  show('branch'); coins(); renderBranch();
+  if (!branchDioP) branchDioP = import('./diorama.js?v=21').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
+}
+function renderBranch() {
+  if (screen !== 'branch' || !save.branch) return;
+  const v = bview(), b = save.branch, size = Rm.sizeOf(b.room), t = Town.refreshTown(v, Date.now()), ev = Town.eventOf(t), n = Town.notices(t);
+  $('branchKicker').textContent = 'YOUR SECOND SHOP · KEPT BY ' + BRANCH.keeper.toUpperCase();
+  $('branchName').textContent = BRANCH.town;
+  $('branchTally').innerHTML = '<b>' + (b.sold || 0) + '</b> sold · <b>' + (b.earned || 0) + '</b> coins taken<br>' + size.word.toLowerCase() + ' · the keeper\'s wage <b>' + BRANCH.wage + ' c</b> an hour and <b>' + Math.round(BRANCH.cut * 100) + ' %</b> of each sale';
+  $('branchHint').textContent = b.closed ? 'Closed: the keeper\'s wage can\'t be paid. Earn some coin and it opens again.' : BRANCH.line + ' Stock its shelves from your back room; ' + BRANCH.keeper.split(' ')[0] + ' sells while you\'re away too.';
+  const filled = v.shelf.filter(Boolean).length;
+  $('branchShelfWord').textContent = filled + ' OF ' + v.slots + ' · ITS CUSTOMERS BUY FROM HERE';
+  $('branchSlots').innerHTML = v.shelf.map((e, i) => {
+    if (!e) return '<button class="slot-empty" data-bslot="' + i + '">EMPTY<br>' + (Sh.inBack(save).length ? 'TAP TO STOCK' : 'NOTHING IN THE BACK') + '</button>';
+    const c = save.cards.find(x => x.id === e.id);
+    return '<button data-bslot="' + i + '" aria-label="' + esc(c.name) + '">' + card(c, { short: true, price: Sh.priceAt(c, e.tag) + ' c<span class="tagword">' + TAGS[e.tag].word + '</span>' }) + '</button>';
+  }).join('');
+  $('branchSlots').querySelectorAll('[data-bslot]').forEach(x => x.onclick = () => branchSlotOpen(+x.dataset.bslot));
+  const cost = Rm.shelfCost(b.room);
+  $('branchBuySlot').hidden = cost == null; if (cost != null) { $('branchBuySlot').textContent = 'ANOTHER SHELF · ' + cost + ' c'; $('branchBuySlot').disabled = save.coins < cost; }
+  const next = Rm.nextSize(b.room); $('branchExpand').hidden = !next; if (next) { $('branchExpand').textContent = 'BIGGER · ' + next.w + ' × ' + next.d + ' · ' + next.cost + ' c'; $('branchExpand').disabled = save.coins < next.cost; }
+  $('branchUps').innerHTML = b.room.items.filter(i => i.kind === 'shelf').map((it, k) => { const nx = SHELF_LEVELS[Rm.levelOf(it) + 1]; return '<div class="fi"><b>' + SHELF_LEVELS[Rm.levelOf(it)].name + ' ' + (k + 1) + ' · ' + Rm.placesOf(it) + ' places</b>' + (nx ? '<button class="seg" data-bup="' + it.id + '"' + (save.coins < nx.cost ? ' disabled' : '') + '>MAKE IT A ' + nx.name.toUpperCase() + ' · ' + nx.cost + ' c</button>' : '<span>As fine as a shelf gets.</span>') + '</div>'; }).join('');
+  $('branchUps').querySelectorAll('[data-bup]').forEach(x => x.onclick = () => { const r = Rm.upgradeShelf(v, x.dataset.bup); branchNote = r.why ? 'Not made better: ' + r.why + '.' : 'A ' + SHELF_LEVELS[r.level].name.toLowerCase() + ' now.'; branchChanged(); });
+  $('branchNote').textContent = branchNote;
+  $('branchTownWord').textContent = 'TODAY AT THE LANDING';
+  $('branchTown').innerHTML = (ev ? '<div class="notice event"><b>TODAY IN TOWN</b><p>' + esc(ev.name) + '</p><span>' + esc(ev.line) + '</span><em>' + esc(ev.effect) + '</em></div>' : '')
+    + n.hot.map(h => '<div class="notice hot"><b>IN DEMAND</b><p>' + esc(h.line) + '</p><span>' + esc(h.patterns.map(p => PATTERNS[p].name.toLowerCase()).join(', ')) + '</span></div>').join('')
+    + (n.cold ? '<div class="notice cold"><b>OUT OF FAVOUR</b><p>' + esc(n.cold.line) + '</p><span>' + esc(n.cold.patterns.map(p => PATTERNS[p].name.toLowerCase()).join(', ')) + '</span></div>' : '')
+    + '<p class="note">The Landing has its own board, and more delvers, travellers and hunters than the old town. What it wants may not be what your first shop\'s town wants today.</p>';
+  $('branchLedger').innerHTML = (b.ledger || []).length ? b.ledger.slice(0, 12).map(e => '<li><span><span class="mood ' + e.mood + '">' + e.mood + '</span><b>' + esc(e.who) + '</b> · wants ' + Sh.wantWord(e.want) + '</span>'
+    + (e.sold ? '<span class="amt">+' + e.sold.price + ' c</span>' : '<span class="amt no">NO SALE</span>') + '<span class="ln">' + (e.sold ? 'Bought the ' + esc(e.sold.name) + '. ' : '') + esc(e.line) + '</span></li>').join('')
+    : '<li class="empty">No one yet. Customers come in through the day.</li>';
+}
+function branchChanged() { store(save); coins(); renderBranch(); if (branchDio) { branchDio.setRoom(save.branch.room, { staff: [] }); branchDio.setShelf(branchShown()); } }
+function branchSlotOpen(slot) {
+  const v = bview(), e = v.shelf[slot];
+  if (!e) {
+    const back = Sh.inBack(save).filter(c => !c.sample || save.made);
+    if (!back.length) { branchNote = 'Nothing in the back room to send. Make something at the forge.'; renderBranch(); return; }
+    openLook('<div class="pickgrid">' + back.map(c => '<button data-id="' + c.id + '" aria-label="' + esc(c.name) + '">' + card(c, { short: true }) + '</button>').join('') + '</div>', '<p>Send a piece to ' + esc(BRANCH.town) + '. It goes up at FAIR.</p>', true);
+    $('lookCard').querySelectorAll('button').forEach(x => x.onclick = () => { Sh.place(v, x.dataset.id, slot); $('look').hidden = true; branchChanged(); });
+    return;
+  }
+  const c = save.cards.find(x => x.id === e.id);
+  const acts = () => '<div class="group">' + Object.entries(TAGS).map(([id, t]) => '<button class="seg" data-tag="' + id + '" aria-pressed="' + (v.shelf[slot] && v.shelf[slot].tag === id) + '">' + t.word + ' · ' + Sh.priceAt(c, id) + ' c</button>').join('') + '</div><button class="seg" id="bTakeDown">BRING IT BACK</button>';
+  openLook(card(c), acts());
+  $('lookActs').onclick = ev2 => {
+    const x = ev2.target.closest('button'); if (!x) return;
+    if (x.dataset.tag) { Sh.setTag(v, slot, x.dataset.tag); $('lookActs').innerHTML = acts(); branchChanged(); }
+    else if (x.id === 'bTakeDown') { Sh.takeDown(v, slot); $('look').hidden = true; branchChanged(); }
+  };
+}
+$('branchBuySlot').onclick = () => { const r = Rm.buy(bview(), 'shelf'); branchNote = r.why ? 'No shelf: ' + r.why + '.' : 'A new shelf: two more places.'; branchChanged(); };
+$('branchExpand').onclick = () => { if (Rm.expand(bview())) { branchNote = 'The Landing\'s shop is bigger.'; branchChanged(); } };
+
 // ---------- A FRIEND'S SHOP: a #shop= link, to look at; and sharing your own ----------
 let visitDio = null, visitDioP = null, visiting = null, visitNext = 0;
 function toVisit(shop, away) {
@@ -1219,7 +1331,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=20').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=21').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }

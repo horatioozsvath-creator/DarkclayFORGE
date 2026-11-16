@@ -1,6 +1,6 @@
 // Growth, with no page access: tools, the maker's level and perks, renown, the display wall.
-import { TOOLS, PERKS, RENOWN, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS } from './data.js?v=20';
-import { levelOf, MAX_LEVEL } from './rules.js?v=20';
+import { TOOLS, PERKS, RENOWN, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS } from './data.js?v=21';
+import { levelOf, MAX_LEVEL } from './rules.js?v=21';
 
 // ---------- tools ----------
 export const has = (save, id) => (save.tools || []).includes(id);
@@ -65,7 +65,7 @@ export function fixWall(save) {
 export const wallCharm = save => (save.wall || []).reduce((a, id) => { const c = save.cards.find(x => x.id === id); return a + (c && !c.sample ? (TIERS.findIndex(t => t.id === c.tier) + 1) * ((PATTERNS[c.pattern] || {}).windowed ? 2 : 1) : 0); }, 0);
 export function hang(save, id) {
   const card = save.cards.find(c => c.id === id);
-  if (!card || card.sample || onWall(save, id) || (save.shelf || []).some(e => e && e.id === id)) return false;   // a flyer's copy never hangs
+  if (!card || card.sample || onWall(save, id) || (save.shelf || []).some(e => e && e.id === id) || ((save.branch || {}).shelf || []).some(e => e && e.id === id)) return false;   // a flyer's copy never hangs
   if ((save.wall || []).length >= wallSlots(save)) return false;
   save.wall = (save.wall || []).concat(id);
   return true;

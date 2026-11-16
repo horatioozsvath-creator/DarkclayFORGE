@@ -4,7 +4,7 @@ import * as Sh from '../js/shop.js';
 import * as R from '../js/rules.js';
 import * as Town from '../js/town.js';
 import { toCode, fromCode } from '../js/save.js';
-import { PATIENCE, TOWN_HOT, TOWN_COLD, DEMAND, OPENING, CUSTOMERS } from '../js/data.js';
+import { PATIENCE, TOWN_HOT, TOWN_COLD, DEMAND, OPENING, CUSTOMERS, TOWN_EVENTS } from '../js/data.js';
 
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const blank = (o = {}) => { const s = { coins: 0, mats: {}, cards: [], shelf: [], slots: 4, ledger: [], queue: [], clock: 0, ...o }; Sh.fixShelf(s); return s; };
@@ -129,4 +129,23 @@ test('the wealthy come with renown: none to an unknown shop, more as it grows; a
   assert.ok(seen.steward.length > 100 && seen.master.length > 30, JSON.stringify(Object.fromEntries(Object.entries(seen).map(([k, v]) => [k, v.length]))));
   assert.ok(seen.master.every(c => c.purse >= 3000 && c.least === 2)); assert.ok(seen.steward.every(c => c.purse >= 1500 && c.least === 1));
   assert.equal(Sh.newCustomer(seeded(1)).type !== undefined, true, 'without a save, as before');
+});
+
+// ---------- town events ----------
+test('town events: about one day in four, the same for everyone; they change who comes, how often, and what they carry', () => {
+  let n = 0; const seen = new Set();
+  for (let d = 20000; d < 20800; d++) { const t = Town.townOn(d); if (t.event) { n++; seen.add(t.event); } }
+  assert.ok(n > 150 && n < 260, n + ' of 800 days'); assert.equal(seen.size, TOWN_EVENTS.length);
+  const dayWith = id => { for (let d = 20000; d < 21000; d++) if (Town.townOn(d).event === id) return Town.townOn(d); };
+  const at = town => ({ town, renown: 0, wall: [], cards: [], shelf: [] });
+  // a muster: more guards; a fair: customers sooner; a siege: later
+  const ids = CUSTOMERS.map(c => c.id), share = (s, id) => { const w = Sh.customerWeights(s); return w[ids.indexOf(id)] / w.reduce((a, b) => a + b, 0); };
+  const quiet = (() => { for (let d = 20000; d < 21000; d++) if (!Town.townOn(d).event) return Town.townOn(d); })();
+  assert.ok(share(at(dayWith('muster')), 'guard') > share(at(quiet), 'guard') * 1.8);
+  assert.ok(Sh.eventGap(at(dayWith('fair'))) < 1); assert.ok(Sh.eventGap(at(dayWith('siege'))) > 1); assert.equal(Sh.eventGap(at(quiet)), 1);
+  // a feast: keener and richer
+  const c = { type: 'folk', who: 'x', want: 'any', purse: 100, mood: 'PINCHED', least: 0 };
+  const feast = Sh.richer({ town: dayWith('feast'), stations: [], renown: 0, wall: [], cards: [] }, c);
+  assert.equal(feast.mood, 'WARY'); assert.equal(feast.purse, 120);
+  assert.equal(Sh.richer({ town: quiet, stations: [], renown: 0, wall: [], cards: [] }, c).purse, 100);
 });
