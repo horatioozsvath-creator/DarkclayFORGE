@@ -209,8 +209,8 @@ export const NAMES = ['Wenna Tolley', 'Pell', 'Pip', 'Corwen Ashe', 'Hollin', 'M
 // the runner's roads: hours, provisions (paid when they set out), what they bring (n commons, rare materials, the odds of an old
 // piece and of a found tile)
 export const ROUTES = {
-  yard: { name: 'Down to the yard', h: 0.25, fee: 4, commons: [3, 5], rare: 0, piece: 0, tile: 0 },
-  ford: { name: 'The ford villages', h: 1, fee: 12, commons: [6, 9], rare: 0, gem: 0.5, piece: 0.15, tile: 0 },
-  reach: { name: 'Out to the Reach', h: 3, fee: 35, commons: [5, 8], rare: 1, piece: 0.25, tile: 0.12 },
-  deep: { name: 'Into the deep doors', h: 8, fee: 80, commons: [6, 10], rare: 2, piece: 0.5, tile: 0.3 },
+  yard: { name: 'Down to the yard', from: 'the yard', h: 0.25, fee: 4, commons: [3, 5], rare: 0, piece: 0, tile: 0 },
+  ford: { name: 'The ford villages', from: 'the ford villages', h: 1, fee: 12, commons: [6, 9], rare: 0, gem: 0.5, piece: 0.15, tile: 0 },
+  reach: { name: 'Out to the Reach', from: 'the Reach', h: 3, fee: 35, commons: [5, 8], rare: 1, piece: 0.25, tile: 0.12 },
+  deep: { name: 'Into the deep doors', from: 'the deep doors', h: 8, fee: 80, commons: [6, 10], rare: 2, piece: 0.5, tile: 0.3 },
 };

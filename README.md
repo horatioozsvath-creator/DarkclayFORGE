@@ -28,6 +28,7 @@ npm test
 - `js/data.js` — patterns, metals, affixes, found tiles, tiers
 - `js/rules.js` — the strip, the working, the result, the card's numbers, trades by practice
 - `js/shop.js` — materials, suppliers and prices, the shelf and its tags, customers and sales
+- `js/staff.js` — hiring, wages, the runner's trips, and the shop while the page is closed
 - `js/main.js` — the screens and the controls
 - `js/stage.js` — the canvas: fire, anvil, piece, hammer, heat meter
 - `js/tiles.js`, `js/card.js`, `js/save.js` — clay tiles, collector cards, the browser save
@@ -41,12 +42,12 @@ npm test
 Browsers and GitHub Pages cache files for a few minutes. Each release bumps the `?v=` number on every script import and stylesheet link (in `index.html` and `js/*.js`), so a player never runs a new file against an old one:
 
 ```bash
-sed -i '' -E 's/\?v=[0-9]+/?v=4/g' index.html js/*.js
+sed -i '' -E 's/\?v=[0-9]+/?v=5/g' index.html js/*.js
 ```
 
 ## Status
 
-Milestones 1 to 3 of 7: the forge; the shelf and the till; the counter. See `docs/PLAN.md`.
+Milestones 1 to 4 of 7: the forge; the shelf and the till; the counter; the staff and the clock. See `docs/PLAN.md`.
 
 Open the game with `?debug` on the address to reach the save from the browser console as `forge.save`.
 

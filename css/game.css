@@ -228,3 +228,36 @@ button, input { font-family: inherit; }
   .offer .choices .row3 { grid-template-columns: minmax(0, 1fr); }
   .hbtn { min-height: 46px; grid-auto-flow: column; justify-content: space-between; padding: 6px 10px; }
 }
+
+/* ---------- milestone 4: the staff, the away ledger ---------- */
+.people { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.people .empty { color: var(--bone-faint); font: 500 14px var(--sans); }
+.person { background: var(--panel-2); border: 1px solid var(--line-soft); padding: 12px; display: grid; gap: 6px; align-content: start; }
+.person .role { font: 800 11px var(--sans); letter-spacing: .16em; color: var(--ember-hot); }
+.person .nm { font: 800 20px/1.1 var(--display); color: var(--bone); }
+.person .tr { font: 600 13px var(--sans); color: var(--bone-dim); }
+.person .tr b { color: var(--gold); }
+.person .kv2 { display: flex; flex-wrap: wrap; gap: 4px 14px; font: 700 12px var(--sans); color: var(--bone-faint); letter-spacing: .06em; }
+.person .kv2 b { color: var(--bone); }
+.person .xp { height: 6px; background: #0b0807; border: 1px solid var(--line-soft); }
+.person .xp i { display: block; height: 100%; background: linear-gradient(90deg, #7a4a20, var(--ember-hot)); }
+.person .status { font: 600 13px var(--sans); color: var(--bone-dim); }
+.person .status b { color: var(--gold); }
+.person .status.bad { color: var(--k-crack); }
+.routes { display: grid; gap: 6px; }
+.routes .seg { display: flex; justify-content: space-between; gap: 8px; text-align: left; min-height: 40px; }
+.routes .seg small { font: 700 11px var(--sans); color: var(--bone-faint); letter-spacing: .04em; }
+.person .rbtns { margin-top: 2px; }
+.away { text-align: left; display: grid; gap: 10px; width: 100%; }
+.away .k { font: 800 12px var(--sans); letter-spacing: .16em; color: var(--ember-hot); }
+.away h3 { margin: 0; font: 800 26px/1.1 var(--display); }
+.away p { margin: 0; color: var(--bone-dim); font-size: 14px; }
+.away p b { color: var(--gold); }
+.away ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.away li { display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid var(--line-soft); padding-top: 4px; font: 600 13px var(--sans); color: var(--bone-dim); }
+.away li b { color: var(--gold); white-space: nowrap; }
+.away .bad { color: var(--k-crack); }
+.people { grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); }
+.person { min-width: 0; }
+.routes .seg { flex-direction: column; align-items: flex-start; white-space: normal; min-width: 0; padding: 6px 10px; }
+.routes .seg small { white-space: normal; }

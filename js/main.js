@@ -1,17 +1,20 @@
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE } from './data.js?v=4';
+import { KINDS, KC, TIERS, FORGE, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES } from './data.js?v=4';
 import * as R from './rules.js?v=4';
 import * as Sh from './shop.js?v=4';
+import * as St from './staff.js?v=4';
 import { lookOf, bagLook, unknownLook } from './tiles.js?v=4';
 import { card, ART } from './card.js?v=4';
 import { paint, sparksFor, LAYOUTS } from './stage.js?v=4';
 import { load, store } from './save.js?v=4';
 
 const $ = id => document.getElementById(id);
+const rng = Math.random;
 const save = load();
 Sh.fixShelf(save);
 save.queue = [];   // whoever was at the counter when the page closed has gone
-const rng = Math.random;
+let awaySum = St.catchUp(save, Date.now(), rng);   // the shop while the page was closed
+store(save);
 const phoneQ = window.matchMedia('(max-width: 600px)');
 const TIERC = ['var(--t-common)', 'var(--t-fine)', 'var(--t-rare)'];
 
@@ -31,7 +34,7 @@ const picks = () => save.picks[pat] || (save.picks[pat] = PATTERNS[pat].parts.ma
 const rwCard = () => rw && save.cards.find(c => c.id === rw.id);
 const benchPicks = () => rw ? R.srcOf(rwCard()).picks : picks();
 const benchName = () => rw ? TIERS[rw.from].name + ' ' + rwCard().name : S.metal.name + ' ' + PATTERNS[pat].name;
-const HUBS = ['home', 'shop', 'supp'];
+const HUBS = ['home', 'shop', 'supp', 'staff'];
 const hour = () => Sh.hourOf(Date.now());
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function show(which) {
@@ -41,6 +44,7 @@ function show(which) {
   $('vHome').hidden = which !== 'home';
   $('vShop').hidden = which !== 'shop';
   $('vSupp').hidden = which !== 'supp';
+  $('vStaff').hidden = which !== 'staff';
   $('screen').hidden = HUBS.includes(which);
   $('vPrep').hidden = which !== 'prepare';
   $('vWork').hidden = which !== 'work';
@@ -60,7 +64,7 @@ function toast(html) {
   $('toasts').appendChild(t); setTimeout(() => t.remove(), 4300);
   while ($('toasts').children.length > 3) $('toasts').firstChild.remove();
 }
-const go = where => where === 'home' ? toHome() : where === 'shop' ? toShop() : toSupp();
+const go = where => where === 'home' ? toHome() : where === 'shop' ? toShop() : where === 'staff' ? toStaff() : toSupp();
 document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
 // never stuck: broke, nothing made, nothing to make it from
 function rescueCheck() {
@@ -288,6 +292,89 @@ function backOpen(id) {
     if (Sh.salvage(save, id)) { store(save); $('look').hidden = true; renderShop(); }
   };
 }
+
+// ---------- STAFF ----------
+const hm = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? h + ' h ' + m + ' min' : m ? m + ' min' : s + ' s'; };
+function toStaff() { clearTimers(); S = null; rescueCheck(); show('staff'); coins(); renderStaff(); }
+let staffTick = 0;
+function personHtml(p, hired) {
+  const lv = R.levelOf(p.xp || 0), tr = St.traitOf(p);
+  return '<div class="role">' + ROLES[p.role].word + '</div><div class="nm">' + esc(p.name) + '</div>'
+    + '<div class="tr"><b>' + tr.word + '</b> · ' + tr.line + '</div>'
+    + '<div class="kv2"><span>LEVEL <b>' + lv.level + '</b></span><span>WAGE <b>' + St.wageOf(p) + ' c</b> AN HOUR</span>'
+    + (p.role === 'clerk' ? '<span>KEEPS <b>' + Math.round((1 - St.clerkTerms(p).rate) * 100) + ' %</b> AWAY</span>' : '') + (hired ? '' : '<span>TO HIRE <b>' + St.hireFee(p) + ' c</b></span>') + '</div>'
+    + (hired ? '<div class="xp"><i style="width:' + (lv.need ? Math.round(lv.into / lv.need * 100) : 100) + '%"></i></div>' : '');
+}
+function renderStaff() {
+  if (screen !== 'staff') return;
+  const now = Date.now(), staff = save.staff || [];
+  $('staffTally').innerHTML = 'Wages <b>' + St.wages(save) + ' c</b> an hour<br>Kept <b>' + St.awayCap(save) + ' h</b> while you\'re away';
+  $('booksWord').textContent = staff.length ? staff.length + ' OF 2' : 'NO ONE YET';
+  $('staffList').innerHTML = staff.length ? staff.map(p => {
+    let status = '';
+    if (save.unpaid) status = '<div class="status bad">Unpaid: not working until the wages can be paid.</div>';
+    else if (p.role === 'clerk') status = '<div class="status">Minds the shop while you\'re at the forge (customers buy more readily) and keeps it while you\'re away.</div>';
+    else if (p.trip) status = '<div class="status">' + ROUTES[p.trip.route].name + ' · back in <b data-back="' + p.trip.back + '">' + hm((p.trip.back - now) / 1000) + '</b></div>';
+    else status = '<div class="status">Ready to go out. Send them on a road:</div><div class="routes">' + Object.entries(ROUTES).map(([id, r]) =>
+      '<button class="seg" data-send="' + id + '"' + (save.coins < r.fee ? ' disabled' : '') + '><span>' + r.name + '</span><small>' + hm(St.tripHours(p, id) * 3600) + ' · ' + r.fee + ' c' + (r.rare ? ' · rare things' : '') + (r.tile ? ' · a found tile, maybe' : '') + '</small></button>').join('') + '</div>';
+    return '<div class="person">' + personHtml(p, true) + status + '<div class="rbtns left"><button class="seg" data-letgo="' + p.id + '">LET THEM GO</button></div></div>';
+  }).join('') : '<div class="empty">No one works here but you. A clerk keeps the shop while you\'re away; a runner goes out for materials.</div>';
+  const cands = St.candidates(save, hour()), mins = 60 - new Date().getMinutes();
+  $('candsWord').textContent = 'NEW FACES IN ' + mins + ' MIN';
+  $('cands').innerHTML = cands.length ? cands.map(c => {
+    const has = staff.some(p => p.role === c.role), fee = St.hireFee(c);
+    return '<div class="person">' + personHtml(c, false) + '<div class="tr">' + ROLES[c.role].line + '</div><div class="rbtns left"><button class="seg go" data-hire="' + c.id + '"' + (has || save.coins < fee ? ' disabled' : '') + '>HIRE · ' + fee + ' c</button></div>'
+      + (has ? '<div class="status">You have a ' + ROLES[c.role].word.toLowerCase() + ' already.</div>' : '') + '</div>';
+  }).join('') : '<div class="empty">No one else this hour.</div>';
+  $('vStaff').querySelectorAll('[data-hire]').forEach(b => b.onclick = () => { const c = cands.find(x => x.id === b.dataset.hire); if (St.hire(save, c)) { store(save); coins(); renderStaff(); } });
+  $('vStaff').querySelectorAll('[data-send]').forEach(b => b.onclick = () => { if (St.sendRunner(save, b.dataset.send, Date.now())) { store(save); coins(); renderStaff(); } });
+  $('vStaff').querySelectorAll('[data-letgo]').forEach(b => b.onclick = () => {
+    const p = staff.find(x => x.id === b.dataset.letgo);
+    if (!confirm('Let ' + p.name + ' go?' + (p.trip ? ' They\'re on the road: what they bring back is lost.' : ''))) return;
+    St.letGo(save, p.id); store(save); renderStaff();
+  });
+}
+
+// ---------- WHILE YOU WERE AWAY ----------
+function haulWords(t) {
+  const parts = Object.entries(t.mats).map(([m, n]) => MATS[m].name + ' × ' + n);
+  if (t.piece) parts.push('an old ' + t.piece.name);
+  if (t.tile) parts.push('a found tile: ' + FOUND[t.tile].name);
+  return parts.join(', ');
+}
+function awayHtml(a) {
+  let h = '<div class="away"><div class="k">WHILE YOU WERE AWAY</div><h3>' + hm(a.elapsed) + '</h3>';
+  if (a.capped) h += '<p>The staff keep the shop ' + hm(a.counted) + ' at most; the rest went unminded.</p>';
+  if (a.sold.length) {
+    h += '<p>' + esc(a.clerk) + ' sold <b>' + a.sold.length + '</b> piece' + (a.sold.length > 1 ? 's' : '') + ' for <b>' + a.coins + ' c</b>, keeping ' + a.cut + ' c.</p><ul>'
+      + a.sold.slice(0, 8).map(e => '<li><span>' + esc(e.sold.name) + ' to ' + esc(e.who) + '</span><b>+' + e.sold.price + ' c</b></li>').join('') + '</ul>';
+  } else if (St.clerkOf(save)) h += '<p>' + esc(St.clerkOf(save).name.split(' ')[0]) + ' kept the shop' + (a.missed ? '; ' + a.missed + ' came in and found nothing for them' : '') + '.</p>';
+  else if (a.missed) h += '<p>No one minded the shop: ' + a.missed + ' customer' + (a.missed > 1 ? 's' : '') + ' came and went. A counter clerk sells while you\'re away (Staff).</p>';
+  if (a.wages) h += '<p>Wages paid: <b>' + a.wages + ' c</b>.</p>';
+  if (a.unpaid) h += '<p class="bad">The purse ran dry: the staff went unpaid and stopped work.</p>';
+  a.trips.forEach(t => { h += '<p>' + esc(t.who) + ' came back from ' + ROUTES[t.route].from + ' with ' + esc(haulWords(t)) + '.</p>'; });
+  return h + '</div>';
+}
+function showAway(a) {
+  if (!a) return;
+  if (screen === 'work' || screen === 'prepare') {   // never take the keys from a working
+    toast('<b>While you were away (' + hm(a.elapsed) + ')</b><br>' + (a.sold.length ? a.sold.length + ' sold, +' + a.coins + ' c' : 'nothing sold') + (a.trips.length ? ' · ' + a.trips.length + ' back from the road' : ''));
+    return;
+  }
+  openLook(awayHtml(a), '', true);
+}
+// the page hidden and shown again: read the save afresh (another tab may have played), clear the counter, catch up
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { save.lastSeen = Date.now(); store(save); return; }
+  const fresh = load();
+  if (fresh.lastSeen && fresh.lastSeen > (save.lastSeen || 0)) { Object.keys(save).forEach(k => delete save[k]); Object.assign(save, fresh); Sh.fixShelf(save); }
+  save.queue = [];
+  const a = St.catchUp(save, Date.now(), rng);
+  store(save); coins(); lastT = performance.now();
+  if (screen === 'shop') renderShop(); else if (screen === 'staff') renderStaff(); else if (screen === 'home') toHome(); else if (screen === 'supp') renderSupp();
+  showAway(a);
+});
+window.addEventListener('pagehide', () => { save.lastSeen = Date.now(); store(save); });
 
 // ---------- SUPPLIERS ----------
 let suppHour = null;
@@ -642,13 +729,23 @@ function fitStage() {   // a phone held upright gets the tall drawing
   if (cv.width !== layout.W || cv.height !== layout.H) { cv.width = layout.W; cv.height = layout.H; }
 }
 window.addEventListener('resize', fitStage); fitStage();
-let lastT = performance.now();
+let lastT = performance.now(), lastStore = 0;
 function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
   // the shop's clock: only while this page is in front (a hidden tab gets no frames, so no time passes)
   // present: at the counter (the shop screen); customers queue to be served, sellers come in
-  const present = screen === 'shop' && !document.hidden;
-  const visits = Sh.shopStep(save, dt, rng, Date.now(), present);
+  const present = screen === 'shop' && !document.hidden, nowMs = Date.now();
+  const clerk = St.clerkOf(save), clerkOn = clerk && !save.unpaid ? St.clerkTerms(clerk) : null;
+  const visits = Sh.shopStep(save, dt, rng, nowMs, present, clerkOn);
+  visits.forEach(e => { if (e.by && e.sold && clerk) St.gain(clerk, 1); });
+  const paid = St.payWages(save, dt);
+  if (paid) coins();
+  const back = St.resolveTrips(save, nowMs, rng);
+  back.forEach(t => toast('<b>' + esc(t.who) + ' is back</b><br>' + esc(haulWords(t))));
+  if (back.length) { store(save); if (screen === 'staff') renderStaff(); }
+  save.lastSeen = nowMs;
+  if (nowMs - lastStore > 5000) { lastStore = nowMs; store(save); }
+  if (screen === 'staff' && nowMs - staffTick > 1000) { staffTick = nowMs; document.querySelectorAll('#staffList [data-back]').forEach(b => { b.textContent = hm((+b.dataset.back - nowMs) / 1000); }); }
   const sig = counterSig();
   if (visits.length || sig !== lastSig) {
     if (visits.length || save.queue.length) store(save);
@@ -703,7 +800,8 @@ document.addEventListener('keydown', e => {
 if (!phoneQ.matches && !save.made) $('howd').open = true;
 
 // for testing: open the page with ?debug to reach the save from the console
-if (new URLSearchParams(location.search).has('debug')) window.forge = { save, Sh, R, renderShop, toShop, store: () => store(save) };
+if (new URLSearchParams(location.search).has('debug')) window.forge = { save, Sh, R, St, renderShop, toShop, toStaff, showAway, store: () => store(save) };
 
 toHome();
+showAway(awaySum); awaySum = null;
 requestAnimationFrame(frame);

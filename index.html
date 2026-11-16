@@ -20,6 +20,7 @@
       <button class="seg" data-go="home">THE FORGE</button>
       <button class="seg" data-go="shop">THE SHOP <span class="dot" id="navSold" hidden></span></button>
       <button class="seg" data-go="supp">SUPPLIERS</button>
+      <button class="seg" data-go="staff">STAFF</button>
     </div>
     <div class="purse" aria-live="polite"><span>PURSE</span><b id="coins">0</b><span>COINS</span></div>
   </nav>
@@ -58,7 +59,7 @@
       <div class="store" id="store"></div>
       <div class="rbtns left"><button class="seg" data-go="supp">TO THE SUPPLIERS</button><button class="seg" data-go="shop" id="toBack"></button></div>
     </section>
-    <p class="foot">Saved in this browser. Customers come in while the game is open.</p>
+    <p class="foot">Saved in this browser. Customers come in while the game is open; a counter clerk keeps the shop while you're away.</p>
   </main>
 
   <!-- THE SHOP: the floor, the shelf, the back room, the ledger -->
@@ -90,6 +91,19 @@
     <section class="card">
       <h2><span>THE LEDGER</span><b>WHO CAME IN</b></h2>
       <ul class="ledger" id="ledger"></ul>
+    </section>
+  </main>
+
+  <!-- STAFF: who works for the shop, and who's looking for work -->
+  <main id="vStaff" hidden>
+    <header class="top"><div><div class="kicker">THE SHOP'S PEOPLE</div><h1>Staff</h1></div><div class="tally" id="staffTally"></div></header>
+    <section class="card">
+      <h2><span>ON THE BOOKS</span><b id="booksWord"></b></h2>
+      <div class="people" id="staffList"></div>
+    </section>
+    <section class="card">
+      <h2><span>LOOKING FOR WORK</span><b id="candsWord"></b></h2>
+      <div class="people" id="cands"></div>
     </section>
   </main>
 
