@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS } from './data.js?v=29';
+import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK } from './data.js?v=31';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -95,13 +95,16 @@ export function newWorking(cfg, rng) {
   // the last rework, toward Old-Blood: the band narrower about its middle, WHITE HEAT later
   const master = !!(cfg.master && !cfg.rework && masterBrewGate(cfg.patternId, cfg.picks, cfg.level).ok);
   const relic = cfg.rework && cfg.rework.relic && RELICS[cfg.rework.relic] ? cfg.rework.relic : null;
-  const old = !relic && (!!(cfg.rework && reworkTo(cfg.rework.from) === OLD_BLOOD.tier && cfg.rework.from < OLD_BLOOD.tier) || master);
-  if (old || relic) { const k = relic ? RELIC_WORK.band : OLD_BLOOD.band, mid = (band[0] + band[1]) / 2, half = (band[1] - band[0]) / 2 * k; band = [Math.round(mid - half), Math.round(mid + half)]; }
+  const mythic = cfg.rework && cfg.rework.mythic && MYTHICS[cfg.rework.mythic] ? cfg.rework.mythic : null;
+  const part = !cfg.rework && cfg.part && MYTHICS[cfg.part.mythic] ? cfg.part : null;
+  const old = !relic && !mythic && !part && (!!(cfg.rework && reworkTo(cfg.rework.from) === OLD_BLOOD.tier && cfg.rework.from < OLD_BLOOD.tier) || master);
+  const narrow = mythic ? MYTHIC_WORK.band : relic ? RELIC_WORK.band : part ? PART_WORK.band : old ? OLD_BLOOD.band : 1;
+  if (narrow < 1) { const mid = (band[0] + band[1]) / 2, half = (band[1] - band[0]) / 2 * narrow; band = [Math.round(mid - half), Math.round(mid + half)]; }
   const S = { cfg, parts, metal, level: cfg.level, rng, station: st,
     band, cool: st.cool * (metal.coolX || 1) * (kit.coolX || 1), drain: st.drain, rise: st.rise, over: st.over,
     phase: 'prepare', meter: st.start || 30, inFire: false, shape: 0, worked: 0, cracks: 0, notches: [], crackMarks: [],
     streak: 0, white: 0, whiteHeat: false, earned: false, scaled: 0, overT: 0, strikes: 0, heats: 1, done: false, dropped: false,
-    twin: false, warden: false, frost: false, rack: [], lines: [], heatLines: [], slipN: 0, oldBlood: old && !master, master, relic, whites: 0, boils: 0, whiteStreak: relic ? RELIC_WORK.whiteStreak : old ? OLD_BLOOD.whiteStreak : 0 };
+    twin: false, warden: false, frost: false, rack: [], lines: [], heatLines: [], slipN: 0, oldBlood: old && !master, master, relic, mythic, part, whites: 0, boils: 0, whiteStreak: mythic ? MYTHIC_WORK.whiteStreak : relic ? RELIC_WORK.whiteStreak : part ? PART_WORK.whiteStreak : old ? OLD_BLOOD.whiteStreak : 0 };
   deal(S);
   return S;
 }
@@ -273,6 +276,12 @@ export function finish(S, how) {
   S.done = true; S.phase = 'done';
   if (S.cfg.rework) {
     const from = S.cfg.rework.from, dropped = how === 'dropped';
+    if (S.mythic) {   // WHITE HEAT three times and not one crack: the Mythic; short of it, the Relic as it was
+      const took = !dropped && S.cracks === 0 && S.whites >= MYTHIC_WORK.whites;
+      S.dropped = dropped;
+      return { rework: true, mythic: S.mythic, from, tier: took ? MYTHIC_WORK.tier : from, failed: !took, flawed: false, dropped, instant: false, odds: odds(S),
+        worked: Math.round(S.worked), strikes: S.strikes, heats: S.heats, cracks: S.cracks, whiteHeat: S.whiteHeat, whites: S.whites, earned: took && S.earned, clean: false, frost: S.frost };
+    }
     if (S.relic) {   // WHITE HEAT twice and not one crack: the Relic; short of it, the Old-Blood piece as it was
       const took = !dropped && S.cracks === 0 && S.whites >= RELIC_WORK.whites;
       S.dropped = dropped;
@@ -291,6 +300,13 @@ export function finish(S, how) {
       cracks: S.cracks, whiteHeat: S.whiteHeat, earned: S.earned && !dropped, clean: false, frost: S.frost };
   }
   const instant = how === 'instant', dropped = how === 'dropped';
+  // a part of the Nine: made, or not; no piece comes of it
+  if (S.part) {
+    const took = !instant && !dropped && S.cracks === 0 && S.whites >= PART_WORK.whites;
+    S.dropped = dropped;
+    return { part: S.part, took, tier: 0, flawed: false, dropped, instant: false, odds: odds(S), worked: Math.round(S.worked), strikes: S.strikes, heats: S.heats,
+      cracks: S.cracks, whiteHeat: S.whiteHeat, whites: S.whites, earned: false, clean: false, frost: false };
+  }
   // a master's brew that made it: Old-Blood, no roll
   if (S.master && !instant && !dropped && S.boils === 0 && S.whiteHeat) {
     S.dropped = false;
@@ -399,6 +415,13 @@ export function relicPiece(piece, id) {
   const r = RELICS[id];
   const out = { ...piece, name: r.name, relic: id, power: r.power.slice(), lore: r.lore, made: (piece.made || []).concat('the Relic working · ' + r.name) };
   if (PATTERNS[piece.pattern].batch) out.count = 1;   // a relic brew: the batch boiled down to one bottle
+  return out;
+}
+// a Mythic: the Relic out of its Mythic working, named, its three powers in place of the Relic's one
+export function mythicPiece(piece, id) {
+  const m = MYTHICS[id];
+  const out = { ...piece, name: m.name, mythic: id, powers: m.powers.map(w => w.slice()), lore: m.lore, made: (piece.made || []).concat('the Mythic working · ' + m.name) };
+  delete out.power;
   return out;
 }
 // a working that yields materials, not a piece (the glass's bottles): how many, by the tier it came out

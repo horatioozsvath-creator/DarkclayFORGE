@@ -39,7 +39,15 @@ export const MYTHICS = {
   morning: { name: 'The Window of Morning', relic: 'corrowgoblet', shard: 'star', parts: [['forge', 'a leading'], ['stretcher', 'a hanging'], ['kettle', 'a staining']],
     powers: [['Poison shows', 'what would harm clouds in its light'], ['First light', 'the room it hangs in wakes rested'], ['The long view', 'through it, the town as it will be']], lore: 'The Corrows\' cup, melted and blown into the window of a hall.' },
 };
-export const TRAIL = { rung: 6, deep: 0.1, court: 0.15 };   // the trail opens OF THE REACH; a trip below finds a shard 10 %; Court orders, 15 % of orders
+export const TRAIL = { rung: 6, deep: 0.1, court: 0.15 };
+// THE MYTHIC WORKINGS (milestone 17). A part: a special working at its station, once its Mythic's shard is found, by a maker at trade 6
+// in something there, with two of the station's rare things and the bars of the piece it's worked as (PART_PATTERN). Narrow, WHITE HEAT
+// once and not one crack; short of it, the stuff is spent and it can be tried again.
+export const PART_WORK = { level: 6, band: 0.8, whiteStreak: 12, whites: 1, rare: 2 };
+export const PART_PATTERN = { forge: 'dagger', stretcher: 'gloves', bowbench: 'staff', kettle: 'oil', glass: 'lens' };
+// The Mythic: its Relic reforged at the Relic's own station, with the shard and its three parts, at trade 9: the narrowest band in the
+// game, WHITE HEAT three times, not one crack. Short of it, the Relic stays as it was; the shard and the parts are kept.
+export const MYTHIC_WORK = { tier: 5, level: 9, band: 0.6, whiteStreak: 12, whites: 3, costX: 3 };   // the trail opens OF THE REACH; a trip below finds a shard 10 %; Court orders, 15 % of orders
 // the Relic working: a master of the trade (trade 9), the blueprint, an Old-Blood piece of its kind, the bars of a last rework and its
 // relic material. Narrower than Old-Blood's, WHITE HEAT twice, not one crack; short of that, the piece stays Old-Blood, untouched.
 export const RELIC_WORK = { tier: 4, level: 9, band: 0.7, whiteStreak: 12, whites: 2, costX: 3 };

@@ -1,6 +1,6 @@
 # Rarity to Mythic: the full ladder for every station
 
-Status: milestones 11–16 built (releases 22–28); 17–18 planned. All eleven Relics, the Hall and the trail of the Nine are in. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
+Status: milestones 11–17 built (releases 22–30); 18 planned. The Nine can be made. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
 This plan takes every station up the last two: **Relic** (named, one of a kind) and **Mythic** (the Nine).
 
 ## The ladder
@@ -199,3 +199,15 @@ Each milestone ends in a release, as before: rules and tests first, then the scr
   **All Nine in three months is far off:** each Relic needs trade 9 in its own pattern, and the bot masters only the falchion. This is
   milestone 18's work: likely a lower trade for later Relics (or trade 9 in the station rather than the pattern), and more blueprints
   and shards once the trail is open.
+
+## Milestone 17, as built (release 30)
+
+- **The parts:** each of the Nine's three parts is a special working at its station (worked as that station's dagger, gloves, staff,
+  oil or lens), open once its shard is found, the station is set up, and the maker is trade 6 in something there. It costs that piece's
+  recipe and two of the station's rare things; the band ×0.8, WHITE HEAT once and not one crack. Short of it, the stuff is spent and it
+  can be tried again. Started from THE TRAIL OF THE NINE (a button per part).
+- **The Mythic working:** on the Relic, from the back room, with the shard, all three parts and trade 9 in its pattern: three times the
+  bars and the Relic's material; the band ×0.6 (the narrowest), WHITE HEAT **three times**, not one crack. Short of it, the Relic stays
+  as it was and the shard and parts are kept. The Mythic takes its name, lore and three powers; one in a save; never broken down.
+- **Not yet:** the Court's once-only purchase of each Mythic and the ending (milestone 18). The pace finding from milestone 16 stands:
+  in the sim almost nobody reaches a Mythic; milestone 18 tunes it.

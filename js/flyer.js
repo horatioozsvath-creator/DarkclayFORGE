@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE FLYER: a shop's invitation drawn as a card (600 × 840), shared as an image with the shop's link. Page only (a canvas).
-import { TIERS } from './data.js?v=29';
-import { ART } from './card.js?v=29';
+import { TIERS } from './data.js?v=31';
+import { ART } from './card.js?v=31';
 
 const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
 const W = 600, H = 840;

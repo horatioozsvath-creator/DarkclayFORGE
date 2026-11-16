@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // A card as a link: the piece's own data packed into the address after #card=. Nothing is sent anywhere.
 // A link comes from someone else's browser: everything in it is checked and rebuilt before it's shown.
-import { TIERS, PATTERNS } from './data.js?v=29';
-import { ART } from './card.js?v=29';
+import { TIERS, PATTERNS } from './data.js?v=31';
+import { ART } from './card.js?v=31';
 
 const FIELDS = ['tier', 'name', 'kind', 'art', 'tint', 'dice', 'stats', 'affixes', 'made', 'lore', 'worth', 'pattern', 'maker', 'power', 'powers'];
 function toB64url(bytes) { let s = ''; bytes.forEach(b => { s += String.fromCharCode(b); }); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }

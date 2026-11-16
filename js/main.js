@@ -1,25 +1,26 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=29';
-import * as R from './rules.js?v=29';
-import * as Sh from './shop.js?v=29';
-import * as St from './staff.js?v=29';
-import * as Rm from './room.js?v=29';
-import * as G from './growth.js?v=29';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=29';
-import * as Snd from './sound.js?v=29';
-import * as Town from './town.js?v=29';
-import * as V from './visit.js?v=29';
-import * as Br from './branch.js?v=29';
-import * as Hl from './hall.js?v=29';
-import * as Trail from './trail.js?v=29';
-import { drawFlyer, flyerBlob } from './flyer.js?v=29';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=29';
-import { card, ART } from './card.js?v=29';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=29';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=29';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN } from './data.js?v=31';
+import * as R from './rules.js?v=31';
+import * as Sh from './shop.js?v=31';
+import * as St from './staff.js?v=31';
+import * as Rm from './room.js?v=31';
+import * as G from './growth.js?v=31';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=31';
+import * as Snd from './sound.js?v=31';
+import * as Town from './town.js?v=31';
+import * as V from './visit.js?v=31';
+import * as Br from './branch.js?v=31';
+import * as Hl from './hall.js?v=31';
+import * as Trail from './trail.js?v=31';
+import { ICONS, emblem } from './icons.js?v=31';
+import { drawFlyer, flyerBlob } from './flyer.js?v=31';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=31';
+import { card, ART } from './card.js?v=31';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=31';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=31';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 29;
+const VERSION = 31;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayFORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -48,6 +49,7 @@ let pat = 'falchion';      // the pattern on the bench
 let S = null;              // the working
 let rw = null;             // back in the fire: { id, from } of the piece on the anvil, or null for a new piece
 let master = false;        // a master's brew chosen at the kettle (rules.js masterBrewGate)
+let part = null;           // a part of the Nine being worked: { mythic, i } (trail.js partGate)
 let paused = false, lastStrike = 0, fresh = null, prevOdds = null;
 const view = { flash: 0, ring: 0, ringC: '#fff', sparks: [] };
 const timers = [];
@@ -191,7 +193,7 @@ function toHome() {
     return head + '<div class="setup"><b>Set up a ' + st.name.toLowerCase() + '</b><span>' + pats.map(([, p]) => p.trade.toLowerCase()).join(', ').replace(/^./, x => x.toUpperCase()) + ', from hides. ' + st.twist + '</span>'
       + '<button class="seg go" data-station="' + st.id + '"' + (save.coins < st.cost ? ' disabled' : '') + '>SET IT UP · ' + st.cost + ' c</button><span id="stNote-' + st.id + '"></span></div>';
   }).join('');
-  $('patterns').querySelectorAll('.pat').forEach(b => b.onclick = () => { rw = null; if (pat !== b.dataset.p) master = false; pat = b.dataset.p; toPrepare(); });
+  $('patterns').querySelectorAll('.pat').forEach(b => b.onclick = () => { rw = null; part = null; if (pat !== b.dataset.p) master = false; pat = b.dataset.p; toPrepare(); });
   $('patterns').querySelectorAll('[data-fp]').forEach(b => b.onclick = () => { if (Sh.forgePart(save, b.dataset.fp)) { store(save); Snd.play('GOOD'); toHome(); } });
   $('patterns').querySelectorAll('[data-station]').forEach(b => b.onclick = () => {
     const r = Rm.buyStation(save, b.dataset.station);
@@ -254,10 +256,19 @@ function renderTrail() {
     : found + ' of 9 shards of Veric found. A Mythic\'s shard can be found once you\'ve made its Relic.';
   $('trail').innerHTML = cl.map(c => {
     const m = MYTHICS[c.id], r = RELICS[c.relic];
-    if (c.found) return '<div class="fi have"><b style="color:var(--t-mythic)">' + esc(m.name) + '</b><span>Its shard is yours. From ' + esc(r.name) + ', with ' + m.parts.map(p => esc(p[1])).join(', ') + ' (the Mythic working comes next).</span></div>';
+    if ((save.mythicsMade || []).includes(c.id)) return '<div class="fi have"><b style="color:var(--t-mythic)">' + esc(m.name) + '</b><span>Made: one of the Nine, and yours.</span></div>';
+    if (c.found) return '<div class="fi"><b style="color:var(--t-mythic)">' + esc(m.name) + '</b><span>Its shard is yours. From ' + esc(r.name) + ', with three parts:</span>'
+      + m.parts.map((p, i) => { const g = Trail.partGate(save, c.id, i); return Trail.hasPart(save, c.id, i) ? '<span>✓ ' + esc(p[1]) + ' (the ' + p[0] + ')</span>'
+        : '<button class="seg" data-part="' + c.id + ':' + i + '"' + (g.ok ? '' : ' disabled') + '>' + esc(p[1].toUpperCase()) + ' · AT THE ' + p[0].toUpperCase() + '</button>' + (g.ok ? '' : '<span>Needs ' + g.why.join(', ') + '.</span>'); }).join('')
+      + (Trail.partsDone(save, c.id) ? '<span>All three made: the Mythic working waits on ' + esc(r.name) + ', from the back room.</span>' : '') + '</div>';
     if (!c.open) return '<div class="fi unknown"><b>' + esc(m.name) + '</b><span>' + (Trail.open(save) ? 'Make ' + esc(r.name) + ' first; then its clue opens.' : 'Grows from ' + esc(r.name) + '.') + '</span></div>';
     return '<div class="fi"><b style="color:var(--t-mythic)">' + esc(m.name) + '</b><span>A clue: its shard lies with ' + SHARD_WHERE[c.source] + '.</span></div>';
   }).join('');
+  $('trail').querySelectorAll('[data-part]').forEach(b => b.onclick = () => { const [id, i] = b.dataset.part.split(':'); partStart(id, +i); });
+}
+function partStart(id, i) {
+  const g = Trail.partGate(save, id, i); if (!g.ok) return;
+  rw = null; master = false; part = { mythic: id, i }; pat = g.pattern; toPrepare();
 }
 function renderTools() {
   $('tools').innerHTML = Object.entries(TOOLS).map(([id, t]) => {
@@ -295,7 +306,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=29').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=31').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -684,7 +695,20 @@ function slotOpen(slot) {
 }
 // a Rare piece that can't go toward Old-Blood yet: what it lacks
 // an Old-Blood piece whose kind has a Relic: the Relic working, or what it still needs
+function mythicActs(c) {
+  const g = Sh.mythicFor(save, c); if (!g.mythic) return '';
+  const m = MYTHICS[g.mythic];
+  if (g.made) return '';
+  if (!g.ok) return '<p class="note"><b style="color:var(--t-mythic)">TOWARD THE NINE · ' + esc(m.name.toUpperCase()) + '</b> · it needs ' + g.why.join(', ') + '.</p>';
+  const cost = Sh.mythicCost(c, g.mythic), have = Sh.canMake(save.mats, cost);
+  return '<button class="seg go" data-mythic="' + g.mythic + '"' + (have ? '' : ' disabled') + '>THE MYTHIC WORKING · ' + esc(m.name.toUpperCase()) + ' · ' + cost.map(x => MATS[x.mat].name + ' × ' + x.n).join(', ') + '</button>';
+}
+function toMythic(id, mythic) {
+  const c = save.cards.find(x => x.id === id); if (!c || !Sh.mythicFor(save, c).ok) return;
+  rw = { id, from: TIERS.findIndex(t => t.id === c.tier), mythic }; part = null; pat = c.pattern; $('look').hidden = true; toPrepare();
+}
 function relicActs(c) {
+  if (c.tier === 'relic') return mythicActs(c);
   const g = Sh.relicFor(save, c); if (!g.relic) return '';
   const r = RELICS[g.relic];
   if (g.made) return '<p class="note">' + esc(r.name) + ' is made already: there\'s only one.</p>';
@@ -734,6 +758,7 @@ function backOpen(id) {
   if ($('deliverIt')) $('deliverIt').onclick = () => { const o = save.order; { const e = Sh.deliver(save, id, Date.now()); if (e) { store(save); coins(); $('look').hidden = true; renderShop(); filledToast(o, e); } } };
   if ($('reworkIt')) $('reworkIt').onclick = () => toRework(id);
   const rb = $('lookActs').querySelector('[data-relic]'); if (rb) rb.onclick = () => toRelic(id, rb.dataset.relic);
+  const mb = $('lookActs').querySelector('[data-mythic]'); if (mb) mb.onclick = () => toMythic(id, mb.dataset.mythic);
   if ($('breakIt')) $('breakIt').onclick = () => {
     if (!confirm('Break down the ' + c.name + ' (worth ' + c.worth + ' c)? It gives ' + (sv.length ? sv.map(r => MATS[r.mat].name + ' × ' + r.n).join(', ') : 'nothing worth keeping') + '. It can\'t be undone.')) return;
     if (Sh.salvage(save, id)) { store(save); $('look').hidden = true; renderShop(); }
@@ -858,7 +883,7 @@ function newWorking() {
   const n = R.slotsFor(lvl());
   save.chosen = save.chosen.filter(id => save.found.includes(id)).slice(0, n);
   if (master && (rw || !R.masterBrewGate(pat, benchPicks(), lvl()).ok)) master = false;
-  S = R.newWorking({ patternId: pat, picks: benchPicks().slice(), level: lvl(), found: save.chosen.slice(), kit: G.kitOf(save), rework: rw ? { from: rw.from, relic: rw.relic } : null, master }, rng);
+  S = R.newWorking({ patternId: pat, picks: benchPicks().slice(), level: lvl(), found: save.chosen.slice(), kit: G.kitOf(save), rework: rw ? { from: rw.from, relic: rw.relic, mythic: rw.mythic } : null, master, part }, rng);
 }
 function toPrepare() {
   clearTimers(); paused = false;
@@ -883,6 +908,23 @@ function toRework(id) {
 }
 function pieceKv() {
   const l = lvl(), o = R.odds(S);
+  if (part) {
+    const m = MYTHICS[part.mythic], pn = m.parts[part.i][1];
+    $('pieceKv').innerHTML = '<span>A part of the Nine</span><b style="color:var(--t-mythic)">' + esc(pn) + ', for ' + esc(m.name) + ': worked as a ' + PATTERNS[pat].name.toLowerCase() + '. Fill the bar and finish with WHITE HEAT reached and not one crack.</b>'
+      + '<span>Fall short</span><b>the stuff is spent; try again.</b>'
+      + '<span>' + stn().meter.replace('THE ', '') + '</span><b>narrowed: the band now ' + S.band[0] + '–' + S.band[1] + '. ' + stn().twist + '</b>'
+      + '<span>White heat</span><b>after ' + PART_WORK.whiteStreak + ' clean in a row, or a TRUE</b>';
+    return;
+  }
+  if (rw && rw.mythic) {
+    const m = MYTHICS[rw.mythic];
+    $('pieceKv').innerHTML = '<span>Now</span><b style="color:var(--t-relic)">' + esc(RELICS[m.relic].name) + ', a Relic</b>'
+      + '<span>To the Nine</span><b style="color:var(--t-mythic)">' + esc(m.name) + ': fill the bar and quench with WHITE HEAT reached three times and not one crack. It takes its three powers.</b>'
+      + '<span>The risk</span><b>short of it, the Relic stays as it was. The shard and the parts are kept; the bars and the relic material are spent.</b>'
+      + '<span>' + stn().meter.replace('THE ', '') + '</span><b>the narrowest in the game: the band now ' + S.band[0] + '–' + S.band[1] + '. ' + stn().twist + '</b>'
+      + '<span>White heat</span><b>after ' + MYTHIC_WORK.whiteStreak + ' clean in a row, or a TRUE: three times in the one working (' + (S.whites || 0) + ' so far)</b>';
+    return;
+  }
   if (rw && rw.relic) {
     const r = RELICS[rw.relic];
     $('pieceKv').innerHTML = '<span>Now</span><b style="color:var(--t-oldblood)">Old-Blood</b>'
@@ -998,13 +1040,14 @@ function renderPrep() {
 }
 
 // what this pattern with these parts takes, against the store room
-const rec = () => rw ? (rw.relic ? Sh.relicCost(rwCard(), rw.relic) : Sh.reworkCost(rwCard())) : Sh.recipe(pat, picks(), master);
-const toWord = () => rw.relic ? RELICS[rw.relic].name.toUpperCase() : TIERS[R.reworkTo(rw.from)].name.toUpperCase();
+const rec = () => rw ? (rw.mythic ? Sh.mythicCost(rwCard(), rw.mythic) : rw.relic ? Sh.relicCost(rwCard(), rw.relic) : Sh.reworkCost(rwCard()))
+  : part ? Sh.recipe(pat, picks()).concat([Trail.partExtra(MYTHICS[part.mythic].parts[part.i][0])]) : Sh.recipe(pat, picks(), master);
+const toWord = () => part ? MYTHICS[part.mythic].parts[part.i][1].toUpperCase() : rw.mythic ? MYTHICS[rw.mythic].name.toUpperCase() : rw.relic ? RELICS[rw.relic].name.toUpperCase() : TIERS[R.reworkTo(rw.from)].name.toUpperCase();
 function renderTakes() {
   const r = rec(), h = hour(), sh = Sh.short(save.mats, r), ok = !sh.length;
   $('takesWord').textContent = ok ? 'IN THE STORE ROOM' : 'SHORT';
   $('takes').innerHTML = r.map(x => { const have = save.mats[x.mat] || 0; return '<li><b>' + MATS[x.mat].name + ' × ' + x.n + '</b><em class="' + (have >= x.n ? 'ok' : 'short') + '">have ' + have + '</em></li>'; }).join('');
-  $('makeIt').disabled = (!ok || master) && !rw; $('workIt').disabled = !ok;
+  $('makeIt').disabled = (!ok || master || !!part) && !rw; $('workIt').disabled = !ok;
   $('takesCard').style.borderColor = ok ? '' : 'var(--blood)';
   if (ok) { $('takesBtns').innerHTML = '<span class="small" style="color:var(--bone-faint)">Taken when you begin. Walk away from a working and they\'re spent.</span>'; return; }
   const gone = sh.filter(x => !Sh.sells(x.mat, h));
@@ -1026,7 +1069,7 @@ function toWork() {
   view.flash = 0; view.ring = 0; view.sparks = [];
   show('work');
   $('workT').textContent = benchName();
-  $('cShape').textContent = rw ? '1 · TO ' + toWord() : '1 · SHAPE';
+  $('cShape').textContent = rw || part ? '1 · TO ' + toWord() : '1 · SHAPE';
   setFireBtn();
   const st = stn();
   $('workK').textContent = st.word + ' · WORK IT';
@@ -1107,7 +1150,7 @@ function render() {
   if (screen !== 'work' || !S) return;
   const shaping = S.shape < 100;
   if (!S.done) { $('cShape').className = shaping ? 'on' : 'done'; $('cPush').className = shaping ? '' : 'on'; $('cDone').className = ''; }
-  $('barLabel').textContent = shaping ? (rw ? 'TO ' + toWord() : 'SHAPE') : 'WORKED';
+  $('barLabel').textContent = shaping ? (rw || part ? 'TO ' + toWord() : 'SHAPE') : 'WORKED';
   $('barVal').textContent = shaping ? Math.round(S.shape) + ' %' : '+' + Math.round(S.worked) + ' %';
   $('bar').classList.toggle('worked', !shaping);
   $('barFill').style.width = (shaping ? S.shape : Math.min(100, S.worked * 2)) + '%';
@@ -1163,7 +1206,7 @@ function finish(how) {
   if (screen === 'work') { $('cDone').className = 'on'; $('cPush').className = 'done'; render(); }
   $('result').hidden = false; document.body.style.overflow = 'hidden';
   $('result').classList.toggle('oldblood', !!(res.oldBlood && !res.failed));
-  $('result').classList.toggle('relic', !!(res.relic && !res.failed));
+  $('result').classList.toggle('relic', !!((res.relic || res.mythic) && !res.failed) || !!(res.part && res.took));
   if (res.earned) {
     const two = R.rollAffixes(pat, 2, rng, rw ? R.affixIds(rwCard().affixes) : []);
     $('rDone').hidden = true; $('rPick').hidden = false;
@@ -1176,8 +1219,13 @@ function finish(how) {
 function complete(res, picked) {
   const before = levelFor(pat);
   let piece;
-  const yields = R.yieldOf(pat, res.tier);
-  if (yields) {   // the glass's bottles: into the store room, no card
+  const yields = res.part ? null : R.yieldOf(pat, res.tier);
+  if (res.part) {   // a part of the Nine: made, or not; no card
+    const m = MYTHICS[res.part.mythic];
+    if (res.took) { Trail.makePart(save, res.part.mythic, res.part.i); Snd.play('chime'); }
+    piece = { name: m.parts[res.part.i][1], tier: 'mythic', worth: 0, id: null };
+    part = null;
+  } else if (yields) {   // the glass's bottles: into the store room, no card
     save.mats[yields.mat] = (save.mats[yields.mat] || 0) + yields.n; save.made++;
     piece = { name: yields.n + ' ' + MATS[yields.mat].name.toLowerCase() + 's', tier: TIERS[res.tier].id, worth: 0, id: null };
   } else if (res.rework) {   // the same piece, out of the fire: in the back where it was
@@ -1186,6 +1234,7 @@ function complete(res, picked) {
     else {
       piece = R.remakePiece({ card: old, res, picked, rng, now: Date.now() });
       if (res.relic) { piece = R.relicPiece(piece, res.relic); save.relicsMade = [...new Set((save.relicsMade || []).concat(res.relic))]; }
+      if (res.mythic) { piece = R.mythicPiece({ ...piece, tier: 'mythic' }, res.mythic); save.mythicsMade = [...new Set((save.mythicsMade || []).concat(res.mythic))]; }
       save.cards[i] = piece;
     }
     rw = null;
@@ -1197,11 +1246,15 @@ function complete(res, picked) {
   const tr = save.trades[pat] || (save.trades[pat] = { xp: 0 }); tr.xp += xp;
   const after = levelFor(pat), p = PATTERNS[pat];
   $('rPick').hidden = true; $('rDone').hidden = false;
-  $('rCard').innerHTML = yields ? '<div class="yield"><div class="tier" style="color:' + TIERC[res.tier] + '">' + TIERS[res.tier].name.toUpperCase() + ' BLOWING</div><div class="cd-art">' + ART.draught('#cfe8e8') + '</div><h3>' + yields.n + ' bottles</h3><p>Into the store room for the kettle. You have ' + save.mats[yields.mat] + '.</p></div>' : card(piece);
+  $('rCard').innerHTML = res.part ? '<div class="yield"><div class="tier" style="color:var(--t-mythic)">' + (res.took ? 'A PART OF THE NINE' : 'NOT THIS TIME') + '</div><h3>' + esc(piece.name) + '</h3><p>For ' + esc(MYTHICS[res.part.mythic].name) + '. ' + (res.took ? (Trail.partsDone(save, res.part.mythic) ? 'All three parts are made: the Mythic working waits, on the Relic, in the back room.' : 'Kept with the shard.') : 'The stuff is spent.') + '</p></div>'
+    : yields ? '<div class="yield"><div class="tier" style="color:' + TIERC[res.tier] + '">' + TIERS[res.tier].name.toUpperCase() + ' BLOWING</div><div class="cd-art">' + ART.draught('#cfe8e8') + '</div><h3>' + yields.n + ' bottles</h3><p>Into the store room for the kettle. You have ' + save.mats[yields.mat] + '.</p></div>' : card(piece);
   if (res.oldBlood && !res.failed) { $('rCard').insertAdjacentHTML('afterbegin', '<div class="oldword">OLD-BLOOD · ' + esc(piece.name.toUpperCase()) + '</div>'); Snd.play('level'); }
+  if (res.mythic && !res.failed) { $('rCard').insertAdjacentHTML('afterbegin', '<div class="oldword" style="color:var(--t-mythic)">ONE OF THE NINE · ' + esc(piece.name.toUpperCase()) + '</div>'); Snd.play('level'); Snd.play('chime'); }
   if (res.relic && !res.failed) { $('rCard').insertAdjacentHTML('afterbegin', '<div class="oldword">A RELIC · ' + esc(piece.name.toUpperCase()) + '</div>'); Snd.play('level'); Snd.play('chime'); }
   const short = { boiled: 'it boiled over', nowhite: 'no WHITE HEAT', dropped: 'it spilled' }[res.masterShort];
-  $('rLine').innerHTML = res.relic ? (res.failed ? (res.dropped ? 'Dropped. ' : res.cracks ? 'A crack in the Relic working. ' : 'WHITE HEAT only ' + (res.whites || 0) + ' time' + (res.whites === 1 ? '' : 's') + ', not twice. ') + 'It stays Old-Blood, as it was; the bars and the relic material are spent.' : 'WHITE HEAT twice, not one crack. It\'s ' + esc(RELICS[res.relic].name) + ' now: there\'s only one.')
+  $('rLine').innerHTML = res.part ? (res.took ? 'WHITE HEAT and not one crack: the part is made.' : (res.dropped ? 'Dropped.' : res.cracks ? 'A crack.' : 'No WHITE HEAT.') + ' It didn\'t take; the stuff is spent.')
+    : res.mythic ? (res.failed ? (res.dropped ? 'Dropped. ' : res.cracks ? 'A crack in the Mythic working. ' : 'WHITE HEAT ' + (res.whites || 0) + ' time' + (res.whites === 1 ? '' : 's') + ', not three. ') + 'The Relic stays as it was; the shard and the parts are kept.' : 'WHITE HEAT three times, not one crack. ' + esc(MYTHICS[res.mythic].name) + ': one of the Nine.')
+    : res.relic ? (res.failed ? (res.dropped ? 'Dropped. ' : res.cracks ? 'A crack in the Relic working. ' : 'WHITE HEAT only ' + (res.whites || 0) + ' time' + (res.whites === 1 ? '' : 's') + ', not twice. ') + 'It stays Old-Blood, as it was; the bars and the relic material are spent.' : 'WHITE HEAT twice, not one crack. It\'s ' + esc(RELICS[res.relic].name) + ' now: there\'s only one.')
     : res.master ? 'A master\'s brew: not one boil-over, WHITE HEAT. Old-Blood, three bottles of it.'
     : short ? 'Short of a master\'s brew (' + short + '): an ordinary batch. WORKED +' + res.worked + ' % · it had Fine ' + Math.round(res.odds.f) + ' % · Rare ' + Math.round(res.odds.r) + ' %'
     : res.oldBlood ? (res.failed ? (res.dropped ? 'Dropped. ' : 'A crack in the last working. ') + 'It wouldn\'t take Old-Blood: it stays Rare, and the materials are spent.' : 'It took. Rare to Old-Blood: a master\'s piece.')
@@ -1238,13 +1291,13 @@ function complete(res, picked) {
       + FOUND[id].line + '. In your bag now (' + save.found.length + ' of ' + Object.keys(FOUND).length + ').</span></div>';
     gEl.hidden = false;
   }
-  const free = yields ? -1 : save.shelf.findIndex(e => !e);
+  const free = yields || res.part ? -1 : save.shelf.findIndex(e => !e);
   $('rShelf').hidden = free < 0;
   $('rShelf').textContent = 'ON THE SHELF · ' + Sh.priceAt(piece, 'fair') + ' c';
   $('rShelf').onclick = () => { Sh.place(save, piece.id, free); store(save); toShop(); };
   if (!store(save)) $('rWhy').textContent += ' · This browser would not save it.';
   const sb = $('rDone').querySelector('.rbtns'); sb.querySelectorAll('.sharebtn').forEach(x => x.remove());
-  if (!yields) { const shb = shareBtn(piece, $('rDone')); shb.classList.add('sharebtn'); sb.appendChild(shb); }
+  if (!yields && !res.part) { const shb = shareBtn(piece, $('rDone')); shb.classList.add('sharebtn'); sb.appendChild(shb); }
   $('rAgain').focus({ preventScroll: true }); $('result').scrollTop = 0;
   if (!res.rework) tip('result', $('rDone').querySelector('.rbtns'));
 }
@@ -1390,7 +1443,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=29').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=31').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -1467,7 +1520,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=29').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=31').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }
@@ -1562,12 +1615,18 @@ function showTitle(away) {
   titleAway = away || titleAway;
   save.lastSeen = Date.now(); store(save);
   const slots = peekSlots(), on = activeSlot();
+  // each slot: the anvil emblem hot in its renown's colour (cold and dashed when empty), the maker, their renown, what they've done
+  const HEAT = ['#8a8070', '#b8b0a2', '#8fc46a', '#6fb1ec', '#b48cf0', '#e8913a', '#e4505e'];
   $('tSlots').innerHTML = slots.map((p, i) => {
     const n = i + 1, here = n === on;
-    if (!p) return '<div class="tslot' + (here ? ' on' : '') + '"><div class="n">SLOT ' + n + (here ? ' · THIS ONE' : '') + '</div><b>Empty</b><span>A cold forge and sixty coins.</span><div class="rbtns left"><button class="seg go" data-tplay="' + n + '">NEW GAME</button></div></div>';
+    if (!p) return '<div class="tslot empty' + (here ? ' on' : '') + '"><div class="ttop">' + emblem('', true) + '<div class="tinfo"><div class="n">SLOT ' + n + (here ? ' · THIS ONE' : '') + '</div><b>Empty</b><div class="tren">A cold forge and sixty coins.</div></div></div>'
+      + '<div class="tacts"><button class="seg go" data-tplay="' + n + '">' + ICONS.flame + 'LIGHT THE FORGE</button></div></div>';
     const rung = RENOWN.reduce((a, r, k) => p.renown >= r.at ? k : a, 0);
-    return '<div class="tslot' + (here ? ' on' : '') + '"><div class="n">SLOT ' + n + (here ? ' · PLAYING' : '') + '</div><b>' + esc(p.maker) + '</b><span>' + p.coins + ' coins · ' + p.made + ' made · ' + p.sold + ' sold<br>Renown ' + RENOWN[rung].word + (p.lastSeen ? ' · ' + ago(p.lastSeen) : '') + '</span>'
-      + '<div class="rbtns left"><button class="seg go" data-tplay="' + n + '">' + (here ? 'CONTINUE' : 'PLAY') + '</button><button class="seg del" data-tdel="' + n + '">DELETE</button></div></div>';
+    return '<div class="tslot' + (here ? ' on' : '') + '" style="--heat:' + HEAT[rung] + '"><div class="ttop">' + emblem(HEAT[rung]) + '<div class="tinfo"><div class="n">SLOT ' + n + (here ? ' · PLAYING' : '') + '</div><b>' + esc(p.maker) + '</b>'
+      + '<div class="tren">' + ICONS.renown + RENOWN[rung].word + '</div></div></div>'
+      + '<div class="tstats"><span title="Coins">' + ICONS.coin + p.coins.toLocaleString() + '</span><span title="Pieces made">' + ICONS.made + p.made + ' made</span><span title="Pieces sold">' + ICONS.sold + p.sold + ' sold</span>'
+      + (p.lastSeen ? '<span title="Last played">' + ICONS.clock + ago(p.lastSeen) + '</span>' : '') + '</div>'
+      + '<div class="tacts"><button class="seg go" data-tplay="' + n + '">' + ICONS.hammer + (here ? 'CONTINUE' : 'PLAY') + '</button><button class="seg del" data-tdel="' + n + '" aria-label="Delete slot ' + n + '">' + ICONS.sweep + 'DELETE</button></div></div>';
   }).join('');
   $('tSlots').querySelectorAll('[data-tplay]').forEach(b => b.onclick = () => playSlot(+b.dataset.tplay));
   $('tSlots').querySelectorAll('[data-tdel]').forEach(b => b.onclick = () => deleteSlot(+b.dataset.tdel));
@@ -1592,7 +1651,7 @@ function deleteSlot(n) {
   clearSlot(n); showTitle();
 }
 function renderUpdate() {
-  $('tUpdate').innerHTML = newest && newest > VERSION ? '<span class="new">VERSION ' + newest + ' IS OUT</span> <button class="seg go" id="tRefresh">REFRESH</button>' : newest ? 'UP TO DATE' : '';
+  $('tUpdate').innerHTML = newest && newest > VERSION ? '<span class="new">VERSION ' + newest + ' IS OUT</span> <button class="seg go" id="tRefresh">' + ICONS.refresh + 'REFRESH</button>' : newest ? 'UP TO DATE' : '';
   if ($('tRefresh')) $('tRefresh').onclick = refreshGame;
 }
 // the newest release, from the site itself (never cached); a newer one than this page: offer the refresh
@@ -1615,6 +1674,7 @@ $('tLicense').onclick = () => openLook('<div class="licence"><div class="sharedh
   + '<h3>MADE WITH</h3><p><b>three.js</b> · © 2010–2024 three.js authors · MIT License.<br><b>Alegreya</b> · © 2011 The Alegreya Project Authors · <b>Alegreya Sans</b> · © 2013 The Alegreya Sans Project Authors · SIL Open Font License 1.1.</p>'
   + '<p>The full text is in the LICENSE file at the game\'s address.</p></div>', '');
 $('titleBtn').onclick = () => showTitle();
+$('tLicense').innerHTML = ICONS.scroll + 'LICENCE';
 // a copy on someone else's site: say so, and where the real game is
 if (!OFFICIAL.hosts.includes(location.hostname)) {
   $('copyBanner').hidden = false;

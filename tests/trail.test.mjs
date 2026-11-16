@@ -55,3 +55,39 @@ test('shards: below the deep doors now and then; the Court\'s orders; the fallen
   assert.ok(Trail.claimStar(t, star).why, 'once a day');
   assert.ok(Trail.claimStar(reach(), { ...star, event: 'fair' }).why);
 });
+
+// ---------- milestone 17: the parts and the Mythic working ----------
+const xpTo = lvl => { let x = 0; for (let l = 1; l < lvl; l++) x += R.xpToNext(l); return x; };
+test('a part: its shard first, the station set up, trade 6 there; narrow, WHITE HEAT once and no crack', () => {
+  const s = reach({ shards: [], trades: {} });
+  assert.match(Trail.partGate(s, 'vericsedge', 0).why.join(), /shard/);
+  s.shards = ['vericsedge']; assert.match(Trail.partGate(s, 'vericsedge', 0).why.join(), /trade 6/);
+  s.trades = { lens: { xp: xpTo(6) } }; const g = Trail.partGate(s, 'vericsedge', 0); assert.ok(g.ok); assert.equal(g.station, 'glass'); assert.equal(g.pattern, 'lens');
+  assert.ok(!Trail.partGate({ ...s, stations: [] }, 'vericsedge', 0).ok, 'no glass set up');
+  const cfg = { patternId: 'lens', picks: [0, 0, 0], level: 6, found: [], kit: {} };
+  const plain = R.newWorking(cfg, seeded(1)), P = R.newWorking({ ...cfg, part: { mythic: 'vericsedge', i: 0 } }, seeded(1));
+  assert.ok(P.part && P.band[1] - P.band[0] < plain.band[1] - plain.band[0]);
+  P.shape = 100; P.whites = 1; P.whiteHeat = true; const ok = R.finish(P, 'quench'); assert.ok(ok.part && ok.took);
+  const Q = R.newWorking({ ...cfg, part: { mythic: 'vericsedge', i: 0 } }, seeded(1)); Q.shape = 100; Q.whites = 1; Q.cracks = 1; assert.ok(!R.finish(Q, 'quench').took);
+  Trail.makePart(s, 'vericsedge', 0); assert.ok(Trail.hasPart(s, 'vericsedge', 0)); assert.ok(Trail.partGate(s, 'vericsedge', 0).done);
+  assert.ok(!Trail.partsDone(s, 'vericsedge')); Trail.makePart(s, 'vericsedge', 1); Trail.makePart(s, 'vericsedge', 2); assert.ok(Trail.partsDone(s, 'vericsedge'));
+});
+
+test('the Mythic working: on the Relic, with the shard, the three parts and trade 9; WHITE HEAT three times and no crack, or the Relic stays', () => {
+  const base = R.makePiece({ patternId: 'falchion', picks: [3, 2, 0], result: { tier: 4, flawed: false, worked: 20, strikes: 20, heats: 2, cracks: 0, whiteHeat: true }, maker: 'T', rng: seeded(2), now: 1 });
+  const relic = { ...R.relicPiece(base, 'gatewarden'), tier: 'relic' };
+  const s = reach({ cards: [relic], shards: ['vericsedge'], mythicParts: { vericsedge: [true, true, false] }, trades: { falchion: { xp: xpTo(9) } } });
+  assert.match(Sh.mythicFor(s, relic).why.join(), /moonwell quench|wyrm-hide/);
+  s.mythicParts.vericsedge = [true, true, true]; const g = Sh.mythicFor(s, relic); assert.ok(g.ok); assert.equal(g.mythic, 'vericsedge');
+  assert.deepEqual(Sh.mythicCost(relic, 'vericsedge').map(x => x.mat), [relic.metal, 'heartstone']);
+  const cfg = { patternId: 'falchion', picks: [3, 2, 0], level: 9, found: [], kit: {} };
+  const Rl = R.newWorking({ ...cfg, rework: { from: 3, relic: 'gatewarden' } }, seeded(1)), M = R.newWorking({ ...cfg, rework: { from: 4, mythic: 'vericsedge' } }, seeded(1));
+  assert.ok(M.mythic && M.band[1] - M.band[0] < Rl.band[1] - Rl.band[0], 'the narrowest');
+  M.shape = 100; M.whites = 3; M.whiteHeat = true; const ok = R.finish(M, 'quench'); assert.equal(ok.tier, 5); assert.ok(!ok.failed);
+  const two = R.newWorking({ ...cfg, rework: { from: 4, mythic: 'vericsedge' } }, seeded(1)); two.shape = 100; two.whites = 2; assert.ok(R.finish(two, 'quench').failed);
+  const piece = R.mythicPiece({ ...R.remakePiece({ card: relic, res: ok, picked: null, rng: seeded(3), now: 2 }), tier: 'mythic' }, 'vericsedge');
+  assert.equal(piece.name, 'Veric\'s Edge'); assert.equal(piece.tier, 'mythic'); assert.equal(piece.powers.length, 3); assert.equal(piece.power, undefined);
+  assert.ok(piece.worth > relic.worth * 2);
+  assert.ok(Sh.mythicFor({ ...s, mythicsMade: ['vericsedge'] }, relic).made, 'one in a save');
+  assert.equal(Sh.salvage({ cards: [piece], shelf: [], wall: [], mats: {} }, piece.id), null, 'never broken down');
+});

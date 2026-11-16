@@ -3,12 +3,12 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS } from './data.js?v=29';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf } from './town.js?v=29';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=29';
-import { charmGap, placeGift } from './room.js?v=29';
-import * as Trail from './trail.js?v=29';
-import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=29';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS } from './data.js?v=31';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf } from './town.js?v=31';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=31';
+import { charmGap, placeGift } from './room.js?v=31';
+import * as Trail from './trail.js?v=31';
+import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=31';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -503,6 +503,20 @@ export function relicFor(save, card) {
   if (onShelf(save, card.id) >= 0 || onWall(save, card.id) || onOtherShelf(save, card.id) || onHall(save, card.id)) why.push('it in the back room');
   return { ok: !why.length, relic: id, why };
 }
+// the Mythic working for this Relic: the shard, the three parts, trade 9, in the back room; one in a save ({ ok, mythic, why })
+export function mythicFor(save, card) {
+  const id = card.relic && Object.keys(MYTHICS).find(k => MYTHICS[k].relic === card.relic);
+  if (!id || card.tier !== 'relic') return { ok: false, mythic: null, why: [] };
+  if ((save.mythicsMade || []).includes(id)) return { ok: false, mythic: id, made: true, why: ['made already'] };
+  const why = [];
+  if (!Trail.hasShard(save, id)) why.push('its shard of Veric');
+  const parts = MYTHICS[id].parts.filter((p, i) => !Trail.hasPart(save, id, i)).map(p => p[1]);
+  if (parts.length) why.push(parts.join(', '));
+  if (tradeLevel(save, card.pattern) < MYTHIC_WORK.level) why.push('trade ' + MYTHIC_WORK.level + ' in ' + PATTERNS[card.pattern].trade.toLowerCase());
+  if (onShelf(save, card.id) >= 0 || onWall(save, card.id) || onOtherShelf(save, card.id) || onHall(save, card.id)) why.push('it in the back room');
+  return { ok: !why.length, mythic: id, why };
+}
+export const mythicCost = (card, id) => [{ mat: card.metal, n: Math.ceil(PATTERNS[card.pattern].bars / 2) * MYTHIC_WORK.costX }, { mat: RELICS[MYTHICS[id].relic].mat, n: 1 }];
 export const relicCost = (card, id) => [{ mat: card.metal, n: Math.ceil(PATTERNS[card.pattern].bars / 2) * RELIC_WORK.costX }, { mat: RELICS[id].mat, n: 1 }];
 export const tradeLevel = (save, pattern) => levelOf(((save.trades || {})[pattern] || {}).xp || 0).level;
 // Common and Fine go up a tier; Rare only toward Old-Blood, for a master with the right piece (rules.js oldBloodGate)
