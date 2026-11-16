@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e0b09">
+<title>Darkclay Forge</title>
+<meta name="description" content="Work iron at the forge, tile by tile, and keep every piece you make as a card.">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/working.css">
+<link rel="stylesheet" href="css/game.css">
+</head>
+<body>
+<div class="wrap">
+
+  <!-- THE FORGE: the patterns, the found tiles, the work so far -->
+  <main id="vHome">
+    <header class="top">
+      <div>
+        <div class="kicker">DARKCLAY · THE MAKER'S SHOP</div>
+        <h1>Darkclay Forge</h1>
+      </div>
+      <label class="maker">MAKER'S MARK<input id="maker" maxlength="24" autocomplete="off" spellcheck="false"></label>
+    </header>
+
+    <details class="howd" id="howd"><summary>HOW IT WORKS</summary>
+      <section class="how" aria-label="How it works">
+        <div><b>1 · PREPARE</b>Your strip of clay tiles is laid out <em>face up</em>: what's in it and what put it there. Choose the parts and the <em>found tiles</em> to bring, then WORK IT.</div>
+        <div><b>2 · HEAT AND STRIKE</b>Heat it into the <em>gold band</em>. Every strike turns over the next tile: GOOD and GREAT shape it, HOLD does nothing, a CRACK marks it, a found tile does its trick.</div>
+        <div><b>3 · MIND THE HEAT</b>It cools as you wait and with every strike. Struck cold, a CRACK slips into your strip. <em>Back in the fire, every tile returns and is shuffled.</em></div>
+        <div><b>4 · PUSH, THEN QUENCH</b>Once SHAPE is full it's made; every strike pushes the odds of Fine and Rare. Quench when you choose. <em>Practice raises your trade</em>, and a clean, fine working turns up a new found tile.</div>
+      </section>
+    </details>
+
+    <section class="card">
+      <h2><span>THE PATTERNS</span><b>EACH IS A TRADE · PRACTICE RAISES IT</b></h2>
+      <div class="patterns" id="patterns"></div>
+    </section>
+
+    <section class="card">
+      <h2><span>FOUND TILES</span><b id="homeFound"></b></h2>
+      <div class="bag" id="homeBag"></div>
+    </section>
+
+    <section class="card">
+      <h2><span>YOUR WORK</span><b id="workCount"></b></h2>
+      <div class="shelf" id="shelf"></div>
+    </section>
+    <p class="foot">Saved in this browser. The shop, its shelves and its customers come next.</p>
+  </main>
+
+  <div class="screen" id="screen" hidden>
+    <!-- PREPARE -->
+    <div id="vPrep" hidden>
+      <div class="screenbar"><button class="seg leave" id="bHome" aria-label="Back to the forge">←</button><div><div class="k" id="prepK">THE FORGE · PREPARE</div><div class="t" id="prepT"></div></div><div class="chips"><span class="on">PREPARE</span><span>THE WORKING</span><span>THE RESULT</span></div></div>
+      <div class="prep">
+        <div class="col">
+          <div class="card">
+            <h2><span>THE PIECE</span><b id="tradeWord"></b></h2>
+            <div class="kv" id="pieceKv"></div>
+          </div>
+          <div class="card" style="border-color:var(--line)">
+            <h2><span>THE PARTS</span><b id="partsHead"></b></h2>
+            <div class="kit" id="parts"></div>
+            <div class="found-lines" id="partLine"></div>
+          </div>
+          <div class="card" style="border-color:var(--line)">
+            <h2><span>FOUND TILES</span><b id="slotWord"></b></h2>
+            <div class="slots" id="slots"></div>
+            <div class="bag" id="bag"></div>
+            <div class="found-lines" id="foundLines"></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card">
+            <h2><span>YOUR STRIP · FACE UP UNTIL YOU BEGIN</span><b id="prepCount"></b></h2>
+            <div class="odds6" id="prepOdds" style="margin-bottom:10px"></div>
+            <div class="rack prep11" id="prepRack"></div>
+            <ul class="lines" id="prepLines"></ul>
+          </div>
+          <div class="choice">
+            <button class="opt" id="makeIt"><b>MAKE IT</b>At once, at the plain odds. It teaches nothing.</button>
+            <button class="opt go" id="workIt"><b>WORK IT</b>The tiles turn face down and shuffle.</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- THE WORKING -->
+    <div id="vWork" hidden>
+      <div class="screenbar"><button class="seg leave" id="bLeave" aria-label="Leave the working, back to PREPARE">✕</button><div><div class="k">THE FORGE · WORK IT</div><div class="t" id="workT"></div></div><div class="chips"><span id="cShape" class="on">1 · SHAPE</span><span id="cPush">2 · PUSH</span><span id="cDone">3 · QUENCH</span></div></div>
+      <div class="stage">
+        <canvas id="cv" width="1280" height="720" aria-label="The stage: the piece, the fire and the heat. Tap to strike."></canvas>
+        <button class="seg stripbtn" id="bStrip">THE STRIP</button>
+        <div class="pop" id="pop" aria-live="polite"></div>
+        <div class="hint" id="hint"></div>
+      </div>
+      <div class="band">
+        <div class="bandhead"><span>YOUR STRIP · <b id="leftWord"></b></span><span>WHITE HEAT <span class="streak" id="streak"></span> <b id="streakVal"></b></span></div>
+        <div class="rack row" id="rowRack"></div>
+        <div class="odds6" id="workOdds"></div>
+        <div class="barrow"><span id="barLabel" style="color:var(--bone-faint)">SHAPE</span><div class="bar" id="bar"><i id="barFill"></i></div><b id="barVal">0 %</b></div>
+        <div class="oddsrow"><span>COMMON <b id="oCommon" style="color:var(--t-common)"></b>%</span><span>FINE <b id="oFine" style="color:var(--t-fine)"></b>%</span><span>RARE <b id="oRare" style="color:var(--t-rare)"></b>%</span><span>CRACKS <b id="oCracks" style="color:var(--k-crack)">0</b></span><span id="flags" style="color:var(--gold)"></span></div>
+      </div>
+      <div class="acts">
+        <button class="act strike" id="bStrike">STRIKE<small>SPACE · TAP THE STAGE</small></button>
+        <button class="act fire" id="bFire" aria-pressed="false"></button>
+        <button class="act quench" id="bQuench" disabled></button>
+      </div>
+      <div class="sheet" id="sheet" hidden>
+        <div class="in2">
+          <div class="paused">PAUSED · THE HEAT WAITS</div>
+          <div class="card">
+            <h2><span>YOUR STRIP · THIS HEAT</span><b id="sheetCount"></b></h2>
+            <div class="odds6" id="sheetOdds" style="margin-bottom:10px"></div>
+            <div class="rack prep11" id="sheetRack"></div>
+          </div>
+          <div class="two">
+            <div class="card"><h2><span>WHAT STACKED IT</span></h2><ul class="lines" id="sheetLines" style="margin:0"></ul></div>
+            <div class="card"><h2><span>THIS HEAT</span></h2><ul class="lines" id="heatLines" style="margin:0"></ul></div>
+          </div>
+          <div style="text-align:center"><button class="seg" id="bClose">CLOSE</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- THE RESULT: the pick if it was earned, then the card -->
+<div class="result" id="result" hidden role="dialog" aria-modal="true" aria-label="The result">
+  <div class="box">
+    <div id="rPick" hidden>
+      <div class="tier" style="color:var(--gold)">THE PICK</div>
+      <h3>Choose what it carries</h3>
+      <p id="rPickWhy"></p>
+      <div class="picks" id="rPicks"></div>
+    </div>
+    <div id="rDone" hidden>
+      <div id="rCard"></div>
+      <p id="rLine"></p>
+      <p id="rWhy" class="small"></p>
+      <div class="gift" id="rTrade" hidden></div>
+      <div class="gift" id="rGift" hidden></div>
+      <div class="rbtns"><button class="seg" id="rHome">TO THE FORGE</button><button class="seg go" id="rAgain">WORK ANOTHER</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- a card from the shelf, opened -->
+<div class="result" id="look" hidden role="dialog" aria-modal="true" aria-label="A piece you made">
+  <div class="box">
+    <div id="lookCard"></div>
+    <div class="rbtns"><button class="seg" id="lookClose">CLOSE</button></div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

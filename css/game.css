@@ -1,0 +1,96 @@
+/* DarkclayFORGE: the home screen, the collector card and what the game changes in the mockup's working.css. */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; -webkit-tap-highlight-color: transparent; }
+button, input { font-family: inherit; }
+[hidden] { display: none !important; }
+#vHome { display: grid; gap: 14px; }
+.top { display: flex; justify-content: space-between; align-items: end; gap: 12px 20px; flex-wrap: wrap; }
+.maker { display: grid; gap: 3px; font: 800 11px var(--sans); letter-spacing: .16em; color: var(--bone-faint); }
+.maker input { font: 700 16px var(--sans); color: var(--bone); background: var(--panel-2); border: 1px solid var(--line-soft); padding: 7px 10px; min-height: 40px; width: min(240px, 60vw); }
+.maker input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.foot { margin: 0; }
+.small { font-size: 13px; }
+
+/* the patterns */
+.patterns { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 1000px) { .patterns { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .patterns { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pat { display: grid; gap: 6px; text-align: left; color: var(--bone); background: var(--panel-2); border: 2px solid var(--line-soft); padding: 10px; cursor: pointer; min-width: 0; }
+.pat:hover, .pat:focus-visible { border-color: var(--ember-hot); }
+.pat .art { height: 64px; display: grid; place-items: center; background: linear-gradient(180deg, #5b3a22, #3b2414); border: 2px dashed rgba(240,190,110,.4); }
+.pat .art svg { width: 88%; max-height: 54px; }
+.pat b { font: 800 20px/1.1 var(--display); }
+.pat .lv { display: flex; justify-content: space-between; gap: 6px; font: 800 11px var(--sans); letter-spacing: .12em; color: var(--gold); }
+.pat .lv span { color: var(--bone-faint); }
+.pat .xp { height: 6px; background: #0b0807; border: 1px solid var(--line-soft); }
+.pat .xp i { display: block; height: 100%; background: linear-gradient(90deg, #7a4a20, var(--ember-hot)); }
+
+/* the shelf of small cards */
+.shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.shelf > button { all: unset; cursor: pointer; display: block; font-size: 11px; border-radius: 12px; }
+.shelf > button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.shelf .empty { grid-column: 1 / -1; color: var(--bone-faint); font: 500 14px var(--sans); }
+#homeBag button { cursor: default; }
+
+/* PREPARE and THE WORKING: what differs from the mockup */
+.leave { display: inline-flex; flex: none; min-width: 40px; min-height: 40px; align-items: center; justify-content: center; font-size: 18px; }
+.screenbar { justify-content: flex-start; }
+.screenbar > div:nth-child(2) { flex: 1; min-width: 0; }
+.seg:disabled { opacity: .4; cursor: not-allowed; }
+.seg.go { color: #1a0e06; background: var(--ember-hot); border-color: #fff0d0; }
+.stage { user-select: none; -webkit-user-select: none; }
+
+/* THE RESULT and an opened card: over everything */
+.result { position: fixed; z-index: 60; padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.result .box { max-width: 420px; display: grid; gap: 10px; justify-items: center; margin: auto; }
+.result .box > div { width: 100%; display: grid; gap: 10px; justify-items: center; }
+.result .box .cd { width: min(100%, 340px); font-size: 14px; text-align: left; }
+.result p { margin: 0; }
+.rbtns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.rbtns .seg { min-height: 44px; padding: 8px 16px; }
+.picks { display: grid; gap: 10px; width: 100%; }
+.picks button { text-align: left; background: var(--panel-2); border: 2px solid var(--gold); color: var(--bone-dim); padding: 12px 14px; cursor: pointer; font: 500 14px var(--sans); min-height: 56px; }
+.picks button b { display: block; font: 800 18px var(--sans); letter-spacing: .06em; color: var(--gold); }
+.picks button:hover, .picks button:focus-visible { background: #3a2a14; }
+.gift { margin-top: 0; width: 100%; }
+.gift.plain { grid-template-columns: 1fr; }
+
+/* THE CARD (Darkclay Zero, mockups/cards302.js); sized by its font-size */
+.cd { position: relative; border-radius: 1em; padding: .55em; background: linear-gradient(160deg, color-mix(in srgb, var(--tc) 85%, #fff) 0%, var(--tc) 30%, color-mix(in srgb, var(--tc) 55%, #000) 100%);
+  box-shadow: 0 0 calc(60px * var(--tg)) color-mix(in srgb, var(--tc) 70%, transparent), 0 8px 24px rgba(0,0,0,.6); font-family: var(--sans); color: var(--bone); overflow: hidden; }
+.cd-in { position: relative; height: 100%; border-radius: .65em; background: radial-gradient(ellipse at 50% 22%, color-mix(in srgb, var(--tc) 22%, #241a12) 0%, #140e0a 70%);
+  border: 2px solid rgba(0,0,0,.6); padding: .7em .9em .9em; overflow: hidden; }
+.cd-top { display: flex; justify-content: space-between; gap: .5em; font: 800 .8em var(--sans); letter-spacing: .16em; }
+.cd-tier { color: var(--tc); } .cd-kind { color: var(--bone-faint); text-align: right; }
+.cd-name { font: 800 1.9em/1.05 var(--display); margin: .15em 0 .3em; text-wrap: balance; }
+.cd-art { position: relative; height: 6.6em; border-radius: .45em; display: grid; place-items: center; margin: 4px;
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 3px, transparent 3px 9px), linear-gradient(180deg, #5b3a22, #3b2414); border: 2px dashed rgba(240,190,110,.55); outline: 4px solid #3b2414; }
+.cd-art svg { width: 86%; max-height: 5.6em; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--tc) 60%, transparent)); }
+.cd-dice { position: absolute; right: .4em; top: .3em; font: 800 1.1em var(--sans); color: #fff; background: rgba(0,0,0,.55); border: 2px solid var(--tc); border-radius: .35em; padding: 0 .35em; }
+.cd-body { margin-top: .7em; }
+.cd-st { display: grid; grid-template-columns: 5.6em 5.6em 1fr; align-items: center; gap: .4em; font: 600 .95em/1.6 var(--sans); color: var(--bone-dim); }
+.cd-st b { color: var(--bone); font-weight: 800; white-space: nowrap; }
+.cd-bar { height: .45em; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden; } .cd-bar i { display: block; height: 100%; }
+.cd-sec { margin: .55em 0 .2em; font: 800 .78em var(--sans); letter-spacing: .2em; color: var(--tc); border-top: 1px solid rgba(233,220,195,.14); padding-top: .4em; }
+.cd-af { font: 600 .9em/1.4 var(--sans); color: var(--bone-dim); }
+.cd-made { display: flex; flex-wrap: wrap; gap: .25em .8em; font: 600 .88em/1.35 var(--sans); color: var(--bone-dim); }
+.cd-lore { margin-top: .5em; font: italic 500 .95em/1.35 var(--display); color: var(--bone-faint); }
+.cd-worth { display: flex; justify-content: space-between; align-items: baseline; margin-top: .6em; border-top: 1px solid rgba(233,220,195,.14); padding-top: .4em; font: 800 .78em var(--sans); letter-spacing: .2em; color: var(--bone-faint); }
+.cd-worth b { font: 800 1.5em var(--sans); letter-spacing: 0; color: var(--gold); }
+.cd-short .cd-name { font-size: 1.5em; min-height: 2.1em; }
+.cd-short .cd-art { height: 5em; }
+.cd-short .cd-art svg { max-height: 4.2em; }
+.cd-short .cd-kind { display: none; }
+.cd-price { margin-top: .5em; text-align: right; font: 800 1.15em var(--sans); color: var(--gold); }
+
+@media (max-width: 600px) {
+  .screen { border: 0; background: none; }
+  #vPrep .screenbar { padding: 6px 0 10px; }
+  .prep { padding: 0 0 120px; }
+}
+
+/* a wide screen: the stage shrinks so the strip and the three actions stay on screen without scrolling */
+@media (min-width: 601px) {
+  #vWork canvas { width: 100%; height: clamp(200px, calc(100dvh - 400px), 56.25vw); max-height: 720px; aspect-ratio: auto; object-fit: contain; }
+  #homeBag { grid-template-columns: repeat(8, minmax(0, 76px)); }
+}

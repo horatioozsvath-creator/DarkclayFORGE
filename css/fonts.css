@@ -1,0 +1,10 @@
+/* Vendored latin subsets (SIL Open Font License). Alegreya for titles, Alegreya Sans for everything else. */
+@font-face{font-family:'Alegreya';font-style:normal;font-weight:500;font-display:block;src:url(../fonts/Alegreya-500.woff2) format('woff2')}
+@font-face{font-family:'Alegreya';font-style:normal;font-weight:700;font-display:block;src:url(../fonts/Alegreya-500.woff2) format('woff2')}
+@font-face{font-family:'Alegreya';font-style:normal;font-weight:800;font-display:block;src:url(../fonts/Alegreya-500.woff2) format('woff2')}
+@font-face{font-family:'Alegreya Sans';font-style:italic;font-weight:400;font-display:block;src:url(../fonts/AlegreyaSans-400i.woff2) format('woff2')}
+@font-face{font-family:'Alegreya Sans';font-style:italic;font-weight:500;font-display:block;src:url(../fonts/AlegreyaSans-500i.woff2) format('woff2')}
+@font-face{font-family:'Alegreya Sans';font-style:normal;font-weight:400;font-display:block;src:url(../fonts/AlegreyaSans-400.woff2) format('woff2')}
+@font-face{font-family:'Alegreya Sans';font-style:normal;font-weight:500;font-display:block;src:url(../fonts/AlegreyaSans-500.woff2) format('woff2')}
+@font-face{font-family:'Alegreya Sans';font-style:normal;font-weight:700;font-display:block;src:url(../fonts/AlegreyaSans-700.woff2) format('woff2')}
+@font-face{font-family:'Alegreya Sans';font-style:normal;font-weight:800;font-display:block;src:url(../fonts/AlegreyaSans-800.woff2) format('woff2')}

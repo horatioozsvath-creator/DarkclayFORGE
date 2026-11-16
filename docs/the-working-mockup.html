@@ -1,0 +1,1038 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>The Working</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;800&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;0,800;1,400&display=swap">
+<style>
+/* Layout: HOW IT WORKS, the mockup's settings, then one screen that is PREPARE, THE WORKING (with THE STRIP over it) or THE RESULT, as in
+   the game; the screen's panels stack on a phone. A deliberately single dark look: the game's own goal-screen palette (DARKCLAY ui.css). */
+:root {
+  --ink: #0e0b09; --panel: #191410; --panel-2: #231b15;
+  --line: rgba(232,196,100,.34); --line-soft: rgba(233,220,195,.12);
+  --bone: #ece0c6; --bone-dim: #b9aa8c; --bone-faint: #7d725e;
+  --ember-hot: #f0a35c; --gold: #e8c464; --blood: #c4483a; --frost: #8fb8d8;
+  --t-common: #b8b0a2; --t-fine: #8fc46a; --t-rare: #6aa6e8;
+  --k-good: #8fc46a; --k-great: #f0a35c; --k-hold: #8e9bb0; --k-crack: #c4483a; --k-true: #fff2c4; --k-found: #e8c464;
+  --display: 'Alegreya', Georgia, serif; --sans: 'Alegreya Sans', 'Trebuchet MS', system-ui, sans-serif;
+  color-scheme: dark;
+}
+html, body { background: var(--ink); color: var(--bone); }
+body { font: 500 16px/1.4 var(--sans); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 32px;
+  background: radial-gradient(ellipse at 30% 0%, #3a1d10 0%, #1a100a 45%, var(--ink) 85%) fixed; }
+.wrap { max-width: 1260px; margin: 0 auto; display: grid; gap: 14px; }
+.kicker { font: 800 13px var(--sans); letter-spacing: .16em; color: var(--ember-hot); }
+h1 { font: 800 clamp(28px, 4vw, 42px)/1.05 var(--display); margin: 2px 0 0; text-wrap: balance; text-shadow: 0 3px 0 #000; }
+.how { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 900px) { .how { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .how { grid-template-columns: minmax(0, 1fr); } }
+.how div { background: var(--panel); border: 1px solid var(--line-soft); padding: 10px 12px; font-size: 14px; color: var(--bone-dim); min-width: 0; }
+.how b { display: block; font: 800 14px var(--sans); letter-spacing: .12em; color: var(--gold); margin-bottom: 3px; }
+.how em { font-style: normal; font-weight: 800; color: var(--bone); }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line-soft); }
+.group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.group > span { font: 800 12px var(--sans); letter-spacing: .14em; color: var(--bone-faint); margin-right: 2px; }
+.seg { font: 700 14px var(--sans); letter-spacing: .06em; color: var(--bone-dim); background: var(--panel-2); border: 1px solid var(--line-soft); padding: 6px 10px; cursor: pointer; min-height: 36px; }
+.seg[aria-pressed="true"] { color: #1a0e06; background: var(--ember-hot); border-color: #fff0d0; }
+button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.screen { position: relative; border: 1px solid rgba(255,140,70,.3); background: radial-gradient(ellipse at 45% 60%, #3a1d10 0%, #1a100a 55%, #0b0807 95%); min-width: 0; }
+.screenbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; border-bottom: 1px solid var(--line-soft); }
+.screenbar .t { font: 800 clamp(20px, 2.6vw, 28px)/1.1 var(--display); }
+.screenbar .k { font: 800 12px var(--sans); letter-spacing: .16em; color: var(--ember-hot); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chips span { padding: 4px 10px; font: 800 11px var(--sans); letter-spacing: .14em; border: 1px solid var(--line-soft); color: var(--bone-faint); }
+.chips span.on { background: var(--gold); color: #1a0e06; border-color: var(--gold); }
+.chips span.done { color: var(--bone-dim); border-color: var(--line); }
+
+/* PREPARE */
+.prep { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr); gap: 14px; padding: 14px; }
+@media (max-width: 900px) { .prep { grid-template-columns: minmax(0, 1fr); } }
+.col { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.card { background: rgba(18,14,11,.9); border: 1px solid var(--line-soft); padding: 12px 14px; min-width: 0; }
+.card h2 { font: 800 12px var(--sans); letter-spacing: .16em; color: var(--bone-faint); margin: 0 0 8px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.card h2 b { color: var(--bone); letter-spacing: .08em; font-variant-numeric: tabular-nums; }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font: 600 14px var(--sans); color: var(--bone-dim); }
+.kv b { color: var(--bone); font-weight: 700; }
+.kit { display: grid; gap: 7px; }
+.kit .row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.kit .row > span { flex: 0 0 82px; font: 800 11px var(--sans); letter-spacing: .12em; color: var(--bone-faint); }
+.kit .seg { padding: 4px 8px; min-height: 30px; font-size: 13px; }
+.bag { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 520px) { .bag { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.bag button { background: none; border: 0; padding: 0; cursor: pointer; display: grid; gap: 4px; text-align: center; color: var(--bone-dim); font: 700 10px/1.1 var(--sans); letter-spacing: .04em; }
+.bag button[aria-pressed="true"] { color: var(--gold); }
+.bag button[aria-pressed="true"] .tile { box-shadow: 0 0 0 3px var(--gold), 0 0 14px rgba(232,196,100,.6); }
+.bag button:disabled { cursor: not-allowed; }
+.bag button.full { opacity: .45; }
+.bag button.unk { opacity: .55; color: var(--bone-faint); }
+.bag button.fresh .tile { animation: glow 1.4s ease-in-out 3; }
+@keyframes glow { 50% { box-shadow: 0 0 0 3px #fff4dc, 0 0 20px #fff4dc; } }
+.slots { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; font: 700 12px var(--sans); color: var(--bone-faint); letter-spacing: .08em; flex-wrap: wrap; }
+.slots i { width: 22px; height: 28px; border: 2px dashed var(--bone-faint); border-radius: 5px; }
+.slots i.on { border: 2px solid var(--gold); background: rgba(232,196,100,.25); }
+.found-lines { margin-top: 8px; display: grid; gap: 3px; font: 500 13px var(--sans); color: var(--bone-dim); }
+.found-lines b { color: var(--gold); }
+.lines { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; font: 500 13px var(--sans); color: var(--bone-dim); }
+.lines li { display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid var(--line-soft); padding-top: 4px; }
+.lines li b { color: var(--bone); font-weight: 700; }
+.lines li em { font-style: normal; font-weight: 800; text-align: right; }
+.choice { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; }
+@media (max-width: 520px) { .choice { grid-template-columns: 1fr; } }
+.opt { background: var(--panel); border: 2px solid var(--line-soft); padding: 12px 14px; text-align: left; color: var(--bone); cursor: pointer; font: 500 14px var(--sans); }
+.opt b { display: block; font: 800 20px var(--sans); letter-spacing: .1em; }
+.opt.go { background: var(--ember-hot); color: #1a0e06; border-color: #fff0d0; box-shadow: 0 0 22px rgba(240,163,92,.35); }
+
+/* clay tiles: handmade, the marks scratched in; each tile's own look kept for the working */
+.rack { display: grid; gap: 5px; }
+.rack.prep11 { grid-template-columns: repeat(11, minmax(0, 1fr)); }
+.rack.row { grid-template-columns: repeat(var(--n, 20), minmax(0, 1fr)); gap: 3px; }
+@media (max-width: 620px) { .rack.prep11 { grid-template-columns: repeat(7, minmax(0, 1fr)); } .rack.row { grid-template-columns: repeat(11, minmax(0, 1fr)); } }
+.tkt { position: relative; aspect-ratio: 3 / 4; perspective: 400px; transform: rotate(var(--r, 0deg)); }
+.tkt .in { position: absolute; inset: 0; transition: transform .38s; transform-style: preserve-3d; }
+.tkt.up .in { transform: rotateY(180deg); }
+.tkt .f, .tkt .b { position: absolute; inset: 0; backface-visibility: hidden; }
+.tkt .f { transform: rotateY(180deg); }
+.tile { position: relative; width: 100%; height: 100%; display: grid; place-items: center; align-content: center; gap: 1px; box-shadow: inset 0 -3px 0 rgba(0,0,0,.35), inset 0 2px 0 rgba(255,230,200,.3), 0 2px 0 #000; overflow: hidden; }
+.tile::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at var(--px, 60%) var(--py, 70%), rgba(60,30,10,.22) 0 16%, transparent 28%); }
+.tile svg { width: 74%; height: auto; overflow: visible; position: relative; }
+.tile .wd { position: relative; font: 800 clamp(7px, .75vw, 10px)/1 var(--sans); letter-spacing: .04em; color: #3a200e; }
+.tile .src { position: absolute; top: 3px; left: 0; right: 0; text-align: center; font: 800 clamp(6px, .6vw, 8px)/1 var(--sans); color: #2a160a; opacity: .75; }
+.tile.found { box-shadow: inset 0 -3px 0 rgba(0,0,0,.35), 0 0 0 2px var(--gold), 0 2px 0 #000; }
+.tile.back svg { width: 58%; opacity: .8; }
+.tkt.up { opacity: .5; }
+.tkt.last { opacity: 1; z-index: 2; }
+.tkt.last .f .tile { box-shadow: 0 0 0 2px #fff4dc, 0 0 12px #fff4dc; }
+.tkt.slip .b .tile { box-shadow: inset 0 0 0 3px var(--blood), 0 2px 0 #000; }
+.tkt.peek .b .tile::after { content: attr(data-peek); position: absolute; inset: auto 0 2px 0; text-align: center; font: 800 8px var(--sans); color: #fff4dc; background: rgba(0,0,0,.6); }
+.tkt.new .in { animation: deal .45s ease-out backwards; animation-delay: var(--d, 0s); }
+@keyframes deal { from { transform: translateY(-40px) rotate(-25deg); opacity: 0; } }
+
+/* THE WORKING */
+.stage { position: relative; }
+canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; touch-action: manipulation; cursor: pointer; }
+.hint { position: absolute; left: 12px; bottom: 8px; right: 30%; font: 700 clamp(12px, 1.5vw, 15px) var(--sans); color: var(--bone); pointer-events: none; text-shadow: 0 1px 0 #000, 0 0 8px #000; }
+.hint i { font-style: normal; color: var(--gold); }
+.stripbtn { position: absolute; right: 12px; top: 10px; }
+.pop { position: absolute; left: 50%; top: 6%; transform: translateX(-50%); pointer-events: none; text-align: center; opacity: 0; display: grid; justify-items: center; gap: 4px; }
+.pop .big { width: clamp(56px, 8vw, 104px); aspect-ratio: 3/4; }
+.pop .big .tile .wd { font-size: clamp(9px, 1.1vw, 14px); }
+.pop .lbl { display: inline-block; padding: 6px 18px 4px; border: 3px solid #fff4dc; color: #140d08; font: 800 clamp(20px, 3vw, 36px)/1 var(--sans); letter-spacing: .12em; box-shadow: 0 5px 0 #000; }
+.pop .gain { font: 800 clamp(15px, 2vw, 22px) var(--sans); letter-spacing: .08em; text-shadow: 0 2px 0 #000; }
+.pop .why { font: 700 clamp(12px, 1.4vw, 15px) var(--sans); letter-spacing: .1em; color: var(--bone); text-shadow: 0 2px 0 #000; }
+.pop.go { animation: pop 1s ease-out forwards; }
+.pop.bigpop.go { animation: popbig 1.4s ease-out forwards; }
+.pop.bad.go { animation: popbad 1s ease-out forwards; }
+@keyframes pop { 0% { opacity: 0; transform: translateX(-50%) translateY(18px) scale(.5) rotate(-8deg); } 18% { opacity: 1; transform: translateX(-50%) scale(1.1) rotate(2deg); } 30% { transform: translateX(-50%) scale(1) rotate(0); } 75% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-16px); } }
+@keyframes popbig { 0% { opacity: 0; transform: translateX(-50%) scale(.3) rotate(-14deg); } 20% { opacity: 1; transform: translateX(-50%) scale(1.3) rotate(4deg); } 35% { transform: translateX(-50%) scale(1.12) rotate(0); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-22px) scale(1.08); } }
+@keyframes popbad { 0% { opacity: 0; transform: translateX(-50%) scale(1.3); } 12% { opacity: 1; transform: translateX(calc(-50% - 14px)) scale(1); } 22% { transform: translateX(calc(-50% + 12px)); } 32% { transform: translateX(calc(-50% - 8px)); } 42% { transform: translateX(-50%); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(14px); } }
+.band { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 10px 14px 14px; border-top: 1px solid var(--line-soft); }
+.bandhead { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font: 800 11px var(--sans); letter-spacing: .14em; color: var(--bone-faint); }
+.bandhead b { color: var(--bone); }
+.odds6 { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
+.odds6 div { text-align: center; padding: 3px 2px; background: var(--panel-2); border: 1px solid var(--line-soft); }
+.odds6 div.off { opacity: .3; }
+.odds6 span { display: block; font: 800 9px var(--sans); letter-spacing: .12em; }
+.odds6 b { font: 800 17px var(--sans); font-variant-numeric: tabular-nums; }
+.odds6 b.up::after { content: ' ▲'; font-size: 10px; color: var(--k-good); }
+.odds6 b.down::after { content: ' ▼'; font-size: 10px; color: var(--k-crack); }
+.barrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; font: 800 12px var(--sans); letter-spacing: .14em; }
+.bar { position: relative; height: 20px; background: #0b0807; border: 1px solid var(--line-soft); overflow: hidden; }
+.bar i { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, #7a4a20, var(--ember-hot)); transition: width .25s cubic-bezier(.3,1.6,.5,1); }
+.bar.worked i { background: linear-gradient(90deg, #2c5a3a, var(--t-fine)); }
+.bar .notch { position: absolute; top: 0; bottom: 0; width: 3px; background: var(--blood); }
+.bar.flash { box-shadow: 0 0 0 2px var(--gold), 0 0 18px var(--gold); }
+.oddsrow { display: flex; gap: 14px; flex-wrap: wrap; font: 700 13px var(--sans); color: var(--bone-dim); align-items: center; }
+.oddsrow b { font-variant-numeric: tabular-nums; }
+.streak { display: inline-flex; gap: 3px; vertical-align: middle; }
+.streak i { width: 16px; height: 7px; background: #2a201a; }
+.streak i.on { background: var(--k-true); box-shadow: 0 0 6px rgba(255,242,196,.6); }
+.acts { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; padding: 0 14px 14px; }
+.act { min-height: 56px; font: 800 18px var(--sans); letter-spacing: .1em; cursor: pointer; border: 3px solid transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+.act small { font: 700 11px var(--sans); letter-spacing: .12em; opacity: .75; margin-top: 3px; }
+.act.strike { background: var(--ember-hot); color: #1a0e06; border-color: #fff0d0; box-shadow: 0 0 26px rgba(255,154,58,.45); }
+.act.fire { background: #3a2012; color: var(--bone); border-color: rgba(255,140,70,.5); }
+.act.fire[aria-pressed="true"] { background: #7a3512; border-color: var(--ember-hot); }
+.act.quench { background: #16222c; color: var(--frost); border-color: rgba(143,184,216,.5); }
+.act:disabled { opacity: .4; cursor: not-allowed; }
+@media (max-width: 520px) { .acts { grid-template-columns: 1fr 1fr; } .acts .strike { grid-column: 1 / -1; } }
+.sheet, .result { position: absolute; inset: 0; background: rgba(8,6,5,.86); padding: 16px; overflow: auto; z-index: 5; }
+.sheet .in2 { max-width: 980px; margin: 0 auto; display: grid; gap: 12px; }
+.paused { text-align: center; font: 800 16px var(--sans); letter-spacing: .2em; color: var(--gold); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 700px) { .two { grid-template-columns: 1fr; } }
+.result { display: grid; place-items: center; }
+.result .box { max-width: 480px; width: 100%; background: var(--panel); border: 1px solid var(--line); padding: 20px; text-align: center; animation: rise .5s ease-out; }
+@keyframes rise { from { transform: scale(.85); opacity: 0; } }
+.result .tier { font: 800 14px var(--sans); letter-spacing: .2em; }
+.result h3 { font: 800 30px/1.1 var(--display); margin: 4px 0 6px; }
+.result p { color: var(--bone-dim); margin: 4px 0; }
+.result .pick { margin-top: 10px; padding: 8px; border: 1px solid var(--gold); color: var(--gold); font: 800 14px var(--sans); letter-spacing: .1em; }
+.result .side { margin-top: 8px; padding: 6px; border: 1px solid var(--frost); color: var(--frost); font: 800 13px var(--sans); letter-spacing: .08em; }
+.gift { margin-top: 12px; padding: 12px; border: 1px solid var(--gold); background: radial-gradient(ellipse at 50% 30%, rgba(232,196,100,.18), transparent 70%); display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center; text-align: left; }
+.gift .gt { width: 64px; aspect-ratio: 3/4; animation: giftin 1.2s cubic-bezier(.2,1.6,.4,1) both; }
+@keyframes giftin { 0% { transform: translateY(-30px) rotate(-30deg) scale(.4); opacity: 0; } 60% { transform: rotate(6deg) scale(1.15); opacity: 1; } 100% { transform: rotate(-2deg) scale(1); } }
+.gift b { display: block; font: 800 12px var(--sans); letter-spacing: .16em; color: var(--gold); }
+.gift strong { display: block; font: 800 20px var(--display); color: var(--bone); }
+.gift span { font: 500 13px var(--sans); color: var(--bone-dim); }
+.foot { font: 500 13px var(--sans); color: var(--bone-faint); }
+.foot kbd { font: 700 12px var(--sans); color: var(--bone); background: var(--panel-2); border: 1px solid var(--line-soft); padding: 1px 6px; }
+/* the phone held upright: THE WORKING takes the whole screen as in the game, PREPARE scrolls with its choice pinned to the bottom */
+.leave { display: none; }
+.howd > summary { cursor: pointer; font: 800 13px var(--sans); letter-spacing: .14em; color: var(--gold); padding: 6px 0; list-style: none; }
+.howd > summary::before { content: '▸ '; }
+.howd[open] > summary::before { content: '▾ '; }
+@media (max-width: 600px) {
+  body { padding-block: 12px 24px; }
+  h1 { font-size: 26px; }
+  .controls { flex-wrap: nowrap; overflow-x: auto; padding: 8px; gap: 14px; -webkit-overflow-scrolling: touch; }
+  .controls .group { flex-wrap: nowrap; }
+  .seg { white-space: nowrap; }
+  .prep { padding: 10px 10px 120px; gap: 10px; }
+  .kit .row > span { flex-basis: 100%; }
+  .choice { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; grid-template-columns: 1fr 1.6fr; gap: 8px;
+    padding: 10px max(12px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+    background: rgba(14,11,9,.97); border-top: 1px solid var(--line); }
+  .opt { padding: 8px 10px; font-size: 12px; }
+  .opt b { font-size: 18px; }
+  #vWork { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; overflow: hidden;
+    background: radial-gradient(ellipse at 45% 40%, #3a1d10 0%, #1a100a 55%, #0b0807 95%);
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+  #vWork .screenbar { padding: 6px 10px; flex-wrap: nowrap; gap: 8px; }
+  #vWork .screenbar > div:nth-child(2) { flex: 1; min-width: 0; }
+  #vWork .screenbar .t { font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #vWork .screenbar .k { font-size: 10px; }
+  #vWork .chips { flex-wrap: nowrap; gap: 3px; }
+  #vWork .chips span { padding: 2px 5px; font-size: 9px; letter-spacing: .06em; }
+  .leave { display: inline-flex; flex: none; min-width: 40px; min-height: 40px; align-items: center; justify-content: center; font-size: 18px; }
+  #vWork .stage { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
+  #vWork canvas { width: 100%; height: 100%; max-height: 100%; aspect-ratio: auto; object-fit: contain; }
+  .stripbtn { top: 6px; right: 6px; min-height: 34px; padding: 4px 8px; font-size: 12px; }
+  .hint { right: 10px; left: 10px; bottom: 4px; font-size: 12px; }
+  .pop { top: 2%; }
+  .band { padding: 6px 10px 8px; gap: 5px; flex: none; }
+  .bandhead { font-size: 10px; }
+  .streak i { width: 10px; height: 6px; }
+  .rack.row { grid-template-columns: repeat(11, minmax(0, 1fr)); }
+  .odds6 b { font-size: 14px; }
+  .odds6 span { font-size: 8px; letter-spacing: .06em; }
+  .barrow { font-size: 11px; }
+  .bar { height: 16px; }
+  .oddsrow { gap: 10px; font-size: 12px; }
+  .acts { flex: none; grid-template-columns: 1fr 1fr; grid-template-areas: 'fire quench' 'strike strike'; gap: 8px; padding: 2px 10px 10px; }
+  .acts .strike { grid-area: strike; min-height: 76px; font-size: 26px; }
+  .acts .fire { grid-area: fire; }
+  .acts .quench { grid-area: quench; }
+  .act { min-height: 48px; font-size: 14px; letter-spacing: .06em; }
+  .act small { font-size: 9px; }
+  .sheet, .result { padding: 10px; }
+  .rack.prep11 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .pop.go, .pop.bigpop.go, .pop.bad.go { animation: fade 1s forwards; } @keyframes fade { 0%,70% { opacity: 1; } 100% { opacity: 0; } } .tkt .in, .bar i { transition: none; } .tkt.new .in, .gift .gt, .bag button.fresh .tile { animation: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="kicker">DARKCLAY ZERO · DECISION 277 · A PLAYABLE MOCKUP</div>
+    <h1 id="title">THE WORKING</h1>
+  </header>
+
+  <details class="howd" id="howd"><summary>HOW IT WORKS</summary>
+  <section class="how" aria-label="How it works">
+    <div><b>1 · PREPARE</b>Your strip of clay tiles is laid out <em>face up</em>: what's in it and what put it there. Choose the <em>found tiles</em> to bring, then WORK IT.</div>
+    <div><b>2 · HEAT AND STRIKE</b>Heat it into the <em>gold band</em>. Every strike turns over the next tile: GOOD and GREAT shape it, HOLD does nothing, a CRACK marks it, a found tile does its trick.</div>
+    <div><b>3 · MIND THE HEAT</b>It cools as you wait and with every strike. Struck cold, a CRACK slips into your strip. <em>Back in the fire, every tile returns and is shuffled.</em></div>
+    <div><b>4 · PUSH, THEN QUENCH</b>Once SHAPE is full it's made; every strike pushes the odds of Fine and Rare. Quench when you choose. WHITE HEAT or a TRUE earns the pick, and <em>a clean, fine working turns up a new found tile</em>.</div>
+  </section>
+  </details>
+
+  <div class="controls" role="group" aria-label="Mockup settings">
+    <div class="group" id="stations"><span>STATION</span></div>
+    <div class="group" id="levels"><span>TRADE</span></div>
+    <div class="group" id="modes"><span>PIECE</span></div>
+  </div>
+
+  <div class="screen" id="screen">
+    <!-- PREPARE -->
+    <div id="vPrep">
+      <div class="screenbar"><div><div class="k" id="prepK">THE FORGE · PREPARE</div><div class="t" id="prepT">Iron Falchion</div></div><div class="chips"><span class="on">PREPARE</span><span>THE WORKING</span><span>THE RESULT</span></div></div>
+      <div class="prep">
+        <div class="col">
+          <div class="card">
+            <h2><span>THE PIECE</span></h2>
+            <div class="kv" id="pieceKv"></div>
+          </div>
+          <div class="card" style="border-color:var(--line)">
+            <h2><span>THE PARTS</span><b id="partsHead">THE BLADE'S METAL SETS YOUR STRIP</b></h2>
+            <div class="kit" id="parts"></div>
+            <div class="found-lines" id="partLine"></div>
+          </div>
+          <div class="card">
+            <h2><span>WHAT YOU BRING</span><b>STACKS YOUR STRIP</b></h2>
+            <div class="kit">
+              <div class="row"><span id="toolName">HAMMER</span><div class="group" id="kHammer"></div></div>
+              <div class="row"><span>GLOVES</span><div class="group" id="kGloves"></div></div>
+              <div class="row"><span>LUCK</span><div class="group" id="kLuck"></div></div>
+              <div class="row"><span>CO-OP</span><div class="group" id="kHelp"></div></div>
+            </div>
+          </div>
+          <div class="card" style="border-color:var(--line)">
+            <h2><span>FOUND TILES</span><b id="slotWord">1 SLOT</b></h2>
+            <div class="slots" id="slots"></div>
+            <div class="bag" id="bag"></div>
+            <div class="found-lines" id="foundLines"></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card">
+            <h2><span>YOUR STRIP · FACE UP UNTIL YOU BEGIN</span><b id="prepCount">20 TILES</b></h2>
+            <div class="odds6" id="prepOdds" style="margin-bottom:10px"></div>
+            <div class="rack prep11" id="prepRack"></div>
+            <ul class="lines" id="prepLines"></ul>
+          </div>
+          <div class="choice">
+            <button class="opt" id="makeIt"></button>
+            <button class="opt go" id="workIt"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- THE WORKING -->
+    <div id="vWork" hidden>
+      <div class="screenbar"><button class="seg leave" id="bLeave" aria-label="Leave the working, back to PREPARE">✕</button><div><div class="k" id="workK">THE FORGE · WORK IT</div><div class="t" id="workT">Iron Falchion</div></div><div class="chips"><span id="cShape" class="on">1 · SHAPE</span><span id="cPush">2 · PUSH</span><span id="cDone">3 · QUENCH</span></div></div>
+      <div class="stage">
+        <canvas id="cv" width="1280" height="720" aria-label="The stage: the piece, the fire and the heat"></canvas>
+        <button class="seg stripbtn" id="bStrip">Y · THE STRIP</button>
+        <div class="pop" id="pop" aria-live="polite"></div>
+        <div class="hint" id="hint"></div>
+      </div>
+      <div class="band">
+        <div class="bandhead"><span>YOUR STRIP · <b id="leftWord">20 OF 20 FACE DOWN</b></span><span>WHITE HEAT <span class="streak" id="streak"></span> <b id="streakVal"></b></span></div>
+        <div class="rack row" id="rowRack"></div>
+        <div class="odds6" id="workOdds"></div>
+        <div class="barrow"><span id="barLabel" style="color:var(--bone-faint)">SHAPE</span><div class="bar" id="bar"><i id="barFill"></i></div><b id="barVal">0 %</b></div>
+        <div class="oddsrow"><span>COMMON <b id="oCommon" style="color:var(--t-common)">75</b>%</span><span>FINE <b id="oFine" style="color:var(--t-fine)">20</b>%</span><span>RARE <b id="oRare" style="color:var(--t-rare)">5</b>%</span><span>CRACKS <b id="oCracks" style="color:var(--k-crack)">0</b></span><span id="flags" style="color:var(--gold)"></span></div>
+      </div>
+      <div class="acts">
+        <button class="act strike" id="bStrike">STRIKE<small>A · SPACE · TAP THE STAGE</small></button>
+        <button class="act fire" id="bFire" aria-pressed="false">INTO THE FIRE<small>B · R</small></button>
+        <button class="act quench" id="bQuench" disabled>QUENCH<small>X · Q</small></button>
+      </div>
+      <div class="sheet" id="sheet" hidden>
+        <div class="in2">
+          <div class="paused">PAUSED · THE HEAT WAITS</div>
+          <div class="card">
+            <h2><span>YOUR STRIP · THIS HEAT, IN THE ORDER TURNED</span><b id="sheetCount"></b></h2>
+            <div class="odds6" id="sheetOdds" style="margin-bottom:10px"></div>
+            <div class="rack prep11" id="sheetRack"></div>
+          </div>
+          <div class="two">
+            <div class="card"><h2><span>WHAT STACKED IT</span></h2><ul class="lines" id="sheetLines" style="margin:0"></ul></div>
+            <div class="card"><h2><span>THIS HEAT</span></h2><ul class="lines" id="heatLines" style="margin:0"></ul></div>
+          </div>
+          <div style="text-align:center"><button class="seg" id="bClose">Y · CLOSE</button></div>
+        </div>
+      </div>
+      <div class="result" id="result" hidden>
+        <div class="box">
+          <div class="tier" id="rTier">FINE</div>
+          <h3 id="rName">Iron Falchion</h3>
+          <p id="rLine"></p>
+          <p id="rWhy" style="font-size:13px"></p>
+          <div class="side" id="rSide" hidden>FROST-KISS · A SMALL FROST SIDE ON THE PIECE</div>
+          <div class="pick" id="rPick" hidden>THE PICK · CHOOSE ONE OF TWO AFFIXES, THEN SET IT</div>
+          <div class="gift" id="rGift" hidden></div>
+          <div style="display:flex; gap:10px; justify-content:center; margin-top:14px; flex-wrap:wrap"><button class="seg" id="again">BACK TO PREPARE</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">A mockup to feel the rules, not the game's art. Keys: <kbd>Space</kbd> strike (WORK IT on PREPARE) · <kbd>R</kbd> into the fire / out · <kbd>Q</kbd> quench · <kbd>Y</kbd> or <kbd>Tab</kbd> the strip. Numbers are first guesses for the balance pass.</div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const KINDS = ['GOOD', 'GREAT', 'HOLD', 'CRACK', 'TRUE', 'FOUND'];
+  const KC = { GOOD: '#8fc46a', GREAT: '#f0a35c', HOLD: '#8e9bb0', CRACK: '#c4483a', TRUE: '#fff2c4', FOUND: '#e8c464' };
+
+  const STATIONS = {
+    forge: { name: 'FORGE', piece: 'Iron Falchion', stuff: 'Iron', tool: 'HAMMER', meter: 'HEAT', fire: 'INTO THE FIRE', out: 'OUT OF THE FIRE', close: 'QUENCH', place: 'the fire',
+      band: [45, 86], drain: 8, cool: 3, rise: 36, over: 95, colours: ['#3a3634', '#7a1e10', '#c8401a', '#f08a2a', '#ffd25a', '#fff6dc'],
+      labels: [[0, 'BLACK'], [30, 'DULL RED'], [45, 'CHERRY'], [70, 'YELLOW'], [86, 'WHITE']], cold: 'STRUCK COLD',
+      twist: 'Strike it hot: yellow to cherry. Struck cold, a CRACK slips in. Left in past white, it scales.' },
+    glass: { name: 'GLASS', piece: 'Clear Lens', stuff: 'Clear sand', tool: 'BLOWPIPE', meter: 'THE GATHER', fire: 'BACK TO THE GLORY HOLE', out: 'OUT OF THE GLORY HOLE', close: 'SHEAR', place: 'the glory hole',
+      band: [40, 80], drain: 9, cool: 5, rise: 40, over: 101, colours: ['#2a3a3a', '#3a6a6a', '#c8702a', '#f0a040', '#ffd27a', '#fff2c0'],
+      labels: [[0, 'STIFF'], [40, 'SOFT'], [80, 'RUNNING']], cold: 'IT SHATTERS',
+      twist: 'Keep it soft. Too stiff and it shatters (a CRACK slips in); too hot and it sags (SHAPE slips back). Cools fastest.' },
+    stretcher: { name: 'STRETCHER', piece: 'Goat Jerkin', stuff: 'Goat hide', tool: 'AWL', meter: 'DAMP', fire: 'SOAK IT', out: 'OUT OF THE SOAK', close: 'SET', place: 'the soak',
+      band: [35, 80], drain: 7, cool: 2, rise: 32, over: 101, colours: ['#6a5034', '#7a5a38', '#8a6a44', '#6a5a4a', '#4a5a6a', '#3a5a7a'],
+      labels: [[0, 'DRY'], [35, 'SUPPLE'], [80, 'SOAKED']], cold: 'TOO DRY · IT STIFFENS', wetTear: true,
+      twist: 'Keep it supple. Too dry: a stitch turns nothing over. Too wet: a stitch tears (a CRACK slips in).' },
+    bench: { name: 'BENCH', piece: 'Birch Shortbow', stuff: 'Birch', tool: 'DRAWKNIFE', meter: 'STEAM', fire: 'INTO THE STEAM', out: 'OUT OF THE STEAM', close: 'STRING', place: 'the steam',
+      band: [40, 100], drain: 8, cool: 3, rise: 34, over: 101, colours: ['#5a4630', '#6a5236', '#8a6a42', '#a8844e', '#c8a060', '#e0c088'],
+      labels: [[0, 'SET'], [40, 'PLIANT']], cold: 'IT SPLITS', grain: true,
+      twist: 'Bend it pliant, with the grain. Cold, it splits (a CRACK slips in). Across the grain, a bend turns nothing over.' },
+    kettle: { name: 'KETTLE', piece: 'Draught of Mending', stuff: 'Mending herbs', tool: 'SPOON', meter: 'THE BOIL', fire: 'STOKE', out: 'STOKE', close: 'STOP', place: 'the fire',
+      band: [40, 75], drain: 0, cool: 7, rise: 26, over: 101, kettle: true, colours: ['#2a3a2a', '#3a5a3a', '#5a7a3a', '#9a8a3a', '#c86a2a', '#e04a2a'],
+      labels: [[0, 'COOL'], [40, 'SIMMER'], [75, 'ROLLING']], cold: 'TOO COOL · IT DOESN\'T TAKE',
+      twist: 'Hold a simmer. Stirring doesn\'t cool it; it settles and STOKE raises it. Too hot boils over (a CRACK); too cool doesn\'t take. Reshuffles when the strip runs out.' },
+  };
+  // found tiles: old makers' tiles, kept for good; each counts as a GOOD and does its trick (THE-WORKING §5.2)
+  const FOUND = {
+    ember:  { name: 'Ember Tile', short: 'EMBER', glaze: '#ff7a2a', line: 'the heat jumps back up a band', where: 'a forge-vault under the Rot Line' },
+    warden: { name: 'Warden\'s Tile', short: 'WARDEN', glaze: '#8fb8d8', line: 'the next CRACK is a HOLD', where: 'a commission for the Crag Keep' },
+    twin:   { name: 'Twin Tile', short: 'TWIN', glaze: '#f0a35c', line: 'the next tile counts twice', where: 'a ruin\'s shrine' },
+    mender: { name: 'Mender\'s Tile', short: 'MENDER', glaze: '#8fc46a', line: 'clears one crack\'s mark', where: 'a master\'s gift' },
+    seer:   { name: 'Seer\'s Tile', short: 'SEER', glaze: '#c08ae8', line: 'shows the next two face-down tiles', where: 'a great door\'s vault' },
+    echo:   { name: 'Echo Tile', short: 'ECHO', glaze: '#b8b0a2', line: 'your last GOOD goes back face down', where: 'a drowned chapel' },
+    hollow: { name: 'The Hollow King\'s Tile', short: 'HOLLOW', glaze: '#c4483a', line: 'counts as a GREAT, but slips a CRACK in', where: 'carried by the Hollow King' },
+    frost:  { name: 'Frost-kiss', short: 'FROST', glaze: '#cfe8ff', line: 'rare: the piece takes a small frost side', where: 'a named foe in the Deep Winter', piece: true },
+  };
+  // THE PARTS: each station's parts and the materials they take. The first part's material sets the strip's makeup (the push's metal strips:
+  // working.json → push → metals) and how the meter behaves (the metals' ways moved onto the meter); a rare material turns a GOOD into a TRUE.
+  const PARTS = {
+    forge: [{ part: 'Blade', opts: [
+        { name: 'Iron', strip: [10, 3, 4, 3], line: 'the baseline: strike it yellow to cherry' },
+        { name: 'Steel', strip: [9, 4, 5, 2], band: [55, 92], line: 'a hotter heat: the band sits higher' },
+        { name: 'Bronze', strip: [11, 2, 2, 5], widen: 1.3, line: 'forgiving: a wider band, fewer cracks' },
+        { name: 'Silver', strip: [7, 5, 6, 2], coolX: 1.7, line: 'it cools fast: strike quickly; +25 % on the dead' },
+        { name: 'Darkclay steel', strip: [7, 6, 6, 1], widen: 0.7, line: 'a narrow band, for more: GREATs and cracks both' }] },
+      { part: 'Guard', opts: [{ name: 'Iron' }, { name: 'Bronze' }, { name: 'Blackwater iron', rare: true, line: 'rare: a GOOD becomes a TRUE' }] },
+      { part: 'Grip', opts: [{ name: 'Leather wrap' }, { name: 'Shark hide' }, { name: 'Cord' }] }],
+    glass: [{ part: 'Sand', opts: [{ name: 'Clear sand', line: 'the baseline' }, { name: 'Black sand', widen: 0.85, strip: [9, 4, 5, 2], line: 'darker glass, a narrower soft band' }] },
+      { part: 'Flux', opts: [{ name: 'Ash' }, { name: 'Lime' }] },
+      { part: 'Colour', opts: [{ name: 'None' }, { name: 'Cobalt' }, { name: 'Starglass', rare: true, line: 'rare: a GOOD becomes a TRUE' }] }],
+    stretcher: [{ part: 'Hide', opts: [{ name: 'Goat hide', widen: 1.15, line: 'easy: a wider supple band' }, { name: 'Shark hide', widen: 0.85, strip: [9, 4, 5, 2], line: 'tough: a narrower band, more GREATs' }, { name: 'Bear hide', strip: [10, 3, 4, 3], line: 'the baseline' }] },
+      { part: 'Lining', opts: [{ name: 'Wool' }, { name: 'Silk' }] },
+      { part: 'Thread', opts: [{ name: 'Gut' }, { name: 'Silver thread', rare: true, line: 'rare: a GOOD becomes a TRUE' }] }],
+    bench: [{ part: 'Stave', opts: [{ name: 'Birch', widen: 1.15, line: 'springy: a wider pliant band' }, { name: 'Oak', widen: 0.85, strip: [9, 4, 5, 2], line: 'dense: a narrower band, more GREATs' }, { name: 'Yew', line: 'the baseline' }] },
+      { part: 'String', opts: [{ name: 'Gut' }, { name: 'Silk' }] },
+      { part: 'Nocks', opts: [{ name: 'Horn' }, { name: 'Starmetal', rare: true, line: 'rare: a GOOD becomes a TRUE' }] }],
+    kettle: [{ part: 'Herb', opts: [{ name: 'Mending herbs', line: 'the baseline' }, { name: 'Ghostcap', rare: true, strip: [9, 4, 5, 2], line: 'rare: a TRUE, but a touchier boil' , widen: 0.85 }] },
+      { part: 'Water', opts: [{ name: 'Well water' }, { name: 'Spring water', widen: 1.1, line: 'a gentler simmer' }] },
+      { part: 'Binder', opts: [{ name: 'Honey' }, { name: 'Wax' }] }],
+  };
+  const chosenParts = {};   // station → [index a part]
+  const partsNow = () => { const P = PARTS[st]; const c = chosenParts[st] || (chosenParts[st] = P.map(() => 0)); return P.map((p, i) => p.opts[c[i]]); };
+  const BASE = {};
+  function applyParts() {   // the first part's material on the station's meter: the band shifted, widened or narrowed, the cooling quicker
+    const c = STATIONS[st];
+    if (!BASE[st]) BASE[st] = { band: c.band.slice(), cool: c.cool };
+    const m = partsNow()[0];
+    let band = (m.band || BASE[st].band).slice();
+    if (m.widen) { const mid = (band[0] + band[1]) / 2, half = (band[1] - band[0]) / 2 * m.widen; band = [Math.max(0, Math.round(mid - half)), Math.min(100, Math.round(mid + half))]; }
+    c.band = band; c.cool = BASE[st].cool * (m.coolX || 1);
+  }
+  const LEVELS = [1, 3, 5, 7];
+  const MODES = { make: 'A NEW PIECE', rework: 'BACK IN THE FIRE' };
+  const TIERS = ['COMMON', 'FINE', 'RARE'];
+  const TIERC = ['var(--t-common)', 'var(--t-fine)', 'var(--t-rare)'];
+
+  let st = 'forge', lvl = 5, mode = 'make';
+  const kit = { hammer: 1, gloves: 1, luck: 12, helper: 0 };
+  let owned = ['ember', 'warden', 'twin'];   // three found so far; a successful working turns up another
+  let chosen = ['ember', 'warden'];
+  let fresh = null;
+  let S = null;
+  const slotsFor = l => l < 3 ? 0 : l < 5 ? 1 : l < 7 ? 2 : 3;
+  const phoneQ = window.matchMedia('(max-width: 600px)');
+
+  // ---------- handmade tiles: every tile its own shape, tilt, clay and thumbprint, the marks scratched in ----------
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const j = (v, n) => (v + rnd(-n, n)).toFixed(1);
+  const line = pts => 'M' + pts.map(p => j(p[0], 2.2) + ',' + j(p[1], 2.2)).join(' L');
+  const ring = (cx, cy, rx, ry, n) => { const p = []; for (let i = 0; i <= n; i++) { const a = i / n * Math.PI * 2 + 0.3; p.push([cx + Math.cos(a) * rnd(rx - 3, rx + 3), cy + Math.sin(a) * rnd(ry - 3, ry + 3)]); } return line(p); };
+  const MARK = {
+    GOOD: () => [line([[50, 14], [49, 40], [51, 64], [50, 86]])],
+    GREAT: () => [line([[38, 14], [37, 50], [39, 86]]), line([[62, 14], [63, 50], [61, 86]])],
+    HOLD: () => [ring(50, 50, 27, 29, 12)],
+    CRACK: () => [line([[54, 10], [40, 30], [58, 46], [38, 66], [56, 90]])],
+    TRUE: () => { const p = []; for (let i = 0; i <= 5; i++) { const a = -Math.PI / 2 + i * 4 * Math.PI / 5; p.push([50 + Math.cos(a) * 34, 52 + Math.sin(a) * 34]); } return [line(p)]; },
+    me: () => [line([[50, 12], [50, 88]]), line([[50, 44], [28, 18]]), line([[50, 44], [72, 18]]), line([[50, 70], [34, 84]])],
+    unk: () => [line([[36, 30], [44, 20], [58, 20], [64, 30], [60, 42], [50, 50], [50, 62]]), line([[50, 76], [50, 80]])],
+    ember: () => [line([[50, 88], [34, 58], [48, 30], [55, 50], [64, 16], [72, 58], [50, 88]])],
+    mender: () => [line([[24, 30], [44, 50], [24, 70]]), line([[76, 30], [56, 50], [76, 70]]), line([[44, 50], [56, 50]])],
+    twin: () => [ring(36, 50, 14, 16, 9), ring(64, 50, 14, 16, 9)],
+    warden: () => [line([[28, 20], [72, 20], [72, 54], [50, 86], [28, 54], [28, 20]])],
+    seer: () => [line([[14, 50], [32, 32], [50, 26], [68, 32], [86, 50], [68, 68], [50, 74], [32, 68], [14, 50]]), ring(50, 50, 8, 8, 7)],
+    echo: () => [line([[50, 50], [60, 44], [62, 58], [44, 64], [36, 44], [52, 30], [72, 38], [76, 62], [56, 80], [30, 74]])],
+    hollow: () => [line([[18, 72], [24, 30], [38, 54], [50, 22], [62, 54], [76, 30], [82, 72], [18, 72]])],
+    frost: () => [line([[50, 12], [50, 88]]), line([[18, 30], [82, 70]]), line([[18, 70], [82, 30]])],
+  };
+  const scratch = (k, glaze) => '<svg viewBox="0 0 100 100">' + MARK[k]().map(d =>
+    '<path d="' + d + '" fill="none" stroke="rgba(40,18,6,.85)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<path d="' + d + '" fill="none" stroke="' + glaze + '" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" transform="translate(0.6,1.2)"/>').join('') + '</svg>';
+  const clayStyle = dark => {
+    const r = () => rnd(4, 11).toFixed(0) + 'px';
+    const l = dark ? rnd(26, 36) : rnd(44, 58), h = rnd(26, 40);
+    const bg = dark ? 'radial-gradient(ellipse at 35% 25%, hsl(' + h + ',30%,' + (l + 6) + '%), hsl(' + h + ',34%,' + l + '%) 60%, hsl(' + h + ',36%,' + (l - 8) + '%))'
+                    : 'radial-gradient(ellipse at 35% 25%, hsl(' + h + ',42%,' + (l + 10) + '%), hsl(' + h + ',44%,' + l + '%) 60%, hsl(' + h + ',46%,' + (l - 10) + '%))';
+    return '--px:' + rnd(30, 70).toFixed(0) + '%; --py:' + rnd(55, 80).toFixed(0) + '%; border-radius:' + r() + ' ' + r() + ' ' + r() + ' ' + r() + '; background:' + bg;
+  };
+  function lookOf(t) { // made once for a tile and kept: it looks the same every time it turns over
+    const f = t.f ? FOUND[t.f] : null;
+    const face = '<div class="tile' + (f ? ' found' : '') + '" style="' + clayStyle(false) + '">' + (t.src && t.src !== 'FOUND' ? '<span class="src">' + t.src + '</span>' : '')
+      + scratch(f ? t.f : t.k, f ? f.glaze : KC[t.k]) + '<span class="wd">' + (f ? f.short : t.k) + '</span></div>';
+    const back = '<div class="tile back" style="' + clayStyle(true) + '">' + scratch('me', '#c99a6c') + '</div>';
+    return { face, back, r: rnd(-4, 4).toFixed(1) };
+  }
+  const lookCache = {};
+
+  // ---------- the strip: the base, every line that stacks it, the found tiles in plain tiles' places ----------
+  function baseStrip(found) {
+    const c = STATIONS[st];
+    const t = [];
+    const add = (k, n) => { for (let i = 0; i < n; i++) t.push({ k, src: '' }); };
+    const pn = partsNow(), m0 = pn[0], sp = m0.strip || [10, 3, 4, 3];
+    add('GOOD', sp[0]); add('GREAT', sp[1]); add('CRACK', sp[2]); add('HOLD', sp[3]);
+    const lines = [{ what: PARTS[st][0].part + ' · ' + m0.name, how: sp[0] + ' GOOD · ' + sp[1] + ' GREAT · ' + sp[2] + ' CRACK · ' + sp[3] + ' HOLD', col: 'var(--bone)' }];
+    const rareParts = pn.filter(o => o.rare);
+    const turn = (from, to, n, src, label) => {
+      let done = 0;
+      for (const x of t) { if (done >= n) break; if (x.k === from && !x.src) { x.k = to; x.src = src; done++; } }
+      if (done) lines.push({ what: label, how: done + ' ' + from + ' → ' + to, col: KC[to] });
+      return done;
+    };
+    const cracks = () => t.filter(x => x.k === 'CRACK').length;
+    if (lvl < 3) turn('CRACK', 'HOLD', 4, 'LEARNING', 'Trade ' + lvl + ' · learning, no cracks yet');
+    else {
+      const tr = Math.min(Math.floor((lvl - 1) / 3), cracks() - 1);
+      if (tr > 0) turn('CRACK', 'GOOD', tr, 'TRADE', 'Trade ' + lvl + ' · every 3 levels');
+      if (kit.gloves && cracks() > 1) turn('CRACK', 'GOOD', 1, 'GLOVES', 'Gloves worn');
+    }
+    if (kit.hammer) turn('GOOD', 'GREAT', kit.hammer, c.tool, (kit.hammer === 1 ? 'A Fine ' : 'An Old-Blood ') + c.tool.toLowerCase());
+    const lt = Math.min(3, Math.max(0, Math.floor((kit.luck - 10) / 2)));
+    if (lt) turn('GOOD', 'GREAT', lt, 'LUCK', 'Luck ' + kit.luck + ' · every 2 over 10');
+    if (rareParts.length) turn('GOOD', 'TRUE', rareParts.length, 'RARE', rareParts.map(o => o.name).join(', ') + ' (rare)');
+    if (lvl >= 7) turn('GOOD', 'TRUE', 1, 'TRADE', 'Trade 7 · a true hand');
+    if (kit.helper) { t.push({ k: 'GOOD', src: 'FRIEND' }); lines.push({ what: 'A friend at the ' + (st === 'kettle' ? 'fire' : 'bellows'), how: '+1 GOOD · cools slower', col: KC.GOOD }); }
+    const fl = found.slice(0, slotsFor(lvl));
+    fl.forEach(id => { const g = t.find(x => x.k === 'GOOD' && !x.src) || t.find(x => x.k === 'GOOD'); if (g) { g.k = 'FOUND'; g.f = id; g.src = 'FOUND'; } });
+    if (fl.length) lines.push({ what: 'Found tiles', how: fl.length + ' GOOD → ' + fl.map(id => FOUND[id].short).join(', '), col: KC.FOUND });
+    const seen = {};
+    t.forEach(x => { const key = st + '|' + x.k + '|' + (x.f || '') + '|' + x.src; seen[key] = (seen[key] || 0) + 1; const id = key + '|' + seen[key]; x.id = id; if (!lookCache[id]) lookCache[id] = lookOf(x); });
+    return { t, lines };
+  }
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [a[i], a[k]] = [a[k], a[i]]; } return a; }
+  function deal(why) {
+    const b = baseStrip(chosen);
+    for (let i = 0; i < S.scaled; i++) { const g = b.t.find(x => x.k === 'GOOD' && x.src !== 'SCALE'); if (g) { g.k = 'HOLD'; g.src = 'SCALE'; g.id += '|scaled'; if (!lookCache[g.id]) lookCache[g.id] = lookOf(g); } }
+    S.rack = shuffle(b.t.map(x => ({ ...x, up: false, n: 0, isNew: true })));
+    S.lines = b.lines; S.heatLines = [];
+    if (why) popLabel('SHUFFLED', why, '', 'bigpop', '#e8c464');
+  }
+  const left = () => S.rack.filter(x => !x.up);
+  const counts = list => { const o = {}; KINDS.forEach(k => o[k] = 0); list.forEach(x => o[x.k]++); return o; };
+  function slipIn(k, src, note) {
+    const down = S.rack.map((x, i) => x.up ? -1 : i).filter(i => i >= 0);
+    const at = down.length ? down[Math.floor(Math.random() * down.length)] : S.rack.length;
+    const t = { k, src, up: false, n: 0, isNew: true, added: true, id: 'slip|' + Math.random() };
+    lookCache[t.id] = lookOf({ k, src: '' });
+    S.rack.splice(at, 0, t);
+    S.heatLines.push({ what: note, how: '+1 ' + k + ' slipped in', col: KC[k] });
+  }
+
+  // ---------- PREPARE ----------
+  function toPrepare() {
+    const c = STATIONS[st];
+    S = { phase: 'prepare', meter: c.kettle ? 55 : 30, inFire: false, shape: 0, worked: 0, cracks: 0, notches: [], crackMarks: [],
+      streak: 0, white: 0, earned: false, scaled: 0, overT: 0, last: 0, strikes: 0, grainT: 0, grainAcross: false, flash: 0,
+      sparks: [], ring: 0, ringC: '#fff', done: false, prevOdds: null, paused: false, twin: false, warden: false, frost: false, heats: 1, rack: [], lines: [], heatLines: [] };
+    deal();
+    document.body.style.overflow = '';
+    $('vPrep').hidden = false; $('vWork').hidden = true; $('result').hidden = true; $('sheet').hidden = true;
+    $('prepK').textContent = 'THE ' + c.name + ' · PREPARE';
+    $('prepT').textContent = (mode === 'rework' ? 'Fine ' : '') + c.piece + (mode === 'rework' ? ' · back in ' + c.place : '');
+    $('title').textContent = 'THE WORKING · ' + (mode === 'rework' ? 'Fine ' : '') + c.piece;
+    $('toolName').textContent = c.tool;
+    $('pieceKv').innerHTML = (mode === 'rework'
+      ? '<span>Now</span><b style="color:var(--t-fine)">Fine</b><span>Worked</span><b>fill the bar to raise it to Rare</b><span>Costs</span><b>120 coins · 3 ' + c.stuff.toLowerCase() + ' · a rough gem</b>'
+      : '<span>Plain odds</span><b><span style="color:var(--t-fine)">Fine 20 %</span> · <span style="color:var(--t-rare)">Rare 5 %</span></b><span>Worked</span><b>up to Fine 70 % · Rare 40 %</b>')
+      + '<span>' + c.meter.replace('THE ', '') + '</span><b>' + c.twist + '</b><span>The pick</span><b>WHITE HEAT or a TRUE</b><span>A new tile</span><b>a Fine or better working with no crack, or WHITE HEAT</b>';
+    $('makeIt').innerHTML = mode === 'rework' ? '<b>LEAVE IT</b>Keep it Fine.' : '<b>MAKE IT</b>At once, at the plain odds.';
+    $('workIt').innerHTML = mode === 'rework' ? '<b>WORK IT AGAIN</b>The tiles turn face down and shuffle.' : '<b>WORK IT</b>The tiles turn face down and shuffle · about 30–40 s.';
+    kitSegs(); partSegs(); renderPrep();
+  }
+  function partSegs() {
+    const box = $('parts'); box.innerHTML = '';
+    const P = PARTS[st]; const ch = chosenParts[st] || (chosenParts[st] = P.map(() => 0));
+    $('partsHead').textContent = 'THE ' + P[0].part.toUpperCase() + ' SETS YOUR STRIP';
+    P.forEach((p, i) => {
+      const row = document.createElement('div'); row.className = 'row';
+      row.innerHTML = '<span>' + p.part.toUpperCase() + '</span><div class="group"></div>';
+      box.appendChild(row);
+      segs(row.querySelector('.group'), p.opts.map((o, k) => [k, o.name + (o.rare ? ' ✶' : '')]), () => ch[i], k => ch[i] = k, () => { applyParts(); deal(); renderPrep(); partLine(); });
+    });
+    applyParts(); partLine();
+  }
+  function partLine() {
+    const pn = partsNow(), c = STATIONS[st];
+    $('partLine').innerHTML = pn.filter(o => o.line).map((o, i) => '<div><b>' + o.name + '</b> · ' + o.line + '</div>').join('') +
+      '<div style="color:var(--bone-faint)">' + c.meter.replace('THE ', '') + '\'s band now ' + c.band[0] + '–' + c.band[1] + '</div>';
+  }
+  function renderPrep() {
+    const n = slotsFor(lvl);
+    chosen = chosen.filter(id => owned.includes(id)).slice(0, n);
+    $('slotWord').textContent = n === 0 ? 'OPEN AT TRADE 3' : chosen.length + ' OF ' + n + ' SLOT' + (n > 1 ? 'S' : '') + ' · ' + owned.length + ' OF 8 FOUND';
+    $('slots').innerHTML = Array.from({ length: 3 }, (_, i) => '<i class="' + (i < chosen.length ? 'on' : '') + '" style="' + (i >= n ? 'opacity:.25' : '') + '"></i>').join('')
+      + '<span>' + (n < 3 ? 'Trade ' + (n === 0 ? 3 : n === 1 ? 5 : 7) + ' opens ' + (n === 0 ? 'the first' : 'another') : 'All three open') + ' · each takes a plain GOOD\'s place</span>';
+    $('bag').innerHTML = Object.entries(FOUND).map(([id, f]) => {
+      if (!owned.includes(id)) {
+        const look = lookCache['unk|' + id] || (lookCache['unk|' + id] = { face: '<div class="tile back" style="' + clayStyle(true) + '">' + scratch('unk', '#7d725e') + '</div>' });
+        return '<button class="unk" disabled title="Not yet found"><div style="aspect-ratio:3/4">' + look.face + '</div>NOT FOUND</button>';
+      }
+      const on = chosen.includes(id), full = !on && chosen.length >= n;
+      const look = lookCache['bag|' + id] || (lookCache['bag|' + id] = lookOf({ k: 'FOUND', f: id, src: 'FOUND' }));
+      return '<button data-f="' + id + '" class="' + (full || n === 0 ? 'full' : '') + (fresh === id ? ' fresh' : '') + '" aria-pressed="' + on + '"' + (full || n === 0 ? ' disabled' : '') + ' title="' + f.name + ': ' + f.line + '"><div style="aspect-ratio:3/4">' + look.face + '</div>' + f.short + '</button>';
+    }).join('');
+    fresh = null;
+    $('bag').querySelectorAll('button[data-f]').forEach(b => b.onclick = () => { const id = b.dataset.f; chosen = chosen.includes(id) ? chosen.filter(x => x !== id) : chosen.concat(id); deal(); renderPrep(); });
+    $('foundLines').innerHTML = chosen.length ? chosen.map(id => '<div><b>' + FOUND[id].name + '</b> · ' + FOUND[id].line + ' <span style="color:var(--bone-faint)">· ' + FOUND[id].where + '</span></div>').join('')
+      : '<div style="color:var(--bone-faint)">' + (n ? 'Tap a found tile to bring it.' : 'Your found tiles wait in the bag until trade 3.') + '</div>';
+    const order = { GOOD: 0, GREAT: 1, HOLD: 2, CRACK: 3, TRUE: 4, FOUND: 5 };
+    const sorted = S.rack.slice().sort((a, b) => order[a.k] - order[b.k] || (a.src > b.src ? 1 : -1));
+    $('prepRack').innerHTML = sorted.map(x => '<div class="tkt up" style="--r:' + lookCache[x.id].r + 'deg; opacity:1"><div class="in"><div class="b">' + lookCache[x.id].back + '</div><div class="f">' + lookCache[x.id].face + '</div></div></div>').join('');
+    $('prepCount').textContent = S.rack.length + ' TILES';
+    $('prepOdds').innerHTML = oddsHtml(counts(S.rack), S.rack.length, null);
+    $('prepLines').innerHTML = S.lines.map(l => '<li><b>' + l.what + '</b><em style="color:' + l.col + '">' + l.how + '</em></li>').join('');
+  }
+  function oddsHtml(cn, tot, prev) {
+    return KINDS.map(k => {
+      const v = tot ? Math.round(cn[k] / tot * 100) : 0;
+      const had = prev ? prev[k] : v;
+      let dir = v > had ? 'up' : v < had ? 'down' : '';
+      if (k === 'CRACK') dir = dir === 'up' ? 'down' : dir === 'down' ? 'up' : '';
+      if (k === 'HOLD') dir = '';
+      return '<div class="' + (cn[k] ? '' : 'off') + '"><span style="color:' + KC[k] + '">' + k + '</span><b class="' + dir + '">' + v + '%</b></div>';
+    }).join('');
+  }
+
+  // ---------- THE WORKING ----------
+  function toWork() {
+    const c = STATIONS[st];
+    S.phase = 'work';
+    if (phoneQ.matches) document.body.style.overflow = 'hidden';
+    shuffle(S.rack); S.rack.forEach(x => { x.up = false; x.isNew = true; });
+    $('vPrep').hidden = true; $('vWork').hidden = false; $('result').hidden = true;
+    $('workK').textContent = 'THE ' + c.name + ' · ' + (mode === 'rework' ? 'BACK IN ' + c.place.toUpperCase() : 'WORK IT');
+    $('workT').textContent = (mode === 'rework' ? 'Fine ' : '') + c.piece;
+    setFireBtn();
+    popLabel(c.kettle ? 'STIR' : 'HEAT IT', c.kettle ? 'WHEN IT SIMMERS' : c.fire, 'then strike in the gold band', '', '#e8c464');
+    render();
+  }
+  function setFireBtn() {
+    const c = STATIONS[st];
+    $('bFire').innerHTML = (c.kettle ? c.fire : S.inFire ? c.out : c.fire) + '<small>' + (c.kettle ? 'B · R · RAISES THE BOIL' : S.inFire ? 'B · R' : 'B · R · RESHUFFLES THE STRIP') + '</small>';
+    $('bFire').setAttribute('aria-pressed', S.inFire ? 'true' : 'false');
+  }
+  function popTile(t, gain, why, size, colour) {
+    const el = $('pop');
+    el.className = 'pop' + (size ? ' ' + size : '');
+    el.innerHTML = '<div class="big" style="transform:rotate(' + lookCache[t.id].r + 'deg)">' + lookCache[t.id].face + '</div>'
+      + (gain ? '<span class="gain" style="color:' + (colour || KC[t.k]) + '">' + gain + '</span>' : '') + (why ? '<span class="why">' + why + '</span>' : '');
+    void el.offsetWidth; el.classList.add('go');
+  }
+  function popLabel(text, gain, why, size, colour) {
+    const el = $('pop');
+    el.className = 'pop' + (size ? ' ' + size : '');
+    el.innerHTML = '<span class="lbl" style="background:' + colour + '">' + text + '</span>' + (gain ? '<span class="gain" style="color:' + colour + '">' + gain + '</span>' : '') + (why ? '<span class="why">' + why + '</span>' : '');
+    void el.offsetWidth; el.classList.add('go');
+  }
+
+  function strike() {
+    if (S.phase !== 'work' || S.done || S.paused) return;
+    const now = performance.now();
+    if (now - S.last < 420) return;
+    S.last = now;
+    const c = STATIONS[st];
+    if (S.inFire && !c.kettle) { S.inFire = false; setFireBtn(); }
+    const m = S.meter, lo = c.band[0], hi = c.band[1];
+    const shaping = S.shape < 100;
+    S.strikes++;
+    if (!c.kettle) S.meter = Math.max(0, S.meter - c.drain * (kit.helper ? 0.75 : 1));
+
+    let dead = '';
+    if (m < lo) {
+      if (st === 'stretcher' || st === 'kettle') dead = c.cold;
+      else if (lvl < 3) dead = st === 'forge' ? 'TOO COLD · IT DOESN\'T MOVE' : st === 'glass' ? 'TOO STIFF · IT WON\'T GIVE' : 'TOO COLD · IT WON\'T BEND';
+      else slipIn('CRACK', 'COLD', c.cold.charAt(0) + c.cold.slice(1).toLowerCase() + ' (strike ' + S.strikes + ')');
+    } else if (m > hi && (c.kettle || c.wetTear || st === 'glass')) {
+      if (st === 'glass') S.shape = Math.max(0, S.shape - 4);
+      if (c.wetTear && lvl >= 3) slipIn('CRACK', 'WET', 'Too wet (strike ' + S.strikes + ')');
+      if (c.kettle) { if (lvl >= 3) slipIn('CRACK', 'BOIL', 'Boiled over (strike ' + S.strikes + ')'); S.meter -= 30; }
+    }
+    if (!dead && c.grain && S.grainAcross) dead = 'ACROSS THE GRAIN';
+    if (dead) { S.streak = 0; popLabel('NOTHING', '', dead, 'bad', KC.HOLD); afterStrike('HOLD', true); return; }
+
+    if (!left().length) { deal('THE STRIP RAN OUT · EVERY TILE BACK IN'); }
+    const tk = S.rack.find(x => !x.up);
+    tk.up = true; tk.n = S.strikes; tk.peek = false;
+    let k = tk.k, why = '', gainText = '', size = '', colour = null;
+    if (m > hi && st === 'glass') why = 'TOO HOT · IT SAGS';
+    if (m > hi && c.wetTear && lvl >= 3) why = 'TOO WET · A CRACK SLIPPED IN';
+    if (m > hi && c.kettle) why = 'IT BOILS OVER';
+    if (k === 'CRACK' && (S.white > 0 || S.warden)) { why = S.warden ? 'THE WARDEN\'S TILE HOLDS IT' : 'WHITE HEAT · NO CRACK'; S.warden = false; k = 'HOLD'; }
+    const mult = S.twin && k !== 'CRACK' ? 2 : 1;
+    if (S.twin && k !== 'CRACK') { S.twin = false; why = why || 'TWIN · IT COUNTS TWICE'; }
+
+    if (k === 'CRACK') {
+      S.cracks++; S.streak = 0; S.crackMarks.push(Math.random());
+      if (shaping) { S.notches.push(S.shape); S.shape = Math.max(0, S.shape - 5); gainText = '−5 SHAPE · A MARK ON IT'; }
+      else gainText = S.cracks >= 2 ? 'IT DROPS A TIER' : 'A MARK ON IT · ONE MORE DROPS A TIER';
+      popTile(tk, gainText, why, 'bad');
+      if (S.cracks >= 2 && !shaping) setTimeout(() => finish('dropped'), 600);
+    } else {
+      S.streak++;
+      let gk = k;
+      if (k === 'FOUND') {
+        const f = tk.f; gk = f === 'hollow' ? 'GREAT' : 'GOOD';
+        size = 'bigpop'; colour = FOUND[f].glaze;
+        if (f === 'ember') { S.meter = c.kettle ? (c.band[0] + c.band[1]) / 2 : Math.min(c.band[1] - 2, S.meter + 28); why = 'EMBER · THE HEAT JUMPS BACK'; }
+        if (f === 'mender') { if (S.cracks) { S.cracks--; S.crackMarks.pop(); if (S.notches.length) S.notches.pop(); why = 'MENDER · A CRACK\'S MARK CLEARED'; } else why = 'MENDER · NOTHING TO MEND'; }
+        if (f === 'twin') { S.twin = true; why = 'TWIN · THE NEXT TILE COUNTS TWICE'; }
+        if (f === 'warden') { S.warden = true; why = 'WARDEN · THE NEXT CRACK IS A HOLD'; }
+        if (f === 'seer') { left().slice(0, 2).forEach(x => x.peek = true); why = 'SEER · THE NEXT TWO SHOWN'; }
+        if (f === 'echo') { const g = S.rack.slice().reverse().find(x => x.up && x.k === 'GOOD' && x !== tk); if (g) { g.up = false; g.n = 0; g.isNew = true; const i = S.rack.indexOf(g); S.rack.splice(i, 1); const down = S.rack.map((x, ii) => x.up ? -1 : ii).filter(ii => ii >= 0); S.rack.splice(down.length ? down[Math.floor(Math.random() * down.length)] : S.rack.length, 0, g); why = 'ECHO · A GOOD GOES BACK FACE DOWN'; } else why = 'ECHO · NO GOOD TO CALL BACK'; }
+        if (f === 'hollow') { slipIn('CRACK', 'HOLLOW', 'The Hollow King\'s Tile'); why = 'THE HOLLOW KING · A GREAT, AND A CRACK SLIPPED IN'; }
+        if (f === 'frost') { S.frost = true; why = 'FROST-KISS · THE PIECE TAKES A FROST SIDE'; }
+      }
+      const base = shaping ? { GOOD: 6.5, GREAT: 11, TRUE: 16, HOLD: 0 }[gk] : { GOOD: 3, GREAT: 6, TRUE: 15, HOLD: 0 }[gk];
+      const gain = base * mult;
+      if (shaping) { S.shape = Math.min(100, S.shape + gain); gainText = gain ? '+' + gain + ' SHAPE' : 'NOTHING GAINED · NOTHING LOST'; }
+      else { S.worked += gain; gainText = gain ? '+' + gain + ' % WORKED' : 'NOTHING GAINED · NOTHING LOST'; }
+      if (k === 'GREAT') size = 'bigpop';
+      if (k === 'TRUE') { size = 'bigpop'; S.earned = true; S.white = 4; S.ring = 1; S.ringC = '#fff2c4'; why = why || 'WHITE HEAT · THE PICK IS YOURS'; }
+      popTile(tk, gainText, why, size, colour);
+      if (shaping && S.shape >= 100) setTimeout(() => { S.ring = 1; S.ringC = '#e8c464'; popLabel(mode === 'rework' ? 'IT TAKES' : 'IT\'S MADE', 'NOW EVERY STRIKE PUSHES IT', c.close + ' WHENEVER YOU CHOOSE', 'bigpop', '#e8c464'); $('bar').classList.add('flash'); setTimeout(() => $('bar').classList.remove('flash'), 900); }, 700);
+      if (lvl >= 5 && S.streak >= 8 && S.white <= 0) { S.white = 4; S.earned = true; S.streak = 0; S.ring = 1; S.ringC = '#fff2c4'; setTimeout(() => popLabel('WHITE HEAT', 'NO CRACK FOR 4 s', 'THE PICK IS YOURS', 'bigpop', '#fff2c4'), 600); }
+    }
+    afterStrike(k, false);
+  }
+  function afterStrike(k, dead) {
+    S.flash = 1;
+    const n = k === 'CRACK' ? 8 : k === 'GREAT' || k === 'FOUND' ? 26 : k === 'TRUE' ? 40 : dead ? 3 : 14;
+    for (let i = 0; i < n; i++) S.sparks.push({ x: 0, y: 0, vx: (Math.random() - .5) * 620, vy: -Math.random() * 480 - 80, t: .6 + Math.random() * .5, c: KC[k], init: 0 });
+    render();
+  }
+  function toggleFire() {
+    if (S.phase !== 'work' || S.done || S.paused) return;
+    const c = STATIONS[st];
+    if (c.kettle) { S.meter = Math.min(100, S.meter + 22); popLabel('STOKED', 'THE BOIL RISES', '', '', '#f0a35c'); render(); return; }
+    S.inFire = !S.inFire;
+    if (S.inFire && S.rack.some(x => x.up || x.added)) { S.heats++; deal('BACK IN ' + c.place.toUpperCase() + ' · EVERY TILE RETURNS'); }
+    setFireBtn(); render();
+  }
+  function toggleSheet(on) {
+    if (S.phase !== 'work' || S.done) return;
+    S.paused = on === undefined ? !S.paused : on;
+    $('sheet').hidden = !S.paused;
+    if (S.paused) renderSheet();
+  }
+  function odds() {
+    if (mode === 'rework') return { c: 0, f: 100, r: 0 };
+    const w = S.worked;
+    let r = Math.min(40, 5 + w * 0.35 + (lvl - 3)), f = Math.min(70, 20 + w * 0.9 + (lvl - 3) * 2);
+    if (S.cracks === 1 && S.shape >= 100) { f *= 0.85; r *= 0.85; }
+    return { c: Math.max(0, 100 - f - r), f, r };
+  }
+  function finish(how) {
+    if (S.done) return;
+    S.done = true; S.phase = 'done'; S.paused = false; $('sheet').hidden = true;
+    const c = STATIONS[st];
+    $('cDone').className = 'on'; $('cPush').className = 'done';
+    $('rGift').hidden = true;
+    let tier = 0, line = '';
+    if (how === 'dropped' && mode === 'make') {
+      $('rTier').textContent = 'IT BROKE'; $('rTier').style.color = 'var(--blood)';
+      $('rName').textContent = c.piece; $('rLine').textContent = 'A second crack after it was made drops it a tier, and a Common piece breaks. The stuff is gone.';
+      $('rWhy').textContent = 'Read what\'s left face down, quench sooner, or go back in the fire to shuffle the cracks away.'; $('rPick').hidden = true; $('rSide').hidden = true; $('result').hidden = false; render(); return;
+    }
+    if (mode === 'rework') {
+      tier = how === 'dropped' ? 0 : (S.shape >= 100 ? 2 : 1);
+      line = tier === 2 ? 'It took. A tier up, what it carries rolled again as a Rare.' : tier === 1 ? 'Stopped before it took. It stays Fine.' : 'Two cracks: it dropped to Common.';
+    } else {
+      const o = odds(), r = Math.random() * 100;
+      tier = r < o.r ? 2 : r < o.r + o.f ? 1 : 0;
+      line = 'WORKED +' + Math.round(S.worked) + ' % · it had Fine ' + Math.round(o.f) + ' % · Rare ' + Math.round(o.r) + ' %';
+    }
+    $('rTier').textContent = TIERS[tier]; $('rTier').style.color = TIERC[tier];
+    $('rName').textContent = TIERS[tier].charAt(0) + TIERS[tier].slice(1).toLowerCase() + ' ' + c.piece;
+    $('rLine').textContent = line;
+    $('rWhy').textContent = (S.cracks ? S.cracks + ' crack' + (S.cracks > 1 ? 's' : '') : 'No cracks') + ' · ' + S.strikes + ' strikes · ' + S.heats + ' heat' + (S.heats > 1 ? 's' : '');
+    $('rPick').hidden = !(S.earned && tier >= 1);
+    $('rSide').hidden = !S.frost;
+    // a successful working turns up a found tile: Fine or better and no crack, or WHITE HEAT reached
+    const good = tier >= 1 && (S.cracks === 0 || S.earned) && how !== 'dropped';
+    const missing = Object.keys(FOUND).filter(id => !owned.includes(id));
+    if (good && missing.length) {
+      const id = missing[Math.floor(Math.random() * missing.length)];
+      owned.push(id); fresh = id;
+      const look = lookCache['bag|' + id] || (lookCache['bag|' + id] = lookOf({ k: 'FOUND', f: id, src: 'FOUND' }));
+      $('rGift').innerHTML = '<div class="gt">' + look.face + '</div><div><b>A NEW FOUND TILE · FOR A ' + (S.cracks === 0 ? 'CLEAN' : 'WHITE-HOT') + ' WORKING</b><strong>' + FOUND[id].name + '</strong><span>' + FOUND[id].line + '. In your bag now (' + owned.length + ' of 8).</span></div>';
+      $('rGift').hidden = false;
+    } else if (good) {
+      $('rGift').innerHTML = '<div></div><div><b>A CLEAN WORKING</b><span>You have every found tile in this mockup.</span></div>';
+      $('rGift').hidden = false;
+    }
+    $('result').hidden = false;
+    render();
+  }
+  function quench() {
+    if (S.phase !== 'work' || S.done || S.paused) return;
+    if (S.shape < 100) { popLabel('NOT YET', mode === 'rework' ? 'IT HASN\'T TAKEN' : 'FILL THE SHAPE FIRST', '', 'bad', '#8e9bb0'); return; }
+    finish('quench');
+  }
+
+  function tileHtml(x, opts) {
+    const L = lookCache[x.id];
+    const cls = 'tkt' + (x.up ? ' up' : '') + (x.up && x.n === S.strikes ? ' last' : '') + (x.isNew && opts.anim ? ' new' : '') + (x.added && !x.up ? ' slip' : '') + (x.peek && !x.up ? ' peek' : '');
+    const back = x.peek && !x.up ? L.back.replace('class="tile back"', 'class="tile back" data-peek="' + (x.f ? FOUND[x.f].short : x.k) + '"') : L.back;
+    return '<div class="' + cls + '" style="--r:' + L.r + 'deg; --d:' + (opts.i * 0.02).toFixed(2) + 's"><div class="in"><div class="b">' + back + '</div><div class="f">' + L.face + '</div></div></div>';
+  }
+  function render() {
+    if (S.phase === 'prepare') return;
+    const c = STATIONS[st];
+    const shaping = S.shape < 100;
+    if (!S.done) { $('cShape').className = shaping ? 'on' : 'done'; $('cPush').className = shaping ? '' : 'on'; $('cDone').className = ''; }
+    $('cShape').textContent = mode === 'rework' ? '1 · TO RARE' : '1 · SHAPE';
+    $('cDone').textContent = '3 · ' + c.close;
+    $('barLabel').textContent = shaping ? (mode === 'rework' ? 'TO RARE' : 'SHAPE') : 'WORKED';
+    $('barVal').textContent = shaping ? Math.round(S.shape) + ' %' : '+' + Math.round(S.worked) + ' %';
+    $('bar').classList.toggle('worked', !shaping);
+    $('barFill').style.width = (shaping ? S.shape : Math.min(100, S.worked * 2)) + '%';
+    $('bar').querySelectorAll('.notch').forEach(n => n.remove());
+    if (shaping) S.notches.forEach(p => { const n = document.createElement('span'); n.className = 'notch'; n.style.left = p + '%'; $('bar').appendChild(n); });
+    const o = odds();
+    $('oCommon').textContent = Math.round(o.c); $('oFine').textContent = Math.round(o.f); $('oRare').textContent = Math.round(o.r); $('oCracks').textContent = S.cracks;
+    $('flags').textContent = [S.twin ? 'TWIN READY' : '', S.warden ? 'WARDEN READY' : '', S.frost ? 'FROST SIDE' : ''].filter(Boolean).join(' · ');
+    $('bQuench').disabled = shaping || S.done;
+    $('bQuench').innerHTML = c.close + '<small>' + (shaping ? (mode === 'rework' ? 'ONCE IT TAKES' : 'ONCE IT\'S SHAPED') : 'X · Q · WHENEVER YOU CHOOSE') + '</small>';
+    const L = left(), cn = counts(L), tot = L.length;
+    $('leftWord').textContent = tot + ' OF ' + S.rack.length + ' FACE DOWN';
+    const now = {}; KINDS.forEach(k => now[k] = tot ? Math.round(cn[k] / tot * 100) : 0);
+    $('workOdds').innerHTML = oddsHtml(cn, tot, S.prevOdds);
+    S.prevOdds = now;
+    $('rowRack').style.setProperty('--n', S.rack.length);
+    $('rowRack').innerHTML = S.rack.map((x, i) => tileHtml(x, { anim: true, i })).join('');
+    S.rack.forEach(x => x.isNew = false);
+    $('streak').innerHTML = Array.from({ length: 8 }, (_, i) => '<i class="' + (i < S.streak || S.white > 0 ? 'on' : '') + '"></i>').join('');
+    $('streakVal').textContent = lvl < 5 ? 'AT TRADE 5' : S.white > 0 ? 'WHITE HEAT' : Math.min(8, S.streak) + ' / 8';
+    if (S.paused) renderSheet();
+  }
+  function renderSheet() {
+    const L = left();
+    $('sheetCount').textContent = (S.rack.length - L.length) + ' turned · ' + L.length + ' face down';
+    $('sheetOdds').innerHTML = oddsHtml(counts(L), L.length, null);
+    $('sheetRack').innerHTML = S.rack.map((x, i) => tileHtml(x, { anim: false, i })).join('');
+    $('sheetLines').innerHTML = S.lines.map(l => '<li><b>' + l.what + '</b><em style="color:' + l.col + '">' + l.how + '</em></li>').join('');
+    const hl = S.heatLines.slice();
+    if (S.scaled) hl.push({ what: 'Left in past white', how: S.scaled + ' GOOD → HOLD (stays)', col: KC.HOLD });
+    hl.push({ what: 'Back in ' + STATIONS[st].place, how: 'every tile returns · the slipped-in go', col: 'var(--bone)' });
+    $('heatLines').innerHTML = hl.map(l => '<li><b>' + l.what + '</b><em style="color:' + l.col + '">' + l.how + '</em></li>').join('');
+  }
+
+  // ---------- the stage ----------
+  const cv = $('cv'), g = cv.getContext('2d');
+  const W = 1280, H = 720;
+  const lerp = (a, b, t) => a + (b - a) * t;
+  function mix(cols, t) {
+    t = Math.max(0, Math.min(1, t)) * (cols.length - 1);
+    const i = Math.min(cols.length - 2, Math.floor(t)), f = t - i;
+    const a = parseInt(cols[i].slice(1), 16), b = parseInt(cols[i + 1].slice(1), 16);
+    const ch = s => Math.round(lerp((a >> s) & 255, (b >> s) & 255, f));
+    return 'rgb(' + ch(16) + ',' + ch(8) + ',' + ch(0) + ')';
+  }
+  const SHAPES = {
+    forge: [[[-150, -32], [-75, -34], [0, -34], [75, -34], [150, -32], [150, 32], [75, 34], [0, 34], [-75, 34], [-150, 32]],
+            [[-230, -14], [-60, -20], [90, -30], [210, -44], [300, -8], [250, 24], [130, 30], [0, 24], [-120, 18], [-230, 14]]],
+    glass: [[[-60, -40], [-30, -55], [0, -60], [30, -55], [60, -40], [60, 40], [30, 55], [0, 60], [-30, 55], [-60, 40]],
+            [[-150, -20], [-100, -70], [0, -95], [100, -70], [150, -20], [150, 20], [100, 70], [0, 95], [-100, 70], [-150, 20]]],
+    stretcher: [[[-200, -150], [-100, -150], [0, -150], [100, -150], [200, -150], [200, 150], [100, 150], [0, 150], [-100, 150], [-200, 150]],
+                [[-200, -90], [-80, -160], [0, -130], [80, -160], [200, -90], [140, 170], [70, 170], [0, 170], [-70, 170], [-140, 170]]],
+  };
+  let lastT = performance.now();
+  function tick(now) {
+    const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+    const c = STATIONS[st];
+    if (S && S.phase === 'work' && !S.done && !S.paused) {
+      if (c.kettle) S.meter = Math.max(0, S.meter - c.cool * dt * (kit.helper ? 0.75 : 1));
+      else if (S.inFire) {
+        S.meter = Math.min(100, S.meter + c.rise * dt);
+        if (S.meter >= c.over) {
+          S.overT += dt;
+          if (S.overT > 1) { const gd = S.rack.find(x => !x.up && x.k === 'GOOD'); if (gd) { gd.k = 'HOLD'; gd.src = 'SCALE'; gd.id += '|scaled'; lookCache[gd.id] = lookOf(gd); S.scaled++; popLabel('IT SCALES', 'A FACE-DOWN GOOD TURNS TO HOLD', 'TAKE IT OUT', 'bad', KC.HOLD); render(); } S.overT = 0; }
+        } else S.overT = 0;
+      } else S.meter = Math.max(0, S.meter - c.cool * dt * (kit.helper ? 0.7 : 1));
+      if (c.grain) { S.grainT += dt; const p = 2.6; S.grainAcross = (S.grainT % p) > p * 0.64; }
+      if (S.white > 0) { S.white -= dt; if (S.white <= 0) render(); }
+    }
+    if (S && !S.paused) { S.flash = Math.max(0, S.flash - dt * 4); S.ring = Math.max(0, S.ring - dt * 1.2); }
+    if (S && S.phase !== 'prepare') paint(S.paused ? 0 : dt);
+    requestAnimationFrame(tick);
+  }
+  function paint(dt) {
+    const c = STATIONS[st];
+    g.clearRect(0, 0, W, H);
+    const heat = S.meter / 100;
+    const fx = 150, fy = 470;
+    const glow = g.createRadialGradient(fx, fy, 10, fx, fy, 260);
+    const fireCol = st === 'stretcher' ? 'rgba(70,110,150,' : st === 'bench' ? 'rgba(220,220,220,' : 'rgba(255,120,40,';
+    const strong = S.inFire || (c.kettle && S.meter > 40) ? 0.6 : 0.18;
+    glow.addColorStop(0, fireCol + strong + ')'); glow.addColorStop(1, fireCol + '0)');
+    g.fillStyle = glow; g.fillRect(0, 160, 420, 560);
+    g.fillStyle = '#1a1210'; g.fillRect(60, 510, 200, 120);
+    g.fillStyle = st === 'stretcher' ? '#2a4a6a' : st === 'bench' ? '#666' : '#ff8a2a';
+    for (let i = 0; i < 6; i++) { const f = Math.sin(performance.now() / 180 + i) * 8; g.globalAlpha = 0.35 + strong * 0.6; g.beginPath(); g.ellipse(90 + i * 28, 490 - f, 14, 30 + f, 0, 0, Math.PI * 2); g.fill(); }
+    g.globalAlpha = 1;
+    g.fillStyle = 'rgba(236,224,198,.6)'; g.font = '800 22px "Alegreya Sans", sans-serif'; g.textAlign = 'center';
+    g.fillText(c.place.toUpperCase(), 160, 665);
+    const ax = 680, ay = 520;
+    const inFire = S.inFire && !c.kettle;
+    g.fillStyle = '#2a2420';
+    if (st === 'forge' || st === 'glass') {
+      g.beginPath(); g.moveTo(ax - 300, ay); g.lineTo(ax + 260, ay); g.lineTo(ax + 330, ay - 30); g.lineTo(ax + 200, ay - 40); g.lineTo(ax - 300, ay - 40); g.closePath(); g.fill();
+      g.fillRect(ax - 140, ay, 260, 60); g.fillRect(ax - 200, ay + 60, 380, 40);
+    } else if (st === 'stretcher') { g.strokeStyle = '#5a4430'; g.lineWidth = 16; g.strokeRect(ax - 260, ay - 400, 520, 420); }
+    else if (st === 'bench') { g.fillRect(ax - 380, ay, 760, 40); g.fillRect(ax - 340, ay + 40, 30, 120); g.fillRect(ax + 310, ay + 40, 30, 120); }
+    else { g.fillStyle = '#1e1a18'; g.beginPath(); g.ellipse(ax, ay - 90, 230, 160, 0, 0, Math.PI * 2); g.fill(); }
+    const t = Math.min(1, S.shape / 100);
+    const col = mix(c.colours, heat);
+    const px = inFire ? 300 : ax, py = inFire ? 470 : (st === 'stretcher' ? ay - 190 : ay - 70);
+    g.save(); g.translate(px, py);
+    if (S.flash > 0 && !inFire) g.translate((Math.random() - .5) * 10 * S.flash, (Math.random() - .5) * 10 * S.flash);
+    if (inFire) g.scale(0.55, 0.55);
+    if (S.ring > 0) { g.save(); g.strokeStyle = S.ringC; g.globalAlpha = S.ring; g.lineWidth = 10 * S.ring; g.beginPath(); g.arc(0, 0, 80 + (1 - S.ring) * 420, 0, 7); g.stroke(); g.restore(); }
+    const hot = st === 'forge' || st === 'glass';
+    g.shadowColor = S.white > 0 ? '#fff2c4' : (heat > 0.45 && hot ? col : 'transparent');
+    g.shadowBlur = S.white > 0 ? 60 : heat > 0.45 && hot ? 40 * heat : 0;
+    g.fillStyle = S.white > 0 && hot ? '#fff6dc' : col; g.strokeStyle = '#0e0b09'; g.lineWidth = 6;
+    if (SHAPES[st]) {
+      const [a, b] = SHAPES[st];
+      if (t < 1 && !inFire) { g.save(); g.shadowBlur = 0; g.setLineDash([10, 8]); g.strokeStyle = 'rgba(232,196,100,.45)'; g.lineWidth = 3; g.beginPath(); b.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath(); g.stroke(); g.restore(); }
+      g.beginPath(); a.forEach((p, i) => { const x = lerp(p[0], b[i][0], t), y = lerp(p[1], b[i][1], t); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+      g.closePath(); g.fill(); g.stroke(); g.shadowBlur = 0;
+      if (st === 'forge' && t > 0.85) { g.globalAlpha = Math.min(1, (t - 0.85) / 0.15); g.fillStyle = '#4a3020'; g.fillRect(-320, -15, 80, 30); g.fillStyle = '#7a6a50'; g.fillRect(-246, -40, 16, 80); g.globalAlpha = 1; }
+      if (st === 'stretcher') { g.fillStyle = '#e8c464'; const n = Math.floor(t * 14); for (let i = 0; i < n; i++) { g.beginPath(); g.arc(-150 + i * 22, -110 + (i % 2) * 6, 4, 0, 7); g.fill(); } }
+      if (S.frost) { g.strokeStyle = 'rgba(207,232,255,.9)'; g.lineWidth = 2; for (let i = 0; i < 6; i++) { const x = -120 + i * 50; g.beginPath(); g.moveTo(x - 8, -8); g.lineTo(x + 8, 8); g.moveTo(x + 8, -8); g.lineTo(x - 8, 8); g.stroke(); } }
+    } else if (st === 'bench') {
+      const bend = t * 120;
+      g.lineCap = 'round'; g.strokeStyle = '#0e0b09'; g.lineWidth = 30;
+      g.beginPath(); g.moveTo(-340, -bend * 0.2); g.quadraticCurveTo(0, -20 - bend, 340, -bend * 0.2); g.stroke();
+      g.strokeStyle = col; g.lineWidth = 22; g.stroke(); g.shadowBlur = 0;
+      if (t < 1) { g.save(); g.setLineDash([10, 8]); g.strokeStyle = 'rgba(232,196,100,.45)'; g.lineWidth = 3; g.beginPath(); g.moveTo(-340, -24); g.quadraticCurveTo(0, -140, 340, -24); g.stroke(); g.restore(); }
+      if (t >= 1) { g.strokeStyle = '#ece0c6'; g.lineWidth = 2; g.beginPath(); g.moveTo(-340, -bend * 0.2); g.lineTo(340, -bend * 0.2); g.stroke(); }
+      if (S.phase === 'work') {
+        g.save(); g.translate(0, 130);
+        g.strokeStyle = S.grainAcross ? '#c4483a' : '#8fc46a'; g.lineWidth = 4;
+        for (let i = -3; i <= 3; i++) { g.beginPath(); if (S.grainAcross) { g.moveTo(i * 40, -18); g.lineTo(i * 40, 18); } else { g.moveTo(i * 40 - 16, 0); g.lineTo(i * 40 + 16, 0); } g.stroke(); }
+        g.fillStyle = S.grainAcross ? '#c4483a' : '#8fc46a'; g.font = '800 24px "Alegreya Sans", sans-serif'; g.textAlign = 'center';
+        g.fillText(S.grainAcross ? 'ACROSS THE GRAIN · WAIT' : 'WITH THE GRAIN', 0, 52); g.restore();
+      }
+    } else {
+      g.shadowBlur = 0;
+      const liq = mix(['#4a5a3a', '#6a7a3a', '#a04a6a', '#c03a5a'], t);
+      g.fillStyle = liq; g.beginPath(); g.ellipse(0, -60, 190, 60, 0, 0, Math.PI * 2); g.fill();
+      const nb = Math.floor(heat * 14);
+      g.fillStyle = 'rgba(255,240,220,.6)';
+      for (let i = 0; i < nb; i++) { const bx = Math.sin(i * 7.1 + performance.now() / (300 - heat * 150)) * 150, by = -60 + Math.cos(i * 3.3 + performance.now() / 200) * 30; g.beginPath(); g.arc(bx, by, 6 + heat * 6, 0, 7); g.fill(); }
+    }
+    if (S.crackMarks.length && st !== 'kettle') {
+      g.strokeStyle = '#120806'; g.lineWidth = 4;
+      S.crackMarks.forEach(r => { const x = -200 + r * 380; g.beginPath(); g.moveTo(x, -22); g.lineTo(x + 8, -6); g.lineTo(x - 4, 6); g.lineTo(x + 6, 22); g.stroke(); });
+    }
+    g.restore();
+    if (S.phase === 'work' && !inFire && st !== 'kettle') {
+      const f = S.flash;
+      // straight down: the face flat to the work, the haft out to the smith's hand on the right; it lands on the strike and rises again
+      const top = st === 'stretcher' ? ay - 260 : st === 'bench' ? ay - 210 : ay - 164;   // the face lands on the work's top
+      const hy = top - (1 - f) * 150, tilt = -0.04 - (1 - f) * 0.18;
+      g.save(); g.translate(ax - 20, hy); g.rotate(tilt);
+      if (f > 0.5) { g.strokeStyle = 'rgba(255,240,220,.5)'; g.lineWidth = 5; g.lineCap = 'round'; [-30, 0, 30].forEach(x => { g.beginPath(); g.moveTo(x, -80); g.lineTo(x, -20); g.stroke(); }); }
+      g.fillStyle = '#5a4030'; g.strokeStyle = '#000'; g.lineWidth = 3; g.fillRect(30, 20, 240, 18); g.strokeRect(30, 20, 240, 18);
+      g.fillStyle = st === 'stretcher' ? '#b9aa8c' : st === 'bench' ? '#8a6a42' : '#4a4a50'; g.fillRect(-50, 0, 100, 60); g.strokeRect(-50, 0, 100, 60);
+      g.fillStyle = 'rgba(255,255,255,.15)'; g.fillRect(-47, 48, 94, 10);
+      g.restore();
+    }
+    for (const s of S.sparks) { if (!s.init) { s.x = ax; s.y = ay - 80; s.init = 1; } s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 900 * dt; s.t -= dt; }
+    S.sparks = S.sparks.filter(s => s.t > 0);
+    for (const s of S.sparks) { g.fillStyle = s.c; g.globalAlpha = Math.min(1, s.t * 2); g.fillRect(s.x, s.y, 6, 6); }
+    g.globalAlpha = 1;
+    const mx = 1160, my = 110, mh = 470, mw = 44;
+    g.fillStyle = '#0b0807'; g.fillRect(mx, my, mw, mh);
+    for (let i = 0; i < 40; i++) { g.fillStyle = mix(c.colours, i / 40); g.globalAlpha = 0.35; g.fillRect(mx, my + mh - (i + 1) * mh / 40, mw, mh / 40 + 1); }
+    g.globalAlpha = 1;
+    const by0 = Math.max(my, my + mh - c.band[1] / 100 * mh), by1 = my + mh - c.band[0] / 100 * mh;
+    g.strokeStyle = '#e8c464'; g.lineWidth = 3; g.strokeRect(mx - 6, by0, mw + 12, by1 - by0);
+    const yv = my + mh - S.meter / 100 * mh;
+    g.fillStyle = mix(c.colours, heat); g.fillRect(mx, yv, mw, my + mh - yv);
+    g.fillStyle = '#fff'; g.beginPath(); g.moveTo(mx - 18, yv); g.lineTo(mx - 4, yv - 10); g.lineTo(mx - 4, yv + 10); g.fill();
+    g.fillStyle = 'rgba(236,224,198,.85)'; g.font = '800 20px "Alegreya Sans", sans-serif'; g.textAlign = 'center';
+    g.fillText(c.meter, mx + mw / 2, my - 18);
+    g.textAlign = 'right'; g.font = '700 15px "Alegreya Sans", sans-serif'; g.fillStyle = 'rgba(185,170,140,.9)';
+    c.labels.forEach(([v, l]) => g.fillText(l, mx - 24, my + mh - v / 100 * mh - 4));
+    g.save(); g.translate(mx + mw + 20, (by0 + by1) / 2); g.rotate(Math.PI / 2); g.textAlign = 'center'; g.fillStyle = '#e8c464'; g.font = '800 14px "Alegreya Sans", sans-serif'; g.fillText('STRIKE HERE', 0, 0); g.restore();
+    if (S.white > 0) { g.fillStyle = 'rgba(255,242,196,' + (0.1 + 0.06 * Math.sin(performance.now() / 90)) + ')'; g.fillRect(0, 0, W, H); }
+    let h = '';
+    if (S.phase === 'work' && !S.done) {
+      if (S.inFire) h = S.meter >= c.band[0] ? '<i>In the band.</i> Strike: it comes out on the first strike.' : 'Heating… wait for the gold band.';
+      else if (S.meter < c.band[0]) h = c.kettle ? 'Too cool: <i>STOKE</i> it.' : 'Cooling below the band: <i>' + c.fire + '</i> (every tile returns).';
+      else if (S.meter > c.band[1] && (c.kettle || c.wetTear || st === 'glass')) h = c.kettle ? 'Too hot: let it settle before you stir.' : 'Above the band: wait a moment.';
+      else h = S.shape < 100 ? '<i>In the band.</i> Strike. It cools while you wait.' : '<i>It\'s made.</i> Each strike pushes it. Read what\'s left face down, then ' + c.close + '.';
+    }
+    $('hint').innerHTML = h;
+  }
+
+  // ---------- wiring ----------
+  function segs(box, items, cur, set, after) {
+    box.querySelectorAll('button').forEach(b => b.remove());
+    items.forEach(([k, label]) => {
+      const b = document.createElement('button'); b.className = 'seg'; b.textContent = label; b.setAttribute('aria-pressed', String(k === cur()));
+      b.onclick = () => { set(k); box.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); after(); };
+      box.appendChild(b);
+    });
+  }
+  segs($('stations'), Object.entries(STATIONS).map(([k, v]) => [k, v.name]), () => st, k => st = k, toPrepare);
+  segs($('levels'), LEVELS.map(l => [l, String(l)]), () => lvl, k => lvl = k, toPrepare);
+  segs($('modes'), Object.entries(MODES), () => mode, k => mode = k, toPrepare);
+  const restack = () => { deal(); renderPrep(); };
+  function kitSegs() {
+    segs($('kHammer'), [[0, 'PLAIN'], [1, 'FINE'], [2, 'OLD-BLOOD']], () => kit.hammer, k => kit.hammer = k, restack);
+    segs($('kGloves'), [[0, 'NONE'], [1, 'WORN']], () => kit.gloves, k => kit.gloves = k, restack);
+    segs($('kLuck'), [[10, '10'], [12, '12'], [14, '14'], [16, '16']], () => kit.luck, k => kit.luck = k, restack);
+    segs($('kHelp'), [[0, 'ALONE'], [1, 'A FRIEND HELPS']], () => kit.helper, k => kit.helper = k, restack);
+  }
+  $('workIt').onclick = toWork;
+  $('makeIt').onclick = () => {
+    if (mode === 'rework') { toPrepare(); return; }
+    toWork(); S.shape = 100; S.done = true; S.phase = 'done';
+    const r = Math.random() * 100, tier = r < 5 ? 2 : r < 25 ? 1 : 0;
+    $('rTier').textContent = TIERS[tier]; $('rTier').style.color = TIERC[tier];
+    $('rName').textContent = TIERS[tier].charAt(0) + TIERS[tier].slice(1).toLowerCase() + ' ' + STATIONS[st].piece;
+    $('rLine').textContent = 'Made at once at the plain odds: Fine 20 % · Rare 5 %.'; $('rWhy').textContent = 'No working, no pick, no found tile.'; $('rPick').hidden = true; $('rSide').hidden = true; $('rGift').hidden = true;
+    $('result').hidden = false; render();
+  };
+  $('again').onclick = toPrepare;
+  $('bLeave').onclick = toPrepare;
+  if (!phoneQ.matches) $('howd').open = true;
+  $('bStrike').onclick = strike;
+  $('bFire').onclick = toggleFire;
+  $('bQuench').onclick = quench;
+  $('bStrip').onclick = () => toggleSheet();
+  $('bClose').onclick = () => toggleSheet(false);
+  cv.addEventListener('pointerdown', e => { e.preventDefault(); strike(); });
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' || (e.code === 'Enter' && !(document.activeElement && document.activeElement.tagName === 'BUTTON'))) {
+      if (S.phase === 'prepare') toWork(); else if (S.done) toPrepare(); else if (S.paused) toggleSheet(false); else strike();
+      e.preventDefault();
+    } else if (/^[rRbB]$/.test(e.key)) { if (S.paused) toggleSheet(false); else toggleFire(); }
+    else if (/^[qQxX]$/.test(e.key)) quench();
+    else if (/^[yY]$/.test(e.key) || (e.key === 'Tab' && S.phase === 'work')) { toggleSheet(); e.preventDefault(); }
+    else if (e.key === 'Escape') toggleSheet(false);
+  });
+
+  toPrepare();
+  requestAnimationFrame(tick);
+})();
+</script>
+
+</body></html>
