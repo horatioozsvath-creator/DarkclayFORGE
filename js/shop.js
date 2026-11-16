@@ -87,7 +87,7 @@ export function newCustomer(rng) {
 }
 export const wants = (want, card) => want === 'any' || want === card.pattern || PATTERNS[card.pattern].want === want;
 export function wantWord(want) {
-  if (PATTERNS[want]) return 'a ' + PATTERNS[want].name.toLowerCase();
+  if (PATTERNS[want]) { const n = PATTERNS[want].name.toLowerCase(); return (/^[aeiou]/.test(n) ? 'an ' : 'a ') + n; }
   return { weapon: 'a weapon', helm: 'a helm', ring: 'a ring', any: 'something good' }[want];
 }
 export const takeOdds = (mood, tag) => mood === 'PINCHED' && tag === 'dear' ? 0 : Math.min(0.95, MOOD_ODDS[mood] * TAGS[tag].odds);
@@ -171,7 +171,7 @@ export function arrive(save, rng, now, present, clerk = null) {
   if (present && save.queue.length < QUEUE_MAX) {
     const c = rng() < SELLER_ODDS ? newSeller(rng, Math.floor(now / 3600000), now) : { ...newCustomer(rng), kind: 'buyer' };
     c.tell = c.kind === 'buyer' ? TELLS[c.mood][Math.floor(rng() * TELLS[c.mood].length)] : '';
-    c.wait = PATIENCE; c.shows = 0;
+    c.wait = PATIENCE; c.shows = 0; c.id = 'v' + Math.floor(rng() * 1e9).toString(36);
     save.queue.push(c);
     return [];
   }
@@ -304,7 +304,8 @@ export function postOrder(save, rng, now) {
   return log(save, { at: now, who: r.who, fig: r.fig, mood: 'EAGER', want: pattern, sold: null, order: 'posted', line: 'Left a special order: ' + orderWord(save.order) + '.' });
 }
 export function orderWord(o) {
-  return (o.least ? TIERS[o.least].name + ' or better ' : 'a ') + (o.metal ? MATS[o.metal].name.replace(' bar', '').toLowerCase() + ' ' : '') + PATTERNS[o.pattern].name.toLowerCase();
+  const rest = (o.metal ? MATS[o.metal].name.replace(' bar', '').toLowerCase() + ' ' : '') + PATTERNS[o.pattern].name.toLowerCase();
+  return o.least ? TIERS[o.least].name + ' or better ' + rest : (/^[aeiou]/.test(rest) ? 'an ' : 'a ') + rest;
 }
 export const fills = (o, card) => !!o && card.pattern === o.pattern && TIER_N[card.tier] >= o.least && (!o.metal || card.metal === o.metal) && !card.flawed;
 export function deliver(save, cardId, now) {
