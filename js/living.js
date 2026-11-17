@@ -1,9 +1,9 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // A LIVING REACH, with no page access: the word in town each day (some true, some not: what's coming, who's about, what's selling,
 // how the regulars are doing after what happened), and the guild fair (one piece entered, judged, a prize for the first three).
-import { LIVING, SEASONS, PATTERNS } from './data.js?v=57';
-import { rung } from './growth.js?v=57';
-import { seasonOf, seasonDay, fairOn } from './town.js?v=57';
+import { LIVING, SEASONS, PATTERNS } from './data.js?v=58';
+import { rung } from './growth.js?v=58';
+import { seasonOf, seasonDay, fairOn } from './town.js?v=58';
 
 const D = 24 * 3600000;
 const dayOf = ms => Math.floor(ms / D);
@@ -33,6 +33,7 @@ export function rumours(save, now) {
   if (toFair > 0 && toFair <= 3) out.push('The guild fair is in ' + toFair + (toFair === 1 ? ' day' : ' days') + '. The judges like a piece worth looking at twice.');
   if (g) out.push('Someone saw ' + g.name + ' counting doors on Bridge Street.');
   if (m && m.done === 'kept') out.push('Sergeant Vance has been made captain of the night watch, they say, for holding the lanes.');
+  if (m && m.done === 'hunted') out.push('They\'re still talking about it in the taverns: your runner brought the beast down.');
   if (m && m.done === 'came') out.push('The carpenters can\'t keep up: half the lanes have something to mend.');
   if (r && r.done && now - r.at < 5 * D) out.push('The Watch drank to your runner at the Bell last night.');
   else if (r && !r.done && now < r.trail) out.push('Ketty Moss\'s stall was turned over by the same lot that robbed you.');

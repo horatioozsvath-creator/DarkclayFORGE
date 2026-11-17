@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK } from './data.js?v=57';
+import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK } from './data.js?v=58';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -303,7 +303,7 @@ export function finish(S, how) {
       return { rework: true, mythic: S.mythic, from, tier: took ? MYTHIC_WORK.tier : from, failed: !took, flawed: false, dropped, instant: false, odds: odds(S),
         worked: Math.round(S.worked), strikes: S.strikes, heats: S.heats, cracks: S.cracks, whiteHeat: S.whiteHeat, whites: S.whites, earned: took && S.earned, clean: false, frost: S.frost };
     }
-    if (S.relic) {   // WHITE HEAT twice and not one crack: the Relic; short of it, the Old-Blood piece as it was
+    if (S.relic) {   // WHITE HEAT twice and not one crack: the Relic; short of it, the piece (Rare or Old-Blood) as it was
       const took = !dropped && S.cracks === 0 && S.whites >= RELIC_WORK.whites;
       S.dropped = dropped;
       return { rework: true, relic: S.relic, from, tier: took ? RELIC_WORK.tier : from, failed: !took, flawed: false, dropped, instant: false, odds: odds(S),

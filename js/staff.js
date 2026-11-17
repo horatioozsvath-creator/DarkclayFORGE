@@ -1,13 +1,14 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=57';
-import { levelOf, makePiece, partOptions } from './rules.js?v=57';
-import { awayStep } from './shop.js?v=57';
-import { wageMult, capBonus, rung } from './growth.js?v=57';
-import * as Trail from './trail.js?v=57';
-import { TRAIL, MONSTERS } from './data.js?v=57';
-import * as Run from './runner.js?v=57';
+import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=58';
+import { levelOf, makePiece, partOptions } from './rules.js?v=58';
+import { awayStep } from './shop.js?v=58';
+import { wageMult, capBonus, rung } from './growth.js?v=58';
+import * as Trail from './trail.js?v=58';
+import { TRAIL, MONSTERS } from './data.js?v=58';
+import * as Run from './runner.js?v=58';
+import * as Mon from './monsters.js?v=58';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -34,7 +35,7 @@ export function gain(p, n) { p.xp = (p.xp || 0) + n * (p.trait === 'quick' ? 1.5
 // a clerk away: the share of the tag price that reaches the till; minding the shop while you work: how much more readily walk-ins buy
 export function clerkTerms(p) {
   const l = levelOfP(p);
-  return { name: p.name.split(' ')[0], rate: Math.min(0.97, 0.8 + 0.02 * (l - 1) + (p.trait === 'silver' ? 0.05 : 0)), boost: 1.3 + 0.03 * (l - 1), restock: p.restock !== false };
+  return { name: p.name.split(' ')[0], rate: Math.min(0.97, 0.8 + 0.02 * (l - 1) + (p.trait === 'silver' ? 0.05 : 0)), boost: 1.3 + 0.03 * (l - 1), restock: p.restock !== false, tidy: p.trait === 'tidy' && p.restock !== false };
 }
 // hours of away time the shop is kept for
 export const awayCap = save => (save.awayCapH || AWAY_CAP_H) + ((clerkOf(save) || {}).trait === 'early' ? 2 : 0) + ((ROOM_SIZES[(save.room || {}).size || 0] || {}).capH || 0) + capBonus(save) + lanternHours(save);
@@ -66,7 +67,7 @@ export function hire(save, c) {
 }
 export function letGo(save, id) {
   const p = (save.staff || []).find(x => x.id === id);   // what they carried comes back to the back room (the potions go with them)
-  if (p) { Object.values(p.gear || {}).forEach(c => save.cards.unshift(c)); if (p.trip && ROUTES[p.trip.route].hunt && save.robbery) save.robbery.hunting = false; }
+  if (p) { Object.values(p.gear || {}).forEach(c => save.cards.unshift(c)); if (p.trip && ROUTES[p.trip.route].hunt && save.robbery) save.robbery.hunting = false; if (p.trip && ROUTES[p.trip.route].beast && save.monster) save.monster.hunting = false; }
   save.staff = (save.staff || []).filter(p => p.id !== id); if (!save.staff.length) { save.owed = 0; save.unpaid = false; } }
 
 // ---------- wages ----------
@@ -88,10 +89,12 @@ export const tripHours = (p, route) => ROUTES[route].h * (p.trait === 'surefoot'
 // id: which runner (the first, when it isn't given). Only one runner goes after a gang at a time.
 export function sendRunner(save, route, now, id) {
   const p = id ? runners(save).find(x => x.id === id) : runnerOf(save), r = ROUTES[route];
-  if (!p || p.trip || !r || save.unpaid || save.coins < r.fee || (r.rung && rung(save) < r.rung) || Run.hurtNow(p, now) || (r.hunt && (!Run.huntOpen(save, now) || save.robbery.hunting))) return false;
+  if (!p || p.trip || !r || save.unpaid || save.coins < r.fee || (r.rung && rung(save) < r.rung) || Run.hurtNow(p, now) || (r.hunt && (!Run.huntOpen(save, now) || save.robbery.hunting))
+    || (r.beast && (!Mon.huntOpen(save, now) || save.monster.hunting))) return false;
   save.coins -= r.fee;
   p.trip = { route, left: now, back: now + tripHours(p, route) * H };
   if (r.hunt) { p.trip.odds = Run.huntOdds(save, p); save.robbery.hunting = true; }
+  if (r.beast) { p.trip.odds = Run.beastOdds(save, p); p.trip.heard = save.monster.heard; save.monster.hunting = true; }
   return true;
 }
 export const COMMONS = ['iron', 'iron', 'iron', 'bronze', 'bronze', 'steel', 'wrap', 'cord', 'ash', 'wool', 'strap', 'horn', 'rowan', 'silk', 'sharkhide', 'deer', 'deer', 'goat', 'gut', 'linen', 'yew', 'birch', 'goose', 'bone'];
@@ -142,6 +145,13 @@ export function resolveTrips(save, now, rng) {
       if (d.died) Run.lose(save, p, route, at); else gain(p, 1 + Math.ceil(ROUTES[route].h));
       out.push({ who: p.name, route, at, mats: {}, hunt: hu, road: d }); continue;
     }
+    // the beast (milestone 34): the road's danger first (as dangerous as the kind), then, if they live, the hunt
+    if (ROUTES[route].beast) {
+      const d = Run.road(save, p, route, rng, at), b = d.died ? Mon.hunt(save, () => 1, at, 0) : Mon.hunt(save, rng, at, odds || 0, p.trip.heard);
+      p.trip = null;
+      if (d.died) Run.lose(save, p, route, at); else gain(p, 1 + Math.ceil(ROUTES[route].h));
+      out.push({ who: p.name, route, at, mats: {}, beast: b, road: d }); continue;
+    }
     const h = haul(save, p, route, rng, at), d = Run.road(save, p, route, rng, at);
     if (d.died) { p.trip = null; Run.lose(save, p, route, at); out.push({ who: p.name, route, at, mats: {}, road: d }); continue; }
     Object.entries(h.mats).forEach(([m, n]) => { save.mats[m] = (save.mats[m] || 0) + n; });
@@ -171,7 +181,7 @@ export function catchUp(save, to, rng) {
     const dt = Math.min(60, counted - t), at = from + (t + dt) * 1000;
     const terms = c ? clerkTerms(c) : null;   // sales first: a broke shop's clerk earns the wage
     const r = awayStep(save, dt, rng, at, terms);
-    sum.sold.push(...r.sold); r.sold.forEach(e => e.restocked && sum.restocked.push(e.restocked.name)); sum.missed += r.missed; sum.cut += r.cut;
+    sum.sold.push(...r.sold); r.sold.forEach(e => e.restocked && sum.restocked.push(e.restocked.name)); sum.restocked.push(...(r.tidied || [])); sum.missed += r.missed; sum.cut += r.cut;
     if (terms) { sum.clerk = terms.name; r.sold.forEach(() => gain(c, 1)); }
     sum.wages += payWages(save, dt);
     if (save.unpaid) sum.unpaid = true;

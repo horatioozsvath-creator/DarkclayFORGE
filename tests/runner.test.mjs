@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import * as Run from '../js/runner.js';
 import * as St from '../js/staff.js';
 import * as R from '../js/rules.js';
-import { GEAR, ROUTES } from '../js/data.js';
+import { GEAR, ROUTES, MONSTERS } from '../js/data.js';
 
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const H = 3600000, D = 24 * H;
@@ -35,7 +35,7 @@ test('danger: every road has some, the short roads little and never deadly; none
   const kitted = Run.risk(s, p, 'below', 0);
   assert.ok(kitted.hurt < bare.hurt / 2); assert.ok(kitted.die < bare.die / 5);
   const lv = Run.riskLevel(s, p, 'below', 0); assert.equal(lv.word, 'MODERATE', 'a full set of Rare gear: deadly down to moderate'); assert.equal(lv.bare, 'DEADLY'); assert.ok(lv.cut > 0.5);
-  for (const r of Object.keys(ROUTES)) assert.ok(GEAR.danger[r], r + ' has its danger');
+  for (const r of Object.keys(ROUTES)) assert.ok(ROUTES[r].beast ? Object.values(MONSTERS.hunt.kinds).every(k => k.danger) : GEAR.danger[r], r + ' has its danger');   // the beast's is the kind's (milestone 34)
 });
 
 test('the road: a salve heals a wound, a draught keeps a dying runner alive; hurt breaks a piece of armour (never a Relic) and costs a healer', () => {

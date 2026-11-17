@@ -164,7 +164,7 @@ no customer is shown (none, once the isometric shop is for arranging).
   phone loads only its own size's pictures, and only the views it turns to. Not yet checked on a real phone.
 - Fixed on the way: the cards on the painted shelves were drawn about three times too big (a page-wide rule stretched every canvas);
   each card's face is its own 256 × 360 now, skewed onto its place.
-- Not done: the brews as bottles (the 3D shop shows them as cards too, so they stay cards).
+- The brews stay cards in the 3D shop, like every other piece (decided 2026-11-17: no bottles).
 
 ## Release 50: fixes from a real phone (2026-11-17)
 

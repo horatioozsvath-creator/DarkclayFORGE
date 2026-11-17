@@ -38,6 +38,9 @@ const H = 3600000, lvl = id => R.levelOf((save.trades[id] || {}).xp || 0).level,
 const CHASE = process.env.CHASE !== '0';
 const chasing = id => G.rung(save) >= 5 && (save.blueprints || []).some(b => RELICS[b].pattern === id && !(save.relicsMade || []).includes(b));
 // off the shelf and out of the Hall, into the back room (for a working)
+// what the game's FILL THE SHELVES keeps back (Sh.keepBack: a Relic, a Mythic, a piece ready for its Relic) and a piece marked KEEP:
+// the bot puts out only what a player filling the shelves would (milestone 34: it used to shelve Relics, and sell them, by hand)
+const forSale = c => !c.sample && !c.keep && !Sh.keepBack(save, c);
 function toBack(c) { const sl = Sh.onShelf(save, c.id); if (sl >= 0) Sh.takeDown(save, sl); if (save.hall) for (const k of Object.keys(save.hall.shown || {})) if (save.hall.shown[k] === c.id) delete save.hall.shown[k]; }
 // which piece to make: the best worth over materials the bot can make or buy, at its trade
 const GLUT = +process.env.GLUT || 6;
@@ -50,7 +53,7 @@ function choose(hour) {
     metals.forEach((m, mi) => {
       if ((m.level || 1) > lvl(id)) return;
       const picks = [mi, 0, 0], rec = Sh.recipe(id, picks), short = Sh.short(save.mats, rec);
-      if (short.some(x => !Sh.sells(x.mat, hour))) return;
+      if (short.some(x => !Sh.sells(x.mat, hour, save))) return;
       const cost = short.reduce((c, x) => c + Sh.priceOf(x.mat, hour) * (x.n - x.have), 0);
       if (cost > save.coins) return;
       const o = save.order, forOrder = o && o.pattern === id && (!o.metal || o.metal === m.id) && !Sh.inBack(save).some(x => Sh.fills(o, x));   // making to order
@@ -94,7 +97,7 @@ function tryOldBlood(hour) {
     if (!Sh.canRework(save, c)) { if (slot >= 0) Sh.place(save, c.id, slot); continue; }
     const cost = Sh.reworkCost(c), short = Sh.short(save.mats, cost);
     const coins = short.reduce((n, x) => n + Sh.priceOf(x.mat, hour) * (x.n - x.have), 0);
-    if (short.some(x => !Sh.sells(x.mat, hour)) || save.coins - coins < 300) { if (slot >= 0) Sh.place(save, c.id, slot); continue; }
+    if (short.some(x => !Sh.sells(x.mat, hour, save)) || save.coins - coins < 300) { if (slot >= 0) Sh.place(save, c.id, slot); continue; }
     short.forEach(x => { const b = save.coins; Sh.buy(save, x.mat, x.n - x.have, hour); spent.mats += b - save.coins; });
     Sh.takeMats(save, cost); oldTried++;
     const took = rng() < Math.min(0.75, 0.45 + 0.06 * (lvl(c.pattern) - OLD_BLOOD.level));
@@ -112,7 +115,7 @@ function tryOldBlood(hour) {
 function restock() {
   if (!TOWN || !save.town) return;
   const hot = c => Town.demandOf(save.town, c.pattern) > 0;
-  const back = Sh.inBack(save).filter(hot).sort((a, b) => b.worth - a.worth);
+  const back = Sh.inBack(save).filter(hot).filter(forSale).sort((a, b) => b.worth - a.worth);
   save.shelf.forEach((e, i) => {
     const c = e && save.cards.find(x => x.id === e.id);
     if (c && hot(c)) { if (e.tag !== 'dear') Sh.setTag(save, i, 'dear'); return; }
@@ -150,7 +153,7 @@ function relicWork(day) {
   if (r && !r.trip) kit(r);
   if (r && !r.trip && Run.huntOpen(save, t)) { if (St.sendRunner(save, 'gang', t)) hunts++; }
   if (r && !r.trip && save.coins > 900) St.sendRunner(save, 'below', t);
-  for (const c of save.cards.filter(x => x.tier === 'oldblood')) {
+  for (const c of save.cards.filter(x => x.tier === 'oldblood' || x.tier === 'rare').sort((a, b) => (b.tier === 'oldblood') - (a.tier === 'oldblood'))) {   // an Old-Blood piece first, else a Rare (milestone 34)
     let g = Sh.relicFor(save, c);
     if (!g.ok && g.why.length === 1 && /back room/.test(g.why[0])) { toBack(c); g = Sh.relicFor(save, c); }
     if (!g.ok) continue;
@@ -188,8 +191,7 @@ function nineWork(day) {
     if (!g.ok && save.hall && g.why.length === 1 && /back room/.test(g.why[0])) { for (const k of Object.keys(save.hall.shown || {})) if (save.hall.shown[k] === relic.id) delete save.hall.shown[k]; g = Sh.mythicFor(save, relic); }
     if (!g.ok) continue;
     const cost = Sh.mythicCost(relic, id);
-    if (Sh.short(save.mats, cost).some(x => x.mat === RELICS[MYTHICS[id].relic].mat)) continue;
-    buyShort(cost); if (!Sh.takeMats(save, cost)) continue;
+    buyShort(cost);   // the relic material from the Crown's factor, when it has it this hour (milestone 34) if (!Sh.takeMats(save, cost)) continue;
     mythicTried++;
     if (rng() < 0.25) {
       const p = R.mythicPiece({ ...relic, tier: 'mythic' }, id);
@@ -203,7 +205,8 @@ function nineWork(day) {
 let orders = 0, stories = 0;
 function fillOrder() {
   const o = save.order; if (!o) return;
-  const c = Sh.inBack(save).filter(x => Sh.fills(o, x)).sort((a, b) => a.worth - b.worth)[0];
+  // on the trail, a Relic whose Mythic isn't made yet is kept for it, not sold to a regular's order
+  const c = Sh.inBack(save).filter(x => Sh.fills(o, x) && !(CHASE && x.tier === 'relic' && !(save.mythicsMade || []).some(id => MYTHICS[id].relic === x.relic))).sort((a, b) => a.worth - b.worth)[0];
   if (c && Sh.deliver(save, c.id, t)) { orders++; if (o.story) stories++; }
 }
 // the second shop: set up once it can be afforded with plenty over, then kept stocked from the back room, best first
@@ -212,7 +215,7 @@ function runBranch(day) {
   if (!BRANCHES) return;
   if (!save.branch && Br.canBuy(save).ok && save.coins > BRANCH.cost + 300) { Br.buy(save); branchDay = day; note('opened the second shop at ' + BRANCH.town); }
   if (!save.branch) return;
-  const v = Br.viewOf(save), back = Sh.inBack(save).filter(c => !c.sample).sort((a, b) => b.worth - a.worth);
+  const v = Br.viewOf(save), back = Sh.inBack(save).filter(forSale).sort((a, b) => b.worth - a.worth);
   v.shelf.forEach((e, i) => { if (!e && back.length) Sh.place(v, back.shift().id, i); });
   const cost = Rm.shelfCost(v.room); if (cost != null && save.coins - cost > 3000 && back.length > 4) Rm.buy(v, 'shelf');
 }
@@ -231,13 +234,16 @@ const fairs = [0, 0, 0, 0];
 function fair() { if (!Liv.fairOpen(save, t)) return; const best = save.cards.filter(c => !c.sample).sort((a, b) => b.worth - a.worth)[0]; if (!best) return; const r = Liv.enterFair(save, best.id, t, rng); if (r.ok) fairs[Math.min(3, r.place - 1)]++; }
 // monsters (MONSTERS=0 turns them off): the bot arms the Watch from the back room, cheapest first, and sets wards when it has them
 const MONSTERING = process.env.MONSTERS !== '0';
-let monsters = 0, kept = 0, came = 0, monsterBills = 0;
+let monsters = 0, kept = 0, came = 0, monsterBills = 0, beasts = 0;
 function watchDuty() {
   if (!MONSTERING) return;
   Mon.tidy(save, t);
   if (Mon.plan(save, t, rng)) monsters++;
   const m = save.monster, st = Mon.stageOf(save, t);
   if (m && (st === 'rumour' || st === 'sighted')) Mon.kindOf(m).order.forEach((l, i) => { for (const c of Sh.inBack(save).filter(c => Mon.fitsLine(l, c)).sort((a, b) => a.worth - b.worth)) { if (!Mon.lineLeft(save, i)) break; if (Mon.give(save, i, c.id, t).kept) kept++; } });
+  // the hunt (milestone 34): a free runner, kitted, goes after it when the odds are even or better
+  const rn = St.runnerOf(save);
+  if (rn && !rn.trip && Mon.huntOpen(save, t) && !save.monster.hunting) { kit(rn); if (Run.beastOdds(save, rn) >= 0.5 && St.sendRunner(save, 'beast', t)) beasts++; }
   const r = Mon.strike(save, t, rng); if (r) { came++; monsterBills += r.bill; note('MONSTER: ' + r.name + ', ' + r.bill + ' c'); }
   for (const c of Sh.inBack(save).filter(Mon.canWard)) { if (Mon.wardsOf(save).length >= 3) break; Mon.addWard(save, c.id); }
 }
@@ -283,7 +289,7 @@ function spend(hour) {
   for (const k of ['lamp', 'rug', 'bench', 'table', 'workbench']) if (Rm.costOf(save.room, k) && save.coins - Rm.costOf(save.room, k) > reserve + 300 && Rm.charm(save.room, save) < 20) { const r = Rm.buy(save, k); if (r.item) spent.room += Rm.costOf(save.room, k); }
   while (G.pointsLeft(save) > 0) { const order = [['craft', 0], ['house', 0], ['craft', 1], ['house', 2], ['craft', 2], ['counter', 0], ['house', 1], ['counter', 1], ['counter', 2]]; const n = order.find(([b, i]) => G.canTake(save, b, i).ok); if (!n) break; G.takePerk(save, ...n); note('skill: ' + n.join(' ')); }
   // anything in the back goes up when there's room
-  Sh.inBack(save).forEach(c => Sh.place(save, c.id));
+  Sh.inBack(save).filter(forSale).forEach(c => Sh.place(save, c.id));
 }
 
 console.log('day  coins  earned  made sold  slots  staff  maker renown  room  (session ' + SESSION_MIN + ' min a day, then a night away)');
@@ -329,10 +335,14 @@ if (process.env.WHY) for (const id of Object.keys(RELICS)) {
   console.log('  ' + id.padEnd(14), (save.relicsMade || []).includes(id) ? 'MADE' : (save.blueprints || []).includes(id) ? 'bp' : 'no bp',
     r.pattern, 'pat', lvl(r.pattern), st, Trail.stationLevel(save, st), 'owns', Rm.owns(save, st), 'oldblood', save.cards.filter(c => c.tier === 'oldblood' && c.pattern === r.pattern).length, 'rare', save.cards.filter(c => c.tier === 'rare' && c.pattern === r.pattern).length, 'mat', save.mats[r.mat] || 0);
 }
+if (process.env.WHY) for (const id of Object.keys(MYTHICS)) console.log('  nine ' + id.padEnd(13), (save.mythicsMade || []).includes(id) ? 'MADE' : '-', 'shard', Trail.hasShard(save, id) ? 'y' : 'n',
+  'parts', [0, 1, 2].filter(i => Trail.hasPart(save, id, i)).length, 'relic', MYTHICS[id].relic, (save.relicsMade || []).includes(MYTHICS[id].relic) ? 'made' : 'not', save.cards.some(c => c.relic === MYTHICS[id].relic && c.tier === 'relic') ? 'held' : 'gone', 'src', MYTHICS[id].shard);
 if (BANKING) console.log('bank: borrowed on day', loanDay, ' interest paid', interestPaid, ' owed now', Bank.bankOf(save).loan, ' second shop from day', branchDay);
 console.log('EARNED', save.earned, 'coins', save.coins);
 if (WEARING) console.log('wear: repairs', repairs, ' broke', broke, ' spent', wearSpent, ' (' + (100 * wearSpent / (save.earned || 1)).toFixed(1) + ' % of earnings)');
 if (THIEVING) console.log('thieves: robbed', robbed, ' caught', caught, ' turned away', turned, ' lost pieces worth', lostWorth, ' from the till', lostTill, ' (' + (100 * (lostWorth + lostTill) / (save.earned || 1)).toFixed(1) + ' % of earnings)');
 { const r = St.runnerOf(save); console.log('runner: ' + (r ? r.name + ' guard ' + Run.strength(r).guard + ' fight ' + Run.strength(r).fight : 'none') + ' · hunts', hunts, ' memorials', (save.memorials || []).length, (save.memorials || []).map(m => m.name).join(', ')); }
-if (MONSTERING) console.log('monsters:', monsters, ' kept off', kept, ' came', came, ' bills', monsterBills, ' (' + (100 * monsterBills / (save.earned || 1)).toFixed(2) + ' % of earnings) · wards', Mon.wardsOf(save).map(c => c.name).join(', ') || 'none');
+if (MONSTERING) console.log('monsters:', monsters, ' kept off', kept, ' came', came, ' hunted', beasts, ' trophies', Mon.trophiesOf(save).map(x => x.name).join(', ') || 'none', ' bills', monsterBills, ' (' + (100 * monsterBills / (save.earned || 1)).toFixed(2) + ' % of earnings) · wards', Mon.wardsOf(save).map(c => c.name).join(', ') || 'none');
 console.log('guild fairs: first', fairs[0], ' second', fairs[1], ' third', fairs[2], ' no prize', fairs[3]);
+// DUMP=path: write the save at the end (for a look at it in the game, slot 3)
+if (process.env.DUMP) (await import('node:fs')).writeFileSync(process.env.DUMP, JSON.stringify(save));

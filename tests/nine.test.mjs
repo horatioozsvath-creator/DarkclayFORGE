@@ -15,12 +15,12 @@ const piece = (pattern, tier) => R.makePiece({ patternId: pattern, picks: [0, 0,
 const relicOf = id => ({ ...R.relicPiece(piece(RELICS[id].pattern, 4), id), tier: 'relic' });
 const mythicOf = id => R.mythicPiece({ ...relicOf(MYTHICS[id].relic), tier: 'mythic' }, id);
 
-test('a Relic asks trade 9 in something at its station and trade 5 in its own pattern (not trade 9 in the pattern)', () => {
+test('a Relic asks trade 7 in something at its station and trade 5 in its own pattern (milestone 34: was 9 at the station)', () => {
   const helm = piece('helm', 3), hk = Object.keys(RELICS).find(k => RELICS[k].pattern === 'helm');
-  const s = reach({ cards: [helm], blueprints: [hk], trades: { falchion: { xp: xpTo(9) }, helm: { xp: xpTo(4) } } });
+  const s = reach({ cards: [helm], blueprints: [hk], trades: { falchion: { xp: xpTo(7) }, helm: { xp: xpTo(4) } } });
   assert.match(Sh.relicFor(s, helm).why.join(), /trade 5 in/);
   s.trades.helm.xp = xpTo(5); assert.ok(Sh.relicFor(s, helm).ok, 'a master of the forge works the helm at trade 5');
-  s.trades = { helm: { xp: xpTo(8) } }; assert.match(Sh.relicFor(s, helm).why.join(), /trade 9 in something at the forge/);
+  s.trades = { helm: { xp: xpTo(6) } }; assert.match(Sh.relicFor(s, helm).why.join(), /trade 7 in something at the forge/);
   s.trades = { lens: { xp: xpTo(9) }, helm: { xp: xpTo(5) } }; assert.ok(!Sh.relicFor(s, helm).ok, 'mastery at another station doesn\'t count');
 });
 

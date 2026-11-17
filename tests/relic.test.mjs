@@ -19,12 +19,14 @@ test('the Relic tier: amber, after Old-Blood; a plain rework never reaches it', 
   assert.equal(R.reworkTo(3), 3);
 });
 
-test('what the Relic working needs: its blueprint, an Old-Blood piece of its kind, trade 9, in the back room; one in a save', () => {
+test('what the Relic working needs: its blueprint, a Rare or Old-Blood piece of its kind, trade 7 at the station, in the back room; one in a save', () => {
   const ob = make('falchion', 3);
   assert.ok(Sh.relicFor(shop({ cards: [ob] }), ob).ok);
   assert.match(Sh.relicFor(shop({ cards: [ob], blueprints: [] }), ob).why.join(), /blueprint/);
-  assert.match(Sh.relicFor(shop({ cards: [ob], trades: { falchion: { xp: xpTo(8) } } }), ob).why.join(), /trade 9/);
-  assert.equal(Sh.relicFor(shop(), make('falchion', 2)).relic, null, 'Old-Blood first');
+  assert.match(Sh.relicFor(shop({ cards: [ob], trades: { falchion: { xp: xpTo(6) } } }), ob).why.join(), /trade 7/);
+  const rare = make('falchion', 2); assert.ok(Sh.relicFor(shop({ cards: [rare] }), rare).ok, 'a Rare will do (milestone 34)');
+  assert.deepEqual(Sh.relicCost(rare, 'gatewarden').map(x => x.mat), [rare.metal, 'heartstone', 'blackwater'], 'from a Rare, the station\'s rare thing too');
+  assert.equal(Sh.relicFor(shop(), make('falchion', 1)).relic, null, 'a Fine piece: no');
   assert.equal(Sh.relicFor(shop(), make('dagger', 3)).relic, null, 'no Relic dagger');
   assert.ok(Sh.relicFor(shop({ cards: [ob], relicsMade: ['gatewarden'] }), ob).made);
   assert.deepEqual(Sh.relicCost(ob, 'gatewarden'), [{ mat: ob.metal, n: Math.ceil(PATTERNS.falchion.bars / 2) * 3 }, { mat: 'heartstone', n: 1 }]);

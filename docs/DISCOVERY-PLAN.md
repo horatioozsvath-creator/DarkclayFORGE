@@ -159,7 +159,7 @@ saves get the same hidden patterns as a new game.
   written into THE MAKER'S BOOK under their name, never the same word twice.
 - **Orders for found patterns:** the regulars' orders now take in the found patterns (Vance: spear, mace, shield; Bram: crossbow,
   satchel, sling; Corrow: mirror, lantern, wand; Marrow: poultice, ink; Ketty: cloak; Tib: sling, club), only once they're known.
-  **Not done:** Court orders for found patterns (the Court still asks only for the Nine).
+  **Court orders for found patterns** followed in release 58 (milestone 34): see docs/MILESTONE-34.md.
 - **The balance run** (`node tools/sim.mjs 30 <seed>`, `FOUND=0` for only the starting patterns): the bot now makes only what it knows,
   and stops making a pattern with six unsold in the back (before that, with everything found it made 550+ war hammers that few
   customers ask for). 30 days, seeds 2–4: everything found earned about 430,000 against 515,000 with nothing found, renown the same

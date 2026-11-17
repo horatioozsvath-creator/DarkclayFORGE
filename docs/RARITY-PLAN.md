@@ -1,6 +1,6 @@
 # Rarity to Mythic: the full ladder for every station
 
-Status: milestones 11–18 built (releases 22–36). The pace target (all Nine in about three months) is not met yet: see milestone 18. The Nine can be made. Builds on release 21. Darkclay Zero's ladder has six tiers (`data/zero/tiers.json`); the Forge has built four.
+Status: built, milestones 11–18 (releases 22–36), all six tiers of Darkclay Zero's ladder (`data/zero/tiers.json`). The pace was tuned again in release 58 (milestone 34, below): all Nine by day 99–120 in half the sim's runs, not quite three months. Builds on release 21.
 This plan takes every station up the last two: **Relic** (named, one of a kind) and **Mythic** (the Nine).
 
 ## The ladder
@@ -241,3 +241,24 @@ Each milestone ends in a release, as before: rules and tests first, then the scr
 - **Sim (150 days, seeds 1–6):** all 9 shards and all 27 parts by day 150 in every run; the first Mythic on day 52–101; **3–6 of the
   Nine by day 150** (was 3–5). The Relics are the bottleneck now (5–8 of 11 by day 150): each needs trade 6 in its own pattern and an
   Old-Blood piece. Letting a Relic be worked from a Rare would be the next lever.
+
+## Release 58: the Nine's pace (milestone 34)
+
+Mostly the game's rules, not the bot's skill. The levers were stacked, each run on top of the ones before it, 120 days on seeds 1–6
+(`tools/sim.mjs`, everything found). One row is a change to the sim, not the rules (marked):
+
+| Lever | Of the Nine by day 120 |
+|---|---|
+| before (with the Court's orders for found patterns and the monster hunt in) | 3–4 |
+| a Relic at trade 7 in the station (was 9), a Mythic at 8 | 1–4 (noise: no gain alone) |
+| **the Crown's Factor**: relic materials sold from RENOWNED, two of the six each hour, 2,500–4,000 c | 1–4 |
+| *(the sim)* it stopped shelving (and selling) its Relics: it now puts out only what FILL THE SHELVES would (`Sh.keepBack`), and keeps a Relic from a regular's order while its Mythic waits | 4–5 |
+| **a Relic from a Rare piece** (or Old-Blood): from a Rare it takes the station's rare thing too; the Court's shard orders ask a Rare or better (was Old-Blood) | 5–7 |
+| **a Mythic at trade 7 in the station** (was 9) | 6–8 |
+| **a part of the Nine at trade 4 in its station** (was 6) | 5–9 |
+
+- **As it stands:** the first Relic on day 21–48 (median about 30); all Nine made in three runs of six (days 99, 112, 120), 7–8 in two
+  more; by day 90, 7–8 in four runs. One run (seed 2) neglects the kettle (trade 4 by day 120) and makes 5. **All Nine in about
+  three months is close for most runs but not met**; the tail is the bot's fixed success odds for the workings (a Relic a third of the
+  time, a Mythic a quarter) and which stations it practises. Earnings are unchanged (about 2.05 M by day 120).
+- The Mythic working itself is as hard as before: three WHITE HEATs, the narrowest band, not one crack.

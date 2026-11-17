@@ -1,11 +1,11 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE RUNNER'S GEAR AND THE ROAD'S DANGER, with no page access: pieces you made, carried by the runner (off the shelves while they're
 // carried), potions used up on the road, the chance of harm on the hard roads, and the hunt for a gang. Spared on a gentler Reach.
-import { GEAR, ROUTES, TIERS } from './data.js?v=57';
-import { rung } from './growth.js?v=57';
-import { threatsOn } from './bank.js?v=57';
-import { levelOf } from './rules.js?v=57';
-import { roadX } from './monsters.js?v=57';
+import { GEAR, ROUTES, TIERS, MONSTERS } from './data.js?v=58';
+import { rung } from './growth.js?v=58';
+import { threatsOn } from './bank.js?v=58';
+import { levelOf } from './rules.js?v=58';
+import { roadX, huntKind } from './monsters.js?v=58';
 
 const D = 24 * 3600000;
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
@@ -25,14 +25,15 @@ export const packBonus = p => 1 + GEAR.pack * powerOf(gearOf(p).pack);
 // a lantern in the LIGHT slot (milestone 33): the road's hurt this much less (0.9 for a Common one, 0.8 a Fine... never below half)
 export const lightCut = p => 1 - Math.min(GEAR.lightMax, GEAR.light * powerOf(gearOf(p).light));
 // on a road: the chance of being hurt, and of being killed
+const dangerOf = (save, route) => route === 'beast' ? (huntKind(save) || {}).danger : GEAR.danger[route];   // the hunt: as dangerous as what's hunted
 export function risk(save, p, route, now) {
-  const d = GEAR.danger[route]; if (!d || !threatsOn(save, now)) return { hurt: 0, die: 0 };
-  const s = strength(p), f = 6 / (6 + s.guard + s.fight / 2), x = roadX(save, now);   // a monster about: every road twice as dangerous
+  const d = dangerOf(save, route); if (!d || !threatsOn(save, now)) return { hurt: 0, die: 0 };
+  const s = strength(p), f = 6 / (6 + s.guard + s.fight / 2), x = route === 'beast' ? 1 : roadX(save, now);   // a monster about: every road twice as dangerous
   return { hurt: Math.min(0.9, d.hurt * f * x * lightCut(p)), die: d.die * f * f * x };
 }
 // the road's risk level, as the runner is kitted now, and bare: { word, cls, hurt, die, bare, cut } (cut: how much the gear takes off)
 export function riskLevel(save, p, route, now) {
-  const k = risk(save, p, route, now), d = GEAR.danger[route];
+  const k = risk(save, p, route, now), d = dangerOf(save, route);
   if (!d) return { word: 'NONE', cls: 'none', hurt: 0, die: 0, bare: 'NONE', cut: 0 };
   if (!threatsOn(save, now)) return { word: 'NONE', cls: 'none', hurt: 0, die: 0, bare: 'NONE', cut: 0, spared: true };
   const lvl = x => GEAR.levels.find(([at]) => x < at)[1];
@@ -66,7 +67,7 @@ export const canCarry = c => !c.sample && (isPotion(c) || !!slotOf(c));
 // ---------- the road: after a hard trip, what happened to them ----------
 export function road(save, p, route, rng, now) {
   const out = { hurt: false, died: false, broke: null, used: [] };
-  if (!GEAR.danger[route] || !threatsOn(save, now)) return out;
+  if (!dangerOf(save, route) || !threatsOn(save, now)) return out;
   const use = name => { const i = potionsOf(p).findIndex(x => x.pattern === name); if (i < 0) return false; out.used.push(potionsOf(p)[i].name); potionsOf(p).splice(i, 1); return true; };
   const r = risk(save, p, route, now);
   use('tonic'); use('oil');   // used up on any hard road
@@ -108,4 +109,10 @@ export function hunt(save, p, rng, now, odds) {
   }
   if (r.took.some(c => c.tier === 'relic')) { r.trail = now + 2 * D; return { cold: true, again: true, gang: r.gang, pieces: [] }; }
   r.done = true; return { cold: true, gang: r.gang, pieces: [] };
+}
+// the odds of bringing the beast down (milestone 34): the kind's, the weapon, their level, a tonic; silver against the wight
+export function beastOdds(save, p) {
+  const h = MONSTERS.hunt, k = huntKind(save); if (!k) return 0;
+  const tonic = potionsOf(p).some(x => x.pattern === 'tonic'), w = gearOf(p).weapon, silver = save.monster.id === 'wight' && w && w.metal === 'silver';
+  return Math.min(h.max, k.odds + h.fight * strength(p).fight + h.level * (levelOf(p.xp || 0).level - 1) + (tonic ? h.tonic : 0) + (silver ? h.silver : 0));
 }

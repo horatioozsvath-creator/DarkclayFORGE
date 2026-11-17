@@ -2,9 +2,9 @@
 // MONSTERS, with no page access: something threatens the town (the rumour, the sightings, the night it comes); the Watch's order to
 // arm them, filled from the back room; the night it comes if it isn't; and the wards (an oil, a lens, a pane) that soften it.
 // Spared on a gentler Reach (bank.js).
-import { MONSTERS, GEAR, TIERS } from './data.js?v=57';
-import { rung } from './growth.js?v=57';
-import { threatsOn } from './bank.js?v=57';
+import { MONSTERS, GEAR, TIERS } from './data.js?v=58';
+import { rung } from './growth.js?v=58';
+import { threatsOn } from './bank.js?v=58';
 
 const H = 3600000, D = 24 * H;
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
@@ -76,6 +76,25 @@ export function strike(save, now, rng) {
 // customers scared off for a while after; the roads twice as dangerous while it's about (sighted until a day after)
 export function tidy(save, now) { save.scared = !!(save.scaredUntil && now < save.scaredUntil); }
 export function roadX(save, now) {
-  const m = save.monster; if (!m || m.done === 'kept') return 1;
+  const m = save.monster; if (!m || m.done === 'kept' || m.done === 'hunted') return 1;
   return now >= m.heard && now < (m.doneAt || m.comes) + D ? MONSTERS.roadX : 1;
 }
+
+// ---------- the hunt (milestone 34): a runner after the beast, from the sightings to a day after it's done ----------
+export const huntKind = save => save.monster && MONSTERS.hunt.kinds[save.monster.id];
+export const huntOpen = (save, now) => { const m = save.monster, st = stageOf(save, now); return !!(m && huntKind(save) && st && st !== 'rumour' && !m.hunted && threatsOn(save, now)); };
+// back from the hunt (odds taken as they set out): brought down, or it got away. Brought down before the night: it won't come
+// heard: the one they set out after (another may have come since: then it's gone, and they come back with nothing)
+export function hunt(save, rng, now, odds, heard) {
+  const m = save.monster, k = huntKind(save); if (m) m.hunting = false;
+  if (!m || !k || m.hunted || (heard != null && m.heard !== heard)) return { away: true, name: 'the beast' };
+  const name = kindOf(m).name;
+  if (rng() >= odds) return { away: true, name };
+  m.hunted = true; if (!m.done) { m.done = 'hunted'; m.doneAt = now; }
+  const bounty = k.bounty * (1 + rung(save)); save.coins += bounty; save.renown = (save.renown || 0) + k.renown;
+  save.mats = save.mats || {}; save.mats[k.mat] = (save.mats[k.mat] || 0) + k.n;
+  save.trophies = (save.trophies || []).concat({ kind: m.id, name: k.trophy, lore: k.lore, at: now });
+  return { won: true, name, bounty, renown: k.renown, mat: k.mat, n: k.n, trophy: k.trophy };
+}
+// the trophies on the wall: each its own renown once (given on the hunt), shown under STAFF › THE NIGHT and in the shop
+export const trophiesOf = save => save.trophies || [];

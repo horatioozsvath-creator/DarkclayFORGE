@@ -218,7 +218,7 @@ and must show a steady player's income dips, not collapses), then a check on a p
 - **While it's about** (the rumour until a day after it came), every road is twice as dangerous: the risk levels show it.
 - **Wards** (STAFF › THE NIGHT, three slots): an oil from the kettle (one bottle), a lens or a pane from the glass. They take off the
   damage (power / (power + 6): a Fine pane and oil, 40 %) and keep some thieves away (half that off their chance at the door). No ward
-  in 3D yet, and no monster hunt or trophy (later).
+  in 3D yet. The monster hunt and its trophies came in release 58 (docs/MILESTONE-34.md).
 - **Spared** on a gentler Reach.
 - **Sim (90 days, seeds 1–4; `MONSTERS=0` to turn off):** 1–3 monsters; the bot (arming the Watch only from what's already in the back
   room) keeps off about one in three; the nights it came cost 0.03–0.4 % of earnings.

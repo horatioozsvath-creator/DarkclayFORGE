@@ -39,7 +39,7 @@ export const MYTHICS = {
   morning: { name: 'The Window of Morning', relic: 'corrowgoblet', shard: 'star', parts: [['forge', 'a leading'], ['stretcher', 'a hanging'], ['kettle', 'a staining']],
     powers: [['Poison shows', 'what would harm clouds in its light'], ['First light', 'the room it hangs in wakes rested'], ['The long view', 'through it, the town as it will be']], lore: 'The Corrows\' cup, melted and blown into the window of a hall.' },
 };
-export const TRAIL = { rung: 6, deep: 0.35, court: 0.4 };
+export const TRAIL = { rung: 6, deep: 0.35, court: 0.4, courtLeast: 2 };   // courtLeast: the Court's shard orders ask a Rare or better (milestone 34: was Old-Blood)
 // milestone 18: the Court asks for each Mythic once (half the orders while one is waiting), paying twice its worth; all Nine made is
 // the ending: the maker's mark becomes Maker of the Nine and the Hall's charm doubles
 // GEAR AND DANGER (milestone 22): the runner carries what you made. Slots by the piece's kind; each piece's power by its tier (a flawed
@@ -69,6 +69,16 @@ export const GEAR = {
 export const WEAPONS = ['falchion', 'dagger', 'axe', 'staff', 'shortbow', 'longbow'];
 export const MONSTERS = { odds: 30, warnD: 3, afterD: 1, pays: 1.5, roadX: 2,
   wards: { max: 3, pieces: ['oil', 'lens', 'pane', 'mirror', 'lantern'], soft: 6, lanternH: 1 },   // lanternH: a lantern hung by the door keeps the shop an hour longer while you're away
+  // THE HUNT (milestone 34): from the sightings until a day after it's done, a runner can go after it (HUNT THE BEAST): the odds from the
+  // kind, the runner's weapon (silver against the wight), their level and a tonic; the road as dangerous as the kind. Brought down: it
+  // won't come (if it hadn't), a bounty, renown, the kind's rare material and its trophy (a piece for the wall)
+  hunt: { fight: 0.04, level: 0.02, tonic: 0.15, silver: 0.2, max: 0.9, kinds: {
+    wolves: { odds: 0.55, danger: { hurt: 0.08, die: 0.003 }, mat: 'winterfox', n: 2, bounty: 150, renown: 15, trophy: 'The Pack-Leader\'s Pelt',
+      lore: 'Grey at the muzzle, and bigger than any dog in the Reach. It led the pack down off the high pasture.' },
+    wight: { odds: 0.4, danger: { hurt: 0.14, die: 0.007 }, mat: 'moonsilver', n: 1, bounty: 400, renown: 25, trophy: 'The Wight\'s Grave-Crown',
+      lore: 'Green bronze from a barrow past the ford. It stopped walking when this came off.' },
+    deep: { odds: 0.25, danger: { hurt: 0.2, die: 0.012 }, mat: 'heartstone', n: 1, bounty: 1200, renown: 40, trophy: 'A Plate of the Deep Thing\'s Hide',
+      lore: 'Warm still, years after. No blade in the town would cut it but the one that did.' } } },
   kinds: {
     wolves: { name: 'Wolves in the lanes', rung: 2, renown: 15, damage: 300, fearH: 24,
       lines: ['A carter says a pack has come down off the high pasture.', 'Wolves seen at the edge of town at dusk: a dog was taken.', 'The pack came into the lanes in the night.'],
@@ -100,19 +110,25 @@ export const WEAR = { per: { work: 0.5, quick: 0.25, rework: 1, part: 1.5, relic
 // twice what was borrowed. grace: a save from before the threats gets a week before the first one.
 export const BANK = { week: 7 * 24 * 3600000, depositRate: 0.01, depositCap: 400, loanRate: 0.05, lateFee: 0.1, bailiffAfter: 2, bailiffRenown: 10,
   debtCap: 2, limits: [0, 0, 1000, 3000, 8000, 20000, 40000], grace: 7 * 24 * 3600000 };
+// THE COURT'S ORDERS FOR FOUND PATTERNS (milestone 34): from FAMED, now and then the Court asks for a pattern you found yourself (never
+// one still to find): Fine or better (Rare OF THE REACH), paying half again an order's pay, and renown when it's filled
+export const COURT_FOUND = { rung: 4, odds: 0.15, pays: 1.5, renown: 10, line: {
+  ink: 'The Court\'s scribes are out of good ink. They hear yours doesn\'t fade.', mirror: 'A lady of the Court would see herself in a glass of yours.',
+  shield: 'The Court\'s guard would carry a shield of your making on the feast day.', crossbow: 'The Court\'s huntsman asks for a crossbow, made by you.',
+  lantern: 'The Court\'s halls are dark in winter. A lantern of yours, they say.', warhammer: 'The Court\'s champion would have a war hammer of yours.' } };
 export const NINE = { courtOdds: 0.5, courtPays: 2, hallCharm: 2, title: 'MAKER OF THE NINE' };
 // THE MYTHIC WORKINGS (milestone 17). A part: a special working at its station, once its Mythic's shard is found, by a maker at trade 6
 // in something there, with two of the station's rare things and the bars of the piece it's worked as (PART_PATTERN). Narrow, WHITE HEAT
 // once and not one crack; short of it, the stuff is spent and it can be tried again.
-export const PART_WORK = { level: 6, band: 0.8, whiteStreak: 12, whites: 1, rare: 2 };
+export const PART_WORK = { level: 4, band: 0.8, whiteStreak: 12, whites: 1, rare: 2 };
 export const PART_PATTERN = { forge: 'dagger', stretcher: 'gloves', bowbench: 'staff', kettle: 'oil', glass: 'lens' };
 // The Mythic: its Relic reforged at the Relic's own station, with the shard and its three parts, at trade 9 in the station (5 in the pattern): the narrowest band in the
 // game, WHITE HEAT three times, not one crack. Short of it, the Relic stays as it was; the shard and the parts are kept.
-export const MYTHIC_WORK = { tier: 5, level: 9, pattern: 5, band: 0.6, whiteStreak: 12, whites: 3, costX: 3 };   // the trail opens OF THE REACH; a trip below finds a shard 35 %; Court orders, 40 % of orders (milestone 18)
+export const MYTHIC_WORK = { tier: 5, level: 7, pattern: 5, band: 0.6, whiteStreak: 12, whites: 3, costX: 3 };   // the trail opens OF THE REACH; a trip below finds a shard 35 %; Court orders, 40 % of orders (milestone 18)
 // the Relic working: a master of the station (trade 9 in something there, 5 in the pattern), the blueprint, an Old-Blood piece of its kind, the bars of a last rework and its
 // relic material. Narrower than Old-Blood's, WHITE HEAT twice, not one crack; short of that, the piece stays Old-Blood, untouched.
 // level: trade 9 in the station (its best pattern); pattern: trade 5 in the piece's own (its WHITE HEAT open). Milestone 18: was trade 9 in the pattern
-export const RELIC_WORK = { tier: 4, level: 9, pattern: 5, band: 0.7, whiteStreak: 12, whites: 2, costX: 3 };
+export const RELIC_WORK = { tier: 4, level: 7, pattern: 5, band: 0.7, whiteStreak: 12, whites: 2, costX: 3 };
 // the Relics (docs/RARITY-PLAN.md): one of each in a save. source: where its blueprint comes from (a regular's great story, or the Deep)
 export const RELICS = {
   gatewarden: { name: 'Gatewarden', pattern: 'falchion', mat: 'heartstone', power: ['Holds the line', 'a parry with it breaks a charge'], source: 'vance',
@@ -565,6 +581,9 @@ export const SUPPLIERS = [
   { id: 'timber', name: 'Hollin\'s Timber', kind: 'STAVES AND FEATHERS', line: 'Staves seasoned for the bench, feathers, bone; forged heads, ferrules and laths, dear.', lines: ['birch', 'yew', 'oak', 'oldyew', 'bone', 'goose', 'raven', 'arrowheads', 'ferrule', 'lath'] },
   { id: 'sandpit', name: 'The Sandpit', kind: 'SAND AND FLUX', line: 'Sands for the glass, potash and lime, cobalt for blue.', lines: ['clearsand', 'riversand', 'blacksand', 'seasand', 'potash', 'lime', 'cobalt'] },
   { id: 'herbs', name: 'Marrow\'s Herbs', kind: 'THE HERBALIST', line: 'Herbs, honey, wax, spring water; bottles too, though the glassworks\' are dearer here.', lines: ['mending', 'sleepmoss', 'emberroot', 'ghostcap', 'springwater', 'honey', 'wax', 'tallow', 'bottle'] },
+  // the Crown's factor (milestone 34), from RENOWNED: two of the six relic materials each hour, very dear (the late game's coin sink)
+  { id: 'factor', name: 'The Crown\'s Factor', kind: 'RELIC MATERIALS', line: 'For makers the Crown has heard of: two of the relic materials, changing on the hour, very dear.', lines: [],
+    rare: ['heartstone', 'moonsilver', 'wyrmhide', 'ghostyew', 'starcore', 'moonmead'], pick: 2, rung: 5 },
   { id: 'pack', name: 'Nell Quarry\'s Pack', kind: 'A PEDLAR', line: 'Gems always; rare things, two at a time, changing on the hour.', lines: ['gem'], rare: ['blackwater', 'bogoak', 'winterfox', 'starglass', 'silverthread', 'sinew', 'starmetal', 'moonwater'], pick: 2 },
 ];
 
@@ -776,6 +795,7 @@ export const TRAITS = {
   clerk: [
     { id: 'silver', word: 'Silver-tongued', line: 'keeps a smaller cut' },
     { id: 'early', word: 'Early riser', line: 'keeps the shop two hours longer while you\'re away' },
+    { id: 'tidy', word: 'Tidy', line: 'fills every empty place on the shelf from the back room, not only the one a sale left' },
     { id: 'quick', word: 'Quick learner', line: 'learns half as fast again' },
   ],
   runner: [
@@ -799,6 +819,8 @@ export const ROUTES = {
   // the Deep: from RENOWNED. Long, dear, and it can come back with nothing much; relic: [the odds of one relic material, of a second]
   below: { name: 'Below the deep doors', from: 'below the deep doors', h: 12, fee: 400, commons: [4, 8], rare: 3, piece: 0.4, tile: 0.2, relic: [0.6, 0.15], empty: 0.15, rung: 5 },
   // the hunt (milestone 22): only while a robbery's trail is warm; no haul, the stolen pieces back and a bounty if they catch them
+  // the beast (milestone 34): only while a monster's about (from the sightings to a day after); its danger is the kind's (MONSTERS.hunt)
+  beast: { name: 'Hunt the beast', from: 'the hunt', h: 6, fee: 50, commons: [0, 0], rare: 0, piece: 0, tile: 0, beast: true },
   gang: { name: 'After the gang', from: 'after the gang', h: 8, fee: 60, commons: [0, 0], rare: 0, piece: 0, tile: 0, hunt: true },
 };
 

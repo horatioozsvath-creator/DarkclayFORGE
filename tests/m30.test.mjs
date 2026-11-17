@@ -27,7 +27,10 @@ test('the rare things: the pedlar some hours, a runner on the longer roads; the 
   const rare = Object.keys(MATS).find(m => MATS[m].rare && !MATS[m].relic && m !== 'gem');
   const k = Src.sourcesOf(rare).map(x => x.kind); assert.ok(k.includes('runner'));
   const relic = Object.keys(MATS).find(m => MATS[m].relic);
-  assert.deepEqual(Src.sourcesOf(relic).map(x => x.kind), ['deep']); assert.equal(Src.nextSold(relic, 1000), null);
+  // the Crown's factor sells them from RENOWNED, some hours (milestone 34); never to a shop below RENOWNED
+  assert.deepEqual(Src.sourcesOf(relic).map(x => x.kind), ['pedlar', 'deep']);
+  assert.equal(Sh.sells(relic, 1000), false, 'without a save: not sold'); assert.equal(Sh.sells(relic, 1000, { renown: 0 }), false);
+  const hr = [...Array(48).keys()].map(i => 1000 + i).find(h => Sh.sells(relic, h, { renown: 1000 })); assert.ok(hr != null, 'RENOWNED: some hour in two days');
   assert.equal(Src.nextSold('iron', 1000), 0, 'iron: always at the yard');
   const pedlar = Src.sourcesOf('moonwater').find(x => x.kind === 'pedlar'); assert.ok(pedlar);
   const n = Src.nextSold('moonwater', 1000); assert.ok(n !== null && n <= 48);

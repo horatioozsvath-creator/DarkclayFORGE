@@ -3,12 +3,12 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE, REG_CLUE_ODDS } from './data.js?v=57';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=57';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=57';
-import { charmGap, placeGift } from './room.js?v=57';
-import * as Trail from './trail.js?v=57';
-import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=57';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, COURT_FOUND, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE, REG_CLUE_ODDS } from './data.js?v=58';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=58';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=58';
+import { charmGap, placeGift } from './room.js?v=58';
+import * as Trail from './trail.js?v=58';
+import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=58';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -48,9 +48,11 @@ export function linesOf(supplier, hour) {
   const rare = (supplier.rare || []).slice().sort((a, b) => hash(hour, supplier.id + a) - hash(hour, supplier.id + b)).slice(0, supplier.pick || 99);
   return supplier.lines.concat(rare);
 }
-export const sells = (id, hour) => SUPPLIERS.some(s => linesOf(s, hour).includes(id));
+// open to this shop: the Crown's factor only from RENOWNED (milestone 34); without a save, every supplier
+export const suppliersFor = save => SUPPLIERS.filter(s => !s.rung || (save && rung(save) >= s.rung));
+export const sells = (id, hour, save) => (save ? suppliersFor(save) : SUPPLIERS.filter(s => !s.rung)).some(s => linesOf(s, hour).includes(id));
 export function buy(save, id, n, hour) {
-  if (!sells(id, hour)) return false;
+  if (!sells(id, hour, save)) return false;
   const cost = priceOf(id, hour) * n;
   if (save.coins < cost) return false;
   save.coins -= cost; save.mats[id] = (save.mats[id] || 0) + n;
@@ -88,7 +90,7 @@ export function place(save, id, slot, tag = 'fair') {
   return slot;
 }
 export function takeDown(save, slot) { save.shelf[slot] = null; }
-// what "fill the shelves" leaves in the back: one-of-a-kind pieces (Relics, Mythics), and an Old-Blood piece ready to become a Relic
+// what "fill the shelves" leaves in the back: one-of-a-kind pieces (Relics, Mythics), and a piece ready to become a Relic
 export const keepBack = (save, c) => c.tier === 'relic' || c.tier === 'mythic' || relicFor(save, c).ok;
 // every empty place filled from the back room, best piece first, at the tag given; returns the cards put up
 export function fillShelf(save, tag = 'fair') {
@@ -107,6 +109,13 @@ export function restock(save, slot, pattern, tag = 'fair') {
   const c = inBack(save).filter(c => restockable(save, c))
     .sort((a, b) => (b.pattern === pattern) - (a.pattern === pattern) || a.worth - b.worth)[0];
   return c && place(save, c.id, slot, TAGS[tag] ? tag : 'fair') >= 0 ? c : null;
+}
+// a Tidy clerk (milestone 34): every empty place filled from the back room, not only the one a sale left (the least worth first, at FAIR).
+// In the open shop, only as someone comes in (so a place you've just cleared isn't filled under your hand)
+export function tidyUp(save) {
+  const put = [];
+  for (let i = 0; i < save.slots; i++) if (!save.shelf[i]) { const c = restock(save, i, null, 'fair'); if (c) put.push(c); else break; }
+  return put;
 }
 export function setTag(save, slot, tag) { if (save.shelf[slot] && TAGS[tag]) save.shelf[slot].tag = tag; }
 export const nextSlotCost = save => SLOT_COSTS[save.slots - START_SLOTS];
@@ -245,7 +254,13 @@ export function shopStep(save, dt, rng, now, present = false, clerk = null) {
   }
   if (save.shopNext == null) save.shopNext = gap(rng);
   save.shopNext -= dt;
-  while (save.shopNext <= 0) { out.push(...arrive(save, rng, now, present, clerk)); save.shopNext += gap(rng) * charmGap(save) * eventGap(save); }
+  let came = false;
+  while (save.shopNext <= 0) { came = true; out.push(...arrive(save, rng, now, present, clerk)); save.shopNext += gap(rng) * charmGap(save) * eventGap(save); }
+  if (came && clerk && clerk.tidy && save.shelf.some((e, i) => !e && i < save.slots)) {
+    const put = tidyUp(save);
+    if (put.length) out.push(log(save, { at: now, who: clerk.name, fig: '#c9b48a', mood: 'CALM', want: null, sold: null, by: clerk.name, restocked: { name: put[0].name, id: put[0].id }, tidied: put.map(c => c.name),
+      line: clerk.name + ' tidied the shelves: put out ' + put.map(c => aName(c.name)).join(', ') + '.' }));
+  }
   return out;
 }
 
@@ -254,7 +269,7 @@ export function shopStep(save, dt, rng, now, present = false, clerk = null) {
 // Away time doesn't run the open-shop clock, so special orders wait. Returns { sold: [entries], missed, cut }.
 export const awayGap = rng => 480 + rng() * 480;   // 8 to 16 minutes between customers
 export function awayStep(save, dt, rng, at, clerk) {
-  const out = { sold: [], missed: 0, cut: 0 };
+  const out = { sold: [], missed: 0, cut: 0, tidied: [] };
   if (at) refreshTown(save, at);
   if (save.awayNext == null) save.awayNext = awayGap(rng);
   save.awayNext -= dt;
@@ -264,6 +279,7 @@ export function awayStep(save, dt, rng, at, clerk) {
     if (!clerk) { out.missed++; continue; }
     const e = visit(save, rng, when, undefined, { rate: clerk.rate, by: clerk.name, quiet: true, restock: clerk.restock });
     if (e.sold) { out.sold.push(e); out.cut += e.sold.full - e.sold.price; } else out.missed++;
+    if (clerk.tidy) out.tidied.push(...tidyUp(save).map(c => c.name));
   }
   return out;
 }
@@ -464,13 +480,22 @@ export function postOrder(save, rng, now) {
       due: (save.clock || 0) + ORDER_TIME[1] * 4, pays: c.worth * NINE.courtPays };
     return log(save, { at: now, who: 'The Court', fig: '#e4505e', mood: 'EAGER', want: c.pattern, sold: null, order: 'posted', line: 'The Court asked for ' + m.name + ', once.' });
   }
-  // the Court, on the trail of the Nine: an Old-Blood piece of a Relic's kind, and a shard of Veric with the pay
+  // the Court, on the trail of the Nine: a Rare or better piece of a Relic's kind (TRAIL.courtLeast), and a shard of Veric with the pay
   const court = Trail.pending(save, 'court').filter(id => ownsPattern(save, RELICS[MYTHICS[id].relic].pattern));
   if (court.length && rng() < TRAIL.court) {
     const id = court[Math.floor(rng() * court.length)], pattern = RELICS[MYTHICS[id].relic].pattern;
-    save.order = { who: 'The Court', fig: '#e4505e', pattern, least: OLD_BLOOD.tier, metal: null, line: 'The Court would see the best you make. It has something of Veric\'s to give in return.', posted: save.clock || 0, shard: id,
-      due: (save.clock || 0) + ORDER_TIME[1] * 4, pays: orderPays(pattern, null, OLD_BLOOD.tier) };
+    save.order = { who: 'The Court', fig: '#e4505e', pattern, least: TRAIL.courtLeast, metal: null, line: 'The Court would see the best you make. It has something of Veric\'s to give in return.', posted: save.clock || 0, shard: id,
+      due: (save.clock || 0) + ORDER_TIME[1] * 4, pays: orderPays(pattern, null, TRAIL.courtLeast) };
     return log(save, { at: now, who: 'The Court', fig: '#e4505e', mood: 'EAGER', want: pattern, sold: null, order: 'posted', line: 'The Court left an order, and a promise.' });
+  }
+  // the Court, from FAMED: a pattern you found yourself (milestone 34), never one still to find
+  const foundHere = rung(save) >= COURT_FOUND.rung ? Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden && !PATTERNS[id].makes && ownsPattern(save, id)) : [];
+  if (foundHere.length && rng() < COURT_FOUND.odds) {
+    const pattern = foundHere[Math.floor(rng() * foundHere.length)], least = rung(save) >= TRAIL.rung ? 2 : 1;
+    save.order = { who: 'The Court', fig: '#e4505e', pattern, least, metal: null, court: true, posted: save.clock || 0,
+      line: COURT_FOUND.line[pattern] || 'The Court has heard of your ' + PATTERNS[pattern].name.toLowerCase() + '. It would have one, well made.',
+      due: (save.clock || 0) + ORDER_TIME[1] * 2, pays: Math.round(orderPays(pattern, null, least) * COURT_FOUND.pays) };
+    return log(save, { at: now, who: 'The Court', fig: '#e4505e', mood: 'EAGER', want: pattern, sold: null, order: 'posted', line: 'The Court left an order: ' + orderWord(save.order) + '.' });
   }
   // a RENOWNED shop with a blueprint not yet made: now and then a regular orders that Relic (filled only by it)
   const bps = rung(save) >= 5 ? (save.blueprints || []).filter(id => !(save.relicsMade || []).includes(id) && ownsPattern(save, RELICS[id].pattern)) : [];
@@ -526,6 +551,7 @@ export function deliver(save, cardId, now) {
     order: 'filled', served: true, line: '"' + (story ? story.thanks : 'Just as I asked. Thank you.') + '"' });
   if (story) e.story = story;
   if (shard) { e.shard = shard; e.line = '"The Court thanks you. Take this: it was Veric\'s."'; }
+  if (o.court && !o.shard && !o.mythic) { fame(save, COURT_FOUND.renown); e.line = '"The Court is pleased. They\'ll speak of your shop."'; }
   if (o.mythic) { fame(save, 50); e.line = '"The Court will keep it as Veric would have. Its maker will be remembered."'; }
   return e;
 }
@@ -557,7 +583,7 @@ export const reworkCost = card => {
   const rare = OLD_BLOOD.rare[stationOf(card.pattern).id];
   return [{ mat: card.metal, n: n * OLD_BLOOD.costX }].concat(rare ? [{ mat: rare, n: 1 }] : []);
 };
-// the mastery a Relic or Mythic working asks: trade 9 in something at the piece's station, and trade 5 in its own pattern
+// the mastery a Relic or Mythic working asks: trade 7 in something at the piece's station (RELIC_WORK.level, MYTHIC_WORK.level), and trade 5 in its own pattern
 const stationWord = st => st === 'forge' ? 'the forge' : 'the ' + st;
 export function masteryWhy(save, pattern, work) {
   const st = PATTERNS[pattern].station || 'forge', why = [];
@@ -568,7 +594,8 @@ export function masteryWhy(save, pattern, work) {
 // the Relic working for this piece: which Relic it could become, and what's missing ({ ok, relic, why })
 export function relicFor(save, card) {
   const id = Object.keys(RELICS).find(k => RELICS[k].pattern === card.pattern);
-  if (!id || card.sample || card.tier !== TIERS[OLD_BLOOD.tier].id) return { ok: false, relic: null, why: [] };
+  // a Rare or an Old-Blood piece of its kind (milestone 34: was Old-Blood only)
+  if (!id || card.sample || (card.tier !== TIERS[OLD_BLOOD.tier].id && card.tier !== TIERS[OLD_BLOOD.tier - 1].id)) return { ok: false, relic: null, why: [] };
   const r = RELICS[id], why = [];
   if ((save.relicsMade || []).includes(id)) return { ok: false, relic: id, made: true, why: ['made already: there\'s only one'] };
   if (!(save.blueprints || []).includes(id)) why.push('its blueprint');
@@ -577,7 +604,7 @@ export function relicFor(save, card) {
   if (onShelf(save, card.id) >= 0 || onWall(save, card.id) || onOtherShelf(save, card.id) || onHall(save, card.id)) why.push('it in the back room');
   return { ok: !why.length, relic: id, why };
 }
-// the Mythic working for this Relic: the shard, the three parts, trade 9, in the back room; one in a save ({ ok, mythic, why })
+// the Mythic working for this Relic: the shard, the three parts, trade 7 at the station, in the back room; one in a save ({ ok, mythic, why })
 export function mythicFor(save, card) {
   const id = card.relic && Object.keys(MYTHICS).find(k => MYTHICS[k].relic === card.relic);
   if (!id || card.tier !== 'relic') return { ok: false, mythic: null, why: [] };
@@ -591,7 +618,9 @@ export function mythicFor(save, card) {
   return { ok: !why.length, mythic: id, why };
 }
 export const mythicCost = (card, id) => [{ mat: card.metal, n: Math.ceil(PATTERNS[card.pattern].bars / 2) * MYTHIC_WORK.costX }, { mat: RELICS[MYTHICS[id].relic].mat, n: 1 }];
-export const relicCost = (card, id) => [{ mat: card.metal, n: Math.ceil(PATTERNS[card.pattern].bars / 2) * RELIC_WORK.costX }, { mat: RELICS[id].mat, n: 1 }];
+// from a Rare, the Old-Blood rework's rare thing of the station's too (milestone 34)
+export const relicCost = (card, id) => [{ mat: card.metal, n: Math.ceil(PATTERNS[card.pattern].bars / 2) * RELIC_WORK.costX }, { mat: RELICS[id].mat, n: 1 }]
+  .concat(card.tier === TIERS[OLD_BLOOD.tier - 1].id && OLD_BLOOD.rare[stationOf(card.pattern).id] ? [{ mat: OLD_BLOOD.rare[stationOf(card.pattern).id], n: 1 }] : []);
 export const tradeLevel = (save, pattern) => levelOf(((save.trades || {})[pattern] || {}).xp || 0).level;
 // Common and Fine go up a tier; Rare only toward Old-Blood, for a master with the right piece (rules.js oldBloodGate)
 export const canRework = (save, card) => !card.sample && knows(save, card.pattern) && !PATTERNS[card.pattern].batch && !PATTERNS[card.pattern].makes && TIER_N[card.tier] < OLD_BLOOD.tier

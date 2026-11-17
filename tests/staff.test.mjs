@@ -122,7 +122,7 @@ test('a trip comes home during the catch-up, even past the cap', () => {
 });
 
 test('a runner\'s haul is worth more than the road costs, over many trips', () => {
-  for (const route of Object.keys(ROUTES).filter(r => !ROUTES[r].hunt)) {   // the hunt brings back the stolen pieces, not a haul
+  for (const route of Object.keys(ROUTES).filter(r => !ROUTES[r].hunt && !ROUTES[r].beast)) {   // the hunts bring back the stolen pieces or the beast, not a haul
     let worth = 0, n = 200;
     for (let i = 0; i < n; i++) {
       const s = blank({ staff: [runner({ trait: 'quick' })] });

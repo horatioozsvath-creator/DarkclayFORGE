@@ -43,9 +43,9 @@ test('shards: below the deep doors now and then; the Court\'s orders; the fallen
   const s = reach(), runner = { id: 'r', role: 'runner', name: 'Kit', trait: 'keen', xp: 0 }, rng = seeded(3);
   let got = 0; for (let i = 0; i < 1000; i++) { const h = St.haul(s, runner, 'below', rng, 0); if (h.shard) { got++; assert.equal(MYTHICS[h.shard].shard, 'deep'); } }
   assert.ok(got > 200 && got < 400, got + ' of 1000 (about one trip in three)');
-  // the Court: an Old-Blood piece of the Relic's kind; its shard with the pay
+  // the Court: a Rare or better piece of the Relic's kind (milestone 34: was Old-Blood); its shard with the pay
   let court = null; for (let i = 0; i < 200 && !court; i++) { const t = reach(); Sh.postOrder(t, seeded(i), 0); if (t.order.shard) court = t; }
-  assert.ok(court); const o = court.order; assert.equal(o.least, 3); assert.equal(MYTHICS[o.shard].shard, 'court');
+  assert.ok(court); const o = court.order; assert.equal(o.least, 2); assert.equal(MYTHICS[o.shard].shard, 'court');
   const piece = R.makePiece({ patternId: o.pattern, picks: [0, 0, 0], result: { tier: 3, flawed: false, worked: 10, strikes: 9, heats: 1, cracks: 0 }, maker: 'T', rng: seeded(1), now: 1 });
   court.cards.push(piece); const e = Sh.deliver(court, piece.id, 1); assert.equal(e.shard, o.shard); assert.ok(Trail.hasShard(court, o.shard));
   // the fallen star: rare, and only once a day
@@ -60,11 +60,11 @@ test('shards: below the deep doors now and then; the Court\'s orders; the fallen
 
 // ---------- milestone 17: the parts and the Mythic working ----------
 const xpTo = lvl => { let x = 0; for (let l = 1; l < lvl; l++) x += R.xpToNext(l); return x; };
-test('a part: its shard first, the station set up, trade 6 there; narrow, WHITE HEAT once and no crack', () => {
+test('a part: its shard first, the station set up, trade 4 there (milestone 34: was 6); narrow, WHITE HEAT once and no crack', () => {
   const s = reach({ shards: [], trades: {} });
   assert.match(Trail.partGate(s, 'vericsedge', 0).why.join(), /shard/);
-  s.shards = ['vericsedge']; assert.match(Trail.partGate(s, 'vericsedge', 0).why.join(), /trade 6/);
-  s.trades = { lens: { xp: xpTo(6) } }; const g = Trail.partGate(s, 'vericsedge', 0); assert.ok(g.ok); assert.equal(g.station, 'glass'); assert.equal(g.pattern, 'lens');
+  s.shards = ['vericsedge']; assert.match(Trail.partGate(s, 'vericsedge', 0).why.join(), /trade 4/);
+  s.trades = { lens: { xp: xpTo(4) } }; const g = Trail.partGate(s, 'vericsedge', 0); assert.ok(g.ok); assert.equal(g.station, 'glass'); assert.equal(g.pattern, 'lens');
   assert.ok(!Trail.partGate({ ...s, stations: [] }, 'vericsedge', 0).ok, 'no glass set up');
   const cfg = { patternId: 'lens', picks: [0, 0, 0], level: 6, found: [], kit: {} };
   const plain = R.newWorking(cfg, seeded(1)), P = R.newWorking({ ...cfg, part: { mythic: 'vericsedge', i: 0 } }, seeded(1));

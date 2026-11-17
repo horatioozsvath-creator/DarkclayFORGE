@@ -1,35 +1,35 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE } from './data.js?v=57';
-import * as R from './rules.js?v=57';
-import * as Sh from './shop.js?v=57';
-import * as St from './staff.js?v=57';
-import * as Rm from './room.js?v=57';
-import * as G from './growth.js?v=57';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=57';
-import * as Snd from './sound.js?v=57';
-import * as CV from './counter.js?v=57';
-import * as Town from './town.js?v=57';
-import * as V from './visit.js?v=57';
-import * as Br from './branch.js?v=57';
-import * as Bank from './bank.js?v=57';
-import * as Wear from './wear.js?v=57';
-import * as Th from './thieves.js?v=57';
-import * as Run from './runner.js?v=57';
-import * as Src from './sources.js?v=57';
-import * as Mon from './monsters.js?v=57';
-import * as Liv from './living.js?v=57';
-import * as Hl from './hall.js?v=57';
-import * as Trail from './trail.js?v=57';
-import * as Disc from './discover.js?v=57';
-import { ICONS, emblem, watch } from './icons.js?v=57';
-import { drawFlyer, flyerBlob } from './flyer.js?v=57';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=57';
-import { card, ART } from './card.js?v=57';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=57';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=57';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE } from './data.js?v=58';
+import * as R from './rules.js?v=58';
+import * as Sh from './shop.js?v=58';
+import * as St from './staff.js?v=58';
+import * as Rm from './room.js?v=58';
+import * as G from './growth.js?v=58';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=58';
+import * as Snd from './sound.js?v=58';
+import * as CV from './counter.js?v=58';
+import * as Town from './town.js?v=58';
+import * as V from './visit.js?v=58';
+import * as Br from './branch.js?v=58';
+import * as Bank from './bank.js?v=58';
+import * as Wear from './wear.js?v=58';
+import * as Th from './thieves.js?v=58';
+import * as Run from './runner.js?v=58';
+import * as Src from './sources.js?v=58';
+import * as Mon from './monsters.js?v=58';
+import * as Liv from './living.js?v=58';
+import * as Hl from './hall.js?v=58';
+import * as Trail from './trail.js?v=58';
+import * as Disc from './discover.js?v=58';
+import { ICONS, emblem, watch } from './icons.js?v=58';
+import { drawFlyer, flyerBlob } from './flyer.js?v=58';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=58';
+import { card, ART } from './card.js?v=58';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=58';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=58';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 57;
+const VERSION = 58;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayZERO_FORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -246,7 +246,7 @@ function toHome() {
 // where a material comes from, and what it goes into
 function matOpen(mat) {
   const m = MATS[mat], h = hour(), uses = Object.entries(PATTERNS).filter(([id, p]) => (p.batch && mat === 'bottle') || R.partOptions(id).some(g => g.opts.some(o => (o.mat || o.id) === mat))).map(([, p]) => p.name);
-  openLook('<div class="matlook"><h3>' + m.name + (m.rare ? ' ✶' : '') + '</h3><p class="note">You have <b>' + (save.mats[mat] || 0) + '</b>.' + (Sh.sells(mat, h) ? ' On sale this hour at <b>' + Sh.priceOf(mat, h) + ' c</b>.' : '') + '</p>'
+  openLook('<div class="matlook"><h3>' + m.name + (m.rare ? ' ✶' : '') + '</h3><p class="note">You have <b>' + (save.mats[mat] || 0) + '</b>.' + (Sh.sells(mat, h, save) ? ' On sale this hour at <b>' + Sh.priceOf(mat, h) + ' c</b>.' : '') + '</p>'
     + '<h4>WHERE IT COMES FROM</h4><ul>' + Src.sourcesOf(mat).map(x => '<li>' + x.word + '</li>').join('') + '</ul>'
     + (uses.length ? '<h4>WHAT IT GOES INTO</h4><p>' + uses.join(', ') + '</p>' : '') + '</div>');
 }
@@ -333,7 +333,7 @@ function renderBlueprints() {
     const p = PATTERNS[r.pattern];
     if (made.includes(id)) return '<div class="fi have"><b style="color:var(--t-relic)">' + esc(r.name) + '</b><span>Made: there\'s only one, and it\'s yours.</span></div>';
     if (!have.includes(id)) return '<div class="fi unknown"><b>A Relic · ' + p.name.toLowerCase() + ' · not yet found</b><span>Its blueprint: ' + BP_WHERE[r.source] + '.</span></div>';
-    return '<div class="fi"><b style="color:var(--t-relic)">' + esc(r.name) + '</b><span>' + esc(r.power[0]) + ': ' + esc(r.power[1]) + '. Worked from an Old-Blood ' + p.name.toLowerCase() + ', by a maker at trade ' + RELIC_WORK.level + ' in something at ' + (p.station && p.station !== 'forge' ? 'the ' + p.station : 'the forge') + ' and trade ' + RELIC_WORK.pattern + ' in ' + p.trade.toLowerCase() + ', with ' + MATS[r.mat].name.toLowerCase() + ' (have ' + (save.mats[r.mat] || 0) + '). Open the piece in the back room.</span></div>';
+    return '<div class="fi"><b style="color:var(--t-relic)">' + esc(r.name) + '</b><span>' + esc(r.power[0]) + ': ' + esc(r.power[1]) + '. Worked from a Rare or Old-Blood ' + p.name.toLowerCase() + ', by a maker at trade ' + RELIC_WORK.level + ' in something at ' + (p.station && p.station !== 'forge' ? 'the ' + p.station : 'the forge') + ' and trade ' + RELIC_WORK.pattern + ' in ' + p.trade.toLowerCase() + ', with ' + MATS[r.mat].name.toLowerCase() + ' (have ' + (save.mats[r.mat] || 0) + '). Open the piece in the back room.</span></div>';
   }).join('');
 }
 // the trail of the Nine: each Mythic, its shard, where to look
@@ -443,7 +443,7 @@ let floorShown = null;
 let cvw = null, cvP = null, iso = false, cvSig = '', cvFront = null;
 function counterView() {
   $('cview').hidden = false; $('cvActs').hidden = false; $('floor').hidden = true; $('dioBar').hidden = true;
-  if (!cvP) cvP = import('./counter.js?v=57').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
+  if (!cvP) cvP = import('./counter.js?v=58').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
   else if (cvw) cvw.show(save, Sh.priceAt);
 }
 // a place on the painted wall: its piece (take it down), or empty (hang one from the back room)
@@ -458,7 +458,7 @@ function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   if (!iso) { counterView(); tip('shop', $('cview')); return; }
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=57').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=58').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -620,7 +620,7 @@ function renderCounter() {
   if (c.kind === 'seller') {
     const o = c.offer, h = hour();
     if (o.type === 'mats') body = '<div class="note">' + MATS[o.mat].name + (MATS[o.mat].rare ? ' ✶' : '') + ' × ' + o.n + ' for <b>' + o.price + ' c</b>'
-      + (Sh.sells(o.mat, h) ? ' (the suppliers ask ' + Sh.priceOf(o.mat, h) * o.n + ' c)' : ' (no supplier has it this hour)') + '. You have ' + (save.mats[o.mat] || 0) + '.</div>';
+      + (Sh.sells(o.mat, h, save) ? ' (the suppliers ask ' + Sh.priceOf(o.mat, h) * o.n + ' c)' : ' (no supplier has it this hour)') + '. You have ' + (save.mats[o.mat] || 0) + '.</div>';
     else { held = card(o.card); heldTag = 'THEY ASK <b>' + o.price + ' c</b>'; heldKey = 'sell:' + o.card.id; }
     if (o.type !== 'mats') body = '<div class="offer' + (inView ? ' inview' : '') + '">' + (inView ? '' : '<div>' + card(o.card, { short: true, price: o.price + ' c' }) + '</div>') + '<div class="choices"><div class="note">' + esc(o.card.name) + ', ' + TIERS.find(t => t.id === o.card.tier).name
       + ', worth ' + o.card.worth + ' c. They\'ll take <b>' + o.price + ' c</b>. It goes in the back: sell it, break it down, or rework it.</div></div></div>';
@@ -705,7 +705,7 @@ function renderOrder() {
   const story = o.story && STORIES.find(x => x.id === o.story);
   $('orderBody').innerHTML = (story ? '<div class="storystep">' + esc(story.who.split(',')[0].toUpperCase()) + '\'S STORY · ' + (o.step + 1) + ' OF ' + story.steps.length + '</div>' : '') + '<div class="who">FROM ' + esc(o.who.toUpperCase()) + ' · "' + esc(o.line) + '"</div>'
     + '<div class="ask">' + esc(Sh.orderWord(o)).replace(/^./, x => x.toUpperCase()) + '</div>'
-    + '<div class="note">Pays <span class="pays">' + o.pays + ' c</span>, ' + (o.story ? 'two and a half times' : 'twice') + ' what such a piece is worth, whatever you hand in.' + (story && o.step === story.steps.length - 1 ? ' The last of their story: they\'ll leave a gift.' : '') + '</div>'
+    + '<div class="note">Pays <span class="pays">' + o.pays + ' c</span>, ' + (o.story ? 'two and a half times' : o.court && !o.shard && !o.mythic ? 'three times' : 'twice') + ' what such a piece is worth, whatever you hand in.' + (story && o.step === story.steps.length - 1 ? ' The last of their story: they\'ll leave a gift.' : '') + '</div>'
     + (fit.length ? '<div class="pickgrid" style="margin-top:10px">' + fit.map(c => '<button data-deliver="' + c.id + '" aria-label="Deliver ' + esc(c.name) + '">' + card(c, { short: true, price: 'DELIVER' }) + '</button>').join('') + '</div>'
       : '<div class="rbtns left"><button class="seg go" id="orderMake">MAKE ONE AT ' + R.stationOf(o.pattern).word + '</button></div>');
   $('orderBody').querySelectorAll('[data-deliver]').forEach(b => b.onclick = () => {
@@ -798,11 +798,13 @@ function regularsHtml() {
 function monsterHtml() {
   const now = Date.now(), m = save.monster, st = Mon.stageOf(save, now); if (!m || !st) return '';
   const k = Mon.kindOf(m);
-  if (st === 'kept') return '<div class="notice event"><b>THE WATCH HELD</b><p>' + esc(k.name) + ': driven off.</p><span>Armed with what you made, the Watch kept it off the lanes.</span></div>';
-  if (st === 'came') return '<div class="notice cold"><b>IT CAME</b><p>' + esc(k.name) + '.</p><span>' + esc(k.lines[2]) + ' The town is mending.</span></div>';
+  const huntLine = Mon.huntOpen(save, now) ? '<span class="hunt">' + (m.hunting ? 'Your runner is out after it.' : 'It can be hunted: send a runner on HUNT THE BEAST (STAFF), for a bounty, a trophy and ' + MATS[Mon.huntKind(save).mat].name + '.') + '</span>' : '';
+  if (st === 'hunted') return '<div class="notice event"><b>BROUGHT DOWN</b><p>' + esc(k.name) + ': hunted down by your runner.</p><span>It won\'t trouble the town again. Its trophy is on your wall.</span></div>';
+  if (st === 'kept') return '<div class="notice event"><b>THE WATCH HELD</b><p>' + esc(k.name) + ': driven off.</p><span>Armed with what you made, the Watch kept it off the lanes.</span>' + huntLine + '</div>';
+  if (st === 'came') return '<div class="notice cold"><b>IT CAME</b><p>' + esc(k.name) + '.</p><span>' + esc(k.lines[2]) + ' The town is mending.</span>' + huntLine + '</div>';
   const left = Math.max(0, m.comes - now);
   return '<div class="notice hot monster"><b>' + (st === 'rumour' ? 'A RUMOUR' : 'SIGHTED') + ' · ' + esc(k.name.toUpperCase()) + '</b><p>' + esc(k.lines[st === 'rumour' ? 0 : 1]) + '</p>'
-    + '<span>The Watch expects it in ' + hm(left / 1000) + '. Arm them in time and it\'s kept off the lanes (+' + k.renown + ' renown); each piece paid half again its worth. Short of it: damage to the shop, customers scared off, and every road twice as dangerous meanwhile.</span>'
+    + '<span>The Watch expects it in ' + hm(left / 1000) + '. Arm them in time and it\'s kept off the lanes (+' + k.renown + ' renown); each piece paid half again its worth. Short of it: damage to the shop, customers scared off, and every road twice as dangerous meanwhile.</span>' + huntLine
     + '<div class="watch">' + k.order.map((l, i) => { const need = Mon.lineLeft(save, i), have = Sh.inBack(save).filter(c => Mon.fitsLine(l, c)).length;
       return '<div class="wline' + (need ? '' : ' done') + '"><span>' + (l.n - need) + ' / ' + l.n + ' · ' + esc(l.word) + '</span>' + (need ? '<button class="seg" data-watch="' + i + '"' + (have ? '' : ' disabled') + '>GIVE TO THE WATCH' + (have ? ' · ' + have + ' IN THE BACK' : '') + '</button>' : '<b>✓</b>') + '</div>'; }).join('') + '</div></div>';
 }
@@ -935,7 +937,7 @@ function renderShelfUps() {
   }).join('') + (shelfNote ? '<p class="note">' + esc(shelfNote) + '</p>' : '');
   $('shelfUps').querySelectorAll('[data-upshelf]').forEach(b => b.onclick = () => doUpgrade(b.dataset.upshelf));
 }
-// FILL FROM THE BACK: every empty place, best piece first, at FAIR (Relics, Mythics and an Old-Blood piece ready for its Relic stay back)
+// FILL FROM THE BACK: every empty place, best piece first, at FAIR (Relics, Mythics and a piece ready for its Relic stay back)
 function fillBtn(b, s) {
   const empty = s.shelf.filter(e => !e).length, can = Sh.inBack(s).filter(c => !Sh.keepBack(s, c) && !c.keep && (!c.sample || s.made)).length;
   b.hidden = !empty; b.disabled = !can;
@@ -971,7 +973,7 @@ function slotOpen(slot) {
   };
 }
 // a Rare piece that can't go toward Old-Blood yet: what it lacks
-// an Old-Blood piece whose kind has a Relic: the Relic working, or what it still needs
+// a Rare or Old-Blood piece whose kind has a Relic (milestone 34: a Rare too): the Relic working, or what it still needs
 function mythicActs(c) {
   const g = Sh.mythicFor(save, c); if (!g.mythic) return '';
   const m = MYTHICS[g.mythic];
@@ -1132,11 +1134,11 @@ function renderStaff() {
     else if (p.role === 'guard') status = '<div class="status">Keeps the shop at night: turns most thieves away, and catches some. See THE NIGHT.</div>';
     else if (p.role === 'clerk') status = '<div class="status">Minds the shop while you\'re at the forge (customers buy more readily) and keeps it while you\'re away.</div>'
       + '<div class="rbtns left"><button class="seg' + (p.restock !== false ? ' go' : '') + '" data-restock="' + p.id + '" aria-pressed="' + (p.restock !== false) + '">RESTOCKS THE SHELF · ' + (p.restock !== false ? 'ON' : 'OFF') + '</button></div>'
-      + '<div class="status small">' + (p.restock !== false ? 'Fills a place they sell from with a piece from the back: the same kind first, then the cheapest. Never a Rare or better, or one you\'ve marked KEEP.' : 'They leave the shelf to you.') + '</div>';
+      + '<div class="status small">' + (p.restock !== false ? (p.trait === 'tidy' ? 'Tidy: fills every empty place from the back as customers come in, and' : 'Fills') + ' a place they sell from with a piece from the back: the same kind first, then the cheapest. Never a Rare or better, or one you\'ve marked KEEP.' : 'They leave the shelf to you.') + '</div>';
     else if (p.role === 'runner' && Run.hurtNow(p, now)) status = gearHtml(p) + '<div class="status bad">Hurt, resting: back on their feet in ' + hm((p.hurt - now) / 1000) + '.</div>';
     else if (p.trip) status = (p.role === 'runner' ? gearHtml(p) : '') + '<div class="status">' + ROUTES[p.trip.route].name + ' · back in <b data-back="' + p.trip.back + '">' + hm((p.trip.back - now) / 1000) + '</b></div>';
-    else status = gearHtml(p) + '<div class="status">Ready to go out. Send them on a road:</div><div class="routes">' + Object.entries(ROUTES).filter(([id, r]) => !r.hunt || (Run.huntOpen(save, now) && !save.robbery.hunting)).map(([id, r]) =>
-      '<button class="seg" data-send="' + id + '" data-who="' + p.id + '"' + (save.coins < r.fee || (r.rung && G.rung(save) < r.rung) ? ' disabled' : '') + '><span>' + r.name + '</span>' + riskBadge(p, id, now) + '<small>' + (r.rung && G.rung(save) < r.rung ? 'opens when the shop is ' + RENOWN[r.rung].word + ' · ' : '') + hm(St.tripHours(p, id) * 3600) + ' · ' + r.fee + ' c' + (r.hunt ? ' · after ' + esc(save.robbery.gang) + ': ' + save.robbery.took.map(c => esc(c.name)).join(', ') + ' back, and a bounty, if they catch them · dangerous' : r.relic ? ' · relic materials, maybe · it can come back empty' : r.rare ? ' · rare things' : '') + (r.tile ? ' · a found tile, maybe' : '') + '</small></button>').join('') + '</div>';
+    else status = gearHtml(p) + '<div class="status">Ready to go out. Send them on a road:</div><div class="routes">' + Object.entries(ROUTES).filter(([id, r]) => (!r.hunt || (Run.huntOpen(save, now) && !save.robbery.hunting)) && (!r.beast || (Mon.huntOpen(save, now) && !save.monster.hunting))).map(([id, r]) =>
+      '<button class="seg" data-send="' + id + '" data-who="' + p.id + '"' + (save.coins < r.fee || (r.rung && G.rung(save) < r.rung) ? ' disabled' : '') + '><span>' + r.name + '</span>' + riskBadge(p, id, now) + '<small>' + (r.rung && G.rung(save) < r.rung ? 'opens when the shop is ' + RENOWN[r.rung].word + ' · ' : '') + hm(St.tripHours(p, id) * 3600) + ' · ' + r.fee + ' c' + (r.beast ? ' · after ' + esc(Mon.kindOf(save.monster).name.toLowerCase()) + ': brought down ' + pct(Run.beastOdds(save, p)) + ' of the time · a bounty, a trophy, ' + MATS[Mon.huntKind(save).mat].name + ' · dangerous' : '') + (r.hunt ? ' · after ' + esc(save.robbery.gang) + ': ' + save.robbery.took.map(c => esc(c.name)).join(', ') + ' back, and a bounty, if they catch them · dangerous' : r.relic ? ' · relic materials, maybe · it can come back empty' : r.rare ? ' · rare things' : '') + (r.tile ? ' · a found tile, maybe' : '') + '</small></button>').join('') + '</div>';
     return '<div class="person">' + personHtml(p, true) + status + '<div class="rbtns left"><button class="seg" data-letgo="' + p.id + '">LET THEM GO</button></div></div>';
   }).join('') + memorialHtml() : '<div class="empty">No one works here but you. A clerk keeps the shop while you\'re away; a runner goes out for materials. See who\'s <button class="linkish" data-tabjump="hire">looking for work</button>.</div>' + memorialHtml();
   const cands = St.candidates(save, hour()), mins = 60 - new Date().getMinutes();
@@ -1177,7 +1179,8 @@ function gearHtml(p) {
     + '<div class="status small">Guard <b>' + s.guard + '</b> · fight <b>' + s.fight + '</b>' + (k.spared ? ' · the gentler Reach: no road is dangerous' : ' · this gear takes every road\'s risk down <b>' + Math.round(k.cut * 100) + ' %</b>') + (Run.huntOpen(save, now) ? ' · after the gang: caught ' + pct(Run.huntOdds(save, p)) : '') + '</div>';
 }
 // the ones who didn't come back
-const memorialHtml = () => (save.memorials || []).length ? '<div class="memorial"><b>REMEMBERED</b>' + save.memorials.map(m => '<span>' + esc(m.name) + ', lost ' + esc(m.where) + ', ' + new Date(m.at).toLocaleDateString(undefined, { day: 'numeric', month: 'long' }) + '</span>').join('') + '</div>' : '';
+const trophyHtml = () => Mon.trophiesOf(save).length ? '<div class="memorial trophies"><b>TROPHIES</b>' + Mon.trophiesOf(save).map(t => '<span><i>' + esc(t.name) + '</i> · ' + esc(t.lore) + ' ' + new Date(t.at).toLocaleDateString(undefined, { day: 'numeric', month: 'long' }) + '</span>').join('') + '</div>' : '';
+const memorialHtml = () => trophyHtml() + ((save.memorials || []).length ? '<div class="memorial"><b>REMEMBERED</b>' + save.memorials.map(m => '<span>' + esc(m.name) + ', lost ' + esc(m.where) + ', ' + new Date(m.at).toLocaleDateString(undefined, { day: 'numeric', month: 'long' }) + '</span>').join('') + '</div>' : '');
 // a road's risk, as the runner is kitted now (and what it would be bare, if gear brings it down)
 function riskBadge(p, route, now) {
   const k = Run.riskLevel(save, p, route, now); if (k.spared) return '<em class="risk risk-none">NO RISK</em>';
@@ -1244,6 +1247,7 @@ function roadWords(t) {
 }
 function haulWords(t) {
   if (t.road && t.road.died) return roadWords(t).trim();
+  if (t.beast) return (t.beast.won ? 'they brought it down: ' + t.beast.name.replace(/^./, c => c.toLowerCase()) + ' is done. A bounty of ' + t.beast.bounty + ' c, +' + t.beast.renown + ' renown, ' + MATS[t.beast.mat].name + ' × ' + t.beast.n + ', and a trophy: ' + t.beast.trophy + '.' : 'it got away from them.') + roadWords(t);
   if (t.hunt) return (t.hunt.won ? 'they caught ' + t.hunt.gang + '. ' + t.hunt.pieces.join(', ') + ' back in the back room, and a bounty of ' + t.hunt.bounty + ' c.' : t.hunt.again ? 'the trail went cold, but the Watch is keeping it warm for the Relic: send them again.' : 'the trail went cold and ' + (t.hunt.gang || 'the gang') + ' got away.') + roadWords(t);
   const parts = Object.entries(t.mats).map(([m, n]) => MATS[m].name + ' × ' + n);
   if (t.piece) parts.push('an old ' + t.piece.name);
@@ -1266,7 +1270,7 @@ function awayHtml(a) {
   if (a.wages) h += '<p>Wages paid: <b>' + a.wages + ' c</b>.</p>';
   if (a.unpaid) h += '<p class="bad">The wages are behind. The clerk works on for the takings; the runner won\'t set out until they\'re paid.</p>';
   if (a.branch && (a.branch.sold.length || a.branch.wages)) h += '<p>At ' + esc(BRANCH.town) + ', ' + esc(BRANCH.keeper) + ' sold <b>' + a.branch.sold.length + '</b> for <b>' + a.branch.coins + ' c</b>' + (a.branch.wages ? ' (wages ' + a.branch.wages + ' c)' : '') + '.</p>';
-  a.trips.forEach(t => { h += t.road && t.road.died ? '<p class="bad">' + esc(haulWords(t)) + '</p>' : t.hunt ? '<p>' + esc(t.who) + ' came back from the hunt: ' + esc(haulWords(t)) + '</p>' : '<p>' + esc(t.who) + ' came back from ' + ROUTES[t.route].from + ' with ' + esc(endDot(haulWords(t))) + '</p>'; });
+  a.trips.forEach(t => { h += t.road && t.road.died ? '<p class="bad">' + esc(haulWords(t)) + '</p>' : t.hunt || t.beast ? '<p>' + esc(t.who) + ' came back from the hunt: ' + esc(haulWords(t)) + '</p>' : '<p>' + esc(t.who) + ' came back from ' + ROUTES[t.route].from + ' with ' + esc(endDot(haulWords(t))) + '</p>'; });
   return h + '</div>';
 }
 function showAway(a) {
@@ -1302,7 +1306,8 @@ function renderSupp() {
   const h = hour(); suppHour = h;
   const mins = 60 - new Date().getMinutes();
   $('hourWord').innerHTML = 'Prices change on the hour · next in <b>' + mins + ' min</b>';
-  $('supps').innerHTML = SUPPLIERS.map(sp => '<section data-group="supp" data-tab="' + sp.id + '" class="card supp"><h2><span>' + sp.kind + '</span><b>' + sp.name.toUpperCase() + '</b></h2><p class="line">' + sp.line + '</p>'
+  $('factorTab').hidden = !Sh.suppliersFor(save).some(s => s.id === 'factor');
+  $('supps').innerHTML = Sh.suppliersFor(save).map(sp => '<section data-group="supp" data-tab="' + sp.id + '" class="card supp"><h2><span>' + sp.kind + '</span><b>' + sp.name.toUpperCase() + '</b></h2><p class="line">' + sp.line + '</p>'
     + Sh.linesOf(sp, h).map(id => {
       const m = MATS[id], pr = Sh.priceOf(id, h), was = Sh.priceOf(id, h - 1);
       const tr = pr > was ? '<i class="up">▲</i>' : pr < was ? '<i class="down">▼</i>' : '';
@@ -1366,9 +1371,10 @@ function pieceKv() {
   }
   if (rw && rw.relic) {
     const r = RELICS[rw.relic];
-    $('pieceKv').innerHTML = '<span>Now</span><b style="color:var(--t-oldblood)">Old-Blood</b>'
+    const fromWord = TIERS[rw.from].name;
+    $('pieceKv').innerHTML = '<span>Now</span><b style="color:' + TIERC[rw.from] + '">' + fromWord + '</b>'
       + '<span>To a Relic</span><b style="color:var(--t-relic)">' + esc(r.name) + ': fill the bar and quench with WHITE HEAT reached twice and not one crack. It takes its name, its lore and its power: ' + esc(r.power[0]) + '.</b>'
-      + '<span>The risk</span><b>short of it, the piece stays Old-Blood, as it was; the bars and the ' + esc(MATS[r.mat].name.toLowerCase()) + ' are spent.</b>'
+      + '<span>The risk</span><b>short of it, the piece stays ' + fromWord + ', as it was; the bars and the ' + esc(MATS[r.mat].name.toLowerCase()) + ' are spent.</b>'
       + '<span>' + stn().meter.replace('THE ', '') + '</span><b>the narrowest yet: the band now ' + S.band[0] + '–' + S.band[1] + '. ' + stn().twist + '</b>'
       + '<span>White heat</span><b>after ' + RELIC_WORK.whiteStreak + ' clean in a row, or a TRUE: twice in the one working (' + (S.whites || 0) + ' so far)</b>';
     return;
@@ -1503,7 +1509,7 @@ function renderTakes0() {
   $('makeIt').disabled = (!ok || master || !!part) && !rw; $('workIt').disabled = !ok;
   $('takesCard').style.borderColor = ok ? '' : 'var(--blood)';
   if (ok) { $('takesBtns').innerHTML = '<span class="small" style="color:var(--bone-faint)">Taken when you begin. Walk away from a working and they\'re spent.</span>'; return; }
-  const gone = sh.filter(x => !Sh.sells(x.mat, h));
+  const gone = sh.filter(x => !Sh.sells(x.mat, h, save));
   const cost = sh.reduce((c, x) => c + Sh.priceOf(x.mat, h) * (x.n - x.have), 0);
   $('takesBtns').innerHTML = (gone.length ? '' : '<button class="seg go" id="buyShort"' + (save.coins < cost ? ' disabled' : '') + '>BUY WHAT\'S SHORT · ' + cost + ' c</button>'
       + (save.coins < cost ? '<span class="small" style="color:var(--bone-faint)">You have ' + save.coins + ' coins.</span>' : ''))
@@ -1526,7 +1532,7 @@ function wayHtml(mat, need, h) {
       lines.push(owns ? '<button class="seg" data-makepat="' + x.pattern + '">MAKE ' + PATTERNS[x.pattern].name.toUpperCase() + ' AT THE ' + STATIONS[x.station].name.toUpperCase() + '</button><span>' + x.word.replace(/^Made at [^:]+: [^,]+, /, '') + '</span>'
         : '<span>' + x.word + ' Set up the ' + STATIONS[x.station].name.toLowerCase() + ' first.</span>');
     } else if (x.kind === 'sold' || x.kind === 'pedlar') {
-      if (Sh.sells(mat, h)) continue;
+      if (Sh.sells(mat, h, save)) continue;
       const n = Src.nextSold(mat, h);
       lines.push('<span>' + x.who + (n == null ? ' hasn\'t had it lately' : ' has it again in about ' + n + ' h') + '.</span>');
     } else if (x.kind === 'runner' || x.kind === 'deep') {
@@ -1761,7 +1767,7 @@ function complete(res, picked) {
   const short = { boiled: 'it boiled over', nowhite: 'no WHITE HEAT', dropped: 'it spilled' }[res.masterShort];
   $('rLine').innerHTML = res.part ? (res.took ? 'WHITE HEAT and not one crack: the part is made.' : (res.dropped ? 'Dropped.' : res.cracks ? 'A crack.' : 'No WHITE HEAT.') + ' It didn\'t take; the stuff is spent.')
     : res.mythic ? (res.failed ? (res.dropped ? 'Dropped. ' : res.cracks ? 'A crack in the Mythic working. ' : 'WHITE HEAT ' + (res.whites || 0) + ' time' + (res.whites === 1 ? '' : 's') + ', not three. ') + 'The Relic stays as it was; the shard and the parts are kept.' : 'WHITE HEAT three times, not one crack. ' + esc(MYTHICS[res.mythic].name) + ': one of the Nine.')
-    : res.relic ? (res.failed ? (res.dropped ? 'Dropped. ' : res.cracks ? 'A crack in the Relic working. ' : 'WHITE HEAT only ' + (res.whites || 0) + ' time' + (res.whites === 1 ? '' : 's') + ', not twice. ') + 'It stays Old-Blood, as it was; the bars and the relic material are spent.' : 'WHITE HEAT twice, not one crack. It\'s ' + esc(RELICS[res.relic].name) + ' now: there\'s only one.')
+    : res.relic ? (res.failed ? (res.dropped ? 'Dropped. ' : res.cracks ? 'A crack in the Relic working. ' : 'WHITE HEAT only ' + (res.whites || 0) + ' time' + (res.whites === 1 ? '' : 's') + ', not twice. ') + 'It stays ' + TIERS[res.from].name + ', as it was; the bars and the relic material are spent.' : 'WHITE HEAT twice, not one crack. It\'s ' + esc(RELICS[res.relic].name) + ' now: there\'s only one.')
     : res.master ? 'A master\'s brew: not one boil-over, WHITE HEAT. Old-Blood, three bottles of it.'
     : short ? 'Short of a master\'s brew (' + short + '): an ordinary batch. WORKED +' + res.worked + ' % · it had Fine ' + Math.round(res.odds.f) + ' % · Rare ' + Math.round(res.odds.r) + ' %'
     : res.oldBlood ? (res.failed ? (res.dropped ? 'Dropped. ' : 'A crack in the last working. ') + 'It wouldn\'t take Old-Blood: it stays Rare, and the materials are spent.' : 'It took. Rare to Old-Blood: a master\'s piece.')
@@ -1841,7 +1847,7 @@ function frame(now) {
   const paid = St.payWages(save, dt);
   if (paid) coins();
   const back = St.resolveTrips(save, nowMs, rng);
-  back.forEach(t => { toast('<b>' + esc(t.who) + (t.road && t.road.died ? ' was killed on the road' : ' is back') + '</b><br>' + esc(haulWords(t))); if (t.road && (t.road.died || t.road.hurt)) Snd.play('bell'); if (t.hunt && t.hunt.won) Snd.play('chime'); });
+  back.forEach(t => { toast('<b>' + esc(t.who) + (t.road && t.road.died ? ' was killed on the road' : ' is back') + '</b><br>' + esc(haulWords(t))); if (t.road && (t.road.died || t.road.hurt)) Snd.play('bell'); if ((t.hunt && t.hunt.won) || (t.beast && t.beast.won)) Snd.play('chime'); });
   if (back.length) { store(save); if (screen === 'staff') renderStaff(); }
   save.lastSeen = nowMs;
   if (nowMs - lastStore > 5000) { lastStore = nowMs; store(save); }
@@ -1962,7 +1968,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=57').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=58').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -2041,7 +2047,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=57').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=58').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }

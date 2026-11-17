@@ -11,4 +11,5 @@ Asked for: the counter clerk doing more when the shop is quiet, such as stocking
 - **RESTOCKS THE SHELF · ON / OFF** on the clerk's card (staff); on by default (`p.restock === false` turns it off).
 - The ledger line says it ("Sold by Wenna. Wenna put out a dagger."), and WHILE YOU WERE AWAY lists what was put out.
 - Only the clerk at the first shop restocks; the second shop's keeper doesn't (yet).
-- Not done: a Tidy trait. Tests: tests/restock.test.mjs (220 in all).
+- Tests: tests/restock.test.mjs (220 in all).
+- **The Tidy clerk** (release 58, milestone 34): a clerk trait. A Tidy clerk fills **every** empty place from the back room, not only the one a sale left (the least worth first, at FAIR, by the same rules: never a Rare or better, a one-of-a-kind piece or one marked KEEP). Away, after each customer; in the open shop, only as someone comes in, so a place you've just cleared isn't filled under your hand. The restock switch turns it off too. Nothing ever defined the trait before; this reading was chosen in release 58.
