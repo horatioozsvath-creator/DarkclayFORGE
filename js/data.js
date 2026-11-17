@@ -48,7 +48,7 @@ export const TRAIL = { rung: 6, deep: 0.35, court: 0.4 };
 // Hurt: off 2–4 days and a healer's bill; one piece of armour broken (never a Relic or Mythic). Potions, two at most, used up: a salve
 // heals a wound on the road (not hurt), a draught keeps a dying runner alive (hurt instead), a tonic and an oil help on any hard road.
 export const GEAR = {
-  slots: { weapon: ['falchion', 'dagger', 'axe', 'staff', 'shortbow', 'longbow'], head: ['helm', 'hood'], body: ['jerkin'], hands: ['gloves'], feet: ['boots'], ring: ['ring'] },
+  slots: { weapon: ['falchion', 'dagger', 'axe', 'staff', 'shortbow', 'longbow', 'spear', 'mace', 'shortsword', 'warhammer'], head: ['helm', 'hood'], body: ['jerkin'], hands: ['gloves'], feet: ['boots'], ring: ['ring'] },
   slotWord: { weapon: 'WEAPON', head: 'HEAD', body: 'BODY', hands: 'HANDS', feet: 'FEET', ring: 'RING' },
   power: { common: 1, fine: 2, rare: 3, oldblood: 5, relic: 8, mythic: 12 },
   potions: ['salve', 'draught', 'tonic', 'oil'], carry: 2,
@@ -328,6 +328,48 @@ export const PATTERNS = {
     parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
     affixes: wearAffixes, lore: ['Dry feet are half of any road.', 'Broken in before they leave the shop.', 'They\'ll outlast the roads they walk.', 'They have walked to the edge of the map and come back with stories.'] },
 };
+// FOUND BY TRYING (milestone 31, docs/DISCOVERY-PLAN.md): patterns no one hands you. Each is found at its station by TRY SOMETHING NEW
+// (the right head, haft and binding: try), or learned outright by studying an old one. gate: a trade level in a related pattern first.
+// hints: what the clue says when a choice is wrong for it; asks: what a customer says, asking for one you don't make yet.
+Object.assign(PATTERNS, {
+  spear: { name: 'Spear', trade: 'Spears', kind: 'SPEAR · REACH', art: 'spear', dice: [1, 8], dmg: [3, 8], speed: 1.3, reach: 2.6, skill: 'SPEARS', value: 50, bars: 2, want: 'weapon',
+    parts: [{ part: 'Head', metals: BLADE_METALS },
+      { part: 'Haft', opts: [{ name: 'Ash', mat: 'ash' }, { name: 'Yew', mat: 'yew', val: 1.05 }, { name: 'Bog oak', mat: 'bogoak', rare: true }] },
+      { part: 'Binding', opts: [{ name: 'Cord', mat: 'cord' }, { name: 'Gut', mat: 'gut' }] }],
+    affixes: weaponAffixes, lore: ['A point on a stick, and a long way between you and the trouble.', 'The head sits true on the haft: it goes where you look.', 'Boar, wolf or worse: it keeps them at the end of it.', 'An old spear never misses its first throw. This one hasn\'t thrown yet.'],
+    hidden: { look: 'A WEAPON · LONG REACH', gate: { trades: ['dagger', 'axe'], level: 3 }, try: { head: BLADE_METALS, haft: ['ash', 'yew'], binding: ['cord', 'gut'] },
+      hints: { head: 'a metal for the point', haft: 'something long and straight, that bends and doesn\'t break', binding: 'something thin to lash the head on tight' },
+      asks: ['"Got a spear? Ash and iron, like my father\'s."', '"A boar spear, if you make them. A long haft, the head lashed on with cord."', '"The pikes want spears. Straight ash, a lashed head. You don\'t make them?"'] } },
+  mace: { name: 'Mace', trade: 'Maces', kind: 'MACE · ONE HAND', art: 'mace', dice: [1, 6], dmg: [4, 8], speed: 1.0, reach: 1.3, skill: 'MACES', value: 46, bars: 2, want: 'weapon',
+    parts: [{ part: 'Head', metals: BLADE_METALS },
+      { part: 'Haft', opts: [{ name: 'Rowan', mat: 'rowan' }, { name: 'Birch', mat: 'birch' }, { name: 'Bog oak', mat: 'bogoak', rare: true }] },
+      { part: 'Grip', opts: [{ name: 'Leather strap', mat: 'strap' }] }],
+    affixes: weaponAffixes, lore: ['No edge to keep: just weight, and where you put it.', 'Flanged clean: it rings when it lands.', 'Mail doesn\'t stop it. Mail just changes shape.', 'It has ended arguments older than the town.'],
+    hidden: { look: 'A WEAPON · ONE HAND, NO EDGE', gate: { trades: ['axe'], level: 3 }, try: { head: BLADE_METALS, haft: ['rowan', 'birch'], binding: ['strap'] },
+      hints: { head: 'a metal for the weight', haft: 'a short, tough haft, not ash', binding: 'a leather strap for the grip, so it won\'t turn in the hand' },
+      asks: ['"A mace, for the watch. A short rowan haft and a strap on it."', '"You make maces? Something with weight, a strap round the grip."'] } },
+  shortsword: { name: 'Shortsword', trade: 'Shortswords', kind: 'SWORD · ONE HAND', art: 'shortsword', dice: [1, 6], dmg: [3, 7], speed: 1.6, reach: 1.2, skill: 'SWORDPLAY', value: 62, bars: 2, want: 'weapon',
+    parts: [{ part: 'Blade', metals: BLADE_METALS },
+      { part: 'Grip', opts: [{ name: 'Horn', mat: 'horn' }, { name: 'Bone', mat: 'bone' }, { name: 'Starmetal', mat: 'starmetal', rare: true }] },
+      { part: 'Wrap', opts: [{ name: 'Leather wrap', mat: 'wrap' }] }],
+    affixes: weaponAffixes, lore: ['Short enough for a lane, long enough for the trouble in it.', 'Quick out of the scabbard and quicker back.', 'Balanced on a finger, and it stays there.', 'A soldier\'s sword that outlived every soldier who carried it.'],
+    hidden: { look: 'A WEAPON · ONE HAND, A BLADE', gate: { trades: ['dagger'], level: 5 }, try: { head: ['steel', 'darkclay'], haft: ['horn', 'bone'], binding: ['wrap'] },
+      hints: { head: 'a harder metal than the dagger takes: steel', haft: 'a grip of horn or bone', binding: 'a leather wrap over the grip' },
+      asks: ['"A shortsword: steel, a horn grip. The kind the river crews carry."', '"Not a dagger. Longer. Steel, with a wrapped grip."'] } },
+  warhammer: { name: 'War hammer', trade: 'War hammers', kind: 'WAR HAMMER · TWO HANDS', art: 'warhammer', dice: [1, 10], dmg: [5, 12], speed: 0.8, reach: 1.7, skill: 'HAMMERS', value: 90, bars: 3, want: 'weapon',
+    parts: [{ part: 'Head', metals: BLADE_METALS },
+      { part: 'Haft', opts: [{ name: 'Oak', mat: 'oak' }, { name: 'Old yew', mat: 'oldyew', val: 1.2 }, { name: 'Bog oak', mat: 'bogoak', rare: true }] },
+      { part: 'Grip', opts: [{ name: 'Leather strap', mat: 'strap' }, { name: 'Leather wrap', mat: 'wrap' }] }],
+    affixes: weaponAffixes, lore: ['A smith\'s hammer that went to war.', 'The head is balanced to come down, and it does.', 'Doors, shields, the things behind them.', 'They say it was swung at a mountain once. The mountain moved.'],
+    hidden: { look: 'A WEAPON · TWO HANDS', gate: { trades: ['axe'], level: 5 }, try: { head: ['iron', 'steel', 'darkclay'], haft: ['oak'], binding: ['strap', 'wrap'] },
+      hints: { head: 'a heavy metal: iron or harder', haft: 'a long haft of the hardest wood the bench takes', binding: 'leather for the grip' },
+      asks: ['"A war hammer, for the deep doors. An oak haft, the longer the better."', '"Something to break a door with. A hammer on a long oak haft."'] } },
+});
+// TRY SOMETHING NEW at the forge: the three things you put together, and the families a near miss is told by
+export const TRY_ROLES = { forge: [{ id: 'head', word: 'HEAD', fams: ['metal'] }, { id: 'haft', word: 'HAFT OR GRIP', fams: ['wood', 'leather', 'cord', 'horn'] }, { id: 'binding', word: 'BINDING', fams: ['leather', 'cord', 'horn', 'wood'] }] };
+export const TRY_FAMILY = { metal: ['iron', 'bronze', 'steel', 'silver', 'darkclay', 'blackwater', 'starmetal'], wood: ['ash', 'rowan', 'birch', 'yew', 'oak', 'oldyew', 'bogoak'],
+  leather: ['wrap', 'strap', 'sharkhide', 'deer', 'goat'], cord: ['cord', 'gut', 'silk', 'linen', 'wool', 'sinew'], horn: ['horn', 'bone'] };
+export const STUDY_RENOWN = 3, FIND_RENOWN = 5;   // renown for a pattern found by trying, or learned from an old piece
 for (const p of Object.values(PATTERNS)) for (const part of p.parts) for (const o of part.opts || []) if (o.rare) { o.level = RARE_LEVEL; o.line = 'rare: a GOOD becomes a TRUE'; }
 
 // from Darkclay Zero's affixes.json: {0} is rolled between min and max (scale divides it)
@@ -420,13 +462,13 @@ export const START_SLOTS = 4;
 export const CUSTOMERS = [
   { id: 'folk', weight: 30, purse: [6, 45], wants: ['dagger', 'ring', 'any', 'dagger', 'axe', 'armour', 'gloves', 'brew', 'salve', 'brew'], moods: [15, 35, 50], fig: '#a08a6a',
     names: ['a miner off the shift', 'a carter', 'a farmer\'s wife', 'a ferryman', 'a charcoal burner', 'a boy with his savings', 'a widow from the lane'] },
-  { id: 'guard', weight: 25, purse: [40, 170], wants: ['falchion', 'axe', 'helm', 'weapon', 'dagger', 'armour', 'jerkin', 'bow', 'arrows', 'oil', 'brew'], moods: [35, 50, 15], fig: '#7a8aa0',
+  { id: 'guard', weight: 25, purse: [40, 170], wants: ['falchion', 'axe', 'helm', 'weapon', 'dagger', 'armour', 'jerkin', 'bow', 'arrows', 'oil', 'brew', 'spear', 'mace'], moods: [35, 50, 15], fig: '#7a8aa0',
     names: ['a warden\'s man', 'a gate guard', 'a sergeant of the pikes', 'a drover riding out armed', 'a watchman'] },
   { id: 'traveller', weight: 20, purse: [30, 240], wants: ['any', 'ring', 'weapon', 'dagger', 'boots', 'armour', 'brew', 'tonic', 'glass', 'goblet'], moods: [30, 45, 25], fig: '#8a9a6a',
     names: ['a caravan master', 'a pilgrim to the abbey', 'a tinker', 'a hedge-knight\'s squire', 'a ferry-bound merchant'] },
-  { id: 'delver', weight: 15, purse: [80, 420], wants: ['weapon', 'helm', 'axe', 'falchion', 'any', 'armour', 'boots', 'arrows', 'staff', 'draught', 'brew', 'lens'], moods: [50, 40, 10], fig: '#9a6a5a',
+  { id: 'delver', weight: 15, purse: [80, 420], wants: ['weapon', 'helm', 'axe', 'falchion', 'any', 'armour', 'boots', 'arrows', 'staff', 'draught', 'brew', 'lens', 'warhammer', 'shortsword'], moods: [50, 40, 10], fig: '#9a6a5a',
     names: ['a delver of the Reach', 'one of Osk\'s Four', 'a door-breaker', 'a lamp-carrier back from the deep'] },
-  { id: 'hunter', weight: 12, purse: [20, 180], wants: ['bow', 'arrows', 'shortbow', 'longbow', 'arrows', 'boots', 'any', 'salve'], moods: [35, 45, 20], fig: '#6a7a4a',
+  { id: 'hunter', weight: 12, purse: [20, 180], wants: ['bow', 'arrows', 'shortbow', 'longbow', 'arrows', 'boots', 'any', 'salve', 'spear'], moods: [35, 45, 20], fig: '#6a7a4a',
     names: ['a hunter from the Reach', 'a trapper', 'a fowler', 'a poacher, quietly', 'a deer-stalker'] },
   { id: 'factor', weight: 7, purse: [200, 750], wants: ['ring', 'helm', 'any', 'glass', 'lens', 'goblet'], least: 1, moods: [30, 55, 15], fig: '#b89a5a',
     names: ['a guild factor', 'a reeve\'s steward', 'a lord\'s buyer'] },

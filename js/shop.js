@@ -3,12 +3,12 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE } from './data.js?v=48';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=48';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=48';
-import { charmGap, placeGift } from './room.js?v=48';
-import * as Trail from './trail.js?v=48';
-import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=48';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE } from './data.js?v=50';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=50';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=50';
+import { charmGap, placeGift } from './room.js?v=50';
+import * as Trail from './trail.js?v=50';
+import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=50';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -122,9 +122,22 @@ function weighted(items, w, rng) { let r = rng() * w.reduce((a, b) => a + b, 0);
 // it can make, else anything at all), and purses grow with renown
 const makes = (save, want) => {
   const own = st => !st || st === 'forge' || (save.stations || []).includes(st);
-  if (PATTERNS[want]) return own(PATTERNS[want].station);
-  return want === 'any' || Object.values(PATTERNS).some(p => p.want === want && own(p.station));
+  if (PATTERNS[want]) return own(PATTERNS[want].station) && knows(save, want);
+  return want === 'any' || Object.entries(PATTERNS).some(([id, p]) => p.want === want && own(p.station) && knows(save, id));
 };
+// a pattern this maker knows: every one but those found by trying (milestone 31) until they're found
+export const knows = (save, id) => !!PATTERNS[id] && (!PATTERNS[id].hidden || ((save.book || {}).found || []).includes(id));
+// now and then a buyer asks for what you don't make yet: their words go in THE MAKER'S BOOK (milestone 31)
+export const ASK_ODDS = 0.12;
+function asking(save, c, rng, now) {
+  const own = st => !st || st === 'forge' || (save.stations || []).includes(st);
+  const left = Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden && !knows(save, id) && own(PATTERNS[id].station));
+  if (!left.length || rng() >= ASK_ODDS) return;
+  const id = left[Math.floor(rng() * left.length)], asks = PATTERNS[id].hidden.asks, line = asks[Math.floor(rng() * asks.length)];
+  c.tell = line; c.asks = id;
+  const book = save.book || (save.book = { found: [], tries: [], clues: [], seen: 0 });
+  if (!book.clues.some(x => x.line === line)) { book.clues.unshift({ pattern: id, line, who: c.who, at: now }); book.clues = book.clues.slice(0, 40); }
+}
 export function richer(save, c, rng) {
   let want = makes(save, c.want) ? c.want : 'any', was = null;
   if (save.town && demandOf(save.town, want) < 0) want = 'any';   // no one asks for what's out of favour
@@ -247,6 +260,7 @@ export function arrive(save, rng, now, present, clerk = null) {
     const c = rng() < SELLER_ODDS ? newSeller(rng, Math.floor(now / 3600000), now) : { ...richer(save, newCustomer(rng, save), rng), kind: 'buyer' };
     c.tell = c.kind === 'buyer' ? TELLS[c.mood][Math.floor(rng() * TELLS[c.mood].length)] : '';
     c.wait = patienceOf(save, PATIENCE); c.shows = 0; c.id = 'v' + Math.floor(rng() * 1e9).toString(36);
+    if (c.kind === 'buyer') asking(save, c, rng, now);
     save.queue.push(c);
     return [];
   }
@@ -392,7 +406,7 @@ export function orderPays(pattern, metal, least) {
   return p.worth * ORDER_PAYS;
 }
 // ---------- the regulars' stories ----------
-const ownsPattern = (save, p) => !!PATTERNS[p] && (!PATTERNS[p].station || PATTERNS[p].station === 'forge' || (save.stations || []).includes(PATTERNS[p].station));
+const ownsPattern = (save, p) => !!PATTERNS[p] && knows(save, p) && (!PATTERNS[p].station || PATTERNS[p].station === 'forge' || (save.stations || []).includes(PATTERNS[p].station));
 export const storyOf = (save, id) => (save.stories || {})[id] || { step: 0, next: 0 };
 // the stories whose next step can come in now: not finished, rested since the last, with a pattern this shop can make
 export function storiesReady(save, now) {
@@ -554,7 +568,7 @@ export const mythicCost = (card, id) => [{ mat: card.metal, n: Math.ceil(PATTERN
 export const relicCost = (card, id) => [{ mat: card.metal, n: Math.ceil(PATTERNS[card.pattern].bars / 2) * RELIC_WORK.costX }, { mat: RELICS[id].mat, n: 1 }];
 export const tradeLevel = (save, pattern) => levelOf(((save.trades || {})[pattern] || {}).xp || 0).level;
 // Common and Fine go up a tier; Rare only toward Old-Blood, for a master with the right piece (rules.js oldBloodGate)
-export const canRework = (save, card) => !card.sample && !PATTERNS[card.pattern].batch && !PATTERNS[card.pattern].makes && TIER_N[card.tier] < OLD_BLOOD.tier
+export const canRework = (save, card) => !card.sample && knows(save, card.pattern) && !PATTERNS[card.pattern].batch && !PATTERNS[card.pattern].makes && TIER_N[card.tier] < OLD_BLOOD.tier
   && onShelf(save, card.id) < 0 && !onWall(save, card.id) && !onOtherShelf(save, card.id) && !onHall(save, card.id) && (TIER_N[card.tier] < OLD_BLOOD.tier - 1 || oldBloodGate(card, tradeLevel(save, card.pattern)).ok);
 
 // ---------- parts for other stations, forged at once ----------

@@ -1,14 +1,14 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // A card's face as it stands on a shelf (the tier's frame, its picture, the price), drawn on a 2D canvas. Shared by the shop in 3D
 // (js/diorama.js, as a texture) and the counter view (js/counter.js, laid over the painted shelves). No page access beyond a canvas.
-import { TIERS } from './data.js?v=48';
-import { ART } from './card.js?v=48';
+import { TIERS } from './data.js?v=50';
+import { ART } from './card.js?v=50';
 
 const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
 export const CW = 256, CH = 360;
 const arts = {};
 const LONG = new Set(['falchion', 'dagger', 'axe', 'shortbow', 'longbow', 'staff', 'arrows']);
-const CROP = { ring: 0.36, helm: 0.4, goblet: 0.32, pane: 0.45, salve: 0.42, lens: 0.72 };   // how much of a wide picture's middle the piece fills
+const CROP = { warhammer: 0.7, mace: 0.66, ring: 0.36, helm: 0.4, goblet: 0.32, pane: 0.45, salve: 0.42, lens: 0.72 };   // how much of a wide picture's middle the piece fills
 function artImage(p) {
   const tint = /^#[0-9a-f]{6}$/i.test(p.tint || '') ? p.tint : '#c9c5be', key = (p.art || 'falchion') + tint;
   if (arts[key]) return arts[key];

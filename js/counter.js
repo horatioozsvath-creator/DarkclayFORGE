@@ -4,12 +4,12 @@
 // cut out to stand in front of the customers), with what changes laid over it in 2D: your cards on the painted shelves (each card's
 // face skewed onto its place), the customers as pictures at their standing spots, and the places and the doorway to tap.
 // The pure parts (fit, the skew, who stands where) are exported for the tests; create() needs a page.
-import { faceCanvas, CW, CH } from './cardface.js?v=48';
-import { LOOKS, POOLS, REGULARS } from './folk.js?v=48';
-import { FURNITURE, TIERS } from './data.js?v=48';
-import { shelfSpots } from './room.js?v=48';
-import { isBroken } from './wear.js?v=48';
-import { threatsOn } from './bank.js?v=48';
+import { faceCanvas, CW, CH } from './cardface.js?v=50';
+import { LOOKS, POOLS, REGULARS } from './folk.js?v=50';
+import { FURNITURE, TIERS } from './data.js?v=50';
+import { shelfSpots } from './room.js?v=50';
+import { isBroken } from './wear.js?v=50';
+import { threatsOn } from './bank.js?v=50';
 
 export const VIEWS = ['left', 'counter', 'right', 'back'];
 export const VIEW_WORD = { left: 'LEFT WALL', counter: 'THE COUNTER', right: 'RIGHT WALL', back: 'THE BACK ROOM' };
@@ -206,16 +206,19 @@ export function create(host, on = {}) {
     }
   }
   // the piece they're looking at, held up as your forged card: to the left of the one at the counter, at the card's own proportions
+  const TAG_H = 30;   // the price tag hanging under the held card
   function placeHeld() {
     const show = view === 'counter' && front && !extra && heldHtml;
     held.hidden = !show; if (!show) return;
     const tall = front.W / front.H < 1.25;
-    let cw = Math.max(90, Math.min(250, front.W * (tall ? 0.36 : 0.24)));
+    // a phone held upright: a smaller card, so the room and the customer still show (release 50); its tag hangs under it
+    let cw = Math.max(90, Math.min(250, front.W * (tall ? 0.29 : 0.24)));
     held.style.width = cw + 'px';
-    if (held.offsetHeight > front.H - 12) { cw = Math.max(70, cw * (front.H - 12) / held.offsetHeight); held.style.width = cw + 'px'; }   // a short view: the card fits its height
+    const room = front.H * (tall ? 0.62 : 1) - 12 - TAG_H;
+    if (held.offsetHeight > room) { cw = Math.max(70, cw * room / held.offsetHeight); held.style.width = cw + 'px'; }   // a short view: the card fits its height
     const left = Math.max(front.W * 0.02, Math.min(front.x - front.w * 0.42 - cw, front.W - cw - 4));
     held.style.left = left + 'px';
-    held.style.top = Math.max(4, Math.min(front.y - cw * 0.05, front.H - held.offsetHeight - 8)) + 'px';   // held up by their head, never out of the view
+    held.style.top = Math.max(4, Math.min(front.y - cw * 0.05, front.H - held.offsetHeight - 8 - TAG_H)) + 'px';   // held up by their head, never out of the view
   }
   // the comic marks by a head: offended (red !! that shake), pleased (gold sparkles, a tune), wary (a thought bubble), eager (a gold !)
   function markAt(layer, kind, x, y, W) {

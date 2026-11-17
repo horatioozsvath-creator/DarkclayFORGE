@@ -165,3 +165,16 @@ no customer is shown (none, once the isometric shop is for arranging).
 - Fixed on the way: the cards on the painted shelves were drawn about three times too big (a page-wide rule stretched every canvas);
   each card's face is its own 256 × 360 now, skewed onto its place.
 - Not done: the brews as bottles (the 3D shop shows them as cards too, so they stay cards).
+
+## Release 50: fixes from a real phone (2026-11-17)
+
+Screenshots from a 430-wide iPhone (the biggest; the checks so far were at 375) showed:
+- **The forge's PREPARE header:** the three steps sat beside the title and squeezed "THE FORGE · PREPARE" to a word a line. On a phone
+  they now take a row of their own under the title.
+- **The held card** in the upright counter view was too big (36 % of the view's width) and its price tag sat over the card's own worth.
+  Now 29 %, at most about three fifths of the view's height, with the tag hanging under the card.
+- **The counter's choices** (MEET THEM, HOLD, ASK MORE…) took only half the panel's width in the view (the card's empty column): full
+  width now.
+- **The view tabs** ran THE BACK ROOM off the edge: their icons go on a phone under 480 wide.
+- **WORK IT** while short of materials looked ready (a dim gold): it turns grey now.
+Checked at 430, 375 and 320 wide upright, and sideways.
