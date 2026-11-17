@@ -2,16 +2,16 @@
 // FOUND BY TRYING (milestone 31, docs/DISCOVERY-PLAN.md), with no page access: TRY SOMETHING NEW at a station (a head, a haft and a
 // binding from the store room), the clue each choice earns, the trade a pattern needs first, studying an old piece to learn its pattern,
 // customers asking for what you don't make yet, and THE MAKER'S BOOK that keeps it all (save.book).
-import { PATTERNS, MATS, TRY_ROLES, TRY_FAMILY, STUDY_RENOWN, FIND_RENOWN } from './data.js?v=54';
-import { makePiece, partOptions, levelOf } from './rules.js?v=54';
-import { knows, salvage } from './shop.js?v=54';
+import { PATTERNS, MATS, TRY_ROLES, TRY_FAMILY, STUDY_RENOWN, FIND_RENOWN } from './data.js?v=55';
+import { makePiece, partOptions, levelOf } from './rules.js?v=55';
+import { knows, salvage } from './shop.js?v=55';
 
 export const bookOf = save => save.book || (save.book = { found: [], tries: [], clues: [], seen: 0 });
 export const hiddenAt = st => Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden && (PATTERNS[id].station || 'forge') === st);
 export const toFind = (save, st) => hiddenAt(st).filter(id => !knows(save, id));
 export const familyOf = mat => Object.keys(TRY_FAMILY).find(f => TRY_FAMILY[f].includes(mat)) || null;
 // what can go in a role: the store room's things of the role's families
-export const fitsRole = (st, role, mat) => { const r = TRY_ROLES[st].find(x => x.id === role); return !!r && r.fams.includes(familyOf(mat)); };
+export const fitsRole = (st, role, mat) => { const r = TRY_ROLES[st].find(x => x.id === role); return !!r && (r.only ? r.only.includes(mat) : r.fams.includes(familyOf(mat))); };
 const trade = (save, id) => levelOf(((save.trades || {})[id] || {}).xp || 0).level;
 // the trade a pattern needs first: { ok, word }
 export function gateOf(save, id) {
@@ -46,7 +46,7 @@ export const canAfford = (save, picks) => Object.entries(tryCost(picks)).every((
 // { result: 'found' | 'close' | 'nothing' | 'notyet' | 'known' | 'short' | 'tried', pattern, clues: [{ role, g, line }], card, gate }
 export function tryIt(save, st, picks, rng, now) {
   const book = bookOf(save), key = keyOf(st, picks);
-  if (!TRY_ROLES[st] || !picks.head) return { result: 'short', clues: [] };
+  if (!TRY_ROLES[st] || !picks[TRY_ROLES[st][0].id]) return { result: 'short', clues: [] };
   // a known pattern's recipe (found already): nothing to learn, nothing spent
   const known = hiddenAt(st).find(id => knows(save, id) && grade(id, picks).every(g => g === 'right'));
   if (known) return { result: 'known', pattern: known, clues: [] };
@@ -96,6 +96,13 @@ export function askFor(save, rng) {
   return { pattern: id, line };
 }
 const ownsStation = (save, st) => !st || st === 'forge' || (save.stations || []).includes(st);
+// THE TOWN BOARD (milestone 32): each day, a notice for one pattern still to find at a station you have (the same all day)
+export function boardClue(save, day) {
+  const left = Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden && PATTERNS[id].hidden.board && !knows(save, id) && ownsStation(save, PATTERNS[id].station));
+  if (!left.length) return null;
+  const id = left[((day * 2654435761) >>> 0) % left.length];
+  return { pattern: id, line: PATTERNS[id].hidden.board };
+}
 export function noteClue(save, c, who, now) {
   const book = bookOf(save);
   if (book.clues.some(x => x.line === c.line)) return false;

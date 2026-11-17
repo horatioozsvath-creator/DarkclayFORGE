@@ -114,3 +114,27 @@ saves get the same hidden patterns as a new game.
   trade each needs; what folk have asked for; your tries and what each taught.
 - Tests: 210. Checked in the browser at phone size: a close try and its clues, not yet, found (the spear), studying an old mace, the book.
   Not checked on a real phone.
+
+## Milestone 32, as built (release 55)
+
+- **Nine finds at the other stations**, full patterns like the forge's four (parts, stats, affixes, four lore lines, card art, buyers who
+  want them once known). Each station's TRY SOMETHING NEW takes its own three things (`TRY_ROLES`; the first is the station's own
+  material, the one its strip comes from):
+  - Stretcher (a hide; a lining or strap; a thread or loop): **Cloak** goat, wool or linen, silk (jerkins, trade 3); **Satchel** deer or
+    shark hide, a leather strap, waxed cord (gloves or boots, trade 3); **Sling** deer or goat, cord or gut, a leather wrap (no gate).
+  - Bench (a wood; a grip or stone; studs or binding): **Club** oak or old yew, a strap or wrap, horn or bone (no gate); **Wand** yew or
+    birch, a rough gem, silk or silver thread (staves, trade 3).
+  - Kettle (a herb; a water or cloth; a binder): **Poultice** mending herbs, linen, honey (salves, trade 3); **Ink** emberroot, spring
+    water, beeswax (oils or tonics, trade 3). Both are batches of three.
+  - Glass (a sand; a flux; a colour or backing): **Mirror** clear or sea-glass sand, potash, silver (panes or lenses, trade 3); **Beads**
+    river or clear sand, lime, cobalt (no gate).
+  - The plan's draft recipes changed where the station couldn't take them: the wand's stick is yew or birch (rowan isn't a bench wood),
+    the ink's "gum" is beeswax, and the poultice's linen takes the water's place.
+- **Runner gear:** a cloak in the BODY slot; the sling, club and wand as weapons; beads in the RING slot; a new **PACK** slot for the
+  satchel (common things brought home +10 % a step of its power: Common +10 %, Fine +20 %, Rare +30 %); the **poultice** as a potion: a
+  hurt on the road mends in half the days and the healer is paid half (a salve, if carried, still stops the hurt first).
+- **The mirror wards** against a monster's night, with the oil, the lens and the pane.
+- **THE TOWN BOARD:** each day a notice for one pattern still to find at a station you have (THE SHOP › the town), written into THE
+  MAKER'S BOOK. Customers asking already covered every station. **Not done:** clues from the named regulars.
+- Tests: 226 (tests/m32.test.mjs checks every hidden pattern the same way, a found try at each station, the board, the gear). Checked in
+  the browser at 430 wide: each station's try, finding the cloak, the book's pages, the board, the nine pictures. Not checked on a real phone.

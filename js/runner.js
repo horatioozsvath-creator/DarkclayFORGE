@@ -1,11 +1,11 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE RUNNER'S GEAR AND THE ROAD'S DANGER, with no page access: pieces you made, carried by the runner (off the shelves while they're
 // carried), potions used up on the road, the chance of harm on the hard roads, and the hunt for a gang. Spared on a gentler Reach.
-import { GEAR, ROUTES, TIERS } from './data.js?v=54';
-import { rung } from './growth.js?v=54';
-import { threatsOn } from './bank.js?v=54';
-import { levelOf } from './rules.js?v=54';
-import { roadX } from './monsters.js?v=54';
+import { GEAR, ROUTES, TIERS } from './data.js?v=55';
+import { rung } from './growth.js?v=55';
+import { threatsOn } from './bank.js?v=55';
+import { levelOf } from './rules.js?v=55';
+import { roadX } from './monsters.js?v=55';
 
 const D = 24 * 3600000;
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
@@ -20,6 +20,8 @@ export function strength(p) {
   const guard = ['head', 'body', 'hands', 'feet'].reduce((a, k) => a + powerOf(g[k]), 0) + powerOf(g.ring) / 2;
   return { guard, fight: powerOf(g.weapon) * (oiled(p) ? 1.5 : 1) };
 }
+// a satchel in the PACK slot (milestone 32): how much more of the common things they bring home (1.1 for a Common one, 1.2 a Fine...)
+export const packBonus = p => 1 + GEAR.pack * powerOf(gearOf(p).pack);
 // on a road: the chance of being hurt, and of being killed
 export function risk(save, p, route, now) {
   const d = GEAR.danger[route]; if (!d || !threatsOn(save, now)) return { hurt: 0, die: 0 };
@@ -69,11 +71,13 @@ export function road(save, p, route, rng, now) {
   let died = rng() < r.die, hurt = !died && rng() < r.hurt;
   if (died && use('draught')) { died = false; hurt = true; }
   if (hurt && use('salve')) hurt = false;
+  const poultice = hurt && use('poultice');   // a poultice: the hurt mends in half the days, and the healer's paid half
   if (died) { out.died = true; return out; }
   if (hurt) {
     out.hurt = true;
-    const days = GEAR.hurtDays[0] + rng() * (GEAR.hurtDays[1] - GEAR.hurtDays[0]); p.hurt = now + days * D; out.days = Math.round(days);
-    out.bill = Math.min(save.coins, GEAR.healer * (1 + rung(save))); save.coins -= out.bill;
+    const days = (GEAR.hurtDays[0] + rng() * (GEAR.hurtDays[1] - GEAR.hurtDays[0])) * (poultice ? GEAR.poultice : 1); p.hurt = now + days * D; out.days = Math.max(1, Math.round(days));
+    out.bill = Math.min(save.coins, Math.round(GEAR.healer * (1 + rung(save)) * (poultice ? GEAR.poultice : 1))); save.coins -= out.bill;
+    if (poultice) out.poultice = true;
     const g = gearOf(p), armour = ['head', 'body', 'hands', 'feet'].filter(k => g[k] && TIER_N[g[k].tier] < TIER_N.relic);
     if (armour.length) { const k = armour[Math.floor(rng() * armour.length)]; out.broke = g[k].name; delete g[k]; }
   }

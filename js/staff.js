@@ -1,13 +1,13 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=54';
-import { levelOf, makePiece, partOptions } from './rules.js?v=54';
-import { awayStep } from './shop.js?v=54';
-import { wageMult, capBonus, rung } from './growth.js?v=54';
-import * as Trail from './trail.js?v=54';
-import { TRAIL } from './data.js?v=54';
-import * as Run from './runner.js?v=54';
+import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=55';
+import { levelOf, makePiece, partOptions } from './rules.js?v=55';
+import { awayStep } from './shop.js?v=55';
+import { wageMult, capBonus, rung } from './growth.js?v=55';
+import * as Trail from './trail.js?v=55';
+import { TRAIL } from './data.js?v=55';
+import * as Run from './runner.js?v=55';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -109,7 +109,7 @@ export function haul(save, p, route, rng, now) {
     const good = left.filter(k => Trail.stationLevel(save, PATTERNS[RELICS[k].pattern].station || 'forge') >= 7);
     if (left.length) blueprint = pick(good.length ? good : left, rng);
   }
-  const n = Math.round((r.commons[0] + rng() * (r.commons[1] - r.commons[0])) * (1 + 0.08 * (l - 1)) * (p.trait === 'keen' ? 1.2 : 1));
+  const n = Math.round((r.commons[0] + rng() * (r.commons[1] - r.commons[0])) * (1 + 0.08 * (l - 1)) * (p.trait === 'keen' ? 1.2 : 1) * Run.packBonus(p));
   for (let i = 0; i < n; i++) { const m = pick(COMMONS, rng); mats[m] = (mats[m] || 0) + 1; }
   for (let i = 0; i < r.rare; i++) { const m = pick(RARES, rng); mats[m] = (mats[m] || 0) + 1; }
   if (r.gem && rng() < r.gem) mats.gem = (mats.gem || 0) + 1;
