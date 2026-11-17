@@ -26,11 +26,15 @@ test('the queue stands at the spots: the front at the counter, the rest behind; 
   assert.deepEqual(C.standing([], 4), []);
 });
 
-test('the backdrops\' places and spots: every view at both shapes; the left wall shows the shelf\'s places, the counter its spots', () => {
-  const d = JSON.parse(readFileSync(new URL('../assets/backdrops/backdrops.json', import.meta.url)));
-  for (const v of C.VIEWS) for (const sh of ['wide', 'tall']) assert.ok(d[v] && d[v][sh] && d[v][sh].size, v + ' ' + sh);
-  assert.ok(d.left.wide.places.shelf.length >= 6); assert.ok(d.right.wide.places.wall.length >= 3);
-  assert.ok(d.counter.wide.spots.length >= 3 && d.counter.wide.fg); assert.ok(d.back.wide.hot.workshop);
+test('the backdrops at every shop size: every view at both shapes; the left wall\'s shelf places with every level\'s card places', () => {
+  for (const size of [0, 1, 2]) {
+    const d = JSON.parse(readFileSync(new URL('../assets/backdrops/s' + size + '/backdrops.json', import.meta.url)));
+    for (const v of C.VIEWS) for (const sh of ['wide', 'tall']) assert.ok(d[v] && d[v][sh] && d[v][sh].size, size + ' ' + v + ' ' + sh);
+    const units = d.left.wide.units; assert.equal(units.length, size + 2, 'a bigger shop, more shelf places');
+    for (const u of units) { assert.ok(u.sprites.cardshelf && u.sprites.cardcase); assert.equal(u.quads['0'].length, 2); assert.equal(u.quads['1'].length, 3); assert.equal(u.quads['2'].length, 6); }
+    assert.ok(d.right.wide.wall.length >= 3); assert.ok(d.counter.wide.spots.length >= 3 && d.counter.wide.fg && d.counter.wide.wards);
+    assert.ok(d.back.wide.hot.workshop && d.back.wide.cold); assert.ok(d.counter.wide.over.boards && d.counter.wide.over.watchbanner);
+  }
 });
 
 // Milestone 26: the folk as pictures
@@ -65,4 +69,33 @@ test('each answer at the counter has its mark: sold pleased, gone offended, a co
   assert.equal(C.reactionTo({ outcome: 'another' }), 'wary');
   assert.equal(C.reactionTo(null), null);
   for (const k of ['offended', 'pleased', 'wary', 'eager']) assert.match(C.MARKS[k], /^<svg/);
+});
+
+// Milestone 28: the room dressed
+import { defaultShop } from '../js/room.js';
+const H28 = 3600000, NOW = 1e12;
+const shop = (extra = {}) => ({ room: defaultShop(2, 0), shelf: [], cards: [], wards: [], threatsFrom: 0, ...extra });
+test('the room\'s state: boards on the door for a day after a break-in, the wall mended after a monster, never on the gentler Reach', () => {
+  assert.deepEqual(C.dressingOf(shop(), NOW).over, []);
+  assert.ok(C.dressingOf(shop({ robbery: { at: NOW - 2 * H28 } }), NOW).over.includes('boards'));
+  assert.ok(!C.dressingOf(shop({ robbery: { at: NOW - 30 * H28 } }), NOW).over.includes('boards'), 'mended by the next day');
+  assert.ok(C.dressingOf(shop({ monster: { done: 'came', doneAt: NOW - 5 * H28 } }), NOW).over.includes('mended'));
+  assert.ok(!C.dressingOf(shop({ monster: { done: 'kept', doneAt: NOW - 5 * H28 } }), NOW).over.includes('mended'), 'kept off: no damage');
+  const g = C.dressingOf(shop({ gentle: true, robbery: { at: NOW - H28 }, monster: { done: 'came', doneAt: NOW - H28 } }), NOW);
+  assert.deepEqual(g.over, [], 'the gentler Reach: no boards, no damage');
+});
+test('a gift shows only when it\'s put out; the forge cold when it broke; the wards over the door', () => {
+  const s = shop(); s.room.items.push({ id: 'g', kind: 'watchbanner', x: 0, z: 4, rot: 0 }); s.stored = ['corrowstatue'];
+  const d = C.dressingOf(s, NOW); assert.ok(d.over.includes('watchbanner')); assert.ok(!d.over.includes('corrowstatue'), 'in the store room: not shown');
+  assert.equal(C.dressingOf(shop({ wear: { forge: { w: 9, broken: true, ready: NOW + H28 } } }), NOW).cold, true);
+  assert.equal(C.dressingOf(shop({ wear: { forge: { w: 9, broken: true, ready: NOW - H28 } } }), NOW).cold, false, 'rebuilt');
+  assert.equal(C.dressingOf(shop({ wards: [{ id: 'a', tier: 'fine', name: 'x' }] }), NOW).wards.length, 1);
+});
+test('your shelves on the painted places: each with its level and its places in order, the first nearest the counter; the shop\'s size', () => {
+  const s = shop(); s.room.items.find(i => i.kind === 'shelf').lv = 2;
+  const d = C.dressingOf(s, NOW);
+  assert.deepEqual(d.shelves.map(x => [x.lv, x.places]), [[2, [0, 1, 2, 3, 4, 5]], [0, [6, 7]]]);
+  assert.equal(C.shelfAt(1, 2, d.shelves).lv, 2, 'the first shelf: the painted place nearest the counter'); assert.equal(C.shelfAt(0, 2, d.shelves).lv, 0);
+  assert.equal(C.shelfAt(0, 3, d.shelves), null, 'a bigger wall than you have shelves: bare');
+  assert.equal(C.dressingOf({ ...s, room: { ...s.room, size: 2 } }, NOW).size, 2);
 });

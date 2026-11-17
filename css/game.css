@@ -655,7 +655,12 @@ h1, .tname, .screenbar .t { font-family: var(--carve); font-weight: 900; letter-
 @keyframes cvStep { 0% { transform: translateY(-3%) scale(.94); } 50% { transform: translateY(-2%) scale(.98); } 100% { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .cv-who.cv-in, .cv-who.cv-step { animation: none; } }
 .cv-shadow { border-radius: 50%; background: radial-gradient(ellipse at center, rgba(0,0,0,.5), rgba(0,0,0,0) 70%); }
-.cv-card { left: 0; top: 0; transform-origin: 0 0; image-rendering: auto; filter: drop-shadow(0 2px 2px rgba(0,0,0,.5)); }
+.cv-sprite { max-width: none; pointer-events: none; user-select: none; }
+.cv-ward { pointer-events: none; background: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 32'%3E%3Cpath d='M10 0v9' stroke='%23c9a46a' stroke-width='1.2'/%3E%3Cpath d='M10 9l8 9-8 13-8-13z' fill='%23e8dcc0' stroke='%233a2414' stroke-width='1.5'/%3E%3Ccircle cx='10' cy='18' r='3.2' fill='%233a2414'/%3E%3C/svg%3E");
+  filter: drop-shadow(0 0 4px var(--wc)) drop-shadow(0 2px 2px rgba(0,0,0,.6)); animation: cvSway 4s ease-in-out infinite; transform-origin: 50% 0; }
+@keyframes cvSway { 0%,100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@media (prefers-reduced-motion: reduce) { .cv-ward { animation: none; } }
+.cv-card { left: 0; top: 0; width: 256px; height: 360px; max-width: none; aspect-ratio: auto; cursor: default; transform-origin: 0 0; image-rendering: auto; filter: drop-shadow(0 2px 2px rgba(0,0,0,.5)); }
 .cv-hot { overflow: visible; }
 .cv-place { fill: rgba(232,196,100,0); stroke: rgba(232,196,100,0); stroke-width: 2; cursor: pointer; transition: fill .15s, stroke .15s; }
 .cv-place.empty { stroke: rgba(232,196,100,.28); stroke-dasharray: 5 4; }

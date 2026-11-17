@@ -141,3 +141,27 @@ no customer is shown (none, once the isometric shop is for arranging).
   moment, eager, and goes; when you fill it, they come to collect, pleased, and the coins go to the till. The queue steps back while
   they're there.
 - Not yet: sellers of materials hold nothing up (no card for a sack of ore).
+
+## Milestone 28, as built (release 46)
+
+- **A shop front per shop size** (tools/backdrops.py, `assets/backdrops/s0`, `s1`, `s2`): a small shop, a good shop and a fine shop are
+  each their own room, wider and deeper as the shop grows, the door further off, more of the left wall to fill (two, three, four shelf
+  places). A phone loads only its own shop's pictures.
+- **Your shelves on the wall:** the left wall is painted bare; each of your shelves is laid on it as its level's model (a shelf or a
+  display shelf as the card shelf, a display case as the case), in the room's order, the first nearest the counter, with your cards on its
+  places (two, three or six). Shelves past the wall's places stay in the SHELF tab, as before.
+- **Re-lit and tidied:** warm and low again so the customers' pictures stand out (the lamp by the door, the street's dusk, a lamp over each
+  shelf, the forge beyond); the counter's candles moved to its right end, clear of the piece held up on the left.
+- **The world in the room:** after a break-in the door is boarded for a day; after a monster, new boards let into the wall and claw marks,
+  for two days; the forge broken, the workshop seen through the back doorway is cold and dark until it's rebuilt. None of it on the
+  gentler Reach.
+- **Dressing:** each regular's gift shows by the door once it's put out in the shop (Ketty's candles, the Watch's banner, Bram's barrels,
+  the Corrow king, Marrow's herbs; not while it's in the store room); your wards hang along the lintel over the door, glowing in their
+  tier's colour.
+- **The phone budget** (measured in a phone-sized browser, a fine shop with its door boarded, the wall mended, two gifts and three
+  shelves): the counter view's room is about 45 KB (the picture 18 KB, the counter's cut-out 8 KB, the overlays and shelves 1–2 KB each,
+  the layout 4–5 KB gzipped), the customers up to about 175 KB more (five pictures). Each shop size is about 0.7 MB on the server; a
+  phone loads only its own size's pictures, and only the views it turns to. Not yet checked on a real phone.
+- Fixed on the way: the cards on the painted shelves were drawn about three times too big (a page-wide rule stretched every canvas);
+  each card's face is its own 256 × 360 now, skewed onto its place.
+- Not done: the brews as bottles (the 3D shop shows them as cards too, so they stay cards).

@@ -4,8 +4,12 @@
 // cut out to stand in front of the customers), with what changes laid over it in 2D: your cards on the painted shelves (each card's
 // face skewed onto its place), the customers as pictures at their standing spots, and the places and the doorway to tap.
 // The pure parts (fit, the skew, who stands where) are exported for the tests; create() needs a page.
-import { faceCanvas, CW, CH } from './cardface.js?v=45';
-import { LOOKS, POOLS, REGULARS } from './folk.js?v=45';
+import { faceCanvas, CW, CH } from './cardface.js?v=46';
+import { LOOKS, POOLS, REGULARS } from './folk.js?v=46';
+import { FURNITURE, TIERS } from './data.js?v=46';
+import { shelfSpots } from './room.js?v=46';
+import { isBroken } from './wear.js?v=46';
+import { threatsOn } from './bank.js?v=46';
 
 export const VIEWS = ['left', 'counter', 'right', 'back'];
 export const VIEW_WORD = { left: 'LEFT WALL', counter: 'THE COUNTER', right: 'RIGHT WALL', back: 'THE BACK ROOM' };
@@ -16,9 +20,27 @@ export const MARKS = {
   wary: '<svg viewBox="0 0 120 110"><path class="cloud" d="M20 58 q-14 -22 10 -30 q6 -20 30 -12 q20 -12 34 6 q22 2 16 26 q10 18 -14 24 q-12 14 -34 6 q-24 8 -32 -6 q-20 -4 -10 -14 z"/><circle class="tail" cx="18" cy="88" r="6"/><circle class="tail" cx="8" cy="102" r="3.5"/><circle class="dot" cx="44" cy="52" r="6"/><circle class="dot d2" cx="62" cy="52" r="6"/><circle class="dot d3" cx="80" cy="52" r="6"/><text x="96" y="30" class="q">?</text></svg>',
   eager: '<svg viewBox="0 0 120 110"><g class="burst"><path class="ray" d="M60 8 v14 M92 20 l-10 10 M104 52 h-14 M28 20 l10 10 M16 52 h14 M90 84 l-10 -8 M30 84 l10 -8"/></g><text x="44" y="82" class="gold">!</text></svg>',
 };
+// ---------- the room as it stands (milestone 28): which pictures, which shelves, what's laid over them ----------
+export const DOOR_MEND_H = 24, PATCH_H = 48;   // hours the door stays boarded after a break-in; the wall's new boards show after a monster
+const HOUR = 3600000;
+// save, now -> { size: the shop's size (its pictures), cold: the forge broke, over: what's laid over the room (boards on the door,
+// the wall mended, the regulars' gifts put out), wards: the cards hung over the door, shelves: [{ lv, places: [shelf index] }] in the
+// room's order (the first nearest the counter on the left wall) }
+export function dressingOf(save, now) {
+  const room = save.room || { items: [] }, size = Math.max(0, Math.min(2, room.size | 0)), threats = threatsOn(save, now), over = [];
+  const r = save.robbery, m = save.monster;
+  if (threats && r && r.at && now >= r.at && now - r.at < DOOR_MEND_H * HOUR) over.push('boards');
+  if (threats && m && m.done === 'came' && m.doneAt && now - m.doneAt < PATCH_H * HOUR) over.push('mended');
+  for (const it of room.items || []) if (FURNITURE[it.kind] && FURNITURE[it.kind].gift && !over.includes(it.kind)) over.push(it.kind);
+  const shelves = [];
+  shelfSpots(room).forEach((sp, i) => { let s = shelves[shelves.length - 1]; if (!s || s.id !== sp.shelf) shelves.push(s = { id: sp.shelf, lv: sp.lv, places: [] }); s.places.push(i); });
+  return { size, cold: isBroken(save, 'forge', now), over, wards: (save.wards || []).filter(Boolean), shelves };
+}
+// the painted shelf places (k: 0 by the door, the last nearest the counter) to your shelves: your first shelf nearest the counter
+export const shelfAt = (k, K, shelves) => shelves[K - 1 - k] || null;
 // what a haggle's answer shows: sold pleased, gone offended, a counter-offer wary (offended when you asked past their purse)
 export const reactionTo = r => !r ? null : r.outcome === 'sold' ? 'pleased' : r.outcome === 'gone' ? 'offended' : r.outcome === 'counter' ? (r.over ? 'offended' : 'wary') : r.outcome === 'another' ? 'wary' : null;
-const BACKDROPS = 'assets/backdrops/', BACKDROPS_V = '?b=4';   // bump b when tools/backdrops.py renders new pictures
+const BACKDROPS = 'assets/backdrops/', BACKDROPS_V = '?b=5';   // bump b when tools/backdrops.py renders new pictures
 const FOLK = 'assets/folk/', FOLK_V = '?f=2';   // bump f when tools/folk.sh renders new pictures
 
 // a picture rendered at rw × rh shown to cover a box of w × h: its scale and where its corner lands
@@ -65,8 +87,12 @@ export const stepUp = (height, spot) => spot === 0 ? Math.max(0, STEP_TO - heigh
 export const standing = (queue, spots) => (queue || []).slice(0, spots).map((c, i) => ({ c, spot: i, look: lookOf(c) }));
 
 // ---------- the view on the page ----------
-let data = null;
-const load = () => data || (data = fetch(BACKDROPS + 'backdrops.json' + BACKDROPS_V).then(r => r.json()));
+const datas = {};
+const load = size => datas[size] || (datas[size] = fetch(BACKDROPS + 's' + size + '/backdrops.json' + BACKDROPS_V).then(r => r.json()).then(d => {
+  // how many shelf places the left wall has (every view shows some of them)
+  d.K = 1 + Math.max(...Object.values(d).flatMap(v => Object.values(v).flatMap(r => (r.units || []).map(u => u.k))));
+  return d;
+}));
 const crops = {};
 // a picture's drawn part (its transparent margin cut away), as fractions of its size
 function cropOf(url) {
@@ -101,12 +127,14 @@ export function create(host, on = {}) {
   function turn(v) { if (v === view) return; view = v; stage.classList.add('turning'); setTimeout(() => stage.classList.remove('turning'), 220); draw(); if (on.turned) on.turned(v); }
   async function draw() {
     const save = last; if (!save) return;
-    const my = ++token, d = await load(); if (my !== token) return;
+    const dr = dressingOf(save, Date.now()), dir = BACKDROPS + 's' + dr.size + '/';
+    const my = ++token, d = await load(dr.size); if (my !== token) return;
     host.querySelectorAll('[data-cv]').forEach(b => b.classList.toggle('go', b.dataset.cv === view));
     const W = stage.clientWidth, H = stage.clientHeight, shape = shapeFor(W, H), rec = d[view] && d[view][shape]; if (!rec) return;
     const [rw, rh] = rec.size, { s, ox, oy } = cover(W, H, rw, rh), at = ([x, y]) => [ox + x * s, oy + y * s];
-    bg.src = BACKDROPS + view + '_' + shape + '.webp' + BACKDROPS_V;
-    fg.hidden = !rec.fg; if (rec.fg) fg.src = BACKDROPS + view + '_' + shape + '_fg.webp' + BACKDROPS_V;
+    const pic = name => dir + view + '_' + shape + name + '.webp' + BACKDROPS_V;
+    bg.src = pic(view === 'back' && dr.cold && rec.cold ? '_cold' : '');
+    fg.hidden = !rec.fg; if (rec.fg) fg.src = pic('_fg');
     for (const im of [bg, fg]) Object.assign(im.style, { width: rw * s + 'px', height: rh * s + 'px', left: ox + 'px', top: oy + 'px' });
     // the customers: the front of the queue at the counter, the rest behind, darker and softer the further back
     const queue = extra ? [extra, ...(save.queue || [])] : (save.queue || []);
@@ -137,20 +165,40 @@ export function create(host, on = {}) {
     }
     if (my === token && rec.spots && rec.spots.length) were = now;
     placeHeld();
-    // the cards on the painted places (your shelves on the left wall, your wall's pieces on the right), and the places to tap
-    for (const [kind, places] of Object.entries(rec.places || {})) {
-      for (const p of places) {
-        const q = p.q.map(at), entry = kind === 'shelf' ? save.shelf[p.i] : (save.wall || [])[p.i];
-        const id = kind === 'shelf' ? entry && entry.id : entry, c = id && save.cards.find(x => x.id === id);
-        const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        poly.setAttribute('points', q.map(pt => pt.join(',')).join(' ')); poly.setAttribute('class', 'cv-place' + (c ? '' : ' empty') + (kind === 'shelf' && p.i >= save.slots ? ' none' : ''));
-        if (!(kind === 'shelf' && p.i >= save.slots)) poly.addEventListener('click', () => on.place && on.place(kind, p.i));
-        hot.appendChild(poly);
-        if (!c) continue;
-        const price = kind === 'shelf' ? entry.price : c.worth;   // the wall's pieces aren't for sale: their worth
-        faceCanvas(c, price).then(cv => { if (my !== token) return; cv.className = 'cv-card'; cv.style.transform = quadMatrix(CW, CH, q); cards.appendChild(cv); });
-      }
+    // the room's state laid over it: the boards on the door, the wall mended, the regulars' gifts (in front of the shelves)
+    const sprite = (name, b, z) => { const im = document.createElement('img'); im.src = pic(name); im.alt = ''; im.className = 'cv-sprite';
+      Object.assign(im.style, { left: ox + b[0] * s + 'px', top: oy + b[1] * s + 'px', width: (b[2] - b[0]) * s + 'px', height: (b[3] - b[1]) * s + 'px', zIndex: z }); cards.appendChild(im); };
+    for (const name of dr.over) if (rec.over && rec.over[name]) sprite('_' + name, rec.over[name], 90);
+    // the wards, hung along the lintel over the door
+    if (rec.wards && dr.wards.length) {
+      const [a, b] = rec.wards.map(at), n = Math.min(dr.wards.length, 6), sz = Math.max(10, Math.hypot(b[0] - a[0], b[1] - a[1]) / 5);
+      dr.wards.slice(0, n).forEach((c, i) => {
+        const t = (i + 1) / (n + 1), el = document.createElement('i'), tier = TIERS.find(x => x.id === c.tier);
+        el.className = 'cv-ward'; el.title = c.name; el.style.setProperty('--wc', tier ? tier.c : '#e8c464');
+        Object.assign(el.style, { left: a[0] + (b[0] - a[0]) * t - sz / 2 + 'px', top: a[1] + (b[1] - a[1]) * t + 'px', width: sz + 'px', height: sz * 1.6 + 'px', zIndex: 91 });
+        cards.appendChild(el);
+      });
     }
+    // your shelves on the left wall's painted places (far ones first), each as its level's model, your cards on its places
+    const place = (q, i, kind, z) => {
+      const entry = kind === 'shelf' ? save.shelf[i] : (save.wall || [])[i];
+      const id = kind === 'shelf' ? entry && entry.id : entry, c = id && save.cards.find(x => x.id === id);
+      const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      poly.setAttribute('points', q.map(pt => pt.join(',')).join(' ')); poly.setAttribute('class', 'cv-place' + (c ? '' : ' empty'));
+      poly.addEventListener('click', () => on.place && on.place(kind, i)); hot.appendChild(poly);
+      if (!c) return;
+      const price = kind === 'shelf' ? entry.price : c.worth;   // the wall's pieces aren't for sale: their worth
+      faceCanvas(c, price).then(cv => { if (my !== token) return; cv.className = 'cv-card'; cv.style.transform = quadMatrix(CW, CH, q); cv.style.zIndex = z; cards.appendChild(cv); });
+    };
+    for (const u of (rec.units || []).slice().sort((a, b) => a.k - b.k)) {
+      const sh = shelfAt(u.k, d.K, dr.shelves); if (!sh) continue;
+      const model = sh.lv >= 2 ? 'cardcase' : 'cardshelf', b = u.sprites[model]; if (!b) continue;
+      sprite('_u' + u.k + '_' + model, b, u.k * 2);
+      // the cards only from the left wall's own view (seen side on from the counter, they'd skew past their places)
+      if (view === 'left') (u.quads[String(Math.min(2, sh.lv))] || []).forEach((q, j) => { if (sh.places[j] != null) place(q.map(at), sh.places[j], 'shelf', u.k * 2 + 1); });
+    }
+    // the wall's pieces, hung on the right wall
+    for (const p of rec.wall || []) place(p.q.map(at), p.i, 'wall', 80);
     for (const [k, q] of Object.entries(rec.hot || {})) {
       const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
       poly.setAttribute('points', q.map(at).map(pt => pt.join(',')).join(' ')); poly.setAttribute('class', 'cv-door');

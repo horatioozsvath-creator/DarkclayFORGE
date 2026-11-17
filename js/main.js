@@ -1,33 +1,33 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING } from './data.js?v=45';
-import * as R from './rules.js?v=45';
-import * as Sh from './shop.js?v=45';
-import * as St from './staff.js?v=45';
-import * as Rm from './room.js?v=45';
-import * as G from './growth.js?v=45';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=45';
-import * as Snd from './sound.js?v=45';
-import * as CV from './counter.js?v=45';
-import * as Town from './town.js?v=45';
-import * as V from './visit.js?v=45';
-import * as Br from './branch.js?v=45';
-import * as Bank from './bank.js?v=45';
-import * as Wear from './wear.js?v=45';
-import * as Th from './thieves.js?v=45';
-import * as Run from './runner.js?v=45';
-import * as Mon from './monsters.js?v=45';
-import * as Liv from './living.js?v=45';
-import * as Hl from './hall.js?v=45';
-import * as Trail from './trail.js?v=45';
-import { ICONS, emblem, watch } from './icons.js?v=45';
-import { drawFlyer, flyerBlob } from './flyer.js?v=45';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=45';
-import { card, ART } from './card.js?v=45';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=45';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=45';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING } from './data.js?v=46';
+import * as R from './rules.js?v=46';
+import * as Sh from './shop.js?v=46';
+import * as St from './staff.js?v=46';
+import * as Rm from './room.js?v=46';
+import * as G from './growth.js?v=46';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=46';
+import * as Snd from './sound.js?v=46';
+import * as CV from './counter.js?v=46';
+import * as Town from './town.js?v=46';
+import * as V from './visit.js?v=46';
+import * as Br from './branch.js?v=46';
+import * as Bank from './bank.js?v=46';
+import * as Wear from './wear.js?v=46';
+import * as Th from './thieves.js?v=46';
+import * as Run from './runner.js?v=46';
+import * as Mon from './monsters.js?v=46';
+import * as Liv from './living.js?v=46';
+import * as Hl from './hall.js?v=46';
+import * as Trail from './trail.js?v=46';
+import { ICONS, emblem, watch } from './icons.js?v=46';
+import { drawFlyer, flyerBlob } from './flyer.js?v=46';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=46';
+import { card, ART } from './card.js?v=46';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=46';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=46';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 45;
+const VERSION = 46;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayFORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -371,7 +371,7 @@ let floorShown = null;
 let cvw = null, cvP = null, iso = false, cvSig = '', cvFront = null;
 function counterView() {
   $('cview').hidden = false; $('cvActs').hidden = false; $('floor').hidden = true; $('dioBar').hidden = true;
-  if (!cvP) cvP = import('./counter.js?v=45').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
+  if (!cvP) cvP = import('./counter.js?v=46').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
   else if (cvw) cvw.show(save, Sh.priceAt);
 }
 // a place on the painted wall: its piece (take it down), or empty (hang one from the back room)
@@ -386,7 +386,7 @@ function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   if (!iso) { counterView(); tip('shop', $('cview')); return; }
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=45').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=46').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -1815,7 +1815,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=45').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=46').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -1894,7 +1894,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=45').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=46').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }
