@@ -598,3 +598,9 @@ h1, .tname, .screenbar .t { font-family: var(--carve); font-weight: 900; letter-
 #bankLoanWord.bad { color: var(--k-crack); }
 .tgentle { display: flex; align-items: center; gap: 8px; font: 600 13px var(--sans); color: var(--bone-dim); margin: 2px 0 4px; cursor: pointer; }
 .tgentle input { width: 18px; height: 18px; accent-color: #c9923e; }
+/* wear */
+.wearbar { display: block; height: 7px; background: rgba(0,0,0,.45); border: 1px solid #0d0b0a; margin: 4px 0 2px; }
+.wearbar i { display: block; height: 100%; background: linear-gradient(90deg, #8a8078, #c9923e); }
+.wearbar.worn i { background: linear-gradient(90deg, #c9923e, #c4483a); box-shadow: 0 0 8px rgba(196,72,58,.6); }
+.fi.broken { border-left-color: var(--k-crack); }
+.fi .bad { color: var(--k-crack); }

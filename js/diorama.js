@@ -3,9 +3,9 @@
 // in to the counter. Loaded only when the shop is opened. Three.js comes through the page's import map as 'three'.
 import * as THREE from 'three';
 import { GLTFLoader } from '../vendor/three/loaders/GLTFLoader.js';
-import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=38';
-import { ART } from './card.js?v=38';
-import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=38';
+import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=39';
+import { ART } from './card.js?v=39';
+import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=39';
 
 const MODELS = 'assets/models/', M = '?m=10';   // bump m when tools/models.sh rebuilds them
 const FIGURES = { folk: 'folk', guard: 'dwarf', traveller: 'carter', delver: 'bard', factor: 'chandler', collector: 'herbalist', steward: 'chandler', master: 'herbalist', seller: 'carter', maker: 'smith', clerk: 'chandler' };
@@ -156,7 +156,7 @@ export async function create(host, { onTap } = {}) {
   const camera = new THREE.OrthographicCamera(-5, 5, 3, -3, 0.1, 100);
   const roomG = new THREE.Group(), itemsG = new THREE.Group(), peopleG = new THREE.Group(), markG = new THREE.Group(), flyG = new THREE.Group();
   scene.add(roomG, itemsG, peopleG, markG, flyG);
-  let room = null, dirty = true, arranging = false, selected = null, size = { w: 6, d: 5 }, view = 'shop';
+  let room = null, dirty = true, arranging = false, selected = null, size = { w: 6, d: 5 }, view = 'shop', cold = false;   // cold: the forge broken, its fire out
   const itemObjs = new Map();   // item id → its group
   const people = new Map();     // customer id → { obj, path, at, gone }
   let shown = [];               // the shelf's pieces: [{ slot, shelf, side, card, price }]
@@ -210,7 +210,7 @@ export async function create(host, { onTap } = {}) {
     const lintel = toonBox(0.24, 0.5, 1.1, '#3b2414'); lintel.position.set(-0.1, 2.35, DOOR_Z + 0.5); roomG.add(lintel);
     const step = toonBox(0.6, 0.06, 1, '#2a1c12'); step.position.set(-0.3, 0.03, DOOR_Z + 0.5); roomG.add(step);
     ember.position.set(hall ? w / 2 : work ? 1 : WORK_DOOR_X + 0.5, hall ? 2.2 : 1.2, hall ? d / 2 : work ? 1.2 : 0.4);
-    ember.intensity = hall ? 4 : work ? 6 : 2.5;
+    ember.intensity = hall ? 4 : work ? (cold ? 0.35 : 6) : (cold ? 0.6 : 2.5);
   }
   function drawMarks() {
     markG.clear();
@@ -442,5 +442,6 @@ export async function create(host, { onTap } = {}) {
       if (moving || dirty) { renderer.render(scene, camera); dirty = false; }
     },
     redraw() { dirty = true; },
+    setCold(on) { if (on === cold) return; cold = on; ember.intensity = view === 'hall' ? 4 : view === 'work' ? (cold ? 0.35 : 6) : (cold ? 0.6 : 2.5); dirty = true; },
   };
 }

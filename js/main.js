@@ -1,27 +1,28 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE } from './data.js?v=38';
-import * as R from './rules.js?v=38';
-import * as Sh from './shop.js?v=38';
-import * as St from './staff.js?v=38';
-import * as Rm from './room.js?v=38';
-import * as G from './growth.js?v=38';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=38';
-import * as Snd from './sound.js?v=38';
-import * as Town from './town.js?v=38';
-import * as V from './visit.js?v=38';
-import * as Br from './branch.js?v=38';
-import * as Bank from './bank.js?v=38';
-import * as Hl from './hall.js?v=38';
-import * as Trail from './trail.js?v=38';
-import { ICONS, emblem, watch } from './icons.js?v=38';
-import { drawFlyer, flyerBlob } from './flyer.js?v=38';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=38';
-import { card, ART } from './card.js?v=38';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=38';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=38';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR } from './data.js?v=39';
+import * as R from './rules.js?v=39';
+import * as Sh from './shop.js?v=39';
+import * as St from './staff.js?v=39';
+import * as Rm from './room.js?v=39';
+import * as G from './growth.js?v=39';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=39';
+import * as Snd from './sound.js?v=39';
+import * as Town from './town.js?v=39';
+import * as V from './visit.js?v=39';
+import * as Br from './branch.js?v=39';
+import * as Bank from './bank.js?v=39';
+import * as Wear from './wear.js?v=39';
+import * as Hl from './hall.js?v=39';
+import * as Trail from './trail.js?v=39';
+import { ICONS, emblem, watch } from './icons.js?v=39';
+import { drawFlyer, flyerBlob } from './flyer.js?v=39';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=39';
+import { card, ART } from './card.js?v=39';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=39';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=39';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 38;
+const VERSION = 39;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayFORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -255,6 +256,33 @@ function renderBlueprints() {
 }
 // the trail of the Nine: each Mythic, its shard, where to look
 const SHARD_WHERE = { deep: 'below the deep doors (a runner\'s trip)', court: 'an order from the Court', star: 'the day a star falls on the Reach (IN TOWN)' };
+// THE STATIONS: each one's wear, REPAIR, REBUILD; the dwarven forge
+let stationNote = '';
+function renderStations() {
+  const now = Date.now(), list = ['forge'].concat(save.stations || []).filter(st => STATIONS[st]);
+  const spared = !Bank.threatsOn(save, now);
+  $('stationsWord').textContent = spared ? (save.gentle ? 'THE GENTLER REACH: NO WEAR' : 'NO WEAR YET') : 'WEAR AND REPAIR';
+  $('stations').innerHTML = list.map(st => {
+    const w = Wear.wearOf(save, st), br = Wear.isBroken(save, st, now), t = Wear.rebuilding(save, st), nm = Wear.stationName(st);
+    const name = (st === 'forge' && save.dwarven ? 'The dwarven forge' : nm.replace(/^./, c => c.toUpperCase()));
+    const bar = '<span class="wearbar' + (w >= 75 ? ' worn' : '') + '"><i style="width:' + Math.round(w) + '%"></i></span>';
+    let body;
+    if (br && t) body = '<span>' + (st === 'forge' && save.dwarven && w === 0 ? 'Going up' : 'Being rebuilt') + ': ready in ' + hm((t - now) / 1000) + '.</span>';
+    else if (br) body = '<span class="bad">Broken. Nothing can be worked at it until it\'s rebuilt.</span><button class="seg go" data-rebuild="' + st + '"' + (save.coins < Wear.rebuildCost(save) ? ' disabled' : '') + '>REBUILD · ' + Wear.rebuildCost(save).toLocaleString() + ' c · ' + WEAR.rebuildH + ' HOURS</button>';
+    else body = bar + '<span>' + Math.floor(w) + ' % worn' + (w >= 75 ? ': the band is narrower' : '') + '.' + (st === 'forge' && save.dwarven ? ' A wider band, and it wears slower.' : '') + '</span>'
+      + (w > 0 ? '<button class="seg" data-repair="' + st + '"' + (save.coins < Wear.repairCost(save, st) ? ' disabled' : '') + '>REPAIR · ' + Wear.repairCost(save, st).toLocaleString() + ' c</button>' : '');
+    return '<div class="fi' + (br ? ' broken' : '') + '"><b>' + esc(name) + '</b>' + body + '</div>';
+  }).join('') + (save.dwarven ? '' : (() => { const c = Wear.canDwarven(save); return '<div class="fi"><b>The dwarven forge</b><span>Stone-lined and banded with iron: a band ' + Math.round((WEAR.dwarven.band - 1) * 100) + ' % wider, and it wears ' + Math.round((1 - WEAR.dwarven.wear) * 100) + ' % slower. It takes the old forge\'s place: out for ' + WEAR.dwarven.h + ' hours while it goes up.</span>'
+    + '<button class="seg" data-dwarven="1"' + (c.ok ? '' : ' disabled') + '>BUILD THE DWARVEN FORGE · ' + WEAR.dwarven.cost.toLocaleString() + ' c</button>' + (c.why && c.why !== 'not enough coin' ? '<span>Needs ' + c.why + '.</span>' : '') + '</div>'; })());
+  $('stationNote').textContent = (spared ? (save.gentle ? 'This save is spared wear (the gentler Reach, under the Bank). ' : 'Wear starts after a week\'s grace. ') : 'Every working wears its station; Relic and Mythic workings most. A broken station breaks after a working, never during one. ') + stationNote;
+  const done = () => { store(save); coins(); renderStations(); if (dio) dio.setCold(Wear.isBroken(save, 'forge', Date.now())); };
+  $('stations').querySelectorAll('[data-repair]').forEach(b => b.onclick = () => { const r = Wear.repair(save, b.dataset.repair); stationNote = r.why ? 'Not repaired: ' + r.why + '.' : 'Repaired, for ' + r.cost + ' c.'; if (r.ok) Snd.play('coin'); done(); });
+  $('stations').querySelectorAll('[data-rebuild]').forEach(b => b.onclick = () => { const r = Wear.rebuild(save, b.dataset.rebuild, Date.now()); stationNote = r.why ? 'Not rebuilt: ' + r.why + '.' : 'The rebuilding has begun: ready in ' + WEAR.rebuildH + ' hours.'; if (r.ok) Snd.play('level'); done(); });
+  $('stations').querySelectorAll('[data-dwarven]').forEach(b => b.onclick = () => {
+    if (!confirm('Build the dwarven forge for ' + WEAR.dwarven.cost.toLocaleString() + ' c? The old forge comes out: nothing can be worked at the forge for ' + WEAR.dwarven.h + ' hours.')) return;
+    const r = Wear.buildDwarven(save, Date.now()); stationNote = r.why ? 'Not built: ' + r.why + '.' : 'The old forge is coming out. The dwarven forge will be ready in ' + WEAR.dwarven.h + ' hours.'; if (r.ok) Snd.play('level'); done();
+  });
+}
 // the maker's title, once the Nine are made: on the forge's sign and the shop's
 function nineMarks() {
   const n = G.isNine(save) ? ' · ' + NINE.title : '';
@@ -301,7 +329,7 @@ function renderTools() {
     return '<div class="fi' + (have ? ' have' : '') + '"><b>' + t.name + '</b><span>' + t.line + '.</span>' + (have ? '' : '<button class="seg" data-tool="' + id + '"' + (c.ok ? '' : ' disabled') + '>BUY · ' + t.cost + ' c</button>' + (c.why && c.why !== 'not enough coin' ? '<span>' + c.why + '</span>' : '')) + '</div>';
   }).join('');
   $('toolNote').textContent = toolNote || 'Tools work on every piece, new or back in the fire.';
-  renderBlueprints(); renderTrail();
+  renderStations(); renderBlueprints(); renderTrail();
   $('tools').querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { const r = G.buyTool(save, b.dataset.tool); toolNote = r.ok ? 'Bought: ' + TOOLS[b.dataset.tool].name + '.' : 'Not bought: ' + r.why + '.'; if (r.ok) { store(save); coins(); } renderTools(); });
 }
 // a piece to share: the link carries the card itself
@@ -331,7 +359,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=38').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=39').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -661,7 +689,7 @@ const HOW = { meet: 'MET THEM', hold: 'HELD THE PRICE', ask: 'ASKED MORE', count
 const howWord = t => TAGS[t] ? TAGS[t].word : HOW[t] || '';
 function renderShop() {
   if (screen !== 'shop') return;
-  nineMarks();
+  nineMarks(); if (dio) dio.setCold(Wear.isBroken(save, 'forge', Date.now()));
   renderCounter(); renderOrder();
   const hlv = R.levelOf((save.haggle || {}).xp || 0);
   $('tally').innerHTML = '<b>' + (save.sold || 0) + '</b> sold · <b>' + (save.earned || 0) + '</b> coins taken<br>Haggling <b>' + hlv.level + '</b>' + (hlv.need ? ' · ' + hlv.into + ' / ' + hlv.need : '') + ' · Renown <b>' + RENOWN[G.rung(save)].word + '</b>';
@@ -994,7 +1022,7 @@ function newWorking() {
   const n = R.slotsFor(lvl());
   save.chosen = save.chosen.filter(id => save.found.includes(id)).slice(0, n);
   if (master && (rw || !R.masterBrewGate(pat, benchPicks(), lvl()).ok)) master = false;
-  S = R.newWorking({ patternId: pat, picks: benchPicks().slice(), level: lvl(), found: save.chosen.slice(), kit: G.kitOf(save), rework: rw ? { from: rw.from, relic: rw.relic, mythic: rw.mythic } : null, master, part }, rng);
+  S = R.newWorking({ patternId: pat, picks: benchPicks().slice(), level: lvl(), found: save.chosen.slice(), kit: G.kitOf(save), bandX: Wear.bandMult(save, R.stationOf(pat).id), rework: rw ? { from: rw.from, relic: rw.relic, mythic: rw.mythic } : null, master, part }, rng);
 }
 function toPrepare() {
   clearTimers(); paused = false;
@@ -1155,6 +1183,20 @@ const rec = () => rw ? (rw.mythic ? Sh.mythicCost(rwCard(), rw.mythic) : rw.reli
   : part ? Sh.recipe(pat, picks()).concat([Trail.partExtra(MYTHICS[part.mythic].parts[part.i][0])]) : Sh.recipe(pat, picks(), master);
 const toWord = () => part ? MYTHICS[part.mythic].parts[part.i][1].toUpperCase() : rw.mythic ? MYTHICS[rw.mythic].name.toUpperCase() : rw.relic ? RELICS[rw.relic].name.toUpperCase() : TIERS[R.reworkTo(rw.from)].name.toUpperCase();
 function renderTakes() {
+  renderTakes0();
+  const st = R.stationOf(pat).id, nm = Wear.stationName(st), w = Wear.wearOf(save, st);
+  const label = rw ? '<b>WORK IT AGAIN</b>The tiles turn face down and shuffle.' : '<b>WORK IT</b>The tiles turn face down and shuffle.';
+  if (Wear.isBroken(save, st, Date.now())) {
+    $('workIt').disabled = true; if (!rw) $('makeIt').disabled = true;
+    const t = Wear.rebuilding(save, st);
+    $('workIt').innerHTML = '<b>' + (t ? 'REBUILDING' : 'BROKEN') + '</b>' + (t ? 'Ready in ' + hm((t - Date.now()) / 1000) + '.' : 'Rebuild ' + nm + ': THE FORGE › WORKSHOP.');
+    $('takesBtns').insertAdjacentHTML('afterbegin', '<p class="note bad">' + nm.replace(/^./, c => c.toUpperCase()) + (t ? ' is being rebuilt: ready in ' + hm((t - Date.now()) / 1000) + '.' : ' is broken: nothing can be worked at it until it\'s rebuilt (THE FORGE › WORKSHOP).') + '</p>');
+    return;
+  }
+  $('workIt').innerHTML = label;
+  if (w >= 75) $('takesBtns').insertAdjacentHTML('afterbegin', '<p class="note">' + nm.replace(/^./, c => c.toUpperCase()) + ' is ' + Math.floor(w) + ' % worn: the band is narrower. Repair it under THE FORGE › WORKSHOP.</p>');
+}
+function renderTakes0() {
   const r = rec(), h = hour(), sh = Sh.short(save.mats, r), ok = !sh.length;
   $('takesWord').textContent = ok ? 'IN THE STORE ROOM' : 'SHORT';
   $('takes').innerHTML = r.map(x => { const have = save.mats[x.mat] || 0; return '<li><b>' + MATS[x.mat].name + ' × ' + x.n + '</b><em class="' + (have >= x.n ? 'ok' : 'short') + '">have ' + have + '</em></li>'; }).join('');
@@ -1354,6 +1396,11 @@ function complete(res, picked) {
     save.cards.unshift(piece); save.made++;
   }
   const xp = R.xpFor(res);
+  { // the station's wear: worn from three quarters; broken at full, after this working
+    const st = R.stationOf(pat).id, wr = Wear.addWear(save, st, Wear.kindOf(res), Date.now()), nm = Wear.stationName(st);
+    if (wr && wr.broke) { setTimeout(() => toast('<b>' + nm.toUpperCase() + ' HAS BROKEN</b><br>It held for this working, then gave out. Rebuild it under THE FORGE › WORKSHOP.'), 900); Snd.play('bell'); if (dio) dio.setCold(Wear.isBroken(save, 'forge', Date.now())); }
+    else if (wr && wr.worn) setTimeout(() => toast('<b>' + esc(nm.replace(/^./, c => c.toUpperCase())) + ' is wearing</b><br>Three quarters worn: the band is narrower. Repair it under THE FORGE › WORKSHOP.'), 900);
+  }
   const tr = save.trades[pat] || (save.trades[pat] = { xp: 0 }); tr.xp += xp;
   const after = levelFor(pat), p = PATTERNS[pat];
   $('rPick').hidden = true; $('rDone').hidden = false;
@@ -1483,8 +1530,8 @@ function frame(now) {
 }
 
 // ---------- wiring ----------
-$('workIt').onclick = toWork;
-$('makeIt').onclick = () => { if (rw) { rw = null; toShop(); } else if (spend()) finish('instant'); };
+$('workIt').onclick = () => { if (Wear.isBroken(save, R.stationOf(pat).id, Date.now())) { renderTakes(); return; } toWork(); };
+$('makeIt').onclick = () => { if (rw) { rw = null; toShop(); } else if (Wear.isBroken(save, R.stationOf(pat).id, Date.now())) renderTakes(); else if (spend()) finish('instant'); };
 $('bHome').onclick = () => { if (rw) { rw = null; toShop(); } else toHome(); };
 $('bLeave').onclick = () => {
   if (S && !S.done && !confirm(rw ? 'Walk away? The piece comes out as it was, and the bars are spent.' : 'Walk away from this working? The materials are spent.')) return;
@@ -1555,7 +1602,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=38').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=39').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -1634,7 +1681,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=38').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=39').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }

@@ -42,6 +42,12 @@ export const MYTHICS = {
 export const TRAIL = { rung: 6, deep: 0.35, court: 0.4 };
 // milestone 18: the Court asks for each Mythic once (half the orders while one is waiting), paying twice its worth; all Nine made is
 // the ending: the maker's mark becomes Maker of the Nine and the Hall's charm doubles
+// WEAR (milestone 20): each working wears its station (out of 100): a plain working ½, MAKE IT ¼, a rework 1, a part 1½, a Relic
+// working 3, a Mythic 5. From ¾ worn the band narrows (×0.92); at 100 the station breaks, after the working, never during one. REPAIR:
+// 2 c a point, more for a famed shop (+50 % a rung). REBUILD a broken one: 300 c a rung above UNKNOWN (300 at the start), 3 hours.
+// The dwarven forge (from FAMED, 8,000 c, 6 hours to go up): the band ×1.08, wear ×0.6. Spared on a gentler Reach.
+export const WEAR = { per: { work: 0.5, quick: 0.25, rework: 1, part: 1.5, relic: 3, mythic: 5 }, worn: 75, wornBand: 0.92, max: 100,
+  repair: 2, repairStep: 0.5, rebuild: 300, rebuildH: 3, dwarven: { cost: 8000, rung: 4, h: 6, band: 1.08, wear: 0.6 } };
 // THE BANK (milestone 19): a week is seven real days, but only a week the game was opened is counted (interest pauses while away).
 // deposit: 1 % a week, at most 400 c; loans by renown rung (none below KNOWN), 5 % a week; a missed payment adds the interest and a
 // late fee to the loan; two missed and the bailiff takes shelf pieces (never a Relic or Mythic) toward it. A loan never grows past

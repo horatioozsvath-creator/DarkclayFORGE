@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK } from './data.js?v=38';
+import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK } from './data.js?v=39';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -98,8 +98,9 @@ export function newWorking(cfg, rng) {
   const mythic = cfg.rework && cfg.rework.mythic && MYTHICS[cfg.rework.mythic] ? cfg.rework.mythic : null;
   const part = !cfg.rework && cfg.part && MYTHICS[cfg.part.mythic] ? cfg.part : null;
   const old = !relic && !mythic && !part && (!!(cfg.rework && reworkTo(cfg.rework.from) === OLD_BLOOD.tier && cfg.rework.from < OLD_BLOOD.tier) || master);
-  const narrow = mythic ? MYTHIC_WORK.band : relic ? RELIC_WORK.band : part ? PART_WORK.band : old ? OLD_BLOOD.band : 1;
-  if (narrow < 1) { const mid = (band[0] + band[1]) / 2, half = (band[1] - band[0]) / 2 * narrow; band = [Math.round(mid - half), Math.round(mid + half)]; }
+  // bandX: the station's state (a worn one narrower, the dwarven forge wider: wear.js)
+  const narrow = (mythic ? MYTHIC_WORK.band : relic ? RELIC_WORK.band : part ? PART_WORK.band : old ? OLD_BLOOD.band : 1) * (cfg.bandX || 1);
+  if (narrow !== 1) { const mid = (band[0] + band[1]) / 2, half = (band[1] - band[0]) / 2 * narrow; band = [Math.max(0, Math.round(mid - half)), Math.min(100, Math.round(mid + half))]; }
   const S = { cfg, parts, metal, level: cfg.level, rng, station: st,
     band, cool: st.cool * (metal.coolX || 1) * (kit.coolX || 1), drain: st.drain, rise: st.rise, over: st.over,
     phase: 'prepare', meter: st.start || 30, inFire: false, shape: 0, worked: 0, cracks: 0, notches: [], crackMarks: [],

@@ -138,3 +138,19 @@ and must show a steady player's income dips, not collapses), then a check on a p
   milestone 20. The bank's own bailiff isn't a threat: it comes with a loan the player chose.
 - **Sim (45 days, seeds 1–3, `BANK=1`):** the bot borrows for the second shop the day it's allowed and repays before interest falls due;
   income is unchanged. The bank is no shortcut for a steady player; it helps one short of coin.
+
+## Milestone 20, as built (release 39)
+
+- **Wear** (js/wear.js, tests/wear.test.mjs): each working wears its station, out of 100: a plain working ½, MAKE IT ¼, a rework 1,
+  a part 1½, a Relic working 3, a Mythic 5 (about 200 plain workings from new to broken). By the kind of working, not yet by how hot
+  or long it ran.
+- **Worn** from 75 %: the band ×0.92, a toast, a red wear bar, a line on PREPARE.
+- **Broken** at 100, after the working (never during one): WORK IT and MAKE IT show BROKEN (or REBUILDING, with the time left), the
+  workshop's fire light goes dim in 3D. A rework at a broken station can still be left (LEAVE IT).
+- **THE STATIONS** (THE FORGE › WORKSHOP): each station's wear, REPAIR (2 c a point, +50 % a renown rung) and REBUILD (300 c a rung
+  above UNKNOWN, from 300; 3 hours).
+- **The dwarven forge:** from FAMED, 8,000 c, out 6 hours while it goes up; then the band ×1.08 and wear ×0.6. No new 3D model yet:
+  the workshop shows the same forge.
+- **Spared** on a gentler Reach and in the week of grace.
+- **Sim (45 days, seeds 1–3; `WEAR=0` to compare):** a bot that repairs past 60 % spends about 1 % of its earnings on upkeep and never
+  breaks a station. Wear is a small, steady sink; it bites only if neglected.

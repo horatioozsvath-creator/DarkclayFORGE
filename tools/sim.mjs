@@ -12,6 +12,7 @@ import * as Br from '../js/branch.js';
 import * as Hl from '../js/hall.js';
 import * as Trail from '../js/trail.js';
 import * as Bank from '../js/bank.js';
+import * as Wear from '../js/wear.js';
 import { BRANCH, RELICS, MYTHICS } from '../js/data.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD } from '../js/data.js';
 
@@ -51,8 +52,13 @@ function choose(hour) {
   return best;
 }
 // one piece made: the odds of a steady player
+// wear (WEAR=0 turns it off): every piece wears its station; the bot repairs past 60 %, rebuilds if one breaks (and waits)
+const WEARING = process.env.WEAR !== '0';
+let wearSpent = 0, repairs = 0, broke = 0;
+function upkeep() { if (!WEARING) return; for (const st of ['forge'].concat(save.stations || [])) if (Wear.wearOf(save, st) > 60 && !Wear.isBroken(save, st, t)) { const c = Wear.repairCost(save, st); if (save.coins > c + 200) { const r = Wear.repair(save, st); if (r.ok) { wearSpent += r.cost; repairs++; } } } }
 function makeOne(hour) {
   const c = choose(hour); if (!c) return false;
+  if (WEARING && Wear.isBroken(save, R.stationOf(c.id).id, t)) return false;
   c.short.forEach(x => { const before = save.coins; Sh.buy(save, x.mat, x.n - x.have, hour); spent.mats += before - save.coins; });
   if (!Sh.takeMats(save, Sh.recipe(c.id, c.picks))) return false;
   const S = R.newWorking({ patternId: c.id, picks: c.picks, level: lvl(c.id), found: [], kit: G.kitOf(save) }, rng);
@@ -61,6 +67,7 @@ function makeOne(hour) {
   const res = R.finish(S, 'quench');
   const p = R.makePiece({ patternId: c.id, picks: c.picks, result: res, picked: null, maker: 'Bot', rng, now: t });
   save.cards.unshift(p); made++;
+  if (WEARING) { const st = R.stationOf(c.id).id; Wear.addWear(save, st, 'work', t); if (Wear.isBroken(save, st, t)) { broke++; const r = Wear.rebuild(save, st, t); if (r.ok) wearSpent += r.cost; } }
   (save.trades[c.id] = save.trades[c.id] || { xp: 0 }).xp += R.xpFor(res);
   const tag = 'fair';
   if (Sh.place(save, p.id, null, tag) < 0) { /* the shelf is full: it waits in the back */ }
@@ -246,7 +253,7 @@ for (let d = 1; d <= days; d++) {
     tally(Sh.shopStep(save, 50, rng, t, false, clerk));
     St.payWages(save, 50); St.resolveTrips(save, t, rng);
     t += 50000; save.lastSeen = t;
-    if (s % 600 === 0) { runBank(d); runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
+    if (s % 600 === 0) { upkeep(); runBank(d); runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
     if (save.branch) tally(Br.step(save, 50, rng, t));
     if (Sh.rescue(save, hour)) note('scrap bin');
   }
@@ -277,3 +284,4 @@ if (process.env.WHY) for (const id of Object.keys(RELICS)) {
 }
 if (BANKING) console.log('bank: borrowed on day', loanDay, ' interest paid', interestPaid, ' owed now', Bank.bankOf(save).loan, ' second shop from day', branchDay);
 console.log('EARNED', save.earned, 'coins', save.coins);
+if (WEARING) console.log('wear: repairs', repairs, ' broke', broke, ' spent', wearSpent, ' (' + (100 * wearSpent / (save.earned || 1)).toFixed(1) + ' % of earnings)');
