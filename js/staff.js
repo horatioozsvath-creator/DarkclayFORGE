@@ -1,13 +1,13 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=52';
-import { levelOf, makePiece, partOptions } from './rules.js?v=52';
-import { awayStep } from './shop.js?v=52';
-import { wageMult, capBonus, rung } from './growth.js?v=52';
-import * as Trail from './trail.js?v=52';
-import { TRAIL } from './data.js?v=52';
-import * as Run from './runner.js?v=52';
+import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=53';
+import { levelOf, makePiece, partOptions } from './rules.js?v=53';
+import { awayStep } from './shop.js?v=53';
+import { wageMult, capBonus, rung } from './growth.js?v=53';
+import * as Trail from './trail.js?v=53';
+import { TRAIL } from './data.js?v=53';
+import * as Run from './runner.js?v=53';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -34,7 +34,7 @@ export function gain(p, n) { p.xp = (p.xp || 0) + n * (p.trait === 'quick' ? 1.5
 // a clerk away: the share of the tag price that reaches the till; minding the shop while you work: how much more readily walk-ins buy
 export function clerkTerms(p) {
   const l = levelOfP(p);
-  return { name: p.name.split(' ')[0], rate: Math.min(0.97, 0.8 + 0.02 * (l - 1) + (p.trait === 'silver' ? 0.05 : 0)), boost: 1.3 + 0.03 * (l - 1) };
+  return { name: p.name.split(' ')[0], rate: Math.min(0.97, 0.8 + 0.02 * (l - 1) + (p.trait === 'silver' ? 0.05 : 0)), boost: 1.3 + 0.03 * (l - 1), restock: p.restock !== false };
 }
 // hours of away time the shop is kept for
 export const awayCap = save => (save.awayCapH || AWAY_CAP_H) + ((clerkOf(save) || {}).trait === 'early' ? 2 : 0) + ((ROOM_SIZES[(save.room || {}).size || 0] || {}).capH || 0) + capBonus(save);
@@ -163,13 +163,13 @@ export function catchUp(save, to, rng) {
   save.lastSeen = to;
   if (!from || to <= from) return null;
   const elapsed = (to - from) / 1000, counted = Math.min(elapsed, awayCap(save) * 3600);
-  const sum = { elapsed, counted, capped: elapsed > counted, sold: [], coins: 0, cut: 0, missed: 0, wages: 0, trips: [], unpaid: false, clerk: null };
+  const sum = { elapsed, counted, capped: elapsed > counted, sold: [], restocked: [], coins: 0, cut: 0, missed: 0, wages: 0, trips: [], unpaid: false, clerk: null };
   const c = clerkOf(save);
   for (let t = 0; t < counted; t += 60) {
     const dt = Math.min(60, counted - t), at = from + (t + dt) * 1000;
     const terms = c ? clerkTerms(c) : null;   // sales first: a broke shop's clerk earns the wage
     const r = awayStep(save, dt, rng, at, terms);
-    sum.sold.push(...r.sold); sum.missed += r.missed; sum.cut += r.cut;
+    sum.sold.push(...r.sold); r.sold.forEach(e => e.restocked && sum.restocked.push(e.restocked.name)); sum.missed += r.missed; sum.cut += r.cut;
     if (terms) { sum.clerk = terms.name; r.sold.forEach(() => gain(c, 1)); }
     sum.wages += payWages(save, dt);
     if (save.unpaid) sum.unpaid = true;

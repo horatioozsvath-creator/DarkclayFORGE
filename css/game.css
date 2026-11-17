@@ -28,6 +28,8 @@ button, input { font-family: inherit; }
 /* the shelf of small cards */
 .shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .shelf > button { all: unset; cursor: pointer; display: block; font-size: 11px; border-radius: 12px; }
+.shelf > button.kept { position: relative; }
+.shelf > button.kept::after { content: 'KEEP'; position: absolute; top: 6px; right: 6px; font: 800 10px var(--sans); letter-spacing: .12em; color: var(--gold); background: rgba(0,0,0,.6); border: 1px solid var(--gold); border-radius: 6px; padding: 2px 5px; }
 .shelf > button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 .shelf .empty { grid-column: 1 / -1; color: var(--bone-faint); font: 500 14px var(--sans); }
 #homeBag button { cursor: default; }

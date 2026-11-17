@@ -3,10 +3,10 @@
 // in to the counter. Loaded only when the shop is opened. Three.js comes through the page's import map as 'three'.
 import * as THREE from 'three';
 import { GLTFLoader } from '../vendor/three/loaders/GLTFLoader.js';
-import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=52';
-import { ART } from './card.js?v=52';
-import { faceCanvas, CW, CH } from './cardface.js?v=52';
-import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=52';
+import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=53';
+import { ART } from './card.js?v=53';
+import { faceCanvas, CW, CH } from './cardface.js?v=53';
+import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=53';
 
 const MODELS = 'assets/models/', M = '?m=10';   // bump m when tools/models.sh rebuilds them
 const FIGURES = { folk: 'folk', guard: 'dwarf', traveller: 'carter', delver: 'bard', factor: 'chandler', collector: 'herbalist', steward: 'chandler', master: 'herbalist', seller: 'carter', maker: 'smith', clerk: 'chandler' };

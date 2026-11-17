@@ -2,10 +2,10 @@
 // The second shop, with no page access: a shop front in another town, run by a keeper. It's the same rules as the first shop
 // (shop.js, room.js), run on a view of the save whose shop keys (room, shelf, ledger, clock, town…) are the second shop's own, and
 // whose coins, cards, renown and stations are the maker's. Bought once; the keeper sells while the game is open and while it's away.
-import { BRANCH, RENOWN } from './data.js?v=52';
-import * as Sh from './shop.js?v=52';
-import { defaultShop } from './room.js?v=52';
-import { rung } from './growth.js?v=52';
+import { BRANCH, RENOWN } from './data.js?v=53';
+import * as Sh from './shop.js?v=53';
+import { defaultShop } from './room.js?v=53';
+import { rung } from './growth.js?v=53';
 
 const KEYS = new Set(['room', 'shelf', 'slots', 'ledger', 'clock', 'shopNext', 'awayNext', 'queue', 'order', 'orderNext', 'town', 'townSalt', 'townWeights', 'townGap', 'sold', 'earned']);
 // the save as the second shop sees it

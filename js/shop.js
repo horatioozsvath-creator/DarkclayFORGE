@@ -3,12 +3,12 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE } from './data.js?v=52';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=52';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=52';
-import { charmGap, placeGift } from './room.js?v=52';
-import * as Trail from './trail.js?v=52';
-import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=52';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE } from './data.js?v=53';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=53';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=53';
+import { charmGap, placeGift } from './room.js?v=53';
+import * as Trail from './trail.js?v=53';
+import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=53';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -93,11 +93,20 @@ export const keepBack = (save, c) => c.tier === 'relic' || c.tier === 'mythic' |
 // every empty place filled from the back room, best piece first, at the tag given; returns the cards put up
 export function fillShelf(save, tag = 'fair') {
   const put = [];
-  for (const c of inBack(save).filter(c => !keepBack(save, c)).sort((a, b) => b.worth - a.worth)) {
+  for (const c of inBack(save).filter(c => !keepBack(save, c) && !c.keep).sort((a, b) => b.worth - a.worth)) {
     if (!save.shelf.some(e => !e)) break;
     if (place(save, c.id, null, tag) >= 0) put.push(c);
   }
   return put;
+}
+// THE CLERK RESTOCKS (release 53): a place the clerk just sold from is filled from the back room. The same kind first, then the
+// least worth; never a Rare or better, one-of-a-kind pieces, or a piece marked KEEP. At the tag the sold piece had. Returns the card.
+export const restockable = (save, c) => !c.keep && !c.sample && TIER_N[c.tier] < TIER_N.rare && !keepBack(save, c);
+export function restock(save, slot, pattern, tag = 'fair') {
+  if (slot < 0 || slot >= save.slots || save.shelf[slot]) return null;
+  const c = inBack(save).filter(c => restockable(save, c))
+    .sort((a, b) => (b.pattern === pattern) - (a.pattern === pattern) || a.worth - b.worth)[0];
+  return c && place(save, c.id, slot, TAGS[tag] ? tag : 'fair') >= 0 ? c : null;
 }
 export function setTag(save, slot, tag) { if (save.shelf[slot] && TAGS[tag]) save.shelf[slot].tag = tag; }
 export const nextSlotCost = save => SLOT_COSTS[save.slots - START_SLOTS];
@@ -108,6 +117,7 @@ export function buySlot(save) {
   return true;
 }
 
+const aName = n => (/^[aeiou]/i.test(n) ? 'an ' : 'a ') + n;
 // ---------- customers ----------
 // the shelf's pieces this buyer wants, at a tier they'll look at; one who came in for what the town wants settles for what they
 // meant to buy when there's none of it
@@ -199,6 +209,10 @@ export function visit(save, rng, now, c = richer(save, newCustomer(rng, save), r
       if (e.tag !== 'cheap') fame(save, 1);
       entry.line = '"' + LINES.sold[c.mood] + '"' + (o.by ? ' Sold by ' + o.by + (o.rate && o.rate < 1 ? ', who kept ' + (priceAt(e.card, e.tag) - price) + ' c.' : '.') : '');
       if (o.by) entry.by = o.by;
+      if (o.restock && !save.shelf[e.slot]) {
+        const put = restock(save, e.slot, e.card.pattern, e.tag);
+        if (put) { entry.restocked = { name: put.name, id: put.id }; entry.line += ' ' + o.by + ' put out ' + aName(put.name) + '.'; }
+      }
     } else { entry.line = 'Weighed the ' + e.card.name + ' at ' + priceAt(e.card, e.tag) + ' c. "' + LINES.passed[c.mood] + '"'; entry.near = e.card.id; }
   }
   if (o.quiet && !entry.sold) return entry;
@@ -248,7 +262,7 @@ export function awayStep(save, dt, rng, at, clerk) {
     const when = at + save.awayNext * 1000;   // when they came in, so the ledger keeps the night's times
     save.awayNext += awayGap(rng) * charmGap(save) * eventGap(save);
     if (!clerk) { out.missed++; continue; }
-    const e = visit(save, rng, when, undefined, { rate: clerk.rate, by: clerk.name, quiet: true });
+    const e = visit(save, rng, when, undefined, { rate: clerk.rate, by: clerk.name, quiet: true, restock: clerk.restock });
     if (e.sold) { out.sold.push(e); out.cut += e.sold.full - e.sold.price; } else out.missed++;
   }
   return out;
@@ -264,10 +278,10 @@ export function arrive(save, rng, now, present, clerk = null) {
     save.queue.push(c);
     return [];
   }
-  return [visit(save, rng, now, undefined, clerk ? { boost: clerk.boost, by: clerk.name } : {})];
+  return [visit(save, rng, now, undefined, clerk ? { boost: clerk.boost, by: clerk.name, restock: clerk.restock } : {})];
 }
 function flushQueue(save, rng, now, clerk) {
-  const out = save.queue.filter(c => c.kind === 'buyer').map(c => visit(save, rng, now, c, clerk ? { boost: clerk.boost, by: clerk.name } : {}));
+  const out = save.queue.filter(c => c.kind === 'buyer').map(c => visit(save, rng, now, c, clerk ? { boost: clerk.boost, by: clerk.name, restock: clerk.restock } : {}));
   save.queue = [];
   return out;
 }
