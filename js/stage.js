@@ -1,6 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The stage: the fire, the anvil, the piece taking shape, the hammer and the heat meter, drawn on a 1280 × 720 canvas.
-import { FORGE, KC } from './data.js?v=50';
+import { FORGE, KC } from './data.js?v=51';
+import { trueZone } from './rules.js?v=51';
 
 // two layouts: wide (a desktop, a phone on its side) and tall (a phone held upright), the same drawing moved and scaled
 export const LAYOUTS = {
@@ -395,6 +396,14 @@ function drawMeter(g, S, L, heat, now, c) {
   const yv = my + mh - S.meter / 100 * mh;
   g.fillStyle = mix(c.colours, heat); g.fillRect(mx, yv, mw, my + mh - yv);
   g.fillStyle = '#fff'; g.beginPath(); g.moveTo(mx - 18, yv); g.lineTo(mx - 4, yv - 10); g.lineTo(mx - 4, yv + 10); g.fill();
+  // the true heat (release 51): the narrow zone at the top of the band to take it out in, drawn over the heat; it glows while one holds
+  if (!S.done && S.phase === 'work') {
+    const tz = trueZone(S), ty0 = my + mh - tz[1] / 100 * mh, ty1 = my + mh - tz[0] / 100 * mh, on = S.trueHeat;
+    g.fillStyle = on ? 'rgba(255,240,170,' + (0.45 + 0.2 * Math.sin(now / 160)) + ')' : 'rgba(255,240,170,.28)'; g.fillRect(mx - 6, ty0, mw + 12, ty1 - ty0);
+    g.strokeStyle = '#fff3c4'; g.lineWidth = 3; g.setLineDash([7, 4]); g.strokeRect(mx - 6, ty0, mw + 12, ty1 - ty0); g.setLineDash([]);
+    g.save(); g.textAlign = 'center'; g.font = '900 12px "Alegreya Sans", sans-serif'; g.fillStyle = '#2a1608';
+    g.fillText(on ? 'HELD' : 'TRUE', mx + mw / 2, (ty0 + ty1) / 2 - 1); if (!on) g.fillText('HEAT', mx + mw / 2, (ty0 + ty1) / 2 + 12); g.restore();
+  }
   g.fillStyle = 'rgba(236,224,198,.85)'; g.font = '800 20px "Alegreya Sans", sans-serif'; g.textAlign = 'center';
   g.fillText(c.meter, mx + mw / 2, my - 18);
   g.textAlign = 'right'; g.font = '700 15px "Alegreya Sans", sans-serif'; g.fillStyle = 'rgba(185,170,140,.9)';

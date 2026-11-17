@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK } from './data.js?v=50';
+import { TRUE_HEAT, KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK } from './data.js?v=51';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -128,8 +128,10 @@ export function strike(S) {
   if (S.phase !== 'work' || S.done) return null;
   const pops = [], pop = p => pops.push(p);
   const m = S.meter, [lo, hi] = S.band, shaping = S.shape < 100;
-  S.strikes++; S.inFire = false;
-  S.meter = Math.max(0, S.meter - S.drain);
+  S.strikes++;
+  // struck straight from the fire: taken out by the strike, and judged as it comes out
+  if (S.inFire) { S.inFire = false; if (judgeHeat(S)) pop({ label: 'A TRUE HEAT', gain: 'IT HOLDS ITS HEAT', size: 'bigpop', colour: '#ffd25a', trueHeat: true }); }
+  S.meter = Math.max(0, S.meter - S.drain * (S.trueHeat ? TRUE_HEAT.drain : 1));
 
   const st = S.station || FORGE;
   if (m < lo) {
@@ -205,16 +207,31 @@ export function strike(S) {
 }
 
 // Into the fire and out. Going in with any tile turned (or slipped in) brings every tile back, shuffled.
+// the true heat's zone as it stands: [from, to] on the meter
+export function trueZone(S) {
+  const st = S.station || FORGE, top = Math.min(S.band[1], st.over - TRUE_HEAT.belowOver), w = TRUE_HEAT.w + TRUE_HEAT.widen * Math.min(TRUE_HEAT.chainMax, S.trueRun || 0);
+  return [Math.max(S.band[0], top - w), top];
+}
+// out of the fire (or stoked) at this heat: a true heat, or not. Returns true when it is one.
+function judgeHeat(S) {
+  const [a, b] = trueZone(S), hit = S.meter >= a && S.meter <= b;
+  S.trueHeat = hit; S.trueRun = hit ? (S.trueRun || 0) + 1 : 0;
+  if (hit) { S.trueHeats = (S.trueHeats || 0) + 1; if (S.level >= 5) S.streak++; }
+  return hit;
+}
 export function toggleFire(S) {
   if (S.phase !== 'work' || S.done) return null;
   const st = S.station || FORGE;
   if (st.stoke) {   // the kettle: STOKE raises the boil at once; it deals the strip again, as a firing does
     S.meter = Math.min(100, S.meter + st.stoke);
-    if (S.rack.some(x => x.up || x.added)) { S.heats++; deal(S); return { shuffled: true, stoked: true }; }
-    return { shuffled: false, stoked: true };
+    const tru = judgeHeat(S);
+    if (S.rack.some(x => x.up || x.added)) { S.heats++; deal(S); return { shuffled: true, stoked: true, trueHeat: tru }; }
+    return { shuffled: false, stoked: true, trueHeat: tru };
   }
   S.inFire = !S.inFire;
-  if (S.inFire && S.rack.some(x => x.up || x.added)) { S.heats++; deal(S); return { shuffled: true }; }
+  if (!S.inFire) return { shuffled: false, trueHeat: judgeHeat(S) };   // taken out: judged
+  S.trueHeat = false;
+  if (S.rack.some(x => x.up || x.added)) { S.heats++; deal(S); return { shuffled: true }; }
   return { shuffled: false };
 }
 
@@ -225,14 +242,15 @@ export function tick(S, dt) {
   if (S.phase !== 'work' || S.done) return {};
   const out = {};
   if (S.station && S.station.grain) { const was = acrossGrain(S); S.grainT = (S.grainT || 0) + dt; if (acrossGrain(S) !== was) out.grain = true; }
-  if ((S.station || FORGE).stoke) { if (S.stirred) S.meter = Math.max(0, S.meter - S.cool * dt); }
+  const keep = S.trueHeat ? TRUE_HEAT.cool : 1;   // a true heat cools at half speed
+  if ((S.station || FORGE).stoke) { if (S.stirred) S.meter = Math.max(0, S.meter - S.cool * keep * dt); }
   else if (S.inFire) {
     S.meter = Math.min(100, S.meter + S.rise * dt);
     if (S.meter >= S.over) {
       S.overT += dt;
       if (S.overT > 1) { S.overT = 0; const gd = S.rack.find(x => !x.up && x.k === 'GOOD'); if (gd) { gd.k = 'HOLD'; gd.src = 'SCALE'; gd.id += '|scaled'; S.scaled++; out.scaled = true; } }
     } else S.overT = 0;
-  } else S.meter = Math.max(0, S.meter - S.cool * dt);
+  } else S.meter = Math.max(0, S.meter - S.cool * keep * dt);
   if (S.white > 0) { S.white -= dt; if (S.white <= 0) out.whiteEnded = true; }
   return out;
 }

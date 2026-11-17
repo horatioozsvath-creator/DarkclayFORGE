@@ -142,6 +142,10 @@ export const BLUEPRINT_DEEP = 0.22;   // the odds a trip below the deep doors br
 export const OLD_BLOOD = { tier: 3, level: 6, costX: 3, band: 0.8, whiteStreak: 12,
   rare: { forge: 'blackwater', stretcher: 'winterfox', bowbench: 'sinew', glass: 'starglass', kettle: 'moonwater' } };
 
+// A TRUE HEAT (release 51): taken out of the fire (or stoked) in the narrow zone at the top of the band, the piece holds its heat: it
+// cools at two fifths the speed and each strike draws half as much, till it goes back in. Each true heat in a row widens the next
+// zone (twice at most); a missed one starts the run again. w: the zone's width; top: never closer than 6 under where it scales.
+export const TRUE_HEAT = { w: 10, widen: 3, chainMax: 2, cool: 0.4, drain: 0.5, belowOver: 6 };
 export const FORGE = {
   id: 'forge', name: 'FORGE', word: 'THE FORGE', tool: 'HAMMER', meter: 'HEAT', fire: 'INTO THE FIRE', out: 'OUT OF THE FIRE', close: 'QUENCH', place: 'the fire',
   heatIt: 'HEAT IT', band_: 'gold band', strike: 'STRIKE', again: 'BACK IN THE FIRE', made: ['strike', 'heat'],
