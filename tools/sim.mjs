@@ -13,6 +13,7 @@ import * as Hl from '../js/hall.js';
 import * as Trail from '../js/trail.js';
 import * as Bank from '../js/bank.js';
 import * as Wear from '../js/wear.js';
+import * as Th from '../js/thieves.js';
 import { BRANCH, RELICS, MYTHICS } from '../js/data.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD } from '../js/data.js';
 
@@ -205,6 +206,15 @@ function runBranch(day) {
   v.shelf.forEach((e, i) => { if (!e && back.length) Sh.place(v, back.shift().id, i); });
   const cost = Rm.shelfCost(v.room); if (cost != null && save.coins - cost > 3000 && back.length > 4) Rm.buy(v, 'shelf');
 }
+// thieves (THIEVES=0 turns them off): the bot fits a lock from SOUGHT, a strongbox from FAMED, and hires a night guard from FAMED
+const THIEVING = process.env.THIEVES !== '0', GUARDING = process.env.GUARD !== '0';
+let robbed = 0, caught = 0, turned = 0, lostWorth = 0, lostTill = 0;
+function security() {
+  if (!THIEVING) return;
+  if (G.rung(save) >= 3 && save.coins > 1500) Th.buySecurity(save, 'lock');
+  if (G.rung(save) >= 4 && save.coins > 4000) Th.buySecurity(save, 'strongbox');
+  if (GUARDING && G.rung(save) >= 4 && !St.guardOf(save)) { const c = St.candidates(save, Math.floor(t / H)).find(x => x.role === 'guard'); if (c && save.coins > St.hireFee(c) + 1000) St.hire(save, c); }
+}
 // the bank (BANK=1): borrow for the second shop as soon as the bank will lend enough, pay the week's interest, repay with plenty over
 const BANKING = process.env.BANK === '1';
 let loanDay = null, interestPaid = 0;
@@ -253,12 +263,13 @@ for (let d = 1; d <= days; d++) {
     tally(Sh.shopStep(save, 50, rng, t, false, clerk));
     St.payWages(save, 50); St.resolveTrips(save, t, rng);
     t += 50000; save.lastSeen = t;
-    if (s % 600 === 0) { upkeep(); runBank(d); runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
+    if (s % 600 === 0) { security(); upkeep(); runBank(d); runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
     if (save.branch) tally(Br.step(save, 50, rng, t));
     if (Sh.rescue(save, hour)) note('scrap bin');
   }
   // the night: away for 14 hours
   const from = save.lastSeen, a = St.catchUp(save, t + 14 * H, rng); if (a) tally(a.sold);
+  if (THIEVING) { const th = Th.night(save, from, t + 14 * H, rng, a ? a.coins : 0); if (th) { if (th.robbed) { robbed++; lostWorth += th.took.reduce((x, c) => x + c.worth, 0); lostTill += th.till; note('ROBBED by ' + th.gang + ': ' + th.took.map(c => c.name).join(', ') + (th.till ? ', ' + th.till + ' c' : '')); } else if (th.caught) caught++; else turned++; } }
   if (save.branch) tally(Br.away(save, from, t + 14 * H, rng, St.awayCap(save)).sold); t += 14 * H; save.lastSeen = t;
   const day = (save.earned || 0) - start;
   console.log(String(d).padStart(3), String(save.coins).padStart(6), String(day).padStart(7), String(made).padStart(5), String(save.sold || 0).padStart(4),
@@ -285,3 +296,4 @@ if (process.env.WHY) for (const id of Object.keys(RELICS)) {
 if (BANKING) console.log('bank: borrowed on day', loanDay, ' interest paid', interestPaid, ' owed now', Bank.bankOf(save).loan, ' second shop from day', branchDay);
 console.log('EARNED', save.earned, 'coins', save.coins);
 if (WEARING) console.log('wear: repairs', repairs, ' broke', broke, ' spent', wearSpent, ' (' + (100 * wearSpent / (save.earned || 1)).toFixed(1) + ' % of earnings)');
+if (THIEVING) console.log('thieves: robbed', robbed, ' caught', caught, ' turned away', turned, ' lost pieces worth', lostWorth, ' from the till', lostTill, ' (' + (100 * (lostWorth + lostTill) / (save.earned || 1)).toFixed(1) + ' % of earnings)');

@@ -154,3 +154,21 @@ and must show a steady player's income dips, not collapses), then a check on a p
 - **Spared** on a gentler Reach and in the week of grace.
 - **Sim (45 days, seeds 1–3; `WEAR=0` to compare):** a bot that repairs past 60 % spends about 1 % of its earnings on upkeep and never
   breaks a station. Wear is a small, steady sink; it bites only if neglected.
+
+## Milestone 21, as built (release 40)
+
+- **Thieves** (js/thieves.js, tests/thieves.test.mjs). From SOUGHT, once a day there's a chance a gang starts working the lanes: about
+  one day in 40 at SOUGHT, 28 at FAMED, 18 at RENOWNED, 12 OF THE REACH, up to half as likely again with a rich shelf.
+- **The rumour first:** a toast, a notice on the town board, and STAFF › THE NIGHT. From the next day, for four days, each night away
+  of four hours or more they try the door.
+- **The door:** they get in 60 % of the time; a lock makes it 40 % fewer; a night guard turns three quarters away (a Stout one more)
+  and catches about a third (a Watchful one more): caught, the gang is gone and the town is grateful (+10 renown).
+- **In:** one to three of the shelf's pieces, the best first (a Relic too: kept in `save.robbery` for the hunt, milestone 22), and
+  30 % of that night's takings from the till (none with a strongbox). Never the wall, the Hall, the bank, or the second shop.
+- **The morning after:** the away report says who, what and which way they went; the shelves are bare where the pieces were. No
+  forced-door scene in 3D yet.
+- **STAFF › THE NIGHT:** the risk tonight, the rumour, the last robbery and its trail, A GOOD LOCK (400 c), A STRONGBOX (1,500 c). The
+  **night guard** is a third staff role (LOOKING FOR WORK, from SOUGHT; wage 5 c an hour).
+- Thieves come only on a night away (the game closed or hidden four hours or more), not while it's open.
+- **Sim (60 days, seeds 1–4):** with a lock and strongbox but no guard (`GUARD=0`), 1–4 robberies, losing 0.1–0.5 % of earnings; with
+  a night guard from FAMED, 0–1 robberies and the rest caught or turned away. `THIEVES=0` turns them off.

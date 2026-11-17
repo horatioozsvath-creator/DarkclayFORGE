@@ -42,6 +42,14 @@ export const MYTHICS = {
 export const TRAIL = { rung: 6, deep: 0.35, court: 0.4 };
 // milestone 18: the Court asks for each Mythic once (half the orders while one is waiting), paying twice its worth; all Nine made is
 // the ending: the maker's mark becomes Maker of the Nine and the Hall's charm doubles
+// THIEVES (milestone 21): from SOUGHT, now and then a gang starts working the lanes (about one day in odds[rung], more with a richer
+// shelf, ref: the shelf's worth that counts as usual for a rung). The rumour comes first; from the next day, on each night away (4 hours
+// or more) while they're about (4 days), they try the shop: in (strike), less with a lock; a night guard turns most away and catches
+// some. In: 1–3 of the shelf's pieces (the best first; a Relic too, always won back on the hunt, milestone 22) and 30 % of the night's
+// takings from the till (none with a strongbox). Spared on a gentler Reach and in the week of grace.
+export const THIEVES = { rung: 3, odds: [0, 0, 0, 40, 28, 18, 12], ref: 1500, warnH: 20, stayD: 4, minAwayH: 4, strike: 0.6, take: [1, 3], till: 0.3,
+  lock: { cost: 400, x: 0.6 }, strongbox: { cost: 1500 }, guard: { stop: 0.75, catch: 0.35, stout: 0.88, watchful: 0.55 }, caughtRenown: 10, trailD: 2,
+  gangs: [['the Ashfoot gang', 'up the marsh road'], ['the Lantern Hands', 'toward the ford villages'], ['old Cobb\'s lot', 'into the old quarry'], ['the river crew', 'down to the docks'], ['the Grey Cloaks', 'out past the gallows oak']] };
 // WEAR (milestone 20): each working wears its station (out of 100): a plain working ½, MAKE IT ¼, a rework 1, a part 1½, a Relic
 // working 3, a Mythic 5. From ¾ worn the band narrows (×0.92); at 100 the station breaks, after the working, never during one. REPAIR:
 // 2 c a point, more for a famed shop (+50 % a rung). REBUILD a broken one: 300 c a rung above UNKNOWN (300 at the start), 3 hours.
@@ -546,8 +554,14 @@ export const AWAY_CAP_H = 8;   // hours of away time the staff keep the shop for
 export const ROLES = {
   clerk: { word: 'COUNTER CLERK', wage: 4, line: 'Minds the shop while you work and while you\'re away.' },
   runner: { word: 'RUNNER', wage: 3, line: 'Goes out on the roads for materials, old pieces and now and then a found tile.' },
+  guard: { word: 'NIGHT GUARD', wage: 5, line: 'Keeps the shop at night: most break-ins stop at the door, and some thieves are caught.', rung: 3 },
 };
 export const TRAITS = {
+  guard: [
+    { id: 'watchful', word: 'Watchful', line: 'catches more of them' },
+    { id: 'stout', word: 'Stout', line: 'turns more of them away' },
+    { id: 'quick', word: 'Quick learner', line: 'learns half as fast again' },
+  ],
   clerk: [
     { id: 'silver', word: 'Silver-tongued', line: 'keeps a smaller cut' },
     { id: 'early', word: 'Early riser', line: 'keeps the shop two hours longer while you\'re away' },

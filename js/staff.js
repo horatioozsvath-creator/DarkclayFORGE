@@ -1,12 +1,12 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=39';
-import { levelOf, makePiece, partOptions } from './rules.js?v=39';
-import { awayStep } from './shop.js?v=39';
-import { wageMult, capBonus, rung } from './growth.js?v=39';
-import * as Trail from './trail.js?v=39';
-import { TRAIL } from './data.js?v=39';
+import { ROLES, TRAITS, NAMES, ROUTES, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=40';
+import { levelOf, makePiece, partOptions } from './rules.js?v=40';
+import { awayStep } from './shop.js?v=40';
+import { wageMult, capBonus, rung } from './growth.js?v=40';
+import * as Trail from './trail.js?v=40';
+import { TRAIL } from './data.js?v=40';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -18,6 +18,7 @@ export const wageOf = p => ROLES[p.role].wage + levelOfP(p) - 1;
 export const wages = save => (save.staff || []).reduce((w, p) => w + wageOf(p), 0) * wageMult(save);
 export const clerkOf = save => (save.staff || []).find(p => p.role === 'clerk');
 export const runnerOf = save => (save.staff || []).find(p => p.role === 'runner');
+export const guardOf = save => (save.staff || []).find(p => p.role === 'guard');
 export const traitOf = p => TRAITS[p.role].find(t => t.id === p.trait);
 export function gain(p, n) { p.xp = (p.xp || 0) + n * (p.trait === 'quick' ? 1.5 : 1); }
 // a clerk away: the share of the tag price that reaches the till; minding the shop while you work: how much more readily walk-ins buy
@@ -33,7 +34,8 @@ export function candidates(save, hour) {
   const rng = seeded(hour * 7919 + 13), taken = new Set((save.staff || []).map(p => p.name));
   const out = [];
   for (let i = 0; i < 3; i++) {
-    const role = i === 0 ? 'clerk' : i === 1 ? 'runner' : pick(['clerk', 'runner'], rng);
+    const roles = Object.keys(ROLES).filter(r => !ROLES[r].rung || rung(save) >= ROLES[r].rung);   // a night guard from SOUGHT
+    const role = i === 0 ? 'clerk' : i === 1 ? 'runner' : pick(roles.length > 2 && rng() < 0.6 ? roles.slice(2) : roles, rng);
     const names = NAMES.filter(n => !taken.has(n)); const name = pick(names, rng); taken.add(name);
     const xp = [0, 0, 5, 5, 20][Math.floor(rng() * 5)];   // level 1, 1, 2, 2, 3
     const c = { id: 'h' + hour + '-' + i, role, name, trait: pick(TRAITS[role], rng).id, xp };

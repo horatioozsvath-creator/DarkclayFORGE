@@ -1,9 +1,9 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // WEAR, with no page access: every working wears its station; a worn one narrows the band; at full wear it breaks (after a working,
 // never during one) until rebuilt, which takes coin and hours. The dwarven forge: a better forge. Spared on a gentler Reach (bank.js).
-import { WEAR, STATIONS, RENOWN } from './data.js?v=39';
-import { rung } from './growth.js?v=39';
-import { threatsOn } from './bank.js?v=39';
+import { WEAR, STATIONS, RENOWN } from './data.js?v=40';
+import { rung } from './growth.js?v=40';
+import { threatsOn } from './bank.js?v=40';
 
 const H = 3600000;
 export const stateOf = (save, st) => { save.wear = save.wear || {}; return save.wear[st] || (save.wear[st] = { w: 0 }); };
