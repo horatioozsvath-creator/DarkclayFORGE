@@ -1,29 +1,30 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES } from './data.js?v=40';
-import * as R from './rules.js?v=40';
-import * as Sh from './shop.js?v=40';
-import * as St from './staff.js?v=40';
-import * as Rm from './room.js?v=40';
-import * as G from './growth.js?v=40';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=40';
-import * as Snd from './sound.js?v=40';
-import * as Town from './town.js?v=40';
-import * as V from './visit.js?v=40';
-import * as Br from './branch.js?v=40';
-import * as Bank from './bank.js?v=40';
-import * as Wear from './wear.js?v=40';
-import * as Th from './thieves.js?v=40';
-import * as Hl from './hall.js?v=40';
-import * as Trail from './trail.js?v=40';
-import { ICONS, emblem, watch } from './icons.js?v=40';
-import { drawFlyer, flyerBlob } from './flyer.js?v=40';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=40';
-import { card, ART } from './card.js?v=40';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=40';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=40';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR } from './data.js?v=41';
+import * as R from './rules.js?v=41';
+import * as Sh from './shop.js?v=41';
+import * as St from './staff.js?v=41';
+import * as Rm from './room.js?v=41';
+import * as G from './growth.js?v=41';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=41';
+import * as Snd from './sound.js?v=41';
+import * as Town from './town.js?v=41';
+import * as V from './visit.js?v=41';
+import * as Br from './branch.js?v=41';
+import * as Bank from './bank.js?v=41';
+import * as Wear from './wear.js?v=41';
+import * as Th from './thieves.js?v=41';
+import * as Run from './runner.js?v=41';
+import * as Hl from './hall.js?v=41';
+import * as Trail from './trail.js?v=41';
+import { ICONS, emblem, watch } from './icons.js?v=41';
+import { drawFlyer, flyerBlob } from './flyer.js?v=41';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=41';
+import { card, ART } from './card.js?v=41';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=41';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=41';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 40;
+const VERSION = 41;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayFORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -363,7 +364,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=40').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=41').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -932,11 +933,12 @@ function renderStaff() {
     if (save.unpaid && p.role === 'runner') status = '<div class="status bad">Wages behind: won\'t set out until they\'re paid.</div>';
     else if (p.role === 'guard') status = '<div class="status">Keeps the shop at night: turns most thieves away, and catches some. See THE NIGHT.</div>';
     else if (p.role === 'clerk') status = '<div class="status">Minds the shop while you\'re at the forge (customers buy more readily) and keeps it while you\'re away.</div>';
-    else if (p.trip) status = '<div class="status">' + ROUTES[p.trip.route].name + ' · back in <b data-back="' + p.trip.back + '">' + hm((p.trip.back - now) / 1000) + '</b></div>';
-    else status = '<div class="status">Ready to go out. Send them on a road:</div><div class="routes">' + Object.entries(ROUTES).map(([id, r]) =>
-      '<button class="seg" data-send="' + id + '"' + (save.coins < r.fee || (r.rung && G.rung(save) < r.rung) ? ' disabled' : '') + '><span>' + r.name + '</span><small>' + (r.rung && G.rung(save) < r.rung ? 'opens when the shop is ' + RENOWN[r.rung].word + ' · ' : '') + hm(St.tripHours(p, id) * 3600) + ' · ' + r.fee + ' c' + (r.relic ? ' · relic materials, maybe · it can come back empty' : r.rare ? ' · rare things' : '') + (r.tile ? ' · a found tile, maybe' : '') + '</small></button>').join('') + '</div>';
+    else if (p.role === 'runner' && Run.hurtNow(p, now)) status = gearHtml(p) + '<div class="status bad">Hurt, resting: back on their feet in ' + hm((p.hurt - now) / 1000) + '.</div>';
+    else if (p.trip) status = (p.role === 'runner' ? gearHtml(p) : '') + '<div class="status">' + ROUTES[p.trip.route].name + ' · back in <b data-back="' + p.trip.back + '">' + hm((p.trip.back - now) / 1000) + '</b></div>';
+    else status = gearHtml(p) + '<div class="status">Ready to go out. Send them on a road:</div><div class="routes">' + Object.entries(ROUTES).filter(([id, r]) => !r.hunt || Run.huntOpen(save, now)).map(([id, r]) =>
+      '<button class="seg" data-send="' + id + '"' + (save.coins < r.fee || (r.rung && G.rung(save) < r.rung) ? ' disabled' : '') + '><span>' + r.name + '</span>' + riskBadge(p, id, now) + '<small>' + (r.rung && G.rung(save) < r.rung ? 'opens when the shop is ' + RENOWN[r.rung].word + ' · ' : '') + hm(St.tripHours(p, id) * 3600) + ' · ' + r.fee + ' c' + (r.hunt ? ' · after ' + esc(save.robbery.gang) + ': ' + save.robbery.took.map(c => esc(c.name)).join(', ') + ' back, and a bounty, if they catch them · dangerous' : r.relic ? ' · relic materials, maybe · it can come back empty' : r.rare ? ' · rare things' : '') + (r.tile ? ' · a found tile, maybe' : '') + '</small></button>').join('') + '</div>';
     return '<div class="person">' + personHtml(p, true) + status + '<div class="rbtns left"><button class="seg" data-letgo="' + p.id + '">LET THEM GO</button></div></div>';
-  }).join('') : '<div class="empty">No one works here but you. A clerk keeps the shop while you\'re away; a runner goes out for materials. See who\'s <button class="linkish" data-tabjump="hire">looking for work</button>.</div>';
+  }).join('') + memorialHtml() : '<div class="empty">No one works here but you. A clerk keeps the shop while you\'re away; a runner goes out for materials. See who\'s <button class="linkish" data-tabjump="hire">looking for work</button>.</div>' + memorialHtml();
   const cands = St.candidates(save, hour()), mins = 60 - new Date().getMinutes();
   $('candsWord').textContent = 'NEW FACES IN ' + mins + ' MIN';
   $('cands').innerHTML = cands.length ? cands.map(c => {
@@ -947,12 +949,49 @@ function renderStaff() {
   $('vStaff').querySelectorAll('[data-tabjump]').forEach(b => b.onclick = () => openTab('staff', b.dataset.tabjump));
   tabBadges();
   $('vStaff').querySelectorAll('[data-hire]').forEach(b => b.onclick = () => { const c = cands.find(x => x.id === b.dataset.hire); if (St.hire(save, c)) { store(save); coins(); renderStaff(); } });
-  $('vStaff').querySelectorAll('[data-send]').forEach(b => b.onclick = () => { if (St.sendRunner(save, b.dataset.send, Date.now())) { store(save); coins(); renderStaff(); } });
+  $('vStaff').querySelectorAll('[data-send]').forEach(b => b.onclick = () => {
+    const p = St.runnerOf(save), route = b.dataset.send, k = p && Run.risk(save, p, route, Date.now());
+    const lv = p && Run.riskLevel(save, p, route, Date.now());
+    if (k && (k.die || lv.word === 'HIGH') && !confirm(ROUTES[route].name + ' is ' + lv.word.toLowerCase() + ' risk. ' + p.name + ' could be hurt (' + pct(k.hurt) + ')' + (k.die ? ' or killed (' + pct(k.die) + ')' : '') + '. Armour, a weapon and potions you give them make it safer. Send them?')) return;
+    if (St.sendRunner(save, route, Date.now())) { store(save); coins(); renderStaff(); }
+  });
+  $('vStaff').querySelectorAll('[data-gear]').forEach(b => b.onclick = () => gearOpen(b.dataset.gear));
   $('vStaff').querySelectorAll('[data-letgo]').forEach(b => b.onclick = () => {
     const p = staff.find(x => x.id === b.dataset.letgo);
     if (!confirm('Let ' + p.name + ' go?' + (p.trip ? ' They\'re on the road: what they bring back is lost.' : ''))) return;
     St.letGo(save, p.id); store(save); renderStaff();
   });
+}
+
+// ---------- THE RUNNER'S GEAR: what you made, carried on the road ----------
+const pct = x => (x >= 0.01 ? Math.round(x * 100) : Math.round(x * 1000) / 10) + ' %';
+function gearHtml(p) {
+  if (p.role !== 'runner') return '';
+  const g = Run.gearOf(p), pots = Run.potionsOf(p), s = Run.strength(p), now = Date.now(), k = Run.riskLevel(save, p, 'below', now);
+  const slot = k2 => '<button class="gslot' + (g[k2] ? ' on' : '') + '" data-gear="' + k2 + '" style="' + (g[k2] ? '--tc:var(--t-' + g[k2].tier + ')' : '') + '"><small>' + GEAR.slotWord[k2] + '</small><b>' + (g[k2] ? esc(g[k2].name) : '+') + '</b></button>';
+  const pot = i => '<button class="gslot pot' + (pots[i] ? ' on' : '') + '" data-gear="pot' + i + '"><small>POTION</small><b>' + (pots[i] ? esc(pots[i].name) : '+') + '</b></button>';
+  return '<div class="gear">' + Object.keys(GEAR.slots).map(slot).join('') + pot(0) + pot(1) + '</div>'
+    + '<div class="status small">Guard <b>' + s.guard + '</b> · fight <b>' + s.fight + '</b>' + (k.spared ? ' · the gentler Reach: no road is dangerous' : ' · this gear takes every road\'s risk down <b>' + Math.round(k.cut * 100) + ' %</b>') + (Run.huntOpen(save, now) ? ' · after the gang: caught ' + pct(Run.huntOdds(save, p)) : '') + '</div>';
+}
+// the ones who didn't come back
+const memorialHtml = () => (save.memorials || []).length ? '<div class="memorial"><b>REMEMBERED</b>' + save.memorials.map(m => '<span>' + esc(m.name) + ', lost ' + esc(m.where) + ', ' + new Date(m.at).toLocaleDateString(undefined, { day: 'numeric', month: 'long' }) + '</span>').join('') + '</div>' : '';
+// a road's risk, as the runner is kitted now (and what it would be bare, if gear brings it down)
+function riskBadge(p, route, now) {
+  const k = Run.riskLevel(save, p, route, now); if (k.spared) return '<em class="risk risk-none">NO RISK</em>';
+  return '<em class="risk risk-' + k.cls + '">RISK ' + k.word + (k.bare !== k.word ? ' <s>' + k.bare + '</s>' : '') + '</em><em class="riskn">hurt ' + pct(k.hurt) + (k.die ? ' · killed ' + pct(k.die) : '') + '</em>';
+}
+function gearOpen(which) {
+  const p = St.runnerOf(save); if (!p) return;
+  if (p.trip) { toast('<b>' + esc(p.name) + ' is on the road</b><br>Their gear goes with them.'); return; }
+  const isPot = which.startsWith('pot'), i = isPot ? +which.slice(3) : -1, g = Run.gearOf(p), pots = Run.potionsOf(p);
+  const now = isPot ? pots[i] : g[which];
+  const fits = Sh.inBack(save).filter(c => !c.sample && (isPot ? Run.isPotion(c) : Run.slotOf(c) === which)).sort((a, b) => b.worth - a.worth);
+  const lead = isPot ? '<p>A bottle from a batch you brewed. ' + ({ salve: 'A salve heals a wound on the road.', draught: 'A draught keeps a dying runner alive.', tonic: 'A tonic: a better chance on the hunt.', oil: 'An oil: the weapon half as strong again.' }[now && now.pattern] || 'A salve heals a wound; a draught keeps a dying runner alive; a tonic helps on the hunt; an oil sharpens the weapon. Used up on a hard road.') + '</p>'
+    : '<p>' + (which === 'weapon' ? 'A weapon fights: a better hunt, fewer trips below that come to nothing, and less danger.' : which === 'ring' ? 'A ring guards a little.' : 'Armour guards: less chance of being hurt or killed.') + ' Carried, it\'s off your shelves; a hard blow can break armour (never a Relic or Mythic).</p>';
+  openLook((now ? '<div class="note">Carrying: <b>' + esc(now.name) + '</b></div>' : '') + (fits.length ? '<div class="pickgrid">' + fits.map(c => '<button data-give="' + c.id + '" aria-label="' + esc(c.name) + '">' + card(c, { short: true, price: 'GIVE IT' }) + '</button>').join('') + '</div>' : '<p class="note">Nothing in the back room fits. ' + (isPot ? 'Brew a salve, draught, tonic or oil at the kettle.' : 'Make one at your stations.') + '</p>'),
+    lead + (now ? '<button class="seg" id="gearBack">TAKE IT BACK</button>' : ''), true);
+  $('lookCard').querySelectorAll('[data-give]').forEach(b => b.onclick = () => { const r = Run.equip(save, p, b.dataset.give); if (r.ok) { store(save); $('look').hidden = true; renderStaff(); } else toast(esc(r.why)); });
+  if ($('gearBack')) $('gearBack').onclick = () => { if (isPot) Run.takePotion(save, p, i); else Run.unequip(save, p, which); store(save); $('look').hidden = true; renderStaff(); };
 }
 
 // ---------- THE NIGHT: thieves, the lock, the strongbox, the guard ----------
@@ -979,13 +1018,23 @@ function renderNight() {
 }
 
 // ---------- WHILE YOU WERE AWAY ----------
+const endDot = w => /[.!]$/.test(w) ? w : w + '.';
+function roadWords(t) {
+  const d = t.road; if (!d) return '';
+  if (d.died) return ' ' + t.who + ' didn\'t come back. The Watch found them ' + ROUTES[t.route].from + ', and brought home what they carried.';
+  let w = d.used.length ? ' Used: ' + d.used.join(', ') + '.' : '';
+  if (d.hurt) w += ' Hurt on the road: resting ' + d.days + ' days' + (d.bill ? ', the healer paid ' + d.bill + ' c' : '') + (d.broke ? '; the ' + d.broke + ' was broken' : '') + '.';
+  return w;
+}
 function haulWords(t) {
+  if (t.road && t.road.died) return roadWords(t).trim();
+  if (t.hunt) return (t.hunt.won ? 'they caught ' + t.hunt.gang + '. ' + t.hunt.pieces.join(', ') + ' back in the back room, and a bounty of ' + t.hunt.bounty + ' c.' : t.hunt.again ? 'the trail went cold, but the Watch is keeping it warm for the Relic: send them again.' : 'the trail went cold and ' + (t.hunt.gang || 'the gang') + ' got away.') + roadWords(t);
   const parts = Object.entries(t.mats).map(([m, n]) => MATS[m].name + ' × ' + n);
   if (t.piece) parts.push('an old ' + t.piece.name);
   if (t.tile) parts.push('a found tile: ' + FOUND[t.tile].name);
   if (t.blueprint) parts.push('a blueprint: ' + RELICS[t.blueprint].name);
   if (t.shard) parts.push('a shard of Veric, for ' + MYTHICS[t.shard].name);
-  return (t.empty ? 'little: the road below went badly. ' : '') + parts.join(', ');
+  return (t.empty ? 'little: the road below went badly. ' : '') + parts.join(', ') + roadWords(t);
 }
 function awayHtml(a) {
   let h = '<div class="away"><div class="k">WHILE YOU WERE AWAY</div><h3>' + hm(a.elapsed) + '</h3>' + nightHtml(a.thieves);
@@ -998,7 +1047,7 @@ function awayHtml(a) {
   if (a.wages) h += '<p>Wages paid: <b>' + a.wages + ' c</b>.</p>';
   if (a.unpaid) h += '<p class="bad">The wages are behind. The clerk works on for the takings; the runner won\'t set out until they\'re paid.</p>';
   if (a.branch && (a.branch.sold.length || a.branch.wages)) h += '<p>At ' + esc(BRANCH.town) + ', ' + esc(BRANCH.keeper) + ' sold <b>' + a.branch.sold.length + '</b> for <b>' + a.branch.coins + ' c</b>' + (a.branch.wages ? ' (wages ' + a.branch.wages + ' c)' : '') + '.</p>';
-  a.trips.forEach(t => { h += '<p>' + esc(t.who) + ' came back from ' + ROUTES[t.route].from + ' with ' + esc(haulWords(t)) + '.</p>'; });
+  a.trips.forEach(t => { h += t.road && t.road.died ? '<p class="bad">' + esc(haulWords(t)) + '</p>' : t.hunt ? '<p>' + esc(t.who) + ' came back from the hunt: ' + esc(haulWords(t)) + '</p>' : '<p>' + esc(t.who) + ' came back from ' + ROUTES[t.route].from + ' with ' + esc(endDot(haulWords(t))) + '</p>'; });
   return h + '</div>';
 }
 function showAway(a) {
@@ -1523,7 +1572,7 @@ function frame(now) {
   const paid = St.payWages(save, dt);
   if (paid) coins();
   const back = St.resolveTrips(save, nowMs, rng);
-  back.forEach(t => toast('<b>' + esc(t.who) + ' is back</b><br>' + esc(haulWords(t))));
+  back.forEach(t => { toast('<b>' + esc(t.who) + (t.road && t.road.died ? ' was killed on the road' : ' is back') + '</b><br>' + esc(haulWords(t))); if (t.road && (t.road.died || t.road.hurt)) Snd.play('bell'); if (t.hunt && t.hunt.won) Snd.play('chime'); });
   if (back.length) { store(save); if (screen === 'staff') renderStaff(); }
   save.lastSeen = nowMs;
   if (nowMs - lastStore > 5000) { lastStore = nowMs; store(save); }
@@ -1634,7 +1683,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=40').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=41').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -1713,7 +1762,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=40').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=41').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }

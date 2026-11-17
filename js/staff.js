@@ -1,12 +1,13 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=40';
-import { levelOf, makePiece, partOptions } from './rules.js?v=40';
-import { awayStep } from './shop.js?v=40';
-import { wageMult, capBonus, rung } from './growth.js?v=40';
-import * as Trail from './trail.js?v=40';
-import { TRAIL } from './data.js?v=40';
+import { ROLES, TRAITS, NAMES, ROUTES, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=41';
+import { levelOf, makePiece, partOptions } from './rules.js?v=41';
+import { awayStep } from './shop.js?v=41';
+import { wageMult, capBonus, rung } from './growth.js?v=41';
+import * as Trail from './trail.js?v=41';
+import { TRAIL } from './data.js?v=41';
+import * as Run from './runner.js?v=41';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -52,7 +53,10 @@ export function hire(save, c) {
   save.hiredIds = (save.hiredIds || []).concat(c.id).slice(-30);
   return true;
 }
-export function letGo(save, id) { save.staff = (save.staff || []).filter(p => p.id !== id); if (!save.staff.length) { save.owed = 0; save.unpaid = false; } }
+export function letGo(save, id) {
+  const p = (save.staff || []).find(x => x.id === id);   // what they carried comes back to the back room (the potions go with them)
+  if (p) { Object.values(p.gear || {}).forEach(c => save.cards.unshift(c)); if (p.trip && ROUTES[p.trip.route].hunt && save.robbery) save.robbery.hunting = false; }
+  save.staff = (save.staff || []).filter(p => p.id !== id); if (!save.staff.length) { save.owed = 0; save.unpaid = false; } }
 
 // ---------- wages ----------
 // Owed by the second, paid by the coin as the purse allows. More than an hour's wages behind, the staff are unpaid: the runner
@@ -72,9 +76,10 @@ export const working = save => !save.unpaid;
 export const tripHours = (p, route) => ROUTES[route].h * (p.trait === 'surefoot' ? 0.8 : 1);
 export function sendRunner(save, route, now) {
   const p = runnerOf(save), r = ROUTES[route];
-  if (!p || p.trip || !r || save.unpaid || save.coins < r.fee || (r.rung && rung(save) < r.rung)) return false;
+  if (!p || p.trip || !r || save.unpaid || save.coins < r.fee || (r.rung && rung(save) < r.rung) || Run.hurtNow(p, now) || (r.hunt && !Run.huntOpen(save, now))) return false;
   save.coins -= r.fee;
   p.trip = { route, left: now, back: now + tripHours(p, route) * H };
+  if (r.hunt) { p.trip.odds = Run.huntOdds(save, p); save.robbery.hunting = true; }
   return true;
 }
 const COMMONS = ['iron', 'iron', 'iron', 'bronze', 'bronze', 'steel', 'wrap', 'cord', 'ash', 'wool', 'strap', 'horn', 'rowan', 'silk', 'sharkhide', 'deer', 'deer', 'goat', 'gut', 'linen', 'yew', 'birch', 'goose', 'bone'];
@@ -83,7 +88,8 @@ export const RELIC_MATS = Object.keys(MATS).filter(id => MATS[id].relic);
 export function haul(save, p, route, rng, now) {
   const r = ROUTES[route], l = levelOfP(p), mats = {};
   // the Deep can come back with nothing much: a few common things, no more
-  if (r.empty && rng() < r.empty) { for (let i = 0; i < 2; i++) { const m = pick(COMMONS, rng); mats[m] = (mats[m] || 0) + 1; } return { mats, piece: null, tile: null, empty: true }; }
+  // a good weapon: fewer trips below that come to nothing
+  if (r.empty && rng() < r.empty * 6 / (6 + Run.strength(p).fight)) { for (let i = 0; i < 2; i++) { const m = pick(COMMONS, rng); mats[m] = (mats[m] || 0) + 1; } return { mats, piece: null, tile: null, empty: true }; }
   if (r.relic) { for (const odds of r.relic) if (rng() < odds) { const m = pick(RELIC_MATS, rng); mats[m] = (mats[m] || 0) + 1; } }
   // a blueprint, now and then: one of the Deep's still to be found
   let blueprint = null;
@@ -115,7 +121,17 @@ export function resolveTrips(save, now, rng) {
   const out = [];
   for (const p of save.staff || []) {
     if (!p.trip || now < p.trip.back) continue;
-    const route = p.trip.route, at = p.trip.back, h = haul(save, p, route, rng, at);
+    const route = p.trip.route, at = p.trip.back, odds = p.trip.odds;
+    // the hunt: decided as they reach the gang; then the road's danger (milestone 22). Killed: nothing comes home but what the Watch
+    // brings back (their gear); the gang, if caught, still caught
+    if (ROUTES[route].hunt) {
+      const hu = Run.hunt(save, p, rng, at, odds || 0), d = Run.road(save, p, route, rng, at); if (save.robbery) save.robbery.hunting = false;
+      p.trip = null;
+      if (d.died) Run.lose(save, p, route, at); else gain(p, 1 + Math.ceil(ROUTES[route].h));
+      out.push({ who: p.name, route, at, mats: {}, hunt: hu, road: d }); continue;
+    }
+    const h = haul(save, p, route, rng, at), d = Run.road(save, p, route, rng, at);
+    if (d.died) { p.trip = null; Run.lose(save, p, route, at); out.push({ who: p.name, route, at, mats: {}, road: d }); continue; }
     Object.entries(h.mats).forEach(([m, n]) => { save.mats[m] = (save.mats[m] || 0) + n; });
     if (h.piece) save.cards.unshift(h.piece);
     if (h.tile) save.found.push(h.tile);
@@ -123,7 +139,7 @@ export function resolveTrips(save, now, rng) {
     if (h.shard) Trail.give(save, h.shard);
     gain(p, 1 + Math.ceil(ROUTES[route].h));
     p.trip = null;
-    out.push({ who: p.name, route, at, ...h });
+    out.push({ who: p.name, route, at, ...h, road: d });
   }
   return out;
 }

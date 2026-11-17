@@ -172,3 +172,34 @@ and must show a steady player's income dips, not collapses), then a check on a p
 - Thieves come only on a night away (the game closed or hidden four hours or more), not while it's open.
 - **Sim (60 days, seeds 1–4):** with a lock and strongbox but no guard (`GUARD=0`), 1–4 robberies, losing 0.1–0.5 % of earnings; with
   a night guard from FAMED, 0–1 robberies and the rest caught or turned away. `THIEVES=0` turns them off.
+
+## Milestone 22, as built (release 41)
+
+- **The runner's gear** (js/runner.js, tests/runner.test.mjs): eight slots on the runner's card (STAFF › ON THE BOOKS): WEAPON
+  (falchion, dagger, axe, staff, shortbow, longbow), HEAD (helm, hood), BODY (jerkin), HANDS (gloves), FEET (boots), RING, and two
+  POTIONS. Tap a slot: the pieces in the back room that fit, best first; GIVE IT, or TAKE IT BACK. Carried pieces are off the shelves.
+  A potion is one bottle from a batch you brewed (taken back, it's one bottle again).
+- **Power by tier:** Common 1, Fine 2, Rare 3, Old-Blood 5, Relic 8, Mythic 12 (a flawed piece one less). Armour and half the ring
+  guard; the weapon fights (an oil makes it half as strong again). The card shows guard, fight, and the odds below the deep doors and
+  on the hunt.
+- **Danger** on the hard roads: hurt and killed, both less with gear (hurt × 6 / (6 + guard + fight / 2), killed × that squared).
+  Bare, below the deep doors: hurt 12 %, killed 0.7 %; after the gang 18 % and 1 %; into the deep doors and out to the Reach a little
+  hurt, never killed; the short roads none. A dangerous trip asks first, with the odds.
+- **Potions,** used up: a salve heals a wound on the road, a draught keeps a dying runner alive (hurt instead), a tonic helps the hunt
+  (+15 %), an oil sharpens the weapon; a tonic and an oil are used on any hard road.
+- **Hurt:** resting 2–4 days (can't be sent), a healer's bill, and one piece of armour broken (never a Relic or Mythic).
+- **Killed:** gone from the staff; the Watch brings home what they carried (not the potions); their name is REMEMBERED under ON THE
+  BOOKS. No memorial stone in 3D yet.
+- **A good weapon helps every save:** fewer trips below the deep doors come back empty.
+- **The hunt:** AFTER THE GANG appears on the runner's roads while a robbery's trail is warm (2 days): 8 hours, 60 c, dangerous. The
+  odds (45 %, more with fight, level and a tonic, at most 95 %) are set as they leave. Caught: the stolen pieces back and a bounty (120 c
+  a renown rung) and +8 renown. Cold: gone, unless a Relic was taken: then the Watch keeps the trail warm and the hunt can go again.
+- Letting a runner go brings their gear back.
+- **Sim (90 days, seeds 1–6, `KIT=0` for none):** a bot that kits its runner from the back room reaches guard 4.5–7.5, fight 2–3; it
+  runs below the deep doors nonstop and loses 0–2 runners in 90 days, hunts 0–3 times.
+- **Every road has a risk level** (added before release 41 shipped): LOW, MODERATE, HIGH or DEADLY, from the road's danger as the
+  runner is kitted now (hurt + 8 × killed: under 1 %, 4 %, 10 %, above). Each road's button shows the level, the odds, and the level it
+  would be bare, struck through, when gear brings it down. The short roads are a little risky too (down to the yard: hurt 0.2 %; the
+  ford: 0.8 %; never killed); into the deep doors can now kill (0.2 % bare). Bare: yard and ford LOW, the Reach MODERATE, into the deep
+  doors HIGH, below the deep doors and after the gang DEADLY. A full set of Rare gear brings below the deep doors down to MODERATE. The
+  runner's card says how much the gear takes off every road's risk. A HIGH or DEADLY road asks first.

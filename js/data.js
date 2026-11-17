@@ -42,6 +42,21 @@ export const MYTHICS = {
 export const TRAIL = { rung: 6, deep: 0.35, court: 0.4 };
 // milestone 18: the Court asks for each Mythic once (half the orders while one is waiting), paying twice its worth; all Nine made is
 // the ending: the maker's mark becomes Maker of the Nine and the Hall's charm doubles
+// GEAR AND DANGER (milestone 22): the runner carries what you made. Slots by the piece's kind; each piece's power by its tier (a flawed
+// one a step less). Armour (head, body, hands, feet) and half the ring guard; the weapon fights (an oil makes it half as strong again).
+// Danger on the hard roads: hurt and (rarely) killed, both less with gear: hurt × 6/(6 + guard + fight/2), killed × that squared.
+// Hurt: off 2–4 days and a healer's bill; one piece of armour broken (never a Relic or Mythic). Potions, two at most, used up: a salve
+// heals a wound on the road (not hurt), a draught keeps a dying runner alive (hurt instead), a tonic and an oil help on any hard road.
+export const GEAR = {
+  slots: { weapon: ['falchion', 'dagger', 'axe', 'staff', 'shortbow', 'longbow'], head: ['helm', 'hood'], body: ['jerkin'], hands: ['gloves'], feet: ['boots'], ring: ['ring'] },
+  slotWord: { weapon: 'WEAPON', head: 'HEAD', body: 'BODY', hands: 'HANDS', feet: 'FEET', ring: 'RING' },
+  power: { common: 1, fine: 2, rare: 3, oldblood: 5, relic: 8, mythic: 12 },
+  potions: ['salve', 'draught', 'tonic', 'oil'], carry: 2,
+  // every road has its danger (release 41: the short roads a little too); its risk level by hurt + 8 × killed: LOW, MODERATE, HIGH, DEADLY
+  danger: { yard: { hurt: 0.002, die: 0 }, ford: { hurt: 0.008, die: 0 }, reach: { hurt: 0.025, die: 0 }, deep: { hurt: 0.06, die: 0.002 }, below: { hurt: 0.12, die: 0.007 }, gang: { hurt: 0.18, die: 0.01 } },
+  levels: [[0.01, 'LOW'], [0.04, 'MODERATE'], [0.1, 'HIGH'], [Infinity, 'DEADLY']],
+  hurtDays: [2, 4], healer: 30, hunt: { base: 0.45, fight: 0.04, level: 0.02, tonic: 0.15, max: 0.95 }, bounty: 120, bountyRenown: 8,
+};
 // THIEVES (milestone 21): from SOUGHT, now and then a gang starts working the lanes (about one day in odds[rung], more with a richer
 // shelf, ref: the shelf's worth that counts as usual for a rung). The rumour comes first; from the next day, on each night away (4 hours
 // or more) while they're about (4 days), they try the shop: in (strike), less with a lock; a night guard turns most away and catches
@@ -584,6 +599,8 @@ export const ROUTES = {
   deep: { name: 'Into the deep doors', from: 'the deep doors', h: 8, fee: 80, commons: [6, 10], rare: 2, piece: 0.5, tile: 0.3 },
   // the Deep: from RENOWNED. Long, dear, and it can come back with nothing much; relic: [the odds of one relic material, of a second]
   below: { name: 'Below the deep doors', from: 'below the deep doors', h: 12, fee: 400, commons: [4, 8], rare: 3, piece: 0.4, tile: 0.2, relic: [0.6, 0.15], empty: 0.15, rung: 5 },
+  // the hunt (milestone 22): only while a robbery's trail is warm; no haul, the stolen pieces back and a bounty if they catch them
+  gang: { name: 'After the gang', from: 'after the gang', h: 8, fee: 60, commons: [0, 0], rare: 0, piece: 0, tile: 0, hunt: true },
 };
 
 // ---------- the diorama (milestone 5) ----------

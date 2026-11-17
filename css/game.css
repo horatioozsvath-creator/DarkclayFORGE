@@ -604,3 +604,22 @@ h1, .tname, .screenbar .t { font-family: var(--carve); font-weight: 900; letter-
 .wearbar.worn i { background: linear-gradient(90deg, #c9923e, #c4483a); box-shadow: 0 0 8px rgba(196,72,58,.6); }
 .fi.broken { border-left-color: var(--k-crack); }
 .fi .bad { color: var(--k-crack); }
+/* the runner's gear */
+.gear { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 8px 0 4px; }
+.gslot { display: grid; gap: 2px; align-content: start; text-align: left; min-height: 54px; padding: 6px 7px; cursor: pointer; color: var(--bone-faint); border: 1px dashed rgba(233,220,195,.22); background: rgba(0,0,0,.25);
+  clip-path: polygon(5px 0, calc(100% - 5px) 0, 100% 5px, 100% calc(100% - 5px), calc(100% - 5px) 100%, 5px 100%, 0 calc(100% - 5px), 0 5px); }
+.gslot small { font: 800 9px var(--sans); letter-spacing: .14em; }
+.gslot b { font: 700 12px/1.2 var(--sans); color: var(--bone-dim); overflow-wrap: anywhere; }
+.gslot.on { border: 1px solid var(--tc, var(--bronze)); background: linear-gradient(180deg, #2c2724, #1f1c1a); }
+.gslot.on b { color: var(--tc, var(--bone)); }
+.gslot.pot.on { --tc: #8fb8d8; }
+.gslot:focus-visible { outline: none; box-shadow: inset 0 0 0 2px #e8c464; }
+.status.small { font-size: 12px; }
+.memorial { margin-top: 12px; padding: 10px 12px; border-left: 3px solid var(--iron); background: rgba(0,0,0,.25); display: grid; gap: 3px; font: 600 13px var(--sans); color: var(--bone-dim); }
+.memorial b { font: 900 12px var(--carve); letter-spacing: .18em; color: var(--bone-faint); }
+@media (max-width: 420px) { .gear { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* a road's risk */
+.routes .seg .risk { display: inline-block; font: 900 10px var(--carve); letter-spacing: .12em; padding: 2px 6px; margin: 3px 0 1px; font-style: normal; border: 1px solid currentColor; }
+.routes .seg .risk s { opacity: .55; margin-left: 4px; }
+.risk-low { color: #8fc46a; } .risk-moderate { color: #e8c464; } .risk-high { color: #f0a35c; } .risk-deadly { color: #e4505e; } .risk-none { color: var(--bone-faint); }
+.routes .seg .riskn { display: block; font: 600 11px var(--sans); font-style: normal; color: var(--bone-faint); }

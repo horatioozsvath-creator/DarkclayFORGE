@@ -14,6 +14,7 @@ import * as Trail from '../js/trail.js';
 import * as Bank from '../js/bank.js';
 import * as Wear from '../js/wear.js';
 import * as Th from '../js/thieves.js';
+import * as Run from '../js/runner.js';
 import { BRANCH, RELICS, MYTHICS } from '../js/data.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD } from '../js/data.js';
 
@@ -139,6 +140,8 @@ function relicWork(day) {
   if (G.rung(save) < 5) return;
   let r = St.runnerOf(save);
   if (!r) { const c = St.candidates(save, Math.floor(t / H)).find(x => x.role === 'runner'); if (c && save.coins > St.hireFee(c) + 500) { St.hire(save, c); r = St.runnerOf(save); } }
+  if (r && !r.trip) kit(r);
+  if (r && !r.trip && Run.huntOpen(save, t)) { if (St.sendRunner(save, 'gang', t)) hunts++; }
   if (r && !r.trip && save.coins > 900) St.sendRunner(save, 'below', t);
   for (const c of save.cards.filter(x => x.tier === 'oldblood')) {
     let g = Sh.relicFor(save, c);
@@ -205,6 +208,16 @@ function runBranch(day) {
   const v = Br.viewOf(save), back = Sh.inBack(save).filter(c => !c.sample).sort((a, b) => b.worth - a.worth);
   v.shelf.forEach((e, i) => { if (!e && back.length) Sh.place(v, back.shift().id, i); });
   const cost = Rm.shelfCost(v.room); if (cost != null && save.coins - cost > 3000 && back.length > 4) Rm.buy(v, 'shelf');
+}
+// the runner's kit (KIT=0: none): before a trip, the best piece in the back room for each empty slot, and two potions if there are any
+const KITTING = process.env.KIT !== '0';
+let hunts = 0;
+function kit(r) {
+  if (!KITTING) return;
+  for (const c of Sh.inBack(save).filter(c => !c.sample && Run.canCarry(c)).sort((a, b) => b.worth - a.worth)) {
+    if (Run.isPotion(c)) { if (Run.potionsOf(r).length < 2) Run.equip(save, r, c.id); }
+    else if (!Run.gearOf(r)[Run.slotOf(c)]) Run.equip(save, r, c.id);
+  }
 }
 // thieves (THIEVES=0 turns them off): the bot fits a lock from SOUGHT, a strongbox from FAMED, and hires a night guard from FAMED
 const THIEVING = process.env.THIEVES !== '0', GUARDING = process.env.GUARD !== '0';
@@ -297,3 +310,4 @@ if (BANKING) console.log('bank: borrowed on day', loanDay, ' interest paid', int
 console.log('EARNED', save.earned, 'coins', save.coins);
 if (WEARING) console.log('wear: repairs', repairs, ' broke', broke, ' spent', wearSpent, ' (' + (100 * wearSpent / (save.earned || 1)).toFixed(1) + ' % of earnings)');
 if (THIEVING) console.log('thieves: robbed', robbed, ' caught', caught, ' turned away', turned, ' lost pieces worth', lostWorth, ' from the till', lostTill, ' (' + (100 * (lostWorth + lostTill) / (save.earned || 1)).toFixed(1) + ' % of earnings)');
+{ const r = St.runnerOf(save); console.log('runner: ' + (r ? r.name + ' guard ' + Run.strength(r).guard + ' fight ' + Run.strength(r).fight : 'none') + ' · hunts', hunts, ' memorials', (save.memorials || []).length, (save.memorials || []).map(m => m.name).join(', ')); }
