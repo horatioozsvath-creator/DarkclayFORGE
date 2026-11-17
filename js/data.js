@@ -619,6 +619,9 @@ export const TRAITS = {
     { id: 'quick', word: 'Quick learner', line: 'learns half as fast again' },
   ],
 };
+// more than one runner (milestone 29): how many by the shop's renown rung (a second from KNOWN, a third from FAMED). Only hiring is
+// held to it: a shop that slips a rung keeps the runners it has.
+export const RUNNER_CAP = [[0, 1], [2, 2], [4, 3]];
 export const NAMES = ['Wenna Tolley', 'Pell', 'Pip', 'Corwen Ashe', 'Hollin', 'Mira Fenn', 'Oswy Brack', 'Tamsin Reed', 'Garrow', 'Effa Lind', 'Duncy Holt', 'Brisa Coombe'];
 // the runner's roads: hours, provisions (paid when they set out), what they bring (n commons, rare materials, the odds of an old
 // piece and of a found tile)

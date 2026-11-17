@@ -107,6 +107,20 @@ canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; touch-
 .hint { position: absolute; left: 12px; bottom: 8px; right: 30%; font: 700 clamp(12px, 1.5vw, 15px) var(--sans); color: var(--bone); pointer-events: none; text-shadow: 0 1px 0 #000, 0 0 8px #000; }
 .hint i { font-style: normal; color: var(--gold); }
 .stripbtn { position: absolute; right: 12px; top: 10px; }
+/* the worth as it stands (milestone 29), over the stage's top left; a small pop as it rises or drops */
+.worthtag { position: absolute; left: 12px; top: 10px; display: grid; justify-items: start; gap: 1px; padding: 5px 9px 6px; background: rgba(12, 8, 6, .72);
+  border: 1px solid rgba(232, 196, 100, .35); border-radius: 4px; pointer-events: none; font-family: var(--sans); text-shadow: 0 1px 0 #000; }
+.worthtag small { font: 800 9px var(--sans); letter-spacing: .14em; color: var(--bone-faint); }
+.worthtag > b { font: 800 22px/1 var(--sans); color: var(--gold); font-variant-numeric: tabular-nums; }
+.worthtag > b.bump { animation: wbump .45s ease-out; } .worthtag > b.dip { animation: wdip .5s ease-out; }
+.worthtag span { font: 700 10px var(--sans); letter-spacing: .08em; color: var(--bone-dim); }
+.worthtag span b { color: var(--bone); font-variant-numeric: tabular-nums; }
+.worthtag .wdelta { position: absolute; left: calc(100% + 6px); top: 18px; font: 800 15px var(--sans); font-style: normal; color: var(--gold); white-space: nowrap; animation: wrise 1.3s ease-out forwards; }
+.worthtag .wdelta.down { color: #e0604a; animation-name: wfall; }
+@keyframes wrise { 0% { opacity: 0; transform: translateY(6px); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(-18px); } }
+@keyframes wfall { 0% { opacity: 0; transform: translateY(-6px); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(14px); } }
+@keyframes wbump { 0% { transform: scale(1); } 40% { transform: scale(1.18); color: #fff2c0; } 100% { transform: scale(1); } }
+@keyframes wdip { 0% { transform: scale(1); } 40% { transform: scale(.9); color: #e0604a; } 100% { transform: scale(1); } }
 .pop { position: absolute; left: 50%; top: 6%; transform: translateX(-50%); pointer-events: none; text-align: center; opacity: 0; display: grid; justify-items: center; gap: 4px; }
 .pop .big { width: clamp(56px, 8vw, 104px); aspect-ratio: 3/4; }
 .pop .big .tile .wd { font-size: clamp(9px, 1.1vw, 14px); }
@@ -200,6 +214,8 @@ canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; touch-
   .leave { display: inline-flex; flex: none; min-width: 40px; min-height: 40px; align-items: center; justify-content: center; font-size: 18px; }
   #vWork .stage { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
   #vWork canvas { width: 100%; height: 100%; max-height: 100%; aspect-ratio: auto; object-fit: contain; }
+  .worthtag { top: 6px; left: 6px; padding: 3px 7px 4px; }
+  .worthtag > b { font-size: 18px; }
   .stripbtn { top: 6px; right: 6px; min-height: 34px; padding: 4px 8px; font-size: 12px; }
   .hint { right: 10px; left: 10px; bottom: 4px; font-size: 12px; }
   .pop { top: 2%; }
@@ -235,4 +251,4 @@ canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; touch-
 @media (max-width: 600px) and (max-height: 620px) {
   #vWork .oddsrow { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { .pop.go, .pop.bigpop.go, .pop.bad.go { animation: fade 1s forwards; } @keyframes fade { 0%,70% { opacity: 1; } 100% { opacity: 0; } } .tkt .in, .bar i { transition: none; } .tkt.new .in, .gift .gt, .bag button.fresh .tile { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .worthtag > b.bump, .worthtag > b.dip, .worthtag .wdelta { animation: none; } .worthtag .wdelta { display: none; } .pop.go, .pop.bigpop.go, .pop.bad.go { animation: fade 1s forwards; } @keyframes fade { 0%,70% { opacity: 1; } 100% { opacity: 0; } } .tkt .in, .bar i { transition: none; } .tkt.new .in, .gift .gt, .bag button.fresh .tile { animation: none; } }

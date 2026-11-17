@@ -1,13 +1,13 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=46';
-import { levelOf, makePiece, partOptions } from './rules.js?v=46';
-import { awayStep } from './shop.js?v=46';
-import { wageMult, capBonus, rung } from './growth.js?v=46';
-import * as Trail from './trail.js?v=46';
-import { TRAIL } from './data.js?v=46';
-import * as Run from './runner.js?v=46';
+import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=47';
+import { levelOf, makePiece, partOptions } from './rules.js?v=47';
+import { awayStep } from './shop.js?v=47';
+import { wageMult, capBonus, rung } from './growth.js?v=47';
+import * as Trail from './trail.js?v=47';
+import { TRAIL } from './data.js?v=47';
+import * as Run from './runner.js?v=47';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -19,6 +19,15 @@ export const wageOf = p => ROLES[p.role].wage + levelOfP(p) - 1;
 export const wages = save => (save.staff || []).reduce((w, p) => w + wageOf(p), 0) * wageMult(save);
 export const clerkOf = save => (save.staff || []).find(p => p.role === 'clerk');
 export const runnerOf = save => (save.staff || []).find(p => p.role === 'runner');
+export const runners = save => (save.staff || []).filter(p => p.role === 'runner');
+// how many runners the shop can take on, and the next step up: { cap, next: { n, rung } | null }
+export const runnerCap = save => RUNNER_CAP.filter(([r]) => rung(save) >= r).pop()[1];
+export const nextRunner = save => { const n = RUNNER_CAP.find(([r]) => rung(save) < r); return n ? { n: n[1], word: RENOWN[n[0]].word } : null; };
+// how many of a role can be hired now (a clerk and a guard: one each)
+export const roleCap = (save, role) => role === 'runner' ? runnerCap(save) : 1;
+export const canHireRole = (save, role) => (save.staff || []).filter(p => p.role === role).length < roleCap(save, role);
+// runners home, paid and on their feet: ready to be sent out
+export const readyRunners = (save, now) => save.unpaid ? [] : runners(save).filter(p => !p.trip && !Run.hurtNow(p, now));
 export const guardOf = save => (save.staff || []).find(p => p.role === 'guard');
 export const traitOf = p => TRAITS[p.role].find(t => t.id === p.trait);
 export function gain(p, n) { p.xp = (p.xp || 0) + n * (p.trait === 'quick' ? 1.5 : 1); }
@@ -47,7 +56,7 @@ export function candidates(save, hour) {
 export const hireFee = c => wageOf(c) * 20;
 export function hire(save, c) {
   save.staff = save.staff || [];
-  if (save.staff.some(p => p.role === c.role) || save.coins < hireFee(c) || (save.hiredIds || []).includes(c.id)) return false;
+  if (!canHireRole(save, c.role) || (save.staff || []).some(p => p.name === c.name) || save.coins < hireFee(c) || (save.hiredIds || []).includes(c.id)) return false;
   save.coins -= hireFee(c);
   save.staff.push({ id: c.id, role: c.role, name: c.name, trait: c.trait, xp: c.xp, trip: null });
   save.hiredIds = (save.hiredIds || []).concat(c.id).slice(-30);
@@ -74,9 +83,10 @@ export const working = save => !save.unpaid;
 
 // ---------- the runner's roads ----------
 export const tripHours = (p, route) => ROUTES[route].h * (p.trait === 'surefoot' ? 0.8 : 1);
-export function sendRunner(save, route, now) {
-  const p = runnerOf(save), r = ROUTES[route];
-  if (!p || p.trip || !r || save.unpaid || save.coins < r.fee || (r.rung && rung(save) < r.rung) || Run.hurtNow(p, now) || (r.hunt && !Run.huntOpen(save, now))) return false;
+// id: which runner (the first, when it isn't given). Only one runner goes after a gang at a time.
+export function sendRunner(save, route, now, id) {
+  const p = id ? runners(save).find(x => x.id === id) : runnerOf(save), r = ROUTES[route];
+  if (!p || p.trip || !r || save.unpaid || save.coins < r.fee || (r.rung && rung(save) < r.rung) || Run.hurtNow(p, now) || (r.hunt && (!Run.huntOpen(save, now) || save.robbery.hunting))) return false;
   save.coins -= r.fee;
   p.trip = { route, left: now, back: now + tripHours(p, route) * H };
   if (r.hunt) { p.trip.odds = Run.huntOdds(save, p); save.robbery.hunting = true; }

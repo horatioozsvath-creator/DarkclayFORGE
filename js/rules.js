@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK } from './data.js?v=46';
+import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK } from './data.js?v=47';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -341,6 +341,27 @@ export function rollAffixes(patternId, n, rng, not = []) {
 
 // ---------- the card: a finished piece, kept as plain data ----------
 export const WORKED_CAP = 50;
+// What a piece is worth, from how it was made: one sum for the finished card and for the figure rising at the forge (milestone 29)
+export function worthOf({ patternId, picks, tier, worked = 0, cracks = 0, flawed = false }) {
+  const p = PATTERNS[patternId], parts = chosenParts(patternId, picks), metal = parts[0], t = TIERS[tier];
+  const w = Math.min(WORKED_CAP, worked), rareN = parts.filter(o => o.rare).length, partsVal = parts.slice(1).reduce((v, o) => v * (o.val || 1), 1);
+  return Math.max(1, Math.round(p.value * metal.val * t.worth * (1 + w / 200) * (1 + 0.25 * rareN) * partsVal * Math.pow(0.9, cracks) * (flawed ? 0.5 : 1)));
+}
+// The worth as it stands mid-working: { lo, hi, loWord, hiWord } (lo: what it's worth at the least it can come out as; hi: at the
+// best it can still come out as), or null for a working that makes no card (a part of the Nine, a Relic or Mythic, a bottle-maker).
+// A second crack once it's made drops it a tier: the least is reckoned with that, as finish() does.
+export function worthNow(S) {
+  if (S.part || S.relic || S.mythic || PATTERNS[S.cfg.patternId].makes) return null;
+  const at = (tier, flawed) => worthOf({ patternId: S.cfg.patternId, picks: S.cfg.picks, tier, worked: S.worked, cracks: S.cracks, flawed });
+  const word = t => TIERS[t].name.toUpperCase();
+  if (S.cfg.rework) {
+    const from = S.cfg.rework.from, to = reworkTo(from), down = S.oldBlood ? from : Math.max(0, from - 1);
+    return { lo: at(S.oldBlood ? from : down, !S.oldBlood && from === 0), hi: at(to, false), loWord: word(S.oldBlood ? from : down), hiWord: word(to) };
+  }
+  if (S.master) return { lo: at(0, false), hi: at(OLD_BLOOD.tier, false), loWord: word(0), hiWord: word(OLD_BLOOD.tier) };
+  const o = odds(S), top = o.r > 0 ? 2 : o.f > 0 ? 1 : 0;
+  return { lo: at(0, false), hi: at(top, false), loWord: word(0), hiWord: word(top) };
+}
 // keep: affixes the piece already carries ([word, line]), kept as far as the tier has room; reworked: how many times back in the fire
 const AFFIX_BY_WORD = Object.fromEntries(Object.entries(AFFIXES).map(([id, a]) => [a.word, id]));
 export const affixIds = list => list.map(a => AFFIX_BY_WORD[a[0]]).filter(Boolean);
@@ -382,9 +403,7 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now, k
   else stats.push(['Wear', result.flawed ? 'FLAWED' : result.cracks ? 'NOTCHED' : 'KEEN', result.flawed ? .2 : result.cracks ? .6 : 1]);
   const bonus = Math.round((tier.mult * wk - 1) * 100 / 12);
   const dice = p.dice ? p.dice[0] + 'd' + p.dice[1] + (bonus > 0 ? '+' + bonus : '') : '';
-  const rareN = parts.filter(o => o.rare).length, partsVal = parts.slice(1).reduce((v, o) => v * (o.val || 1), 1);
-  const worth = Math.max(1, Math.round(p.value * metal.val * tier.worth * (1 + w / 200) * (1 + 0.25 * rareN) * partsVal
-    * Math.pow(0.9, result.cracks) * (result.flawed ? 0.5 : 1)));
+  const worth = worthOf({ patternId, picks, tier: result.tier, worked, cracks: result.cracks, flawed: result.flawed });
   const sid = stationOf(patternId).id, leather = sid === 'stretcher', wood = sid === 'bowbench', brew = sid === 'kettle', glass = sid === 'glass';
   const made = [(leather ? 'Stitched by ' : wood ? 'Bent by ' : brew ? 'Brewed by ' : glass ? 'Blown by ' : 'Forged by ') + maker];
   if (result.instant) made.push('made at once, at the plain odds');
