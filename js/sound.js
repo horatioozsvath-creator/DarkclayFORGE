@@ -54,6 +54,11 @@ const SOUNDS = {
   bell: () => { tone(1046, 1.4, { gain: 0.16 }); tone(1568, 1.0, { gain: 0.06, at: 0.01 }); },
   chime: () => [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.6, { gain: 0.14, at: i * 0.09 })),
   level: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.45, { type: 'triangle', gain: 0.16, at: i * 0.11 })),
+  // the counter's reaction marks (milestone 27): a huff, a little tune, a doubtful hum, a bright rise
+  offended: () => { tone(260, 0.22, { type: 'sawtooth', gain: 0.07, to: 150 }); noise(0.18, { gain: 0.2, freq: 500, type: 'lowpass' }); tone(200, 0.25, { type: 'sawtooth', gain: 0.06, to: 120, at: 0.16 }); },
+  pleased: () => [659, 784, 988].forEach((f, i) => tone(f, 0.35, { type: 'triangle', gain: 0.13, at: i * 0.1 })),
+  wary: () => { tone(330, 0.3, { type: 'triangle', gain: 0.12, to: 300 }); tone(294, 0.4, { type: 'triangle', gain: 0.1, at: 0.28, to: 320 }); },
+  eager: () => { tone(523, 0.18, { type: 'triangle', gain: 0.13, to: 784 }); tone(1046, 0.25, { gain: 0.08, at: 0.12 }); },
 };
 export function play(name) { if (muted || !ctx || ctx.state !== 'running' || !SOUNDS[name]) return; try { SOUNDS[name](); } catch (e) { /* never break the game for a sound */ } }
 

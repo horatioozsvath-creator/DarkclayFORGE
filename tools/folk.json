@@ -1,0 +1,299 @@
+{
+ "_doc": "The folk at the counter (milestone 26): one waiting picture a look, rendered by tools/folk.sh with tools/folk.py from Darkclay Zero's stylized bodies (WalkerS_<body>), its garment cuts (GearS_<body>) dressed as one of its outfits (gearlooks.json stylized outfits: [cut, material, colour]; seat = the look's own colour, hood = its second), Zero's hair, bald crests and beards fitted by its own per-body fits, and an optional head piece (PiecesS_<body>: coif__Head, hoodF__Head, hoodL__Head, ironcap). Beards only where the people grows one (Zero's bloods: lizard, shandain, shiril, serengeti and kalthax none; women clean-faced); lizard and shandain the bald crest or fan; kalthax nothing. height: the walker's own (world.json art stylized walkers). pools: which looks each kind of customer is drawn from; regulars: a fixed look by name.",
+ "looks": {
+  "folk_man": {
+   "body": "human_m",
+   "outfit": "folk",
+   "seat": "#8a8274",
+   "hair": "crop",
+   "hairCol": "#4a3524",
+   "beard": "short"
+  },
+  "folk_wife": {
+   "body": "human_f",
+   "outfit": "farmer",
+   "seat": "#6a2a22",
+   "hair": "braid",
+   "hairCol": "#6b4a2a"
+  },
+  "folk_hedge": {
+   "body": "small_m",
+   "outfit": "rover",
+   "seat": "#44502e",
+   "hair": "curls",
+   "hairCol": "#8a6a3a"
+  },
+  "folk_dwarf": {
+   "body": "dwarf_f",
+   "outfit": "chandler",
+   "seat": "#2c3f5c",
+   "hair": "twin",
+   "hairCol": "#4a3524"
+  },
+  "folk_old": {
+   "body": "human_m",
+   "outfit": "ratter",
+   "seat": "#4a3a2a",
+   "hair": "nape",
+   "hairCol": "#c9c4bb",
+   "beard": "full"
+  },
+  "guard_man": {
+   "body": "human_m",
+   "outfit": "guard",
+   "seat": "#2c3f5c",
+   "piece": "ironcap",
+   "hair": "crop",
+   "hairCol": "#2b211a",
+   "beard": "full"
+  },
+  "guard_woman": {
+   "body": "human_f",
+   "outfit": "guard",
+   "seat": "#6a2a22",
+   "piece": "coif__Head",
+   "hair": "tied",
+   "hairCol": "#4a3524"
+  },
+  "guard_orc": {
+   "body": "orc_m",
+   "outfit": "warden",
+   "seat": "#2c3f5c",
+   "hood": "#33302e",
+   "hair": "topknot",
+   "hairCol": "#2b211a",
+   "beard": "tash"
+  },
+  "traveller_gob": {
+   "body": "goblin_m",
+   "outfit": "carter",
+   "seat": "#7a6630",
+   "hood": "#3a3227",
+   "hair": "wild",
+   "hairCol": "#3e4a2a"
+  },
+  "traveller_man": {
+   "body": "human_m",
+   "outfit": "merchant",
+   "seat": "#2e3a31",
+   "hair": "long",
+   "hairCol": "#b09a72",
+   "beard": "full"
+  },
+  "traveller_horn": {
+   "body": "horned_f",
+   "outfit": "rover",
+   "seat": "#5a2d3e",
+   "hair": "pony",
+   "hairCol": "#4a1616"
+  },
+  "delver_dwarf": {
+   "body": "dwarf_m",
+   "outfit": "crew_hammer",
+   "seat": "#43332e",
+   "hair": "braid",
+   "hairCol": "#6b4a2a",
+   "beard": "twinbraid"
+  },
+  "delver_woman": {
+   "body": "human_f",
+   "outfit": "crew_blade",
+   "seat": "#2f2f3a",
+   "hood": "#2f2f3a",
+   "hair": "crop",
+   "hairCol": "#7a2f22"
+  },
+  "delver_lizard": {
+   "body": "lizard_m",
+   "outfit": "crew_bow",
+   "seat": "#2f4a4a",
+   "hood": "#33302e",
+   "bald": "crest",
+   "hairCol": "#3f7a5a"
+  },
+  "hunter_man": {
+   "body": "human_m",
+   "outfit": "woodsman",
+   "seat": "#3a3227",
+   "hood": "#44502e",
+   "piece": "hoodF__Head",
+   "beard": "short",
+   "hairCol": "#6b4a2a"
+  },
+  "hunter_gob": {
+   "body": "goblin_f",
+   "outfit": "hunter",
+   "seat": "#44502e",
+   "hair": "tied",
+   "hairCol": "#2b211a"
+  },
+  "factor_man": {
+   "body": "human_m",
+   "outfit": "merchant",
+   "seat": "#2f2f3a",
+   "hair": "crop",
+   "hairCol": "#8a8478",
+   "beard": "tash"
+  },
+  "factor_shiril": {
+   "body": "shiril_f",
+   "outfit": "chronicler",
+   "seat": "#2f4a4a",
+   "hair": "bob",
+   "hairCol": "#a58cc4"
+  },
+  "collector": {
+   "body": "human_f",
+   "outfit": "merchant",
+   "seat": "#5a2d3e",
+   "hair": "nape",
+   "hairCol": "#b8bcc4"
+  },
+  "steward": {
+   "body": "human_m",
+   "outfit": "chronicler",
+   "seat": "#7a6630",
+   "hair": "long",
+   "hairCol": "#c9c4bb",
+   "beard": "long"
+  },
+  "master_dwarf": {
+   "body": "dwarf_m",
+   "outfit": "merchant",
+   "seat": "#1c1a1c",
+   "hair": "crop",
+   "hairCol": "#8a8478",
+   "beard": "forked"
+  },
+  "vance": {
+   "body": "human_m",
+   "outfit": "warden",
+   "seat": "#2c3f5c",
+   "hood": "#2c3f5c",
+   "piece": "ironcap",
+   "hair": "crop",
+   "hairCol": "#8a8478",
+   "beard": "full"
+  },
+  "ketty": {
+   "body": "human_f",
+   "outfit": "chronicler",
+   "seat": "#33302e",
+   "piece": "coif__Head",
+   "hair": "nape",
+   "hairCol": "#8a8478"
+  },
+  "bram": {
+   "body": "human_m",
+   "outfit": "carter",
+   "seat": "#8a8274",
+   "hood": "#4a3a2a",
+   "hair": "wild",
+   "hairCol": "#6b4a2a",
+   "beard": "full"
+  },
+  "corrow": {
+   "body": "human_f",
+   "outfit": "merchant",
+   "seat": "#5a2d3e",
+   "hair": "braid",
+   "hairCol": "#cfc08a"
+  },
+  "marrow": {
+   "body": "small_f",
+   "outfit": "herbalist",
+   "seat": "#44502e",
+   "hair": "curls",
+   "hairCol": "#b09a72"
+  },
+  "herald": {
+   "body": "human_m",
+   "outfit": "chronicler",
+   "seat": "#6a2a22",
+   "hair": "bob",
+   "hairCol": "#8a6a3a"
+  }
+ },
+ "pools": {
+  "folk": [
+   "folk_man",
+   "folk_wife",
+   "folk_hedge",
+   "folk_dwarf",
+   "folk_old"
+  ],
+  "guard": [
+   "guard_man",
+   "guard_woman",
+   "guard_orc"
+  ],
+  "traveller": [
+   "traveller_gob",
+   "traveller_man",
+   "traveller_horn"
+  ],
+  "delver": [
+   "delver_dwarf",
+   "delver_woman",
+   "delver_lizard"
+  ],
+  "hunter": [
+   "hunter_man",
+   "hunter_gob"
+  ],
+  "factor": [
+   "factor_man",
+   "factor_shiril"
+  ],
+  "collector": [
+   "collector",
+   "factor_shiril"
+  ],
+  "steward": [
+   "steward",
+   "master_dwarf"
+  ],
+  "master": [
+   "master_dwarf",
+   "steward",
+   "collector"
+  ],
+  "seller": [
+   "folk_man",
+   "traveller_gob",
+   "folk_hedge",
+   "hunter_man"
+  ],
+  "crown": [
+   "steward",
+   "factor_shiril",
+   "collector"
+  ]
+ },
+ "regulars": [
+  [
+   "Ollo Vance",
+   "vance"
+  ],
+  [
+   "^Ketty Moss",
+   "ketty"
+  ],
+  [
+   "^Bram Oakes",
+   "bram"
+  ],
+  [
+   "^Lady Ysmay Corrow(?!'s)",
+   "corrow"
+  ],
+  [
+   "^Marrow",
+   "marrow"
+  ],
+  [
+   "^The Court",
+   "herald"
+  ]
+ ]
+}

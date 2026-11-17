@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as C from '../js/counter.js';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 
 test('a backdrop covers its box: scaled to fill, centred', () => {
   const f = C.cover(390, 430, 780, 860); assert.ok(Math.abs(f.s - 0.5) < 1e-9 && Math.abs(f.ox) < 1e-9 && Math.abs(f.oy) < 1e-9);
@@ -31,4 +31,38 @@ test('the backdrops\' places and spots: every view at both shapes; the left wall
   for (const v of C.VIEWS) for (const sh of ['wide', 'tall']) assert.ok(d[v] && d[v][sh] && d[v][sh].size, v + ' ' + sh);
   assert.ok(d.left.wide.places.shelf.length >= 6); assert.ok(d.right.wide.places.wall.length >= 3);
   assert.ok(d.counter.wide.spots.length >= 3 && d.counter.wide.fg); assert.ok(d.back.wide.hot.workshop);
+});
+
+// Milestone 26: the folk as pictures
+test('every kind of customer draws from its own pool; the regulars always look themselves; every look has a picture', () => {
+  const kinds = ['folk', 'guard', 'traveller', 'delver', 'hunter', 'factor', 'collector', 'steward', 'master', 'crown', 'seller'];
+  for (const k of kinds) for (const who of ['a', 'bb', 'ccc', 'dddd']) assert.ok(C.FOLK_LOOKS[C.lookOf({ type: k, who })], k);
+  assert.equal(C.lookOf({ type: 'guard', who: 'Sergeant Ollo Vance' }), 'vance');
+  assert.equal(C.lookOf({ who: 'Captain Ollo Vance' }), 'vance');
+  assert.equal(C.lookOf({ who: 'Ketty Moss, a grandmother now' }), 'ketty');
+  assert.equal(C.lookOf({ who: 'Lady Ysmay Corrow, dowager' }), 'corrow');
+  assert.notEqual(C.lookOf({ type: 'collector', who: 'Lady Ysmay Corrow\'s man' }), 'corrow', 'her man is not her');
+  assert.equal(C.lookOf({ who: 'The Court' }), 'herald');
+  assert.equal(C.lookOf({ type: 'nobody-knows', who: 'x' }), C.lookOf({ type: 'folk', who: 'x' }), 'an unknown kind is folk');
+  for (const k of Object.keys(C.FOLK_LOOKS)) {
+    assert.ok(C.FOLK_LOOKS[k] > 1 && C.FOLK_LOOKS[k] < 2.3, k + ' height');
+    assert.ok(existsSync(new URL('../assets/folk/' + k + '.webp', import.meta.url)), k + ' picture');
+  }
+});
+
+test('the small folk climb a step at the counter to be seen; nobody else does, and nobody behind', () => {
+  assert.ok(C.stepUp(C.FOLK_LOOKS.traveller_gob, 0) > 0.3, 'a goblin at the counter is lifted');
+  assert.equal(C.stepUp(C.FOLK_LOOKS.traveller_gob, 0) + C.FOLK_LOOKS.traveller_gob, C.STEP_TO);
+  assert.equal(C.stepUp(C.FOLK_LOOKS.guard_orc, 0), 0); assert.equal(C.stepUp(C.FOLK_LOOKS.traveller_gob, 2), 0);
+});
+
+// Milestone 27: the haggle at the counter
+test('each answer at the counter has its mark: sold pleased, gone offended, a counter-offer wary (offended past their purse)', () => {
+  assert.equal(C.reactionTo({ outcome: 'sold', price: 9 }), 'pleased');
+  assert.equal(C.reactionTo({ outcome: 'gone' }), 'offended');
+  assert.equal(C.reactionTo({ outcome: 'counter', price: 9 }), 'wary');
+  assert.equal(C.reactionTo({ outcome: 'counter', price: 9, over: true }), 'offended');
+  assert.equal(C.reactionTo({ outcome: 'another' }), 'wary');
+  assert.equal(C.reactionTo(null), null);
+  for (const k of ['offended', 'pleased', 'wary', 'eager']) assert.match(C.MARKS[k], /^<svg/);
 });

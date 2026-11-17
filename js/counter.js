@@ -4,12 +4,22 @@
 // cut out to stand in front of the customers), with what changes laid over it in 2D: your cards on the painted shelves (each card's
 // face skewed onto its place), the customers as pictures at their standing spots, and the places and the doorway to tap.
 // The pure parts (fit, the skew, who stands where) are exported for the tests; create() needs a page.
-import { faceCanvas, CW, CH } from './cardface.js?v=44';
+import { faceCanvas, CW, CH } from './cardface.js?v=45';
+import { LOOKS, POOLS, REGULARS } from './folk.js?v=45';
 
 export const VIEWS = ['left', 'counter', 'right', 'back'];
 export const VIEW_WORD = { left: 'LEFT WALL', counter: 'THE COUNTER', right: 'RIGHT WALL', back: 'THE BACK ROOM' };
+// the reaction marks (looktest/reactions.html), drawn by a customer's head
+export const MARKS = {
+  offended: '<svg viewBox="0 0 120 110"><g class="shake"><path class="vein" d="M70 22 l10 -12 l4 10 l12 -4 l-6 12 l10 6 l-12 2 l2 12 l-10 -8 l-8 10 l-2 -12 l-12 0 l8 -8 z"/><text x="6" y="88" class="bang">!!</text><path class="zap" d="M100 50 l14 -6 M102 64 l16 2 M98 78 l12 10"/></g></svg>',
+  pleased: '<svg viewBox="0 0 120 110"><g class="tw"><path class="spark" d="M30 40 l5 -16 l5 16 l16 5 l-16 5 l-5 16 l-5 -16 l-16 -5 z"/></g><g class="tw t2"><path class="spark" d="M84 20 l3 -10 l3 10 l10 3 l-10 3 l-3 10 l-3 -10 l-10 -3 z"/></g><g class="tw t3"><path class="spark" d="M92 70 l4 -12 l4 12 l12 4 l-12 4 l-4 12 l-4 -12 l-12 -4 z"/></g><text x="50" y="96" class="note">♪</text><text x="66" y="80" class="note n2">♫</text></svg>',
+  wary: '<svg viewBox="0 0 120 110"><path class="cloud" d="M20 58 q-14 -22 10 -30 q6 -20 30 -12 q20 -12 34 6 q22 2 16 26 q10 18 -14 24 q-12 14 -34 6 q-24 8 -32 -6 q-20 -4 -10 -14 z"/><circle class="tail" cx="18" cy="88" r="6"/><circle class="tail" cx="8" cy="102" r="3.5"/><circle class="dot" cx="44" cy="52" r="6"/><circle class="dot d2" cx="62" cy="52" r="6"/><circle class="dot d3" cx="80" cy="52" r="6"/><text x="96" y="30" class="q">?</text></svg>',
+  eager: '<svg viewBox="0 0 120 110"><g class="burst"><path class="ray" d="M60 8 v14 M92 20 l-10 10 M104 52 h-14 M28 20 l10 10 M16 52 h14 M90 84 l-10 -8 M30 84 l10 -8"/></g><text x="44" y="82" class="gold">!</text></svg>',
+};
+// what a haggle's answer shows: sold pleased, gone offended, a counter-offer wary (offended when you asked past their purse)
+export const reactionTo = r => !r ? null : r.outcome === 'sold' ? 'pleased' : r.outcome === 'gone' ? 'offended' : r.outcome === 'counter' ? (r.over ? 'offended' : 'wary') : r.outcome === 'another' ? 'wary' : null;
 const BACKDROPS = 'assets/backdrops/', BACKDROPS_V = '?b=4';   // bump b when tools/backdrops.py renders new pictures
-const FOLK = 'assets/folk/', FOLK_V = '?f=1';
+const FOLK = 'assets/folk/', FOLK_V = '?f=2';   // bump f when tools/folk.sh renders new pictures
 
 // a picture rendered at rw × rh shown to cover a box of w × h: its scale and where its corner lands
 export function cover(w, h, rw, rh) { const s = Math.max(w / rw, h / rh); return { s, ox: (w - rw * s) / 2, oy: (h - rh * s) / 2 }; }
@@ -37,15 +47,20 @@ export function mapPoint(w, h, q, u, v) {
   return [((x1 - x0 + g * x1) * s + (x3 - x0 + hh * x3) * t + x0) / z, ((y1 - y0 + g * y1) * s + (y3 - y0 + hh * y3) * t + y0) / z];
 }
 
-// ---------- the customers: who looks like whom (stand-in pictures until milestone 26), and where each one stands ----------
-export const FOLK_LOOKS = { human: 1.8, dwarf: 1.35, goblin: 1.1, orc: 1.95 };   // a picture's height in metres
-const BY_TYPE = { guard: 'orc', delver: 'dwarf', traveller: 'goblin' };
+// ---------- the customers: who looks like whom (tools/folk.json), and where each one stands ----------
+export const FOLK_LOOKS = LOOKS;   // a picture's height in metres (js/folk.js, from tools/folk.json)
 const hash = s => { let h = 7; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; };
+// a regular always the same (by name); anyone else from their kind's pool, the same picture for the same name
 export function lookOf(c) {
-  if (!c) return 'human';
-  if (BY_TYPE[c.type] && hash(c.who) % 3) return BY_TYPE[c.type];
-  const k = Object.keys(FOLK_LOOKS); return k[hash(c.who) % k.length];
+  if (!c) return POOLS.folk[0];
+  const who = String(c.who || '');
+  for (const [re, k] of REGULARS) if (re.test(who)) return k;
+  const pool = POOLS[c.type] || POOLS.folk;
+  return pool[hash(who) % pool.length];
 }
+// the step at the counter: the small folk (a goblin, a hedgefolk) climb it to be seen over the counter; further back, their own height
+export const STEP_TO = 1.5;   // metres: anyone shorter at the counter stands this tall
+export const stepUp = (height, spot) => spot === 0 ? Math.max(0, STEP_TO - height) : 0;
 // the queue to the spots: the front of it at the counter (spot 0), the rest behind, as many as there are spots
 export const standing = (queue, spots) => (queue || []).slice(0, spots).map((c, i) => ({ c, spot: i, look: lookOf(c) }));
 
@@ -69,10 +84,15 @@ function cropOf(url) {
 // host: an empty element. on: { place(kind, i), workshop(), turned(view) }
 export function create(host, on = {}) {
   host.classList.add('cview');
-  host.innerHTML = '<div class="cv-stage"><img class="cv-bg" alt=""><div class="cv-cards"></div><div class="cv-folk"></div><img class="cv-fg" alt=""><svg class="cv-hot"></svg></div>'   // back to front: the room, the walls' cards, the customers, the counter
+  host.innerHTML = '<div class="cv-stage"><img class="cv-bg" alt=""><div class="cv-cards"></div><div class="cv-folk"></div><div class="cv-gone"></div><img class="cv-fg" alt=""><svg class="cv-hot"></svg><div class="cv-over"><div class="cv-held"></div></div></div>'   // back to front: the room, the walls' cards, the customers, the counter
     + '<div class="cv-turns">' + VIEWS.map(v => '<button class="seg" data-cv="' + v + '">' + (v === 'left' ? '◀ ' : '') + VIEW_WORD[v] + (v === 'right' ? ' ▶' : '') + '</button>').join('') + '</div>';
   const stage = host.querySelector('.cv-stage'), bg = host.querySelector('.cv-bg'), fg = host.querySelector('.cv-fg'), folk = host.querySelector('.cv-folk'), cards = host.querySelector('.cv-cards'), hot = host.querySelector('.cv-hot');
-  let view = 'counter', last = null, token = 0;
+  const gone = host.querySelector('.cv-gone'), over = host.querySelector('.cv-over'), held = host.querySelector('.cv-held');
+  let view = 'counter', last = null, token = 0, were = null;
+  let front = null;            // the one at the counter as drawn: { key, img, x, y (their head), w (their width), W, H }
+  let parting = undefined;     // the mark the one at the counter leaves with, when they go (set just before the queue moves)
+  let extra = null, extraT = 0; // a visitor for a moment (a regular leaving an order, coming for it): they stand at the counter
+  let heldHtml = '', heldKey = '', markT = 0;   // were: where each customer stood last time (key → spot), to walk them
   host.querySelectorAll('[data-cv]').forEach(b => b.onclick = () => turn(b.dataset.cv));
   // a swipe across the picture turns to the next view
   let sx = null;
@@ -89,19 +109,34 @@ export function create(host, on = {}) {
     fg.hidden = !rec.fg; if (rec.fg) fg.src = BACKDROPS + view + '_' + shape + '_fg.webp' + BACKDROPS_V;
     for (const im of [bg, fg]) Object.assign(im.style, { width: rw * s + 'px', height: rh * s + 'px', left: ox + 'px', top: oy + 'px' });
     // the customers: the front of the queue at the counter, the rest behind, darker and softer the further back
+    const queue = extra ? [extra, ...(save.queue || [])] : (save.queue || []);
+    const keys = new Set(queue.map(c => c.id || c.who));
+    // whoever was at the counter and isn't in the queue now goes out of the door (with their mark, if they leave one)
+    if (front && !keys.has(front.key) && front.img.isConnected && view === 'counter') depart(front, parting);
+    else if (front && !keys.has(front.key)) front.img.remove();
+    parting = undefined;
+    if (!front || front.key !== (queue[0] && (queue[0].id || queue[0].who))) { clearMark(); }
+    front = null;
     folk.innerHTML = ''; hot.innerHTML = ''; cards.innerHTML = '';
     hot.setAttribute('viewBox', '0 0 ' + W + ' ' + H); hot.setAttribute('width', W); hot.setAttribute('height', H);
-    for (const st of standing(save.queue, (rec.spots || []).length).reverse()) {
+    const now = new Map();
+    for (const st of standing(queue, (rec.spots || []).length).reverse()) {
       const sp = rec.spots[st.spot], url = FOLK + st.look + '.webp' + FOLK_V, cr = await cropOf(url); if (my !== token || !cr) continue;
-      const hpx = FOLK_LOOKS[st.look] * sp.ppm * s, k = hpx / ((cr.y1 - cr.y0) * cr.im.height), [fx, fy] = at(sp.foot);
+      const hpx = FOLK_LOOKS[st.look] * sp.ppm * s, k = hpx / ((cr.y1 - cr.y0) * cr.im.height), [fx, fy0] = at(sp.foot), fy = fy0 - stepUp(FOLK_LOOKS[st.look], st.spot) * sp.ppm * s;
       const img = document.createElement('img'); img.src = url; img.alt = st.c.who; img.className = 'cv-who' + (st.spot ? ' back' : '');
       Object.assign(img.style, { width: cr.im.width * k + 'px', height: cr.im.height * k + 'px', left: (fx - ((cr.x0 + cr.x1) / 2) * cr.im.width * k) + 'px', top: (fy - cr.y1 * cr.im.height * k) + 'px', zIndex: 10 - st.spot });
       if (st.spot) img.style.filter = 'brightness(' + (0.82 - st.spot * 0.08) + ') blur(' + (0.6 + st.spot * 0.5) + 'px)';
+      // walking: someone new comes in from the door, someone moving up steps forward (a bob); not on the view's first drawing
+      const key = st.c.id || st.c.who, was = were && were.get(key); now.set(key, st.spot);
+      if (were && was == null) img.classList.add('cv-in'); else if (were && was > st.spot) img.classList.add('cv-step');
       folk.appendChild(img);
+      if (!st.spot) front = { key, img, x: fx, y: fy - hpx, w: cr.im.width * k * (cr.x1 - cr.x0), W, H };
       const shadow = document.createElement('div'); shadow.className = 'cv-shadow'; const sw = cr.im.width * k * (cr.x1 - cr.x0) * 1.1;
-      Object.assign(shadow.style, { width: sw + 'px', height: sw * 0.22 + 'px', left: fx - sw / 2 + 'px', top: fy - sw * 0.11 + 'px', zIndex: 9 - st.spot });
+      Object.assign(shadow.style, { width: sw + 'px', height: sw * 0.22 + 'px', left: fx - sw / 2 + 'px', top: fy0 - sw * 0.11 + 'px', zIndex: 9 - st.spot });
       folk.appendChild(shadow);
     }
+    if (my === token && rec.spots && rec.spots.length) were = now;
+    placeHeld();
     // the cards on the painted places (your shelves on the left wall, your wall's pieces on the right), and the places to tap
     for (const [kind, places] of Object.entries(rec.places || {})) {
       for (const p of places) {
@@ -122,12 +157,61 @@ export function create(host, on = {}) {
       poly.addEventListener('click', () => on[k] && on[k]()); hot.appendChild(poly);
     }
   }
+  // the piece they're looking at, held up as your forged card: to the left of the one at the counter, at the card's own proportions
+  function placeHeld() {
+    const show = view === 'counter' && front && !extra && heldHtml;
+    held.hidden = !show; if (!show) return;
+    const tall = front.W / front.H < 1.25;
+    let cw = Math.max(90, Math.min(250, front.W * (tall ? 0.36 : 0.24)));
+    held.style.width = cw + 'px';
+    if (held.offsetHeight > front.H - 12) { cw = Math.max(70, cw * (front.H - 12) / held.offsetHeight); held.style.width = cw + 'px'; }   // a short view: the card fits its height
+    const left = Math.max(front.W * 0.02, Math.min(front.x - front.w * 0.42 - cw, front.W - cw - 4));
+    held.style.left = left + 'px';
+    held.style.top = Math.max(4, Math.min(front.y - cw * 0.05, front.H - held.offsetHeight - 8)) + 'px';   // held up by their head, never out of the view
+  }
+  // the comic marks by a head: offended (red !! that shake), pleased (gold sparkles, a tune), wary (a thought bubble), eager (a gold !)
+  function markAt(layer, kind, x, y, W) {
+    const el = document.createElement('div'), sz = Math.max(54, Math.min(118, W * 0.12));
+    el.className = 'cv-mark cv-' + kind; el.innerHTML = MARKS[kind] || '';
+    Object.assign(el.style, { width: sz + 'px', height: sz * 0.92 + 'px', left: x + 'px', top: (y - sz * 0.75) + 'px' });
+    layer.appendChild(el); return el;
+  }
+  function clearMark() { over.querySelectorAll('.cv-mark').forEach(m => m.remove()); clearTimeout(markT); }
+  function depart(f, kind) {
+    const img = f.img; img.classList.remove('cv-in', 'cv-step'); img.classList.add('cv-out'); gone.appendChild(img);
+    if (kind) markAt(gone, kind, f.x + f.w * 0.12, f.y, f.W);
+    setTimeout(() => { gone.innerHTML = ''; }, 1500);
+  }
   const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => draw()) : null; if (ro) ro.observe(stage);
   return {
     get view() { return view; },
     turn,
     // the shop as it stands: save (its queue, shelf, wall, cards); priceOf(entry, card) for the shelf's price tags
-    show(save, priceOf) { last = { ...save, shelf: (save.shelf || []).map(e => { const c = e && save.cards.find(x => x.id === e.id); return e && c ? { ...e, price: priceOf ? priceOf(c, e.tag) : '' } : e; }) }; draw(); },
+    show(save, priceOf) { last = { ...save, shelf: (save.shelf || []).map(e => { const c = e && save.cards.find(x => x.id === e.id); return e && c ? { ...e, price: priceOf ? priceOf(c, e.tag) : '' } : e; }) }; return draw(); },
     redraw: draw,
+    // the piece at the counter, as the forged card's HTML (or '' for none); key: which piece, so a new one rises into the hand; tag: the price
+    // on it at the counter (HTML: a price, a word)
+    hold(html, key = html, tag = '') { const h = html && tag ? html + '<div class="cv-tag">' + tag + '</div>' : html; if (h === heldHtml && key === heldKey) return; if (key !== heldKey) { heldKey = key; held.classList.remove('cv-rise'); void held.offsetWidth; if (html) held.classList.add('cv-rise'); } heldHtml = h; held.innerHTML = h; placeHeld(); },
+    // a mark by the head of the one at the counter, for a while (ms; 0: until the next)
+    react(kind, ms = 2600) { clearMark(); if (!kind || !front || view !== 'counter') return; markAt(over, kind, front.x + front.w * 0.12, front.y, front.W); if (ms) markT = setTimeout(clearMark, ms); },
+    // the one at the counter goes with this mark, when the queue next moves
+    leaving(kind) { parting = kind; },
+    // coins from the piece to the till
+    coins(n = 7) {
+      if (!front || view !== 'counter') return;
+      const r = held.hidden ? { x: front.x, y: front.y + front.w } : { x: held.offsetLeft + held.offsetWidth / 2, y: held.offsetTop + held.offsetHeight / 2 };
+      for (let i = 0; i < n; i++) {
+        const c = document.createElement('i'); c.className = 'cv-coin';
+        Object.assign(c.style, { left: r.x + 'px', top: r.y + 'px', animationDelay: i * 70 + 'ms' });
+        c.style.setProperty('--dx', (front.W * 0.5 - r.x + (i - n / 2) * 9) + 'px'); c.style.setProperty('--dy', (front.H * 0.93 - r.y) + 'px');
+        over.appendChild(c); setTimeout(() => c.remove(), 1400 + i * 70);
+      }
+    },
+    // someone stops by for a moment (who, type): they come to the counter, wear their mark, and go with the other
+    visit(c, kind, then, ms = 3800) {
+      clearTimeout(extraT); extra = { ...c, id: 'visit:' + c.who }; draw();
+      setTimeout(() => this.react(kind, ms - 600), 950);
+      extraT = setTimeout(() => { parting = then; extra = null; draw(); }, ms);
+    },
   };
 }

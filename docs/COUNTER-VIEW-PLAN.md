@@ -93,10 +93,51 @@ no customer is shown (none, once the isometric shop is for arranging).
 - **Your cards on the painted places:** the left wall's two display cases hold 12 of your shelf's places (each card's face, from
   js/cardface.js, skewed onto its place); the right wall holds 6 of the wall's pieces. Tapping a place opens it as the SHELF and THE
   WALL tabs do; an empty place is outlined. Places beyond the painted ones stay in the tabs under the view.
-- **The customers:** the queue at the counter, the front of it at the counter, up to four behind, darker and softer. **Stand-ins until
-  milestone 26:** the four look-test pictures (human, dwarf, goblin, orc in assets/folk/), chosen by the customer's kind and name.
+- **The customers:** the queue at the counter, the front of it at the counter, up to four behind, darker and softer. Stand-ins (the look test's four pictures) until milestone 26.
 - **ARRANGE THE SHOP** opens the 3D shop, with no customers (the diorama's `folk: false`), for arranging, the workshop and the Hall;
   BACK TO THE COUNTER returns. VISIT MY SHOP · SHARE sits under the counter view. Other players' shops are still seen in 3D.
 - The haggle stays in the AT THE COUNTER panel under the view (milestone 27 brings it into the view).
 - Not yet: a backdrop per shop size and shelf level (one shop front for every shop for now), the brews' glowing bottles over the
   backdrop, the card held up, the reaction marks.
+
+## Milestone 26, as built (release 45)
+
+- **The folk as pictures** (tools/folk.sh → tools/folk.py, Blender): each look is built from Darkclay Zero's stylized parts: the body
+  (WalkerS_<body>, its painted skin), the garment cuts an outfit names (GearS_<body>, gearlooks.json's outfits: each cut its material
+  and colour, Zero's tileable linen, leather and mail maps), a head piece (a coif, a hood, the iron cap), and the hair, bald crest and
+  beard placed by Zero's own fit for the body. Lit as the backdrops, seen from behind the counter, in the waiting pose. One picture a
+  look, about 30–50 KB each.
+- **The cast** (tools/folk.json): 27 looks across human, dwarf, hedgefolk, goblin, orc, horned, lizard and shiril folk. Each kind of
+  customer draws from its own pool (folk, guards, travellers, delvers, hunters, factors, collectors, stewards, masters, the Crown's
+  agents, sellers), the same picture for the same name. **The regulars have fixed looks**, matched by name: Ollo Vance (the warden's
+  mail and the iron cap, through every rank), Ketty Moss (the widow's coif and dark coat), Bram Oakes, Lady Ysmay Corrow, Marrow, and the
+  Court's herald. They are drawn and ready, but the regulars and the Court still leave their orders without standing in the queue: they
+  appear at the counter with milestone 27, when orders come to the counter.
+- **Zero's rules for hair:** a beard only on a man of a people that grows one (the lizard, shandain, shiril, serengeti and kalthax
+  folk none; women clean-faced); the lizard and shandain folk a crest or fan for hair; the kalthax nothing.
+- **Height by people** (Zero's walkers: a hedgefolk 1.2 m, a dwarf 1.4–1.48 m, an orc 1.98 m), so a dwarf at the counter is a dwarf.
+  **A step at the counter:** anyone shorter than 1.5 m climbs it there (a goblin would otherwise be a tuft of hair over the counter);
+  further back everyone stands at their own height.
+- **Walking:** someone new comes in from the door (small and far, fading in, a bob of the stride); someone moving up the queue steps
+  forward. Still when less motion is asked for.
+- `js/folk.js` is written from the cast by tools/folk_js.py. Not yet: the bandit and your staff (no place to stand in the view until
+  milestones 27–28), poses other than waiting.
+
+## Milestone 27, as built (release 45, with 26)
+
+- **The piece held up:** the piece at the counter is your forged card (the full card, at its own proportions) held up to the left of the
+  one at the counter, tilted, rising into the hand when a new piece is shown, with a price tag hung on it: the shelf's price and tag
+  (184 c · FAIR), their counter-offer (YOU ASKED 232 c · THEY SAY 27 c), or a seller's asking price. It fits the view at every shape
+  (upright, on its side, a short phone on its side).
+- **The reaction marks** (from looktest/reactions.html), each with its own sound: a sale, gold sparkles and a tune as they go, and the
+  coins fly from the piece to the till; walking out, the red "!!" that shakes; a counter-offer, the thought bubble (offended instead when
+  you asked past their purse); someone eager at the counter, the gold "!" (once your Haggling reads moods). Tired of waiting, they go
+  offended. Still when less motion is asked for.
+- **The one who's done goes out of the door** with their mark, and the next steps up.
+- **The panel under the view** keeps their words, the mood, the patience bar and the choices (today's rules: meet them, hold, ask more,
+  their offer, split the difference, nothing for them); the silhouette and the card go from it while the view shows them. ARRANGE THE
+  SHOP and VISIT MY SHOP sit under the panels.
+- **The regulars and the Court at the counter:** leaving an order, the regular (or the Court's herald) comes to the counter for a
+  moment, eager, and goes; when you fill it, they come to collect, pleased, and the coins go to the till. The queue steps back while
+  they're there.
+- Not yet: sellers of materials hold nothing up (no card for a sack of ore).

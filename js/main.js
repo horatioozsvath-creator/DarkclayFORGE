@@ -1,32 +1,33 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING } from './data.js?v=44';
-import * as R from './rules.js?v=44';
-import * as Sh from './shop.js?v=44';
-import * as St from './staff.js?v=44';
-import * as Rm from './room.js?v=44';
-import * as G from './growth.js?v=44';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=44';
-import * as Snd from './sound.js?v=44';
-import * as Town from './town.js?v=44';
-import * as V from './visit.js?v=44';
-import * as Br from './branch.js?v=44';
-import * as Bank from './bank.js?v=44';
-import * as Wear from './wear.js?v=44';
-import * as Th from './thieves.js?v=44';
-import * as Run from './runner.js?v=44';
-import * as Mon from './monsters.js?v=44';
-import * as Liv from './living.js?v=44';
-import * as Hl from './hall.js?v=44';
-import * as Trail from './trail.js?v=44';
-import { ICONS, emblem, watch } from './icons.js?v=44';
-import { drawFlyer, flyerBlob } from './flyer.js?v=44';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=44';
-import { card, ART } from './card.js?v=44';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=44';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=44';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING } from './data.js?v=45';
+import * as R from './rules.js?v=45';
+import * as Sh from './shop.js?v=45';
+import * as St from './staff.js?v=45';
+import * as Rm from './room.js?v=45';
+import * as G from './growth.js?v=45';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=45';
+import * as Snd from './sound.js?v=45';
+import * as CV from './counter.js?v=45';
+import * as Town from './town.js?v=45';
+import * as V from './visit.js?v=45';
+import * as Br from './branch.js?v=45';
+import * as Bank from './bank.js?v=45';
+import * as Wear from './wear.js?v=45';
+import * as Th from './thieves.js?v=45';
+import * as Run from './runner.js?v=45';
+import * as Mon from './monsters.js?v=45';
+import * as Liv from './living.js?v=45';
+import * as Hl from './hall.js?v=45';
+import * as Trail from './trail.js?v=45';
+import { ICONS, emblem, watch } from './icons.js?v=45';
+import { drawFlyer, flyerBlob } from './flyer.js?v=45';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=45';
+import { card, ART } from './card.js?v=45';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=45';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=45';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 44;
+const VERSION = 45;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayFORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -367,10 +368,10 @@ $('lookClose').onclick = () => { $('look').hidden = true; };
 let floorShown = null;
 // BEHIND THE COUNTER (milestone 25): the shop seen from behind your counter, the painted views (js/counter.js); the 3D shop only to
 // arrange it, with no customers in it
-let cvw = null, cvP = null, iso = false, cvSig = '';
+let cvw = null, cvP = null, iso = false, cvSig = '', cvFront = null;
 function counterView() {
   $('cview').hidden = false; $('cvActs').hidden = false; $('floor').hidden = true; $('dioBar').hidden = true;
-  if (!cvP) cvP = import('./counter.js?v=44').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
+  if (!cvP) cvP = import('./counter.js?v=45').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
   else if (cvw) cvw.show(save, Sh.priceAt);
 }
 // a place on the painted wall: its piece (take it down), or empty (hang one from the back room)
@@ -385,7 +386,7 @@ function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   if (!iso) { counterView(); tip('shop', $('cview')); return; }
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=44').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=45').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -532,10 +533,12 @@ function renderCounter() {
   const c = save.queue[0], box = $('counterBox');
   lastSig = counterSig();
   box.hidden = !c;
-  if (!c) return;
+  const inView = !!(cvw && !iso);   // the counter view holds the piece up and shows who they are; the panel keeps their words and the choices
+  let held = '', heldKey = '', heldTag = '';
+  if (!c) { if (cvw) cvw.hold(''); return; }
   const hl = Sh.haggleLevel(save), rd = G.readLevels(save);
   $('queueWord').textContent = save.queue.length > 1 ? (save.queue.length - 1) + ' WAITING BEHIND' : 'NO ONE BEHIND';
-  const head = '<div class="cust">' + figure(c.fig).replace('class="fig in"', 'class="fig"') + '<div class="nm">' + esc(c.who) + '</div>'
+  const head = '<div class="cust' + (inView ? ' inview' : '') + '">' + (inView ? '' : figure(c.fig).replace('class="fig in"', 'class="fig"')) + '<div class="nm">' + esc(c.who) + '</div>'
     + (c.tell ? '<div class="tell">' + esc(c.tell) + '</div>' : '')
     + '<div class="meta">' + (c.kind === 'buyer' ? 'Wants <b>' + Sh.wantWord(c.want) + (c.least ? ', ' + TIERS[c.least].name + ' or better' : '') + '</b>' : 'Has something to sell')
     + (c.type === 'steward' || c.type === 'master' ? '<span class="wealthy">WEALTHY</span>' : '')
@@ -546,11 +549,13 @@ function renderCounter() {
     const o = c.offer, h = hour();
     if (o.type === 'mats') body = '<div class="note">' + MATS[o.mat].name + (MATS[o.mat].rare ? ' ✶' : '') + ' × ' + o.n + ' for <b>' + o.price + ' c</b>'
       + (Sh.sells(o.mat, h) ? ' (the suppliers ask ' + Sh.priceOf(o.mat, h) * o.n + ' c)' : ' (no supplier has it this hour)') + '. You have ' + (save.mats[o.mat] || 0) + '.</div>';
-    else body = '<div class="offer"><div>' + card(o.card, { short: true, price: o.price + ' c' }) + '</div><div class="choices"><div class="note">' + esc(o.card.name) + ', ' + TIERS.find(t => t.id === o.card.tier).name
+    else { held = card(o.card); heldTag = 'THEY ASK <b>' + o.price + ' c</b>'; heldKey = 'sell:' + o.card.id; }
+    if (o.type !== 'mats') body = '<div class="offer">' + (inView ? '' : '<div>' + card(o.card, { short: true, price: o.price + ' c' }) + '</div>') + '<div class="choices"><div class="note">' + esc(o.card.name) + ', ' + TIERS.find(t => t.id === o.card.tier).name
       + ', worth ' + o.card.worth + ' c. They\'ll take <b>' + o.price + ' c</b>. It goes in the back: sell it, break it down, or rework it.</div></div></div>';
     body += '<div class="rbtns left"><button class="hbtn go" data-act="buy"' + (save.coins < o.price ? ' disabled' : '') + '>BUY IT<small>' + o.price + ' c</small></button><button class="hbtn" data-act="away">NO THANKS</button></div>';
   } else if (c.counter) {
     const cd = save.cards.find(x => x.id === c.counter.id);
+    if (cd) { held = card(cd); heldTag = 'YOU ASKED ' + c.counter.asked + ' c · THEY SAY <b>' + c.counter.price + ' c</b>'; heldKey = 'ask:' + cd.id; }
     const k = c.counter, said = k.final ? (k.price >= c.purse ? '"That\'s everything I\'ve got."' : '"' + k.price + ' c, and that\'s my last word."') : k.over ? '"' + k.asked + ' c? I can do ' + k.price + ' c. No more."' : '"Not ' + k.asked + ' c. ' + k.price + ' c?"';
     body = '<div class="note">' + esc(cd ? cd.name : 'The piece') + ': you asked ' + k.asked + ' c. <b>' + said + '</b>' + (k.final ? ' Take it, or they look elsewhere.' : '') + '</div>'
       + '<div class="rbtns left"><button class="hbtn go" data-act="take">TAKE IT<small>' + k.price + ' c</small></button>'
@@ -562,37 +567,54 @@ function renderCounter() {
       + '<div class="rbtns left"><button class="hbtn" data-act="away">NOTHING FOR THEM</button></div>';
     else {
       const e = list[c.shows % list.length], hm2 = G.haggleMult(save);
-      body = '<div class="offer"><div>' + card(e.card, { short: true, price: Sh.priceAt(e.card, e.tag) + ' c<span class="tagword">' + TAGS[e.tag].word + '</span>' }) + '</div><div class="choices">'
+      const tagged = card(e.card, { short: true, price: Sh.priceAt(e.card, e.tag) + ' c<span class="tagword">' + TAGS[e.tag].word + '</span>' });
+      held = card(e.card); heldTag = '<b>' + Sh.priceAt(e.card, e.tag) + ' c</b> · ' + TAGS[e.tag].word; heldKey = 'show:' + e.card.id;
+      body = '<div class="offer">' + (inView ? '' : '<div>' + tagged + '</div>') + '<div class="choices">'
         + '<div class="row3">' + Object.entries(HAGGLE).map(([k, h]) => { const pr = Sh.hagglePrice(e.card, e.tag, k, hm2); return '<button class="hbtn' + (k === 'hold' ? ' go' : '') + '" data-act="h:' + k + '" data-id="' + e.card.id + '">' + h.word + '<small>' + pr + ' c</small></button>'; }).join('') + '</div>'
         + '<div class="rbtns left">' + (list.length > 1 && c.shows < 2 ? '<button class="seg" data-act="another">SHOW ANOTHER</button>' : '') + '<button class="seg" data-act="away">NOTHING FOR THEM</button></div></div></div>';
     }
   }
+  if (cvw) cvw.hold(inView ? held : '', heldKey, heldTag);
   if (Date.now() - counterNoteAt > 6000) counterNote = '';
   $('counterBody').innerHTML = head + body + (counterNote ? '<p class="note' + (counterNoteBad ? ' bad' : '') + '">' + counterNote + '</p>' : '')
     + (hl < rd.purse ? '<p class="note" style="color:var(--bone-faint)">Haggling ' + hl + (hl < rd.mood ? ': read their mood from their words. It shows at Haggling ' + rd.mood + ', their purse at ' + rd.purse + '.' : ': their purse shows at Haggling ' + rd.purse + '.') + '</p>' : '');
   tickCounter();
 }
+// the answer at the counter, in the view: a mark and its sound; the one who goes takes theirs out of the door, a sale's coins to the till
+function counterReact(res) {
+  const k = res && CV.reactionTo(res); if (!k) return;
+  Snd.play(k);
+  if (!cvw || iso) return;
+  if (res.outcome === 'sold') { cvw.coins(); cvw.leaving('pleased'); }
+  else if (res.outcome === 'gone') cvw.leaving('offended');
+}
 $('counterBody').onclick = ev => {
   const b = ev.target.closest('button'); if (!b || b.disabled) return;
   const a = b.dataset.act, now = Date.now(), c = save.queue[0]; if (!c) return;
   counterNote = ''; counterNoteBad = false; counterNoteAt = Date.now();
-  if (a === 'buy') { const e = Sh.buyOffer(save, now); if (e) { counterNote = 'Bought: ' + esc(e.bought.what) + '.'; Snd.play('coin'); } }
-  else if (a === 'away') Sh.sendAway(save, now);
+  let res = null;   // the answer, for the mark by their head
+  if (a === 'buy') { const e = Sh.buyOffer(save, now); if (e) { counterNote = 'Bought: ' + esc(e.bought.what) + '.'; Snd.play('coin'); res = { outcome: 'sold', bought: true }; } }
+  else if (a === 'away') { Sh.sendAway(save, now); if (cvw) cvw.leaving(null); }
   else if (a === 'another') c.shows++;
-  else if (a === 'take' || a === 'refuse') { const r = Sh.answerCounter(save, a === 'take', now); if (r) { counterNote = r.outcome === 'sold' ? 'Sold for ' + r.price + ' c.' : r.outcome === 'another' ? 'They look at something else.' : 'They went.'; counterNoteBad = r.outcome === 'gone'; if (r.outcome === 'sold') { Snd.play('coin'); if (dio) dio.sold(r.entry); } } }
-  else if (a === 'split') { const r = Sh.split(save, now); if (r) { if (r.outcome === 'sold') { counterNote = 'Met halfway: sold for ' + r.price + ' c.'; Snd.play('coin'); if (dio) dio.sold(r.entry); } else counterNote = 'They came up to ' + r.price + ' c.'; } }
+  else if (a === 'take' || a === 'refuse') { const r = Sh.answerCounter(save, a === 'take', now); res = r; if (r) { counterNote = r.outcome === 'sold' ? 'Sold for ' + r.price + ' c.' : r.outcome === 'another' ? 'They look at something else.' : 'They went.'; counterNoteBad = r.outcome === 'gone'; if (r.outcome === 'sold') { Snd.play('coin'); if (dio) dio.sold(r.entry); } } }
+  else if (a === 'split') { const r = Sh.split(save, now); res = r; if (r) { if (r.outcome === 'sold') { counterNote = 'Met halfway: sold for ' + r.price + ' c.'; Snd.play('coin'); if (dio) dio.sold(r.entry); } else counterNote = 'They came up to ' + r.price + ' c.'; } }
   else if (a.startsWith('h:')) {
-    const r = Sh.haggle(save, b.dataset.id, a.slice(2), now);
+    const r = Sh.haggle(save, b.dataset.id, a.slice(2), now); res = r;
     if (r) {
       if (r.outcome === 'sold') { counterNote = 'Sold for ' + r.price + ' c.'; Snd.play('coin'); if (dio) dio.sold(r.entry); }
       else if (r.outcome === 'gone') { counterNote = 'They went.'; counterNoteBad = true; }
     }
   }
+  counterReact(res);
   store(save); coins(); renderShop();
+  if (res && cvw && !iso && (res.outcome === 'counter' || res.outcome === 'another')) { const k = CV.reactionTo(res); cvw.show(save, Sh.priceAt).then(() => cvw.react(k, 0)); }
   const first = $('counterBody').querySelector('button:not(:disabled)'); if (first) first.focus({ preventScroll: true });
 };
 // an order filled: the coin, and a regular's thanks (and their gift, at a story's end)
+// the one the order was for comes to the counter for it: pleased, and the coins (milestone 27)
+function collects(o) { if (!cvw || iso || screen !== 'shop') return; cvw.visit({ who: o.who }, 'pleased', 'pleased'); setTimeout(() => cvw.coins(9), 1100); Snd.play('pleased'); }
 function filledToast(o, e) {
+  collects(o);
   const st = e.story;
   toast('<b>Order filled · +' + o.pays + ' c</b><br>' + esc(o.who) + (st ? ': "' + esc(st.thanks) + '"' : '')
     + (st && st.gift ? '<br><b>A gift: ' + esc(FURNITURE[st.gift].name) + '</b> ' + (st.stored ? '(in the store room: put it out from FURNISH)' : 'in your shop front') : '')
@@ -637,7 +659,7 @@ function renderCourtOrder(o) {
   if (b) b.onclick = () => {
     if (!confirm(c.name + ' goes to the Court for ' + o.pays.toLocaleString() + ' c. There\'s only one: it won\'t come back. Sell it?')) return;
     if (inHall) Object.keys(save.hall.shown).forEach(k => { if (save.hall.shown[k] === c.id) delete save.hall.shown[k]; });
-    const e = Sh.deliver(save, c.id, Date.now()); if (e) { store(save); coins(); renderShop(); toast('<b>To the Court · +' + o.pays.toLocaleString() + ' c</b><br>' + esc(e.line.replace(/"/g, ''))); Snd.play('coin'); }
+    const e = Sh.deliver(save, c.id, Date.now()); if (e) { store(save); coins(); renderShop(); collects(o); toast('<b>To the Court · +' + o.pays.toLocaleString() + ' c</b><br>' + esc(e.line.replace(/"/g, ''))); Snd.play('coin'); }
   };
   $('courtKeep').onclick = () => {
     if (!confirm('Keep ' + MYTHICS[o.mythic].name + '? The Court won\'t ask for it again.')) return;
@@ -1666,6 +1688,7 @@ function frame(now) {
   if (save.lastSeen && nowMs - save.lastSeen > 3000) returning(nowMs);
   const present = screen === 'shop' && !document.hidden;
   const clerk = St.clerkOf(save), clerkOn = clerk && !save.unpaid ? St.clerkTerms(clerk) : null;
+  const frontWas = save.queue[0] && save.queue[0].who;
   const visits = Sh.shopStep(save, dt, rng, nowMs, present, clerkOn);
   visits.forEach(e => { if (e.by && e.sold && clerk) St.gain(clerk, 1); });
   const paid = St.payWages(save, dt);
@@ -1682,6 +1705,10 @@ function frame(now) {
     if (visits.length || save.queue.length) store(save);
     visits.forEach(e => {
       if (e.sold) { coins(); Snd.play('coin'); if (dio && screen === 'shop') dio.sold(e); if (screen !== 'shop') { toast('<b>Sold: ' + esc(e.sold.name) + ' · +' + e.sold.price + ' c</b><br>to ' + esc(e.who)); $('navSold').hidden = false; } }
+      if (screen === 'shop' && cvw && !iso) {
+        if (e.order === 'posted') { cvw.visit({ who: e.who }, 'eager', null); Snd.play('eager'); }   // a regular (or the Court's herald) comes to leave it
+        else if (e.who === frontWas && !e.served && !e.by) cvw.leaving(e.sold ? 'pleased' : 'offended');   // tired of waiting: they went
+      }
       if (e.order === 'posted' && screen !== 'shop') { toast('<b>A special order</b><br>' + esc(e.who) + ': ' + esc(Sh.orderWord(save.order)) + '.'); $('navSold').hidden = false; }
     });
     if (screen === 'shop') renderShop(); else tabBadges();
@@ -1694,7 +1721,12 @@ function frame(now) {
     if (screen === 'branch' && branchDio) { if (bs.length) branchDio.setShelf(branchShown()); bs.forEach(e => { if (e.sold) branchDio.sold(e); else branchDio.walkIn(e); }); branchDio.tick(); }
   }
   if (screen === 'visit' && visitDio) { visitTick(); visitDio.tick(); }
-  if (screen === 'shop' && cvw && !iso && sig !== cvSig) { cvSig = sig; cvw.show(save, Sh.priceAt); }
+  if (screen === 'shop' && cvw && !iso && sig !== cvSig) {
+    cvSig = sig; const f = save.queue[0], fresh = f && f.id !== cvFront; cvFront = f && f.id;
+    const p = cvw.show(save, Sh.priceAt);
+    // someone new at the counter who wants something badly: a gold "!" (once you can read a mood)
+    if (fresh && f.kind === 'buyer' && f.mood === 'EAGER' && Sh.haggleLevel(save) >= G.readLevels(save).mood) p.then(() => { cvw.react('eager'); Snd.play('eager'); });
+  }
   if (screen === 'shop') { tickCounter(); if (dio && iso) { if (sig !== dioSig) { dioSig = sig; dio.setQueue(save.queue); } visits.forEach(e => { if (!e.served && !e.by && !e.sold) dio.walkIn(e); }); dio.tick(); } }
   if (screen === 'supp' && suppHour !== hour()) renderSupp();
   if (S && screen === 'work') {
@@ -1783,7 +1815,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=44').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=45').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -1862,7 +1894,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=44').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=45').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }
