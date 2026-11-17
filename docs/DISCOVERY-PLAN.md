@@ -1,6 +1,6 @@
 # Finding new patterns: a plan (milestones 31–33)
 
-Status: proposed (2026-11-17), nothing built. Builds on release 48.
+Status: built, milestones 31–33 (releases 49, 55, 57). Proposed 2026-11-17 on release 48.
 
 ## What it's for
 
@@ -138,3 +138,31 @@ saves get the same hidden patterns as a new game.
   MAKER'S BOOK. Customers asking already covered every station. **Not done:** clues from the named regulars.
 - Tests: 226 (tests/m32.test.mjs checks every hidden pattern the same way, a found try at each station, the board, the gear). Checked in
   the browser at 430 wide: each station's try, finding the cloak, the book's pages, the board, the nine pictures. Not checked on a real phone.
+
+## Milestone 33, as built (release 57)
+
+- **Three two-station pieces**, each made at its station with a part forged at the forge (`FORGED_PARTS` now name the station they're
+  `for`; each is forged at once from a bar of iron, or bought dear: the boss and the frame at Dougal's Yard, the lath at Hollin's Timber).
+  TRY SOMETHING NEW takes a forged part in the second choice at the stretcher, the bench and the glass (a new `forged` family, so a
+  ferrule where a boss belongs is a near miss):
+  - **Shield** (stretcher): deer or shark hide, a forged **shield boss**, a leather wrap or strap; jerkins, trade 3. OFF HAND armour.
+  - **Crossbow** (bench): an oak or yew stock, a forged **crossbow lath**, gut or wyvern sinew; shortbows or longbows, trade 3. A weapon.
+  - **Lantern** (glass): clear or sea-glass sand, a forged **lantern frame**, a bronze or iron cap; panes or goblets, trade 3. LIGHT.
+  - Simpler than the plan's draft: the shield's rim is leather, not a bentwood rim from the bench, and the lantern's glass is blown in
+    the working itself rather than a pane brought from the glass. Each is the forge and one station.
+- **Runner gear:** a new OFF HAND slot (the shield, counted in the guard) and a LIGHT slot (the lantern: the road's hurt 10 % less a
+  step of its power, never more than half off); the crossbow as a weapon.
+- **A lantern lit in the shop:** hung among the wards (THE SHOP AT NIGHT), it softens a monster like any ward and keeps the shop an hour
+  longer while you're away (one lantern: a second adds no more hours, though it still wards).
+- **The regulars' clues:** about one order in three from a named regular carries a word about a pattern still to find at a station you
+  have (Bram on the crossbow, Marrow on the poultice, Vance on the shield, Lady Corrow on the lantern...), shown with the order and
+  written into THE MAKER'S BOOK under their name, never the same word twice.
+- **Orders for found patterns:** the regulars' orders now take in the found patterns (Vance: spear, mace, shield; Bram: crossbow,
+  satchel, sling; Corrow: mirror, lantern, wand; Marrow: poultice, ink; Ketty: cloak; Tib: sling, club), only once they're known.
+  **Not done:** Court orders for found patterns (the Court still asks only for the Nine).
+- **The balance run** (`node tools/sim.mjs 30 <seed>`, `FOUND=0` for only the starting patterns): the bot now makes only what it knows,
+  and stops making a pattern with six unsold in the back (before that, with everything found it made 550+ war hammers that few
+  customers ask for). 30 days, seeds 2–4: everything found earned about 430,000 against 515,000 with nothing found, renown the same
+  (about 2,300). The gap is the bot practising sixteen more trades; shields and crossbows were among the slower sellers.
+- Tests: 232 (tests/m33.test.mjs). Checked in the browser at 430 wide: the forged parts under each station, forging a boss, finding the
+  shield, the three pictures, a lantern hung (kept 9 h, not 8). Not checked on a real phone.

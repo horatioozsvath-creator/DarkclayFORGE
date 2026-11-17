@@ -1,13 +1,13 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=56';
-import { levelOf, makePiece, partOptions } from './rules.js?v=56';
-import { awayStep } from './shop.js?v=56';
-import { wageMult, capBonus, rung } from './growth.js?v=56';
-import * as Trail from './trail.js?v=56';
-import { TRAIL } from './data.js?v=56';
-import * as Run from './runner.js?v=56';
+import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=57';
+import { levelOf, makePiece, partOptions } from './rules.js?v=57';
+import { awayStep } from './shop.js?v=57';
+import { wageMult, capBonus, rung } from './growth.js?v=57';
+import * as Trail from './trail.js?v=57';
+import { TRAIL, MONSTERS } from './data.js?v=57';
+import * as Run from './runner.js?v=57';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -37,7 +37,9 @@ export function clerkTerms(p) {
   return { name: p.name.split(' ')[0], rate: Math.min(0.97, 0.8 + 0.02 * (l - 1) + (p.trait === 'silver' ? 0.05 : 0)), boost: 1.3 + 0.03 * (l - 1), restock: p.restock !== false };
 }
 // hours of away time the shop is kept for
-export const awayCap = save => (save.awayCapH || AWAY_CAP_H) + ((clerkOf(save) || {}).trait === 'early' ? 2 : 0) + ((ROOM_SIZES[(save.room || {}).size || 0] || {}).capH || 0) + capBonus(save);
+export const awayCap = save => (save.awayCapH || AWAY_CAP_H) + ((clerkOf(save) || {}).trait === 'early' ? 2 : 0) + ((ROOM_SIZES[(save.room || {}).size || 0] || {}).capH || 0) + capBonus(save) + lanternHours(save);
+// a lantern hung by the door among the wards (milestone 33): an hour more (one lantern is enough: a second adds no more)
+export const lanternHours = save => (save.wards || []).some(c => c && c.pattern === 'lantern') ? MONSTERS.wards.lanternH : 0;
 
 // who's looking for work this hour: three, at least one of each role, none already hired
 export function candidates(save, hour) {

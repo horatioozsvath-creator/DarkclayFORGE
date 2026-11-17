@@ -37,7 +37,7 @@ test('every hidden pattern: art, lore, a recipe that fits its station\'s roles a
     const t = PATTERNS[a].hidden.try, picks = { head: t.head[0], haft: t.haft[0], binding: t.binding[0] };
     assert.ok(!Disc.grade(b, picks).every(g => g === 'right'), a + ' vs ' + b);
   }
-  for (const [st, ids] of Object.entries(NEW)) assert.deepEqual(Disc.hiddenAt(st).sort(), ids.slice().sort());
+  for (const [st, ids] of Object.entries(NEW)) for (const id of ids) assert.ok(Disc.hiddenAt(st).includes(id), st + ': ' + id);   // and milestone 33's beside them
 });
 
 test('a found try at each station, with its gate met: the pattern, a Common one (a batch at the kettle)', () => {

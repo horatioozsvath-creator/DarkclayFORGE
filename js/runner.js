@@ -1,11 +1,11 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE RUNNER'S GEAR AND THE ROAD'S DANGER, with no page access: pieces you made, carried by the runner (off the shelves while they're
 // carried), potions used up on the road, the chance of harm on the hard roads, and the hunt for a gang. Spared on a gentler Reach.
-import { GEAR, ROUTES, TIERS } from './data.js?v=56';
-import { rung } from './growth.js?v=56';
-import { threatsOn } from './bank.js?v=56';
-import { levelOf } from './rules.js?v=56';
-import { roadX } from './monsters.js?v=56';
+import { GEAR, ROUTES, TIERS } from './data.js?v=57';
+import { rung } from './growth.js?v=57';
+import { threatsOn } from './bank.js?v=57';
+import { levelOf } from './rules.js?v=57';
+import { roadX } from './monsters.js?v=57';
 
 const D = 24 * 3600000;
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
@@ -17,16 +17,18 @@ const powerOf = c => c ? Math.max(0, GEAR.power[c.tier] - (c.flawed ? 1 : 0)) : 
 const oiled = p => potionsOf(p).some(x => x.pattern === 'oil');
 export function strength(p) {
   const g = gearOf(p);
-  const guard = ['head', 'body', 'hands', 'feet'].reduce((a, k) => a + powerOf(g[k]), 0) + powerOf(g.ring) / 2;
+  const guard = ['head', 'body', 'hands', 'feet', 'offhand'].reduce((a, k) => a + powerOf(g[k]), 0) + powerOf(g.ring) / 2;   // a shield in the off hand guards (milestone 33)
   return { guard, fight: powerOf(g.weapon) * (oiled(p) ? 1.5 : 1) };
 }
 // a satchel in the PACK slot (milestone 32): how much more of the common things they bring home (1.1 for a Common one, 1.2 a Fine...)
 export const packBonus = p => 1 + GEAR.pack * powerOf(gearOf(p).pack);
+// a lantern in the LIGHT slot (milestone 33): the road's hurt this much less (0.9 for a Common one, 0.8 a Fine... never below half)
+export const lightCut = p => 1 - Math.min(GEAR.lightMax, GEAR.light * powerOf(gearOf(p).light));
 // on a road: the chance of being hurt, and of being killed
 export function risk(save, p, route, now) {
   const d = GEAR.danger[route]; if (!d || !threatsOn(save, now)) return { hurt: 0, die: 0 };
   const s = strength(p), f = 6 / (6 + s.guard + s.fight / 2), x = roadX(save, now);   // a monster about: every road twice as dangerous
-  return { hurt: Math.min(0.9, d.hurt * f * x), die: d.die * f * f * x };
+  return { hurt: Math.min(0.9, d.hurt * f * x * lightCut(p)), die: d.die * f * f * x };
 }
 // the road's risk level, as the runner is kitted now, and bare: { word, cls, hurt, die, bare, cut } (cut: how much the gear takes off)
 export function riskLevel(save, p, route, now) {

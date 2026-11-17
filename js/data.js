@@ -48,10 +48,12 @@ export const TRAIL = { rung: 6, deep: 0.35, court: 0.4 };
 // Hurt: off 2–4 days and a healer's bill; one piece of armour broken (never a Relic or Mythic). Potions, two at most, used up: a salve
 // heals a wound on the road (not hurt), a draught keeps a dying runner alive (hurt instead), a tonic and an oil help on any hard road.
 export const GEAR = {
-  slots: { weapon: ['falchion', 'dagger', 'axe', 'staff', 'shortbow', 'longbow', 'spear', 'mace', 'shortsword', 'warhammer', 'sling', 'club', 'wand'], head: ['helm', 'hood'], body: ['jerkin', 'cloak'], hands: ['gloves'], feet: ['boots'], ring: ['ring', 'beads'], pack: ['satchel'] },
-  slotWord: { weapon: 'WEAPON', head: 'HEAD', body: 'BODY', hands: 'HANDS', feet: 'FEET', ring: 'RING', pack: 'PACK' },
+  slots: { weapon: ['falchion', 'dagger', 'axe', 'staff', 'shortbow', 'longbow', 'spear', 'mace', 'shortsword', 'warhammer', 'sling', 'club', 'wand', 'crossbow'], offhand: ['shield'], head: ['helm', 'hood'], body: ['jerkin', 'cloak'], hands: ['gloves'], feet: ['boots'], ring: ['ring', 'beads'], pack: ['satchel'], light: ['lantern'] },
+  slotWord: { weapon: 'WEAPON', head: 'HEAD', body: 'BODY', hands: 'HANDS', feet: 'FEET', ring: 'RING', pack: 'PACK', offhand: 'OFF HAND', light: 'LIGHT' },
   // a satchel: a runner brings home this much more (common things) for each step of its power; a poultice: a hurt mends in this share of the days, the healer's bill halved
   pack: 0.1, poultice: 0.5,
+  // a lantern carried (milestone 33): the road's hurt this much less for each step of its power, at most half
+  light: 0.1, lightMax: 0.5,
   power: { common: 1, fine: 2, rare: 3, oldblood: 5, relic: 8, mythic: 12 },
   potions: ['salve', 'draught', 'tonic', 'oil', 'poultice'], carry: 2,
   // every road has its danger (release 41: the short roads a little too); its risk level by hurt + 8 × killed: LOW, MODERATE, HIGH, DEADLY
@@ -66,7 +68,7 @@ export const GEAR = {
 // (an oil from the kettle, a lens or a pane from the glass, three at most) cut the damage and keep some thieves off.
 export const WEAPONS = ['falchion', 'dagger', 'axe', 'staff', 'shortbow', 'longbow'];
 export const MONSTERS = { odds: 30, warnD: 3, afterD: 1, pays: 1.5, roadX: 2,
-  wards: { max: 3, pieces: ['oil', 'lens', 'pane', 'mirror'], soft: 6 },
+  wards: { max: 3, pieces: ['oil', 'lens', 'pane', 'mirror', 'lantern'], soft: 6, lanternH: 1 },   // lanternH: a lantern hung by the door keeps the shop an hour longer while you're away
   kinds: {
     wolves: { name: 'Wolves in the lanes', rung: 2, renown: 15, damage: 300, fearH: 24,
       lines: ['A carter says a pack has come down off the high pasture.', 'Wolves seen at the edge of town at dusk: a dog was taken.', 'The pack came into the lanes in the night.'],
@@ -441,23 +443,47 @@ Object.assign(PATTERNS, {
       hints: { head: 'an easy sand', haft: 'lime for the flux', binding: 'a colour: cobalt' },
       asks: ['"Blue beads, for luck. Cobalt glass, like the pedlars sell."', '"A string of beads for my girl. Blue ones."'],
       board: 'POSTED: For the spring fair: blue glass beads wanted, cobalt, by the string.' } },
+  // two hands to make it (milestone 33): a part forged at the forge, brought to another station
+  shield: { name: 'Shield', trade: 'Shields', kind: 'SHIELD · OFF HAND', art: 'shield', armour: 3, weight: 4, value: 58, bars: 2, want: 'armour', station: 'stretcher', two: 'forge',
+    parts: [{ part: 'Face', metals: HIDES }, { part: 'Boss', opts: [{ name: 'Forged boss', mat: 'boss' }] }, { part: 'Rim', opts: [{ name: 'Leather wrap', mat: 'wrap' }, { name: 'Leather strap', mat: 'strap' }, { name: 'Wyvern sinew', mat: 'sinew', rare: true }] }],
+    affixes: ['parrying', 'unyielding', 'steady', 'turning', 'graveward', 'weatherproof'], lore: ['A hide on a frame, and something between you and the blow.', 'The boss rings and the face holds.', 'A shield that has turned a spear will turn a sword without thinking.', 'Every blow it ever took is still in it, and none of them got through.'],
+    hidden: { look: 'ARMOUR · OFF HAND · TWO STATIONS', gate: { trades: ['jerkin'], level: 3 }, try: { head: ['deer', 'sharkhide'], haft: ['boss'], binding: ['wrap', 'strap'] },
+      hints: { head: 'a stout hide for the face: deer or shark', haft: 'a boss for the middle, forged at the forge', binding: 'a leather rim: a wrap or a strap' },
+      asks: ['"A shield. Hide on the face, an iron boss in the middle."', '"Have you shields? Leather, with a forged boss and a bound rim."'],
+      board: 'POSTED: The gate wants shields: a hide face, an iron boss from the forge, a leather rim.' } },
+  crossbow: { name: 'Crossbow', trade: 'Crossbows', kind: 'CROSSBOW · TWO HANDS', art: 'crossbow', dice: [1, 10], dmg: [5, 11], speed: 0.8, range: 50, skill: 'ARCHERY', value: 84, bars: 3, want: 'bow', station: 'bowbench', two: 'forge',
+    parts: [{ part: 'Stock', metals: WOODS }, { part: 'Lath', opts: [{ name: 'Forged lath', mat: 'lath' }] }, { part: 'String', opts: STRINGS }],
+    affixes: bowAffixes, lore: ['Point it, loose it: no years at the butts needed.', 'The lath is stiff and the bolt goes where it\'s looking.', 'A child could shoot it, and a knight would fear it.', 'It was wound once, the story goes, and never needed winding again.'],
+    hidden: { look: 'A WEAPON · RANGED · TWO STATIONS', gate: { trades: ['shortbow', 'longbow'], level: 3 }, try: { head: ['oak', 'yew'], haft: ['lath'], binding: ['gut', 'sinew'] },
+      hints: { head: 'a stout stock: oak or yew', haft: 'a lath, forged at the forge', binding: 'a strong string: gut' },
+      asks: ['"A crossbow, like they have in the far valley. A stock, an iron lath."', '"Can you make a crossbow? Oak, a forged lath, a gut string."'],
+      board: 'POSTED: The far-valley wall wants crossbows: a stock, a forged lath, a gut string.' } },
+  lantern: { name: 'Lantern', trade: 'Lanterns', kind: 'LANTERN · A LIGHT', art: 'lantern', clarity: 8, value: 50, bars: 2, want: 'glass', station: 'glass', two: 'forge',
+    parts: [{ part: 'Glass', metals: SANDS }, { part: 'Frame', opts: [{ name: 'Forged frame', mat: 'lampframe' }] }, { part: 'Cap', opts: [{ name: 'Iron', mat: 'iron' }, { name: 'Bronze', mat: 'bronze', val: 1.1 }, { name: 'Silver', mat: 'silver', rare: true }] }],
+    affixes: glassAffixes, lore: ['A flame that stays lit in the wind.', 'Clear glass, a good frame: the light goes where it\'s wanted.', 'The deep roads are a little less deep with one of these.', 'It was lit in the first winter, and it has not gone out.'],
+    hidden: { look: 'A LIGHT · TWO STATIONS', gate: { trades: ['pane', 'goblet'], level: 3 }, try: { head: ['clearsand', 'seasand'], haft: ['lampframe'], binding: ['bronze', 'iron'] },
+      hints: { head: 'a clear sand', haft: 'a frame, forged at the forge', binding: 'a cap and a handle: bronze or iron' },
+      asks: ['"A lantern for the road. Glass in an iron frame."', '"Do you make lanterns? Clear glass, a forged frame, a bronze cap."'],
+      board: 'POSTED: The lamp-carriers of the deep want lanterns: clear glass in a forged frame.' } },
 });
 // TRY SOMETHING NEW at the forge: the three things you put together, and the families a near miss is told by
 // (only: the first role takes the station's own material, the one the working's strip comes from; pick: the empty choice's words;
 // line: how the station's TRY SOMETHING NEW reads)
 export const TRY_ROLES = {
   forge: [{ id: 'head', word: 'HEAD', fams: ['metal'], pick: 'choose a metal' }, { id: 'haft', word: 'HAFT OR GRIP', fams: ['wood', 'leather', 'cord', 'horn'] }, { id: 'binding', word: 'BINDING', fams: ['leather', 'cord', 'horn', 'wood'] }],
-  stretcher: [{ id: 'head', word: 'HIDE', only: HIDES, fams: ['leather'], pick: 'choose a hide' }, { id: 'haft', word: 'LINING OR STRAP', fams: ['cord', 'leather'] }, { id: 'binding', word: 'THREAD OR LOOP', fams: ['cord', 'leather'] }],
-  bowbench: [{ id: 'head', word: 'WOOD', only: WOODS, fams: ['wood'], pick: 'choose a wood' }, { id: 'haft', word: 'GRIP OR STONE', fams: ['leather', 'stone'] }, { id: 'binding', word: 'STUDS OR BINDING', fams: ['horn', 'cord'] }],
+  stretcher: [{ id: 'head', word: 'HIDE', only: HIDES, fams: ['leather'], pick: 'choose a hide' }, { id: 'haft', word: 'LINING, STRAP OR A FORGED PART', fams: ['cord', 'leather', 'forged'] }, { id: 'binding', word: 'THREAD OR LOOP', fams: ['cord', 'leather'] }],
+  bowbench: [{ id: 'head', word: 'WOOD', only: WOODS, fams: ['wood'], pick: 'choose a wood' }, { id: 'haft', word: 'GRIP, STONE OR A FORGED PART', fams: ['leather', 'stone', 'forged'] }, { id: 'binding', word: 'STUDS OR BINDING', fams: ['horn', 'cord'] }],
   kettle: [{ id: 'head', word: 'HERB OR ROOT', only: HERBS, fams: ['herb'], pick: 'choose a herb' }, { id: 'haft', word: 'WATER OR CLOTH', fams: ['water', 'cord'] }, { id: 'binding', word: 'BINDER', fams: ['binder'] }],
-  glass: [{ id: 'head', word: 'SAND', only: SANDS, fams: ['sand'], pick: 'choose a sand' }, { id: 'haft', word: 'FLUX', fams: ['flux'] }, { id: 'binding', word: 'COLOUR OR BACKING', fams: ['colour', 'metal'] }],
+  glass: [{ id: 'head', word: 'SAND', only: SANDS, fams: ['sand'], pick: 'choose a sand' }, { id: 'haft', word: 'FLUX OR A FORGED PART', fams: ['flux', 'forged'] }, { id: 'binding', word: 'COLOUR OR BACKING', fams: ['colour', 'metal'] }],
 };
-export const TRY_LINE = { forge: 'Put a head, a haft and a binding together', stretcher: 'Put a hide, a lining or strap and a thread together', bowbench: 'Put a wood, a grip or stone and a binding together',
-  kettle: 'Put a herb, a water or cloth and a binder together', glass: 'Put a sand, a flux and a colour or backing together' };
+export const TRY_LINE = { forge: 'Put a head, a haft and a binding together', stretcher: 'Put a hide, a lining, strap or forged part and a thread together', bowbench: 'Put a wood, a grip, stone or forged part and a binding together',
+  kettle: 'Put a herb, a water or cloth and a binder together', glass: 'Put a sand, a flux or forged part and a colour or backing together' };
 export const TRY_FAMILY = { metal: ['iron', 'bronze', 'steel', 'silver', 'darkclay', 'blackwater', 'starmetal'], wood: ['ash', 'rowan', 'birch', 'yew', 'oak', 'oldyew', 'bogoak'],
   leather: ['wrap', 'strap', 'sharkhide', 'deer', 'goat'], cord: ['cord', 'gut', 'silk', 'linen', 'wool', 'sinew', 'silverthread'], horn: ['horn', 'bone'],
   // the other stations' (milestone 32)
-  herb: HERBS, water: ['springwater', 'moonwater'], binder: ['honey', 'wax', 'tallow'], sand: SANDS, flux: ['potash', 'lime'], colour: ['cobalt', 'starglass'], stone: ['gem', 'heartstone'] };
+  herb: HERBS, water: ['springwater', 'moonwater'], binder: ['honey', 'wax', 'tallow'], sand: SANDS, flux: ['potash', 'lime'], colour: ['cobalt', 'starglass'], stone: ['gem', 'heartstone'],
+  // milestone 33: parts forged for the other stations
+  forged: ['arrowheads', 'ferrule', 'boss', 'lath', 'lampframe'] };
 export const STUDY_RENOWN = 3, FIND_RENOWN = 5;   // renown for a pattern found by trying, or learned from an old piece
 for (const p of Object.values(PATTERNS)) for (const part of p.parts) for (const o of part.opts || []) if (o.rare) { o.level = RARE_LEVEL; o.line = 'rare: a GOOD becomes a TRUE'; }
 
@@ -518,6 +544,7 @@ export const MATS = {
   birch: { name: 'Birch stave', price: 7 }, yew: { name: 'Yew stave', price: 8 }, oak: { name: 'Oak stave', price: 12 }, oldyew: { name: 'Old yew stave', price: 35 },
   bone: { name: 'Bone', price: 2 }, goose: { name: 'Goose feathers', price: 1 }, raven: { name: 'Raven feathers', price: 3 },
   arrowheads: { name: 'Arrowheads', price: 8, forged: true }, ferrule: { name: 'Ferrule', price: 14, forged: true },
+  boss: { name: 'Shield boss', price: 12, forged: true }, lath: { name: 'Crossbow lath', price: 14, forged: true }, lampframe: { name: 'Lantern frame', price: 12, forged: true },
   sinew: { name: 'Wyvern sinew', price: 50, rare: true }, starmetal: { name: 'Starmetal', price: 60, rare: true },
   deer: { name: 'Deer hide', price: 6 }, goat: { name: 'Goat hide', price: 5 }, linen: { name: 'Linen', price: 3 }, gut: { name: 'Gut', price: 1 },
   silverthread: { name: 'Silver thread', price: 40, rare: true },
@@ -533,9 +560,9 @@ export const MATS = {
 };
 // pick: how many of its rare lines a pack carries in an hour (0: all of them, always)
 export const SUPPLIERS = [
-  { id: 'yard', name: 'Dougal\'s Yard', kind: 'THE SMELTER', line: 'Bars from the smelter, iron to darkclay steel.', lines: ['iron', 'bronze', 'steel', 'silver', 'darkclay'] },
+  { id: 'yard', name: 'Dougal\'s Yard', kind: 'THE SMELTER', line: 'Bars from the smelter, iron to darkclay steel; shield bosses and lantern frames, dear.', lines: ['iron', 'bronze', 'steel', 'silver', 'darkclay', 'boss', 'lampframe'] },
   { id: 'tannery', name: 'The Tannery on the Ford', kind: 'HIDES, HAFTS AND CLOTH', line: 'Wraps, cord, hafts, linings and straps.', lines: ['deer', 'goat', 'sharkhide', 'wrap', 'cord', 'gut', 'horn', 'ash', 'rowan', 'wool', 'linen', 'silk', 'strap'] },
-  { id: 'timber', name: 'Hollin\'s Timber', kind: 'STAVES AND FEATHERS', line: 'Staves seasoned for the bench, feathers, bone; forged heads and ferrules, dear.', lines: ['birch', 'yew', 'oak', 'oldyew', 'bone', 'goose', 'raven', 'arrowheads', 'ferrule'] },
+  { id: 'timber', name: 'Hollin\'s Timber', kind: 'STAVES AND FEATHERS', line: 'Staves seasoned for the bench, feathers, bone; forged heads, ferrules and laths, dear.', lines: ['birch', 'yew', 'oak', 'oldyew', 'bone', 'goose', 'raven', 'arrowheads', 'ferrule', 'lath'] },
   { id: 'sandpit', name: 'The Sandpit', kind: 'SAND AND FLUX', line: 'Sands for the glass, potash and lime, cobalt for blue.', lines: ['clearsand', 'riversand', 'blacksand', 'seasand', 'potash', 'lime', 'cobalt'] },
   { id: 'herbs', name: 'Marrow\'s Herbs', kind: 'THE HERBALIST', line: 'Herbs, honey, wax, spring water; bottles too, though the glassworks\' are dearer here.', lines: ['mending', 'sleepmoss', 'emberroot', 'ghostcap', 'springwater', 'honey', 'wax', 'tallow', 'bottle'] },
   { id: 'pack', name: 'Nell Quarry\'s Pack', kind: 'A PEDLAR', line: 'Gems always; rare things, two at a time, changing on the hour.', lines: ['gem'], rare: ['blackwater', 'bogoak', 'winterfox', 'starglass', 'silverthread', 'sinew', 'starmetal', 'moonwater'], pick: 2 },
@@ -551,15 +578,15 @@ export const START_SLOTS = 4;
 export const CUSTOMERS = [
   { id: 'folk', weight: 30, purse: [6, 45], wants: ['dagger', 'ring', 'any', 'dagger', 'axe', 'armour', 'gloves', 'brew', 'salve', 'brew', 'sling', 'beads', 'club'], moods: [15, 35, 50], fig: '#a08a6a',
     names: ['a miner off the shift', 'a carter', 'a farmer\'s wife', 'a ferryman', 'a charcoal burner', 'a boy with his savings', 'a widow from the lane'] },
-  { id: 'guard', weight: 25, purse: [40, 170], wants: ['falchion', 'axe', 'helm', 'weapon', 'dagger', 'armour', 'jerkin', 'bow', 'arrows', 'oil', 'brew', 'spear', 'mace', 'club', 'cloak', 'mirror'], moods: [35, 50, 15], fig: '#7a8aa0',
+  { id: 'guard', weight: 25, purse: [40, 170], wants: ['falchion', 'axe', 'helm', 'weapon', 'dagger', 'armour', 'jerkin', 'bow', 'arrows', 'oil', 'brew', 'spear', 'mace', 'club', 'cloak', 'mirror', 'shield'], moods: [35, 50, 15], fig: '#7a8aa0',
     names: ['a warden\'s man', 'a gate guard', 'a sergeant of the pikes', 'a drover riding out armed', 'a watchman'] },
-  { id: 'traveller', weight: 20, purse: [30, 240], wants: ['any', 'ring', 'weapon', 'dagger', 'boots', 'armour', 'brew', 'tonic', 'glass', 'goblet', 'cloak', 'satchel', 'beads', 'poultice'], moods: [30, 45, 25], fig: '#8a9a6a',
+  { id: 'traveller', weight: 20, purse: [30, 240], wants: ['any', 'ring', 'weapon', 'dagger', 'boots', 'armour', 'brew', 'tonic', 'glass', 'goblet', 'cloak', 'satchel', 'beads', 'poultice', 'lantern'], moods: [30, 45, 25], fig: '#8a9a6a',
     names: ['a caravan master', 'a pilgrim to the abbey', 'a tinker', 'a hedge-knight\'s squire', 'a ferry-bound merchant'] },
-  { id: 'delver', weight: 15, purse: [80, 420], wants: ['weapon', 'helm', 'axe', 'falchion', 'any', 'armour', 'boots', 'arrows', 'staff', 'draught', 'brew', 'lens', 'warhammer', 'shortsword', 'satchel', 'poultice', 'mirror', 'wand'], moods: [50, 40, 10], fig: '#9a6a5a',
+  { id: 'delver', weight: 15, purse: [80, 420], wants: ['weapon', 'helm', 'axe', 'falchion', 'any', 'armour', 'boots', 'arrows', 'staff', 'draught', 'brew', 'lens', 'warhammer', 'shortsword', 'satchel', 'poultice', 'mirror', 'wand', 'lantern', 'shield', 'crossbow'], moods: [50, 40, 10], fig: '#9a6a5a',
     names: ['a delver of the Reach', 'one of Osk\'s Four', 'a door-breaker', 'a lamp-carrier back from the deep'] },
   { id: 'hunter', weight: 12, purse: [20, 180], wants: ['bow', 'arrows', 'shortbow', 'longbow', 'arrows', 'boots', 'any', 'salve', 'spear', 'sling', 'cloak', 'satchel'], moods: [35, 45, 20], fig: '#6a7a4a',
     names: ['a hunter from the Reach', 'a trapper', 'a fowler', 'a poacher, quietly', 'a deer-stalker'] },
-  { id: 'factor', weight: 7, purse: [200, 750], wants: ['ring', 'helm', 'any', 'glass', 'lens', 'goblet', 'ink', 'mirror', 'wand'], least: 1, moods: [30, 55, 15], fig: '#b89a5a',
+  { id: 'factor', weight: 7, purse: [200, 750], wants: ['ring', 'helm', 'any', 'glass', 'lens', 'goblet', 'ink', 'mirror', 'wand', 'lantern'], least: 1, moods: [30, 55, 15], fig: '#b89a5a',
     names: ['a guild factor', 'a reeve\'s steward', 'a lord\'s buyer'] },
   { id: 'collector', weight: 3, purse: [500, 1600], wants: ['any'], least: 1, moods: [55, 40, 5], fig: '#a07ab8',
     names: ['a collector of maker\'s marks', 'Lady Ysmay Corrow\'s man'] },
@@ -645,13 +672,21 @@ export const QUEUE_MAX = 3;    // one at the counter, two waiting
 export const SELLER_ODDS = 0.14;   // of those who come in while you're at the counter, how many have something to sell
 // the named regulars who leave special orders (Darkclay Zero's regulars, §5.2): wants, a least tier, a metal they insist on
 export const REGULARS = [
-  { who: 'Sergeant Ollo Vance', wants: ['falchion', 'axe', 'helm', 'jerkin'], line: 'For the gate. The pikes need better than they\'ve got.', fig: '#7a8aa0' },
-  { who: 'Lady Ysmay Corrow', wants: ['ring', 'falchion', 'helm', 'longbow', 'staff', 'lens', 'goblet'], least: 1, line: 'Something with a maker\'s mark worth the name.', fig: '#a07ab8' },
-  { who: 'Bram Oakes, a drover', wants: ['dagger', 'axe', 'boots', 'arrows'], line: 'For my drovers. Good ones, mind.', fig: '#8a9a6a' },
-  { who: 'Ketty Moss, a widow', wants: ['ring'], metal: 'silver', line: 'A silver ring, for his grave.', fig: '#a08a6a' },
-  { who: 'Marrow, the herbalist', wants: ['tonic', 'draught', 'salve'], line: 'My own kettle\'s cracked. Brew for me this once.', fig: '#8a9a6a' },
-  { who: 'Tib Harrow', wants: ['dagger'], line: 'A knife. My own. I\'ve saved for it.', fig: '#a08a6a' },
+  { who: 'Sergeant Ollo Vance', wants: ['falchion', 'axe', 'helm', 'jerkin', 'spear', 'mace', 'shield'], line: 'For the gate. The pikes need better than they\'ve got.', fig: '#7a8aa0',
+    clues: { shield: '"The men at the gate want shields. A hide face, an iron boss off a forge, a leather rim. Can\'t be that hard."', spear: '"A spear\'s just a dagger that\'s grown up. Iron, ash, a cord binding."', mace: '"An iron head on a rowan haft, a strap for the grip. That\'s what breaks a helm."' } },
+  { who: 'Lady Ysmay Corrow', wants: ['ring', 'falchion', 'helm', 'longbow', 'staff', 'lens', 'goblet', 'mirror', 'lantern', 'wand'], least: 1, line: 'Something with a maker\'s mark worth the name.', fig: '#a07ab8',
+    clues: { lantern: '"My hall is dark at the stair. A lantern: clear glass in a forged frame, a bronze cap. The glassblower and the smith, together."', mirror: '"A looking-glass. Clear sand, potash, a silver backing. I won\'t have tin."', ink: '"The abbey\'s scribes beg for ink. Emberroot, they say, spring water and beeswax."' } },
+  { who: 'Bram Oakes, a drover', wants: ['dagger', 'axe', 'boots', 'arrows', 'crossbow', 'satchel', 'sling'], line: 'For my drovers. Good ones, mind.', fig: '#8a9a6a',
+    clues: { crossbow: '"In the far valley they shoot crossbows. An oak stock, a lath the smith forges, a gut string. Never misses, they say."', satchel: '"My drovers want satchels. Deer hide, a strap, waxed cord."', sling: '"A sling for the dogs to fear: a hide cup on two cords."' } },
+  { who: 'Ketty Moss, a widow', wants: ['ring', 'cloak'], metal: 'silver', line: 'A silver ring, for his grave.', fig: '#a08a6a',
+    clues: { cloak: '"He had a goat-hide cloak, lined in wool, sewn with silk. I can\'t bear to wear it, nor to give it away."', beads: '"Blue beads, the pedlar\'s kind. River sand, lime and cobalt."' } },
+  { who: 'Marrow, the herbalist', wants: ['tonic', 'draught', 'salve', 'poultice', 'ink'], line: 'My own kettle\'s cracked. Brew for me this once.', fig: '#8a9a6a',
+    clues: { poultice: '"A poultice: mending herbs on linen, sealed with honey. Not a salve, mind."', ink: '"Ink is only a root boiled black. Emberroot, spring water, a little wax to hold it."' } },
+  { who: 'Tib Harrow', wants: ['dagger', 'sling', 'club'], line: 'A knife. My own. I\'ve saved for it.', fig: '#a08a6a',
+    clues: { club: '"The big lads have oak clubs with bone in the head. Strap grips."', sling: '"I want a sling. Just a hide cup and some cord."' } },
 ];
+// a regular leaving an order now and then drops a word about a pattern you've still to find (milestone 33)
+export const REG_CLUE_ODDS = 0.35;
 // regulars with stories: three orders over days (the next comes back STORY_GAP hours after the last was filled), a gift for the shop
 // at the end. A step names the patterns it can ask for, first the shop can make; it waits while the shop can make none of them.
 export const STORY_GAP = 18, STORY_PAYS = 2.5, STORY_ODDS = 0.6;
@@ -886,7 +921,11 @@ export const PERKS = {
 
 // parts for the bench, forged at once from iron (no working): a strong link between the stations, never a dead end (they're also
 // sold, dearer, at Hollin's Timber)
+// for: the station that uses it (milestone 33: a shield's boss, a crossbow's lath, a lantern's frame, the two-station pieces)
 export const FORGED_PARTS = {
-  arrowheads: { name: 'Arrowheads', from: { iron: 1 }, makes: 2, line: 'a bar of iron makes heads for two sheaves' },
-  ferrule: { name: 'A ferrule', from: { iron: 1 }, makes: 1, line: 'an iron cap for a staff\'s foot' },
+  arrowheads: { name: 'Arrowheads', from: { iron: 1 }, makes: 2, for: 'bowbench', line: 'a bar of iron makes heads for two sheaves' },
+  ferrule: { name: 'A ferrule', from: { iron: 1 }, makes: 1, for: 'bowbench', line: 'an iron cap for a staff\'s foot' },
+  boss: { name: 'A shield boss', from: { iron: 1 }, makes: 1, for: 'stretcher', line: 'an iron dome for the middle of a shield' },
+  lath: { name: 'A crossbow lath', from: { iron: 1 }, makes: 1, for: 'bowbench', line: 'a forged bow of iron, and its trigger' },
+  lampframe: { name: 'A lantern frame', from: { iron: 1 }, makes: 1, for: 'glass', line: 'an iron cage for a lantern\'s glass' },
 };

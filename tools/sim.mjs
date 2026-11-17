@@ -26,6 +26,9 @@ const rng = seeded(seed0);
 const save = { v: 1, maker: 'Bot', trades: {}, found: ['ember'], chosen: [], picks: {}, cards: [], made: 0,
   coins: 60, mats: { iron: 5, bronze: 2, cord: 3, wrap: 1, ash: 1, wool: 1, strap: 1 }, slots: 4, shelf: [], ledger: [], sold: 0, earned: 0, shopNext: 6, queue: [] };
 Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
+// FOUND=0: only the patterns known from the start; otherwise (milestone 33's balance run) every hidden pattern found from day one
+const FOUND = process.env.FOUND !== '0';
+if (FOUND) save.book = { found: Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden), tries: [], clues: [], seen: 0 };
 const OLD = process.env.OLD !== '0', TOWN = process.env.TOWN !== '0', BRANCHES = process.env.BRANCH !== '0';   // TOWN=0: the bot ignores the notice board   // OLD=0: a run without Old-Blood, to compare
 let t = Date.UTC(2026, 10, 1, 9), log = [], made = 0, oldTried = 0, oldMade = 0, spent = { mats: 0, staff: 0, tools: 0, room: 0 };
 const H = 3600000, lvl = id => R.levelOf((save.trades[id] || {}).xp || 0).level, note = m => log.push('  ' + m);
@@ -37,10 +40,12 @@ const chasing = id => G.rung(save) >= 5 && (save.blueprints || []).some(b => REL
 // off the shelf and out of the Hall, into the back room (for a working)
 function toBack(c) { const sl = Sh.onShelf(save, c.id); if (sl >= 0) Sh.takeDown(save, sl); if (save.hall) for (const k of Object.keys(save.hall.shown || {})) if (save.hall.shown[k] === c.id) delete save.hall.shown[k]; }
 // which piece to make: the best worth over materials the bot can make or buy, at its trade
+const GLUT = +process.env.GLUT || 6;
 function choose(hour) {
   let best = null;
   for (const id of Object.keys(PATTERNS)) {
-    if (!Rm.owns(save, PATTERNS[id].station || 'forge') || PATTERNS[id].makes) continue;
+    if (!Rm.owns(save, PATTERNS[id].station || 'forge') || PATTERNS[id].makes || !Sh.knows(save, id)) continue;
+    if (Sh.inBack(save).filter(c => c.pattern === id).length >= GLUT) continue;   // six of it waiting unsold: make something else, as a player would
     const metals = R.partOptions(id)[0].opts;
     metals.forEach((m, mi) => {
       if ((m.level || 1) > lvl(id)) return;
@@ -315,6 +320,7 @@ console.log('relics:', relics.join(', ') || 'none', ' tried', relicTried, ' blue
 console.log('big sales:', JSON.stringify(big), ' orders filled:', orders, '(stories', stories + ')', ' second shop from day', branchDay, save.branch ? 'sold ' + save.branch.sold + ' for ' + save.branch.earned + ' c' : '');
 console.log('old-blood: tried', oldTried, 'made', oldMade, ' sold by tier:', tiers);
 console.log('spent:', spent, ' trades:', Object.fromEntries(Object.entries(save.trades).map(([k, v]) => [k, lvl(k)])), ' in the back:', Sh.inBack(save).length);
+if (process.env.BACK) { const n = {}; for (const c of Sh.inBack(save)) n[c.pattern] = (n[c.pattern] || 0) + 1; console.log('back by pattern:', JSON.stringify(n)); }
 console.log('nine:', mythics.join(', ') || 'none', ' parts', partsMade + '/' + partsTried, ' mythic tries', mythicTried, ' court asked', courtAsked, G.isNine(save) ? ' · MAKER OF THE NINE' : '');
 const firstRelic = relics[0] ? relics[0].split(' d')[1] : '-';
 console.log('SUMMARY first-relic d' + firstRelic + ' relics ' + relics.length + ' shards ' + (save.shards || []).length + ' parts ' + partsMade + ' mythics ' + mythics.length + ' renown ' + G.renownOf(save));

@@ -3,12 +3,12 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE } from './data.js?v=56';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=56';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=56';
-import { charmGap, placeGift } from './room.js?v=56';
-import * as Trail from './trail.js?v=56';
-import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=56';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE, REG_CLUE_ODDS } from './data.js?v=57';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=57';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=57';
+import { charmGap, placeGift } from './room.js?v=57';
+import * as Trail from './trail.js?v=57';
+import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=57';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -492,7 +492,19 @@ export function postOrder(save, rng, now) {
   if (!metal && rng() < 0.3) { const ok = ['iron', 'bronze', 'steel'].filter(m => metalIndex(pattern, m) >= 0); metal = ok[Math.floor(rng() * ok.length)]; }
   save.order = { who: r.who, fig: r.fig, pattern, least, metal, line: r.line, posted: save.clock || 0,
     due: (save.clock || 0) + ORDER_TIME[0] + rng() * (ORDER_TIME[1] - ORDER_TIME[0]), pays: orderPays(pattern, metal, least) };
-  return log(save, { at: now, who: r.who, fig: r.fig, mood: 'EAGER', want: pattern, sold: null, order: 'posted', line: 'Left a special order: ' + orderWord(save.order) + '.' });
+  const clue = rng() < REG_CLUE_ODDS ? regularClue(save, r, rng, now) : null;
+  return log(save, { at: now, who: r.who, fig: r.fig, mood: 'EAGER', want: pattern, sold: null, order: 'posted', clue: clue ? clue.pattern : undefined,
+    line: 'Left a special order: ' + orderWord(save.order) + '.' + (clue ? ' And a word in passing: ' + clue.line : '') });
+}
+// a regular's word about a pattern still to find at a station you have (milestone 33), written into THE MAKER'S BOOK once
+export function regularClue(save, r, rng, now) {
+  const has = st => !st || st === 'forge' || (save.stations || []).includes(st);
+  const ids = Object.keys(r.clues || {}).filter(id => PATTERNS[id] && PATTERNS[id].hidden && !knows(save, id) && has(PATTERNS[id].station));
+  const book = save.book || (save.book = { found: [], tries: [], clues: [], seen: 0 }), fresh = ids.filter(id => !book.clues.some(c => c.line === r.clues[id]));
+  const pool = fresh.length ? fresh : ids; if (!pool.length) return null;
+  const id = pool[Math.floor(rng() * pool.length)], line = r.clues[id];
+  if (!book.clues.some(c => c.line === line)) { book.clues.unshift({ pattern: id, line, who: r.who, at: now }); book.clues = book.clues.slice(0, 40); }
+  return { pattern: id, line, who: r.who };
 }
 export function orderWord(o) {
   if (o.relic) return RELICS[o.relic].name + ', the Relic';
