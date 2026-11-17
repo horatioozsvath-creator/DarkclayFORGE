@@ -1,9 +1,9 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE BANK, with no page access: coin kept safe (a little interest), loans by renown (interest each week), the late letter and the
 // bailiff. A week is counted only when the game is open at its end (interest pauses while away). Time comes in as plain milliseconds.
-import { BANK, RENOWN } from './data.js?v=47';
-import { rung } from './growth.js?v=47';
-import { takeDown } from './shop.js?v=47';
+import { BANK, RENOWN } from './data.js?v=48';
+import { rung } from './growth.js?v=48';
+import { takeDown } from './shop.js?v=48';
 
 export const bankOf = save => save.bank || (save.bank = { deposit: 0, loan: 0, borrowed: 0, due: 0, missed: 0 });
 export const limitOf = save => BANK.limits[rung(save)] || 0;

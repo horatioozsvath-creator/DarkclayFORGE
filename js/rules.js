@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK } from './data.js?v=47';
+import { KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK } from './data.js?v=48';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -360,7 +360,9 @@ export function worthNow(S) {
   }
   if (S.master) return { lo: at(0, false), hi: at(OLD_BLOOD.tier, false), loWord: word(0), hiWord: word(OLD_BLOOD.tier) };
   const o = odds(S), top = o.r > 0 ? 2 : o.f > 0 ? 1 : 0;
-  return { lo: at(0, false), hi: at(top, false), loWord: word(0), hiWord: word(top) };
+  // likely (milestone 30): each tier's worth weighed by its odds as they stand; it climbs as the Fine and Rare odds do
+  const likely = Math.round((o.c * at(0, false) + o.f * at(1, false) + o.r * at(2, false)) / Math.max(1, o.c + o.f + o.r));
+  return { lo: at(0, false), hi: at(top, false), loWord: word(0), hiWord: word(top), likely };
 }
 // keep: affixes the piece already carries ([word, line]), kept as far as the tier has room; reworked: how many times back in the fire
 const AFFIX_BY_WORD = Object.fromEntries(Object.entries(AFFIXES).map(([id, a]) => [a.word, id]));

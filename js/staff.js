@@ -1,13 +1,13 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=47';
-import { levelOf, makePiece, partOptions } from './rules.js?v=47';
-import { awayStep } from './shop.js?v=47';
-import { wageMult, capBonus, rung } from './growth.js?v=47';
-import * as Trail from './trail.js?v=47';
-import { TRAIL } from './data.js?v=47';
-import * as Run from './runner.js?v=47';
+import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=48';
+import { levelOf, makePiece, partOptions } from './rules.js?v=48';
+import { awayStep } from './shop.js?v=48';
+import { wageMult, capBonus, rung } from './growth.js?v=48';
+import * as Trail from './trail.js?v=48';
+import { TRAIL } from './data.js?v=48';
+import * as Run from './runner.js?v=48';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -92,7 +92,7 @@ export function sendRunner(save, route, now, id) {
   if (r.hunt) { p.trip.odds = Run.huntOdds(save, p); save.robbery.hunting = true; }
   return true;
 }
-const COMMONS = ['iron', 'iron', 'iron', 'bronze', 'bronze', 'steel', 'wrap', 'cord', 'ash', 'wool', 'strap', 'horn', 'rowan', 'silk', 'sharkhide', 'deer', 'deer', 'goat', 'gut', 'linen', 'yew', 'birch', 'goose', 'bone'];
+export const COMMONS = ['iron', 'iron', 'iron', 'bronze', 'bronze', 'steel', 'wrap', 'cord', 'ash', 'wool', 'strap', 'horn', 'rowan', 'silk', 'sharkhide', 'deer', 'deer', 'goat', 'gut', 'linen', 'yew', 'birch', 'goose', 'bone'];
 const RARES = Object.keys(MATS).filter(id => MATS[id].rare);
 export const RELIC_MATS = Object.keys(MATS).filter(id => MATS[id].relic);
 export function haul(save, p, route, rng, now) {

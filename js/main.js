@@ -1,33 +1,34 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING } from './data.js?v=47';
-import * as R from './rules.js?v=47';
-import * as Sh from './shop.js?v=47';
-import * as St from './staff.js?v=47';
-import * as Rm from './room.js?v=47';
-import * as G from './growth.js?v=47';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=47';
-import * as Snd from './sound.js?v=47';
-import * as CV from './counter.js?v=47';
-import * as Town from './town.js?v=47';
-import * as V from './visit.js?v=47';
-import * as Br from './branch.js?v=47';
-import * as Bank from './bank.js?v=47';
-import * as Wear from './wear.js?v=47';
-import * as Th from './thieves.js?v=47';
-import * as Run from './runner.js?v=47';
-import * as Mon from './monsters.js?v=47';
-import * as Liv from './living.js?v=47';
-import * as Hl from './hall.js?v=47';
-import * as Trail from './trail.js?v=47';
-import { ICONS, emblem, watch } from './icons.js?v=47';
-import { drawFlyer, flyerBlob } from './flyer.js?v=47';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=47';
-import { card, ART } from './card.js?v=47';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=47';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=47';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING } from './data.js?v=48';
+import * as R from './rules.js?v=48';
+import * as Sh from './shop.js?v=48';
+import * as St from './staff.js?v=48';
+import * as Rm from './room.js?v=48';
+import * as G from './growth.js?v=48';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=48';
+import * as Snd from './sound.js?v=48';
+import * as CV from './counter.js?v=48';
+import * as Town from './town.js?v=48';
+import * as V from './visit.js?v=48';
+import * as Br from './branch.js?v=48';
+import * as Bank from './bank.js?v=48';
+import * as Wear from './wear.js?v=48';
+import * as Th from './thieves.js?v=48';
+import * as Run from './runner.js?v=48';
+import * as Src from './sources.js?v=48';
+import * as Mon from './monsters.js?v=48';
+import * as Liv from './living.js?v=48';
+import * as Hl from './hall.js?v=48';
+import * as Trail from './trail.js?v=48';
+import { ICONS, emblem, watch } from './icons.js?v=48';
+import { drawFlyer, flyerBlob } from './flyer.js?v=48';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=48';
+import { card, ART } from './card.js?v=48';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=48';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=48';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 47;
+const VERSION = 48;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayFORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -203,7 +204,8 @@ function toHome() {
   $('patterns').innerHTML = Object.values(STATIONS).map(st => {
     const pats = Object.entries(PATTERNS).filter(([, p]) => (p.station || 'forge') === st.id);
     const head = '<h3 class="stationhead">' + st.word + '</h3>';
-    const parts = st.id === 'bowbench' ? '<div class="setup"><b>Parts from the forge</b><span>Arrows need forged heads, a staff a forged ferrule. Forge them at once from iron, or buy them dearer from Hollin\'s Timber.</span><div class="rbtns left">'
+    // the forge's parts for the bench: under the forge (milestone 30) once there's a bench to use them, and under the bench as before
+    const parts = st.id === 'bowbench' || (st.id === 'forge' && Rm.owns(save, 'bowbench')) ? '<div class="setup"><b>' + (st.id === 'forge' ? 'For the other stations' : 'Parts from the forge') + '</b><span>Arrows need forged heads, a staff a forged ferrule. Forge them at once from iron (no working), or buy them dearer from Hollin\'s Timber.</span><div class="rbtns left">'
       + Object.entries(FORGED_PARTS).map(([id, f]) => '<button class="seg" data-fp="' + id + '"' + ((save.mats.iron || 0) < f.from.iron ? ' disabled' : '') + '>FORGE ' + f.name.toUpperCase() + ' · ' + f.from.iron + ' IRON → ' + f.makes + ' · HAVE ' + (save.mats[id] || 0) + '</button>').join('') + '</div></div>' : '';
     if (Rm.owns(save, st.id)) return head + pats.map(patBtn).join('') + parts;
     return head + '<div class="setup"><b>Set up a ' + st.name.toLowerCase() + '</b><span>' + pats.map(([, p]) => p.trade.toLowerCase()).join(', ').replace(/^./, x => x.toUpperCase()) + ', from hides. ' + st.twist + '</span>'
@@ -225,10 +227,18 @@ function toHome() {
   if (G.pointsLeft(save) > 0) tip('points', document.querySelector('[data-tabs="forge"]'));
   const have = Object.entries(save.mats).filter(([, n]) => n > 0);
   $('storeWord').textContent = have.length ? have.reduce((a, [, n]) => a + n, 0) + ' THINGS' : 'EMPTY';
-  $('store').innerHTML = have.length ? have.map(([id, n]) => '<span>' + MATS[id].name + '<b>' + n + '</b></span>').join('')
+  $('store').innerHTML = have.length ? have.map(([id, n]) => '<button data-mat="' + id + '">' + MATS[id].name + '<b>' + n + '</b></button>').join('')
     : '<span class="empty">Nothing in the store room. The suppliers sell bars, hides and hafts.</span>';
+  $('store').querySelectorAll('[data-mat]').forEach(b => b.onclick = () => matOpen(b.dataset.mat));
   const back = Sh.inBack(save).length;
   $('toBack').textContent = back + ' IN THE BACK · TO THE SHOP';
+}
+// where a material comes from, and what it goes into
+function matOpen(mat) {
+  const m = MATS[mat], h = hour(), uses = Object.entries(PATTERNS).filter(([id, p]) => (p.batch && mat === 'bottle') || R.partOptions(id).some(g => g.opts.some(o => (o.mat || o.id) === mat))).map(([, p]) => p.name);
+  openLook('<div class="matlook"><h3>' + m.name + (m.rare ? ' ✶' : '') + '</h3><p class="note">You have <b>' + (save.mats[mat] || 0) + '</b>.' + (Sh.sells(mat, h) ? ' On sale this hour at <b>' + Sh.priceOf(mat, h) + ' c</b>.' : '') + '</p>'
+    + '<h4>WHERE IT COMES FROM</h4><ul>' + Src.sourcesOf(mat).map(x => '<li>' + x.word + '</li>').join('') + '</ul>'
+    + (uses.length ? '<h4>WHAT IT GOES INTO</h4><p>' + uses.join(', ') + '</p>' : '') + '</div>');
 }
 // ---------- THE MAKER: level, renown, skills; THE WORKSHOP: tools ----------
 let perkNote = '', toolNote = '';
@@ -371,7 +381,7 @@ let floorShown = null;
 let cvw = null, cvP = null, iso = false, cvSig = '', cvFront = null;
 function counterView() {
   $('cview').hidden = false; $('cvActs').hidden = false; $('floor').hidden = true; $('dioBar').hidden = true;
-  if (!cvP) cvP = import('./counter.js?v=47').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
+  if (!cvP) cvP = import('./counter.js?v=48').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
   else if (cvw) cvw.show(save, Sh.priceAt);
 }
 // a place on the painted wall: its piece (take it down), or empty (hang one from the back room)
@@ -386,7 +396,7 @@ function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   if (!iso) { counterView(); tip('shop', $('cview')); return; }
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=47').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=48').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -1409,10 +1419,37 @@ function renderTakes0() {
   if (ok) { $('takesBtns').innerHTML = '<span class="small" style="color:var(--bone-faint)">Taken when you begin. Walk away from a working and they\'re spent.</span>'; return; }
   const gone = sh.filter(x => !Sh.sells(x.mat, h));
   const cost = sh.reduce((c, x) => c + Sh.priceOf(x.mat, h) * (x.n - x.have), 0);
-  $('takesBtns').innerHTML = gone.length ? '<span class="small" style="color:var(--bone-faint)">' + gone.map(x => MATS[x.mat].name).join(', ') + ': not in the pedlar\'s pack this hour.</span>'
-    : '<button class="seg go" id="buyShort"' + (save.coins < cost ? ' disabled' : '') + '>BUY WHAT\'S SHORT · ' + cost + ' c</button>'
-      + (save.coins < cost ? '<span class="small" style="color:var(--bone-faint)">You have ' + save.coins + ' coins.</span>' : '');
+  $('takesBtns').innerHTML = (gone.length ? '' : '<button class="seg go" id="buyShort"' + (save.coins < cost ? ' disabled' : '') + '>BUY WHAT\'S SHORT · ' + cost + ' c</button>'
+      + (save.coins < cost ? '<span class="small" style="color:var(--bone-faint)">You have ' + save.coins + ' coins.</span>' : ''))
+    + '<div class="ways">' + sh.map(x => wayHtml(x.mat, x.n - x.have, h)).join('') + '</div>';
   if (!gone.length) $('buyShort').onclick = () => { sh.forEach(x => Sh.buy(save, x.mat, x.n - x.have, hour())); store(save); renderTakes(); };
+  $('takesBtns').querySelectorAll('[data-fpshort]').forEach(b => b.onclick = () => { const id = b.dataset.fpshort; if (Sh.forgePart(save, id, +b.dataset.bars)) { store(save); Snd.play('GOOD'); renderTakes(); } });
+  $('takesBtns').querySelectorAll('[data-makepat]').forEach(b => b.onclick = () => { rw = null; part = null; master = false; pat = b.dataset.makepat; toPrepare(); });
+  $('takesBtns').querySelectorAll('[data-tostaff]').forEach(b => b.onclick = () => toStaff());
+}
+// WHERE THINGS COME FROM (milestone 30): for a material you're short of, the ways to get it, the quickest one a button
+function wayHtml(mat, need, h) {
+  const src = Src.sourcesOf(mat), nm = MATS[mat].name, lines = [];
+  for (const x of src) {
+    if (x.kind === 'forged') {
+      const bars = Math.ceil(need / x.makes), [from, k] = Object.entries(x.from)[0], have = save.mats[from] || 0, enough = have >= k * bars;
+      lines.push('<button class="seg" data-fpshort="' + mat + '" data-bars="' + bars + '"' + (enough ? '' : ' disabled') + '>FORGE ' + (x.makes * bars) + ' ' + nm.toUpperCase() + ' · ' + k * bars + ' ' + MATS[from].name.toUpperCase() + '</button>'
+        + '<span>at once, no working' + (enough ? '' : ': you have ' + have + ' ' + MATS[from].name.toLowerCase()) + '</span>');
+    } else if (x.kind === 'made') {
+      const owns = Rm.owns(save, x.station);
+      lines.push(owns ? '<button class="seg" data-makepat="' + x.pattern + '">MAKE ' + PATTERNS[x.pattern].name.toUpperCase() + ' AT THE ' + STATIONS[x.station].name.toUpperCase() + '</button><span>' + x.word.replace(/^Made at [^:]+: [^,]+, /, '') + '</span>'
+        : '<span>' + x.word + ' Set up the ' + STATIONS[x.station].name.toLowerCase() + ' first.</span>');
+    } else if (x.kind === 'sold' || x.kind === 'pedlar') {
+      if (Sh.sells(mat, h)) continue;
+      const n = Src.nextSold(mat, h);
+      lines.push('<span>' + x.who + (n == null ? ' hasn\'t had it lately' : ' has it again in about ' + n + ' h') + '.</span>');
+    } else if (x.kind === 'runner' || x.kind === 'deep') {
+      if (src.some(y => y.kind === 'sold') && x.kind === 'runner' && !MATS[mat].rare) continue;   // a common thing: buy it
+      const r = St.runners(save).length;
+      lines.push('<span>' + x.word + '</span>' + (r ? '<button class="seg" data-tostaff="1">SEND A RUNNER</button>' : '<button class="seg" data-tostaff="1">HIRE A RUNNER</button>'));
+    }
+  }
+  return lines.length ? '<div class="way"><b>' + nm + ' × ' + need + '</b>' + lines.join('') + '</div>' : '';
 }
 function spend() {   // take the materials as a working begins; false if they're not all there
   if (!Sh.takeMats(save, rec())) { renderTakes(); return false; }
@@ -1535,16 +1572,18 @@ function render() {
 function renderWorth() {
   const w = S.done ? null : R.worthNow(S), tag = $('worthTag');
   tag.hidden = !w; if (!w) return;
-  $('wWord').textContent = (PATTERNS[S.cfg.patternId].batch ? 'A BOTTLE, ' : '') + 'WORTH AT LEAST';
-  $('wLo').textContent = w.lo + ' c';
-  $('wHi').innerHTML = w.hi > w.lo ? 'UP TO <b>' + w.hi + ' c</b> ' + w.hiWord : '';
-  if (prevWorth !== null && w.lo !== prevWorth) {
-    const d = w.lo - prevWorth, n = document.createElement('em');
+  // the big figure: what it's likely worth (milestone 30), or for a rework and a master's brew, the least it can come out as
+  const big = w.likely != null ? w.likely : w.lo, bottle = PATTERNS[S.cfg.patternId].batch ? 'A BOTTLE, ' : '';
+  $('wWord').textContent = bottle + (w.likely != null ? 'LIKELY WORTH' : 'WORTH AT LEAST');
+  $('wLo').textContent = big + ' c';
+  $('wHi').innerHTML = (w.likely != null ? 'AT LEAST <b>' + w.lo + ' c</b>' + (w.hi > w.lo ? ' · ' : '') : '') + (w.hi > w.lo ? 'UP TO <b>' + w.hi + ' c</b> ' + w.hiWord : '');
+  if (prevWorth !== null && big !== prevWorth) {
+    const d = big - prevWorth, n = document.createElement('em');
     n.className = 'wdelta' + (d < 0 ? ' down' : ''); n.textContent = (d > 0 ? '+' : '−') + Math.abs(d) + ' c';
     tag.appendChild(n); setTimeout(() => n.remove(), 1300);
     $('wLo').classList.remove('bump'); void $('wLo').offsetWidth; $('wLo').classList.add(d > 0 ? 'bump' : 'dip');
   }
-  prevWorth = w.lo;
+  prevWorth = big;
 }
 function renderSheet() {
   const L = R.left(S);
@@ -1834,7 +1873,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=47').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=48').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -1913,7 +1952,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=47').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=48').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }
