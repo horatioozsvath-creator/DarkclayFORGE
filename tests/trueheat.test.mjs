@@ -48,3 +48,20 @@ test('timed well, about twice the strikes a heat at a phone\'s pace (one a secon
   const plain = per(false), tru = per(true);
   assert.ok(plain <= 5, 'plain: ' + plain); assert.ok(tru >= 2 * plain - 1 && tru >= 8, 'true: ' + tru);
 });
+
+test('a clean blow: now and then a GOOD or GREAT shapes twice as far, more often in a true heat; never once it\'s made', async () => {
+  const { CLEAN_BLOW } = await import('../js/data.js');
+  const rate = trueHeat => {
+    let hits = 0, clean = 0;
+    for (let i = 0; i < 300; i++) {
+      const S = R.newWorking({ patternId: 'falchion', picks: [0, 0, 0], level: 3, found: [], kit: {} }, seeded(100 + i)); R.begin(S);
+      S.meter = 70; S.trueHeat = trueHeat; const before = S.shape;
+      const ev = R.strike(S); if (!ev || ev.dead) continue;
+      if (ev.k === 'GOOD' || ev.k === 'GREAT') { hits++; const base = ev.k === 'GOOD' ? 6.5 : 11; if (S.shape - before > base * 1.5) clean++; }
+    }
+    return clean / hits;
+  };
+  const plain = rate(false), tru = rate(true);
+  assert.ok(Math.abs(plain - CLEAN_BLOW.odds) < 0.08, 'plain ' + plain); assert.ok(Math.abs(tru - CLEAN_BLOW.trueOdds) < 0.1, 'true ' + tru);
+  const S = working(); S.shape = 100; S.meter = 70; const w = S.worked; R.strike(S); assert.ok(S.worked - w <= 15, 'pushing: no doubling');
+});

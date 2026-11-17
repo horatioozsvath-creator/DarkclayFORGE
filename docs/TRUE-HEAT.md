@@ -14,3 +14,10 @@ it cools 3 a second), and every trip back to the fire turns the whole strip face
 - `TRUE_HEAT` in `js/data.js`; `trueZone(S)` and the judging in `js/rules.js`; the mark in `js/stage.js`; the hint and the pop in
   `js/main.js`. Every station has it (the soak, the steam, the stoke, the gather).
 - Tests: 215. Checked in the browser at 430 wide: the mark, the hint ("Now: the true heat"), the pop. Not checked on a real phone.
+
+## A clean blow (release 52)
+
+Asked for in play: a random bonus on good hits, to finish a piece faster. While it's being shaped, a GOOD or GREAT now and then lands
+clean and shapes it twice as far: one in five, and about one in three in a true heat (`CLEAN_BLOW` in `js/data.js`). Not once it's made
+(WORKED is unchanged), and never on a HOLD, a CRACK or a TRUE. The pop says "+13 SHAPE · CLEAN — A CLEAN BLOW · TWICE THE SHAPE".
+Shaping takes about a fifth fewer strikes on average, a third fewer in true heats. Tests: 216. Checked in the browser at 430 wide.

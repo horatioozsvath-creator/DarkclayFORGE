@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { TRUE_HEAT, KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK } from './data.js?v=51';
+import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK } from './data.js?v=52';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -194,8 +194,10 @@ export function strike(S) {
       if (f === 'frost') { S.frost = true; why = 'FROST-KISS · THE PIECE TAKES A FROST SIDE'; }
     }
     const base = shaping ? { GOOD: 6.5, GREAT: 11, TRUE: 16, HOLD: 0 }[gk] : { GOOD: 3, GREAT: 6, TRUE: 15, HOLD: 0 }[gk];
-    const g = base * mult;
-    if (shaping) { S.shape = Math.min(100, S.shape + g); gain = g ? '+' + g + ' SHAPE' : 'NOTHING GAINED · NOTHING LOST'; }
+    const clean = shaping && (gk === 'GOOD' || gk === 'GREAT') && S.rng() < (S.trueHeat ? CLEAN_BLOW.trueOdds : CLEAN_BLOW.odds);
+    const g = base * mult * (clean ? CLEAN_BLOW.x : 1);
+    if (clean) { S.cleanBlows = (S.cleanBlows || 0) + 1; size = 'bigpop'; why = why || 'A CLEAN BLOW · TWICE THE SHAPE'; }
+    if (shaping) { S.shape = Math.min(100, S.shape + g); gain = g ? '+' + Math.round(g * 10) / 10 + ' SHAPE' + (clean ? ' · CLEAN' : '') : 'NOTHING GAINED · NOTHING LOST'; }
     else { S.worked += g; gain = g ? '+' + g + ' % WORKED' : 'NOTHING GAINED · NOTHING LOST'; }
     if (k === 'GREAT') size = 'bigpop';
     if (k === 'TRUE') { size = 'bigpop'; if (S.white <= 0) S.whites++; S.earned = true; S.whiteHeat = true; S.white = 4; why = why || 'WHITE HEAT · THE PICK IS YOURS'; }

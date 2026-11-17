@@ -2,13 +2,13 @@
 // A shop front as a link, with no page access: what a friend sees when they visit (the room as it's arranged, the cards on its
 // shelves with their prices, the wall's pieces in full, a sign). Packed small here; js/share.js compresses it into the address after
 // #shop=. A link comes from someone else's browser: unpack checks and rebuilds every part, and the room must pass the room rules.
-import { FURNITURE, TIERS, RENOWN, ROOM_SIZES, STATIONS, CHARM_MAX, SHELF_LEVELS, MAX_PLACES } from './data.js?v=51';
-import { ART } from './card.js?v=51';
-import { valid, shelfSpots, charm, levelOf, homeOf } from './room.js?v=51';
-import { priceAt } from './shop.js?v=51';
-import { makePiece } from './rules.js?v=51';
-import { rung, hallCards, isNine } from './growth.js?v=51';
-import { cardFields, checkCard } from './share.js?v=51';
+import { FURNITURE, TIERS, RENOWN, ROOM_SIZES, STATIONS, CHARM_MAX, SHELF_LEVELS, MAX_PLACES } from './data.js?v=52';
+import { ART } from './card.js?v=52';
+import { valid, shelfSpots, charm, levelOf, homeOf } from './room.js?v=52';
+import { priceAt } from './shop.js?v=52';
+import { makePiece } from './rules.js?v=52';
+import { rung, hallCards, isNine } from './growth.js?v=52';
+import { cardFields, checkCard } from './share.js?v=52';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 const str = (v, n) => typeof v === 'string' && v.length <= n ? v : null;
