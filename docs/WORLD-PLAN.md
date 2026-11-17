@@ -222,3 +222,21 @@ and must show a steady player's income dips, not collapses), then a check on a p
 - **Spared** on a gentler Reach.
 - **Sim (90 days, seeds 1–4; `MONSTERS=0` to turn off):** 1–3 monsters; the bot (arming the Watch only from what's already in the back
   room) keeps off about one in three; the nights it came cost 0.03–0.4 % of earnings.
+
+## Milestone 24, as built (release 43)
+
+- **Seasons** (js/town.js, tests/living.test.mjs): spring, summer, autumn, winter, each 14 days, the same for everyone (by the date).
+  Each season's wares fetch an eighth more (winter: jerkins, hoods, gloves, boots, salves, tonics; summer: bows, arrows, rings, goblets,
+  draughts; and so on); summer brings more travellers (customers 10 % more often), winter fewer (15 % less). A notice on the board says
+  which season, how far in, and what's wanted; the board's date carries it too.
+- **Market days** every seventh day and **the guild fair** every 28th: more customers.
+- **The guild fair** (js/living.js): on its day, from NOTED, ENTER THE GUILD FAIR on the board: one piece from anywhere (it stays
+  yours), judged on its worth against three of the Reach's makers (their pieces scaled to your renown). First, second and third win
+  150, 70 or 30 c a renown rung above UNKNOWN and +20, +10, +5 renown. Once a fair. The board says how many days to the next.
+- **The word in town:** two or three lines a day on the board, the same all day: true things first (the season turning or about to,
+  the fair coming, a gang counting doors, the Watch made captain after a monster kept off, the carpenters busy after one came, the
+  Watch drinking to your runner after a hunt, Ketty's stall turned over by the gang that robbed you, your best seller, the Landing),
+  then a line of gossip.
+- **The regulars' lives** show only through the word in town for now; their stories themselves don't change yet.
+- **Sim (90 days, seeds 1–3):** seasons and market days run in every day; the bot entered 2 fairs, placing first or second in half.
+- Not seen in the browser: the fair entry (no fair on the day it was checked).

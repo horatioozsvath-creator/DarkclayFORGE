@@ -3,12 +3,12 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE } from './data.js?v=42';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf } from './town.js?v=42';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=42';
-import { charmGap, placeGift } from './room.js?v=42';
-import * as Trail from './trail.js?v=42';
-import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=42';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE } from './data.js?v=43';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=43';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=43';
+import { charmGap, placeGift } from './room.js?v=43';
+import * as Trail from './trail.js?v=43';
+import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=43';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -192,7 +192,7 @@ export function visit(save, rng, now, c = richer(save, newCustomer(rng, save), r
   return log(save, entry);
 }
 export const gap = rng => 22 + rng() * 26;   // seconds between customers
-export const eventGap = save => { const ev = eventOf(save.town); return ((ev && ev.gap) || 1) * (save.townGap || 1) * (save.scared ? 1.6 : 1); };   // scared: after a monster's night (monsters.js)   // townGap: a smaller town's (the second shop's)
+export const eventGap = save => { const ev = eventOf(save.town); return ((ev && ev.gap) || 1) * (save.townGap || 1) * (save.scared ? 1.6 : 1) * livingGap(save.town); };   // the season, market days, the fair (town.js)   // scared: after a monster's night (monsters.js)   // townGap: a smaller town's (the second shop's)
 function log(save, entry) { save.ledger = [entry].concat(save.ledger || []).slice(0, LEDGER_MAX); return entry; }
 
 // ---------- the clock ----------

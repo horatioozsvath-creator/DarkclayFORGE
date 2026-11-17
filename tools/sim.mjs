@@ -16,6 +16,7 @@ import * as Wear from '../js/wear.js';
 import * as Th from '../js/thieves.js';
 import * as Run from '../js/runner.js';
 import * as Mon from '../js/monsters.js';
+import * as Liv from '../js/living.js';
 import { BRANCH, RELICS, MYTHICS } from '../js/data.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD } from '../js/data.js';
 
@@ -220,6 +221,9 @@ function kit(r) {
     else if (!Run.gearOf(r)[Run.slotOf(c)]) Run.equip(save, r, c.id);
   }
 }
+// the guild fair: the bot enters its best piece
+const fairs = [0, 0, 0, 0];
+function fair() { if (!Liv.fairOpen(save, t)) return; const best = save.cards.filter(c => !c.sample).sort((a, b) => b.worth - a.worth)[0]; if (!best) return; const r = Liv.enterFair(save, best.id, t, rng); if (r.ok) fairs[Math.min(3, r.place - 1)]++; }
 // monsters (MONSTERS=0 turns them off): the bot arms the Watch from the back room, cheapest first, and sets wards when it has them
 const MONSTERING = process.env.MONSTERS !== '0';
 let monsters = 0, kept = 0, came = 0, monsterBills = 0;
@@ -289,7 +293,7 @@ for (let d = 1; d <= days; d++) {
     tally(Sh.shopStep(save, 50, rng, t, false, clerk));
     St.payWages(save, 50); St.resolveTrips(save, t, rng);
     t += 50000; save.lastSeen = t;
-    if (s % 600 === 0) { watchDuty(); security(); upkeep(); runBank(d); runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
+    if (s % 600 === 0) { fair(); watchDuty(); security(); upkeep(); runBank(d); runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
     if (save.branch) tally(Br.step(save, 50, rng, t));
     if (Sh.rescue(save, hour)) note('scrap bin');
   }
@@ -325,3 +329,4 @@ if (WEARING) console.log('wear: repairs', repairs, ' broke', broke, ' spent', we
 if (THIEVING) console.log('thieves: robbed', robbed, ' caught', caught, ' turned away', turned, ' lost pieces worth', lostWorth, ' from the till', lostTill, ' (' + (100 * (lostWorth + lostTill) / (save.earned || 1)).toFixed(1) + ' % of earnings)');
 { const r = St.runnerOf(save); console.log('runner: ' + (r ? r.name + ' guard ' + Run.strength(r).guard + ' fight ' + Run.strength(r).fight : 'none') + ' · hunts', hunts, ' memorials', (save.memorials || []).length, (save.memorials || []).map(m => m.name).join(', ')); }
 if (MONSTERING) console.log('monsters:', monsters, ' kept off', kept, ' came', came, ' bills', monsterBills, ' (' + (100 * monsterBills / (save.earned || 1)).toFixed(2) + ' % of earnings) · wards', Mon.wardsOf(save).map(c => c.name).join(', ') || 'none');
+console.log('guild fairs: first', fairs[0], ' second', fairs[1], ' third', fairs[2], ' no prize', fairs[3]);

@@ -465,6 +465,17 @@ export const TOWN_HOT = [
 // town events: about one day in four, something happens in town for the whole day (the same in every shop). gap: how much sooner or
 // later customers come (×), weights: more of some kinds of buyer (×), purse: what they carry (×), keen: everyone a step keener
 export const EVENT_ODDS = 0.25;
+// A LIVING REACH (milestone 24): the season turns every 14 days (its wares fetch an eighth more; summer brings more travellers, winter
+// fewer); a market day every seventh day (customers come more often); the guild fair every 28 days (enter one piece: judged against
+// the Reach's makers, a prize for the first three; the piece stays yours); a line or two of news on the board each day.
+export const SEASONS = [
+  { id: 'spring', name: 'Spring', line: 'The roads dry out and the fields want tools.', patterns: ['axe', 'staff', 'oil', 'pane', 'gloves'], gap: 1 },
+  { id: 'summer', name: 'Summer', line: 'The road trade is at its height: travellers in every inn.', patterns: ['shortbow', 'arrows', 'ring', 'goblet', 'draught'], gap: 0.9 },
+  { id: 'autumn', name: 'Autumn', line: 'The hunt and the harvest feasts: blades, bows and cups.', patterns: ['longbow', 'arrows', 'falchion', 'dagger', 'goblet'], gap: 1 },
+  { id: 'winter', name: 'Winter', line: 'Snow on the passes: fewer travellers, and everyone wants to keep warm.', patterns: ['jerkin', 'hood', 'gloves', 'boots', 'salve', 'tonic'], gap: 1.15 },
+];
+export const LIVING = { seasonD: 14, seasonPurse: 1.12, market: { every: 7, at: 3, gap: 0.85 }, fair: { every: 28, at: 17, gap: 0.8, rung: 1,
+  rivals: [40, 80, 160, 320, 700, 1500, 3000], spread: [0.7, 1.6], prizes: [[150, 20], [70, 10], [30, 5]] } };
 export const TOWN_EVENTS = [
   { id: 'fair', name: 'The midsummer fair', line: 'Stalls fill the square and the lanes are full of strangers.', effect: 'More customers, more travellers and folk.', gap: 0.7, weights: { folk: 2, traveller: 2 } },
   { id: 'muster', name: 'The muster', line: 'The watch is called up and every man wants to be armed by morning.', effect: 'Guards and delvers crowd in, carrying more.', gap: 0.9, weights: { guard: 3, delver: 2 }, purse: 1.15 },

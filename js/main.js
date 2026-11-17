@@ -1,31 +1,32 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS } from './data.js?v=42';
-import * as R from './rules.js?v=42';
-import * as Sh from './shop.js?v=42';
-import * as St from './staff.js?v=42';
-import * as Rm from './room.js?v=42';
-import * as G from './growth.js?v=42';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=42';
-import * as Snd from './sound.js?v=42';
-import * as Town from './town.js?v=42';
-import * as V from './visit.js?v=42';
-import * as Br from './branch.js?v=42';
-import * as Bank from './bank.js?v=42';
-import * as Wear from './wear.js?v=42';
-import * as Th from './thieves.js?v=42';
-import * as Run from './runner.js?v=42';
-import * as Mon from './monsters.js?v=42';
-import * as Hl from './hall.js?v=42';
-import * as Trail from './trail.js?v=42';
-import { ICONS, emblem, watch } from './icons.js?v=42';
-import { drawFlyer, flyerBlob } from './flyer.js?v=42';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=42';
-import { card, ART } from './card.js?v=42';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=42';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=42';
+import { KINDS, KC, TIERS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING } from './data.js?v=43';
+import * as R from './rules.js?v=43';
+import * as Sh from './shop.js?v=43';
+import * as St from './staff.js?v=43';
+import * as Rm from './room.js?v=43';
+import * as G from './growth.js?v=43';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=43';
+import * as Snd from './sound.js?v=43';
+import * as Town from './town.js?v=43';
+import * as V from './visit.js?v=43';
+import * as Br from './branch.js?v=43';
+import * as Bank from './bank.js?v=43';
+import * as Wear from './wear.js?v=43';
+import * as Th from './thieves.js?v=43';
+import * as Run from './runner.js?v=43';
+import * as Mon from './monsters.js?v=43';
+import * as Liv from './living.js?v=43';
+import * as Hl from './hall.js?v=43';
+import * as Trail from './trail.js?v=43';
+import { ICONS, emblem, watch } from './icons.js?v=43';
+import { drawFlyer, flyerBlob } from './flyer.js?v=43';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=43';
+import { card, ART } from './card.js?v=43';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=43';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=43';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 42;
+const VERSION = 43;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayFORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -367,7 +368,7 @@ let floorShown = null;
 function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=42').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=43').then(m => m.create($('floor'), { onTap: dioTap })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -711,17 +712,48 @@ function monsterNight(r) {
 }
 const nightMonsterHtml = r => r ? '<p class="bad"><b>' + esc(r.name) + '.</b> ' + esc(r.line) + ' The repairs cost ' + r.bill + ' c' + (r.knocked.length ? ', and ' + r.knocked.map(esc).join(', ') + (r.knocked.length > 1 ? ' were' : ' was') + ' knocked off a shelf (safe in the back room)' : '') + '. Customers will be scarce for a while.' + (r.cut ? ' Your wards took ' + Math.round(r.cut * 100) + ' % off it.' : '') + '</p>' : '';
 
+// ---------- A LIVING REACH: the season, market days, the guild fair, the word in town ----------
+function livingHtml(t) {
+  const now = Date.now(), s = Town.seasonOf(t.day), sd = Town.seasonDay(t.day), fairToday = Town.fairOn(t.day), entered = save.fairDay === t.day, last = (save.fairs || []).slice(-1)[0];
+  const names = list => list.filter(id => PATTERNS[id]).map(id => PATTERNS[id].name.toLowerCase()).join(', ');
+  let h = '<div class="notice season"><b>' + s.name.toUpperCase() + ' · DAY ' + (sd + 1) + ' OF ' + LIVING.seasonD + '</b><p>' + esc(s.line) + '</p><span>Fetching an eighth more: ' + esc(names(s.patterns)) + '.' + (s.gap < 1 ? ' More travellers.' : s.gap > 1 ? ' Fewer travellers.' : '') + '</span></div>';
+  if (Town.marketOn(t.day)) h += '<div class="notice event"><b>MARKET DAY</b><p>Stalls in the square from first light.</p><span>Customers come more often today.</span></div>';
+  if (fairToday) h += '<div class="notice event fair"><b>THE GUILD FAIR</b><p>The Reach\'s makers lay out their best.</p>'
+    + (entered && last ? '<span>You entered ' + esc(last.name) + ': ' + ['', 'first place', 'second place', 'third place'][last.place] + (last.place > 3 ? 'no prize this time' : '') + '.</span>'
+      : Liv.fairOpen(save, now) ? '<span>Enter one piece (it stays yours): judged against the Reach\'s makers, with a prize for the first three. Busy all day.</span><button class="seg go" id="toFair">ENTER THE GUILD FAIR</button>'
+      : '<span>For a shop that is ' + RENOWN[LIVING.fair.rung].word + ' or better.</span>') + '</div>';
+  else h += '<p class="note">The next guild fair is in ' + Liv.daysToFair(now) + ' days.</p>';
+  h += '<div class="word"><b>THE WORD IN TOWN</b>' + Liv.rumours(save, now).map(x => '<p>' + esc(x) + '</p>').join('') + '</div>';
+  return h;
+}
+function fairOpenDlg() {
+  const pool = save.cards.filter(c => !c.sample).sort((a, b) => b.worth - a.worth).slice(0, 24);
+  openLook('<div class="pickgrid">' + pool.map(c => '<button data-fair="' + c.id + '" aria-label="' + esc(c.name) + '">' + card(c, { short: true, price: 'ENTER IT' }) + '</button>').join('') + '</div>',
+    '<p>Your best pieces, from the shelf, the back room, the wall or the Hall. It\'s judged on what it\'s worth, and it comes home with you.</p>', true);
+  $('lookCard').querySelectorAll('[data-fair]').forEach(b => b.onclick = () => {
+    const r = Liv.enterFair(save, b.dataset.fair, Date.now(), rng); if (!r.ok) { toast(esc(r.why)); return; }
+    store(save); coins();
+    openLook('<div class="away"><div class="k">THE GUILD FAIR</div><h3>' + (r.place <= 3 ? ['', 'First place', 'Second place', 'Third place'][r.place] : 'No prize this time') + '</h3><p>Your ' + esc(r.name) + ' against the Reach\'s makers:</p><ul>'
+      + r.rivals.map(x => '<li><span>' + esc(x.who) + '</span><b>' + x.score.toLocaleString() + '</b></li>').join('') + '<li><span><b>You</b>: ' + esc(r.name) + '</span><b>' + r.worth.toLocaleString() + '</b></li></ul>'
+      + (r.coins ? '<p>The prize: <b>' + r.coins.toLocaleString() + ' c</b> and <b>+' + r.renown + '</b> renown.</p>' : '<p>Next fair, bring something finer.</p>') + '</div>', '', true);
+    if (r.place <= 3) { Snd.play('level'); Snd.play('chime'); }
+    renderShop();
+  });
+}
+
 function renderTown() {
   const t = Town.refreshTown(save, Date.now()), n = Town.notices(t);
   const can = id => PATTERNS[id] && Rm.owns(save, PATTERNS[id].station || 'forge');
   const names = list => list.map(id => '<span class="' + (can(id) ? 'can' : 'cant') + '">' + PATTERNS[id].name.toLowerCase() + '</span>').join(', ');
+  setTimeout(() => { if ($('toFair')) $('toFair').onclick = fairOpenDlg; }, 0);
   setTimeout(() => { $('townBody').querySelectorAll('[data-watch]').forEach(b => b.onclick = () => watchOpen(+b.dataset.watch)); }, 0);
   setTimeout(() => { if ($('toStar')) $('toStar').onclick = () => { const r = Trail.claimStar(save, Town.refreshTown(save, Date.now())); if (r.shard) { store(save); Snd.play('chime'); toast('<b>A shard of Veric</b><br>In the crater, cold to the touch: the shard of ' + esc(MYTHICS[r.shard].name) + '.'); } renderShop(); }; });
-  $('townWord').textContent = new Date(t.day * 86400000).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).toUpperCase();
+  $('townWord').textContent = new Date(t.day * 86400000).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).toUpperCase() + ' · ' + Town.seasonOf(t.day).name.toUpperCase();
   const ev = Town.eventOf(t);
   const star = ev && ev.id === 'starfall' && Trail.pending(save, 'star').length && save.starDay !== t.day;
   $('townBody').innerHTML = (ev ? '<div class="notice event"><b>TODAY IN TOWN</b><p>' + esc(ev.name) + '</p><span>' + esc(ev.line) + '</span><em>' + esc(ev.effect) + '</em>' + (star ? '<button class="seg go" id="toStar">GO OUT TO THE FALLEN STAR</button>' : '') + '</div>' : '') + n.hot.map(h => '<div class="notice hot"><b>IN DEMAND</b><p>' + esc(h.line) + '</p><span>' + names(h.patterns) + '</span></div>').join('')
     + (n.cold ? '<div class="notice cold"><b>OUT OF FAVOUR</b><p>' + esc(n.cold.line) + '</p><span>' + names(n.cold.patterns) + '</span></div>' : '')
+    + livingHtml(t)
     + monsterHtml()
     + (save.gang && Date.now() < save.gang.until ? '<div class="notice hot"><b>A RUMOUR</b><p>' + esc(save.gang.name.replace(/^./, c => c.toUpperCase())) + ' are working the lanes.</p><span>Lock up at night (STAFF › THE NIGHT).</span></div>' : '')
     + regularsHtml()
@@ -1730,7 +1762,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=42').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=43').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -1809,7 +1841,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=42').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=43').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }

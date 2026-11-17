@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The town's wants, with no page access: what's in demand today and what's out of favour. It follows the real calendar day (UTC), so
 // every player sees the same notice board on the same day. The day's pick is kept on the save (save.town) for the shop's rules.
-import { TOWN_HOT, TOWN_COLD, DEMAND, TOWN_EVENTS, EVENT_ODDS } from './data.js?v=42';
+import { TOWN_HOT, TOWN_COLD, DEMAND, TOWN_EVENTS, EVENT_ODDS, SEASONS, LIVING } from './data.js?v=43';
 
 export const dayOf = ms => Math.floor(ms / 86400000);
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -29,4 +29,11 @@ export function demandOf(town, pattern) {
   if (hotPatterns(town).includes(pattern)) return 1;
   const c = notices(town).cold; return c && c.patterns.includes(pattern) ? -1 : 0;
 }
-export const purseMultFor = (town, pattern) => { const d = demandOf(town, pattern); return d > 0 ? DEMAND.purse : d < 0 ? DEMAND.cold : 1; };
+export const purseMultFor = (town, pattern) => { const d = demandOf(town, pattern); return (d > 0 ? DEMAND.purse : d < 0 ? DEMAND.cold : 1) * (town && seasonOf(town.day).patterns.includes(pattern) ? LIVING.seasonPurse : 1); };
+// ---------- a living Reach (milestone 24): the season, market days, the guild fair ----------
+export const seasonOf = day => SEASONS[Math.floor((day || 0) / LIVING.seasonD) % SEASONS.length];
+export const seasonDay = day => (day || 0) % LIVING.seasonD;   // how far into it (0–13)
+export const marketOn = day => day % LIVING.market.every === LIVING.market.at;
+export const fairOn = day => day % LIVING.fair.every === LIVING.fair.at;
+// customers: the season's travellers, a market day's crowd, the fair's
+export const livingGap = town => !town ? 1 : seasonOf(town.day).gap * (marketOn(town.day) ? LIVING.market.gap : 1) * (fairOn(town.day) ? LIVING.fair.gap : 1);

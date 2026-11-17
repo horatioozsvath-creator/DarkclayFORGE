@@ -629,3 +629,9 @@ h1, .tname, .screenbar .t { font-family: var(--carve); font-weight: 900; letter-
 .wline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; font: 700 13px var(--sans); color: var(--bone); }
 .wline.done { color: var(--k-good); }
 #wards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* a living Reach */
+.notice.season { border-color: #6a8a5a; }
+.notice.fair { border-color: #e8c464; }
+.word { margin: 10px 0; padding: 10px 12px; border-left: 3px solid var(--bronze); background: rgba(0,0,0,.25); }
+.word b { display: block; font: 900 12px var(--carve); letter-spacing: .16em; color: var(--bronze); margin-bottom: 4px; }
+.word p { margin: 4px 0 0; font: italic 500 14px/1.4 var(--display); color: var(--bone-dim); }
