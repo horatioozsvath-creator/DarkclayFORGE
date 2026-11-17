@@ -3,12 +3,12 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE } from './data.js?v=55';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=55';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=55';
-import { charmGap, placeGift } from './room.js?v=55';
-import * as Trail from './trail.js?v=55';
-import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=55';
+  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE } from './data.js?v=56';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=56';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=56';
+import { charmGap, placeGift } from './room.js?v=56';
+import * as Trail from './trail.js?v=56';
+import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=56';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;

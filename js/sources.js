@@ -1,10 +1,10 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // WHERE THINGS COME FROM (milestone 30), with no page access: for any material, every way to get it (a seller, a station that makes
 // it, a part forged at once, a runner's roads, the Deep), and when a seller who doesn't have it this hour next will.
-import { MATS, SUPPLIERS, FORGED_PARTS, PATTERNS, ROUTES, STATIONS } from './data.js?v=55';
-import { linesOf, sells } from './shop.js?v=55';
-import { COMMONS } from './staff.js?v=55';
-import { partOptions } from './rules.js?v=55';
+import { MATS, SUPPLIERS, FORGED_PARTS, PATTERNS, ROUTES, STATIONS } from './data.js?v=56';
+import { linesOf, sells } from './shop.js?v=56';
+import { COMMONS } from './staff.js?v=56';
+import { partOptions } from './rules.js?v=56';
 
 const roadNames = test => Object.values(ROUTES).filter(r => !r.hunt && test(r)).map(r => r.name);
 // [{ kind: 'forged' | 'made' | 'sold' | 'pedlar' | 'runner' | 'deep', word, ...}] in the order worth trying
