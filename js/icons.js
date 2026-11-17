@@ -33,6 +33,7 @@ export const ICONS = {
   // the Landing: a riverboat on the water
   boat: svg('<path d="M3 13.5h18l-2.5 4.5h-13z"/><path d="M12 13.5V3.5l6 7.5h-6"/><path d="M2.5 21c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0"/>'),
   // a shelf with things on it
+  shield: svg('<path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M12 7v10M8 11h8"/>'),
   shelf: svg('<path d="M3 4v16M21 4v16M3 11.5h18M3 19h18"/><path d="M6 11.5V8h3v3.5M13 11.5V7.5l3.5 1v3M6.5 19v-4h3.5v4M14 19v-3h4v3"/>'),
   // the wall: a framed piece
   frame: svg('<rect x="4" y="5" width="16" height="15" rx="1"/><rect x="7" y="8" width="10" height="9"/><path d="M9 3l3-1 3 1M8 15l3-3 2 2 2-1"/>'),
@@ -104,7 +105,7 @@ export function emblem(heat, empty) {
 
 // ---------- every button its icon: matched on what it says, first match wins ----------
 const RULES = [
-  [/^EXIT\b/, 'exit'], [/^SKILLS\b/, 'skills'], [/^TAKE IT BACK$/, 'back'], [/^GIVE IT TO /, 'hire'], [/^THE NIGHT\b/, 'lamp'], [/^FIT A LOCK/, 'check'], [/^A STRONGBOX/, 'crate'], [/^REPAIR\b/, 'hammer'], [/^REBUILD\b/, 'build'], [/^BUILD THE DWARVEN FORGE/, 'anvil'], [/^BANK\b/, 'coin'], [/^PUT IN$/, 'down'], [/^TAKE OUT$/, 'up'], [/^ALL MY PURSE$/, 'coin'], [/^BORROW$/, 'scroll'], [/^REPAY/, 'check'], [/^SPARE THIS SAVE|^LET THE REACH IN/, 'lamp'], [/^THE FORGE IS STILL WARM/, 'flame'], [/^READ THE ENDING/, 'book'], [/^KEEP IT$/, 'crown'], [/^FILL FROM THE BACK/, 'crate'], [/^LEDGER\b/, 'book'], [/^ON THE BOOKS\b/, 'scroll2'], [/^BUY WHAT'S SHORT/, 'buy'], [/^MAKE IT/, 'hammer'], [/^THE FORGE$|^TO THE FORGE|^TO MY FORGE|^BACK TO MY FORGE/, 'anvil'], [/^THE SHOP( FRONT)?$|^TO THE SHOP|IN THE BACK · TO THE SHOP/, 'shop'],
+  [/^EXIT\b/, 'exit'], [/^SKILLS\b/, 'skills'], [/^GIVE TO THE WATCH/, 'shield'], [/^SET IT AS A WARD|^TAKE THE WARD DOWN/, 'lamp'], [/^TAKE IT BACK$/, 'back'], [/^GIVE IT TO /, 'hire'], [/^THE NIGHT\b/, 'lamp'], [/^FIT A LOCK/, 'check'], [/^A STRONGBOX/, 'crate'], [/^REPAIR\b/, 'hammer'], [/^REBUILD\b/, 'build'], [/^BUILD THE DWARVEN FORGE/, 'anvil'], [/^BANK\b/, 'coin'], [/^PUT IN$/, 'down'], [/^TAKE OUT$/, 'up'], [/^ALL MY PURSE$/, 'coin'], [/^BORROW$/, 'scroll'], [/^REPAY/, 'check'], [/^SPARE THIS SAVE|^LET THE REACH IN/, 'lamp'], [/^THE FORGE IS STILL WARM/, 'flame'], [/^READ THE ENDING/, 'book'], [/^KEEP IT$/, 'crown'], [/^FILL FROM THE BACK/, 'crate'], [/^LEDGER\b/, 'book'], [/^ON THE BOOKS\b/, 'scroll2'], [/^BUY WHAT'S SHORT/, 'buy'], [/^MAKE IT/, 'hammer'], [/^THE FORGE$|^TO THE FORGE|^TO MY FORGE|^BACK TO MY FORGE/, 'anvil'], [/^THE SHOP( FRONT)?$|^TO THE SHOP|IN THE BACK · TO THE SHOP/, 'shop'],
   [/^SUPPLIERS$|^TO THE SUPPLIERS/, 'crate'], [/^STAFF$/, 'people'], [/^THE LANDING$/, 'boat'], [/^THE WORKSHOP$|^WORKSHOP$/, 'anvil'], [/^THE HALL$/, 'column'],
   [/^STRIKE/, 'hammer'], [/^INTO THE FIRE|^OUT OF THE FIRE|^STOKE|^HEAT IT|^SOAK IT|^INTO THE STEAM|^BACK TO THE GLORY/, 'flame'], [/QUENCH|^STOP|^SET$|^STRING$|^LET IT DRY/, 'check'],
   [/^WORK IT|^WORK ANOTHER|^CONTINUE|^PLAY$/, 'hammer'], [/^MAKE IT$/, 'anvil'], [/^LEAVE IT/, 'back'], [/^LIGHT THE FORGE|^NEW GAME/, 'flame'],

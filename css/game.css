@@ -623,3 +623,9 @@ h1, .tname, .screenbar .t { font-family: var(--carve); font-weight: 900; letter-
 .routes .seg .risk s { opacity: .55; margin-left: 4px; }
 .risk-low { color: #8fc46a; } .risk-moderate { color: #e8c464; } .risk-high { color: #f0a35c; } .risk-deadly { color: #e4505e; } .risk-none { color: var(--bone-faint); }
 .routes .seg .riskn { display: block; font: 600 11px var(--sans); font-style: normal; color: var(--bone-faint); }
+/* the Watch's order */
+.notice.monster { border-color: var(--k-crack); }
+.watch { display: grid; gap: 6px; margin-top: 8px; }
+.wline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; font: 700 13px var(--sans); color: var(--bone); }
+.wline.done { color: var(--k-good); }
+#wards { grid-template-columns: repeat(3, minmax(0, 1fr)); }

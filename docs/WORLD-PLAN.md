@@ -203,3 +203,22 @@ and must show a steady player's income dips, not collapses), then a check on a p
   ford: 0.8 %; never killed); into the deep doors can now kill (0.2 % bare). Bare: yard and ford LOW, the Reach MODERATE, into the deep
   doors HIGH, below the deep doors and after the gang DEADLY. A full set of Rare gear brings below the deep doors down to MODERATE. The
   runner's card says how much the gear takes off every road's risk. A HIGH or DEADLY road asks first.
+
+## Milestone 23, as built (release 42)
+
+- **Monsters** (js/monsters.js, tests/monsters.test.mjs): about one day in 30, something threatens the town: **wolves in the lanes**
+  (from KNOWN), **a grave-wight on the ford road** (from SOUGHT), **something out of the deep doors** (from RENOWNED). One at a time.
+- **The build-up:** a toast and a notice on the board (THE SHOP › IN TOWN): the rumour the first day, then sightings, then three days
+  on, the night it comes. The notice counts down.
+- **Arm the Watch:** the notice carries the Watch's order (wolves: 2 blades and 2 sheaves of arrows; the wight: 2 silver weapons and a
+  lens or pane for a lantern; the deep thing: 3 Fine weapons, 2 Fine helms or hoods, a Fine bow). GIVE TO THE WATCH from the back room;
+  each piece paid half again its worth. Filled in time: kept off the lanes, renown (+15, +25, +40).
+- **The night it comes** (the order short): a repair bill (300, 900 or 3,000 c × (1 + rung) / 2), up to three pieces knocked off the
+  shelves (safe in the back room), customers scared off for a day or two (they come 1.6× less often). Reported while open or on return.
+- **While it's about** (the rumour until a day after it came), every road is twice as dangerous: the risk levels show it.
+- **Wards** (STAFF › THE NIGHT, three slots): an oil from the kettle (one bottle), a lens or a pane from the glass. They take off the
+  damage (power / (power + 6): a Fine pane and oil, 40 %) and keep some thieves away (half that off their chance at the door). No ward
+  in 3D yet, and no monster hunt or trophy (later).
+- **Spared** on a gentler Reach.
+- **Sim (90 days, seeds 1–4; `MONSTERS=0` to turn off):** 1–3 monsters; the bot (arming the Watch only from what's already in the back
+  room) keeps off about one in three; the nights it came cost 0.03–0.4 % of earnings.

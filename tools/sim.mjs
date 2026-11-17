@@ -15,6 +15,7 @@ import * as Bank from '../js/bank.js';
 import * as Wear from '../js/wear.js';
 import * as Th from '../js/thieves.js';
 import * as Run from '../js/runner.js';
+import * as Mon from '../js/monsters.js';
 import { BRANCH, RELICS, MYTHICS } from '../js/data.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD } from '../js/data.js';
 
@@ -219,6 +220,18 @@ function kit(r) {
     else if (!Run.gearOf(r)[Run.slotOf(c)]) Run.equip(save, r, c.id);
   }
 }
+// monsters (MONSTERS=0 turns them off): the bot arms the Watch from the back room, cheapest first, and sets wards when it has them
+const MONSTERING = process.env.MONSTERS !== '0';
+let monsters = 0, kept = 0, came = 0, monsterBills = 0;
+function watchDuty() {
+  if (!MONSTERING) return;
+  Mon.tidy(save, t);
+  if (Mon.plan(save, t, rng)) monsters++;
+  const m = save.monster, st = Mon.stageOf(save, t);
+  if (m && (st === 'rumour' || st === 'sighted')) Mon.kindOf(m).order.forEach((l, i) => { for (const c of Sh.inBack(save).filter(c => Mon.fitsLine(l, c)).sort((a, b) => a.worth - b.worth)) { if (!Mon.lineLeft(save, i)) break; if (Mon.give(save, i, c.id, t).kept) kept++; } });
+  const r = Mon.strike(save, t, rng); if (r) { came++; monsterBills += r.bill; note('MONSTER: ' + r.name + ', ' + r.bill + ' c'); }
+  for (const c of Sh.inBack(save).filter(Mon.canWard)) { if (Mon.wardsOf(save).length >= 3) break; Mon.addWard(save, c.id); }
+}
 // thieves (THIEVES=0 turns them off): the bot fits a lock from SOUGHT, a strongbox from FAMED, and hires a night guard from FAMED
 const THIEVING = process.env.THIEVES !== '0', GUARDING = process.env.GUARD !== '0';
 let robbed = 0, caught = 0, turned = 0, lostWorth = 0, lostTill = 0;
@@ -276,7 +289,7 @@ for (let d = 1; d <= days; d++) {
     tally(Sh.shopStep(save, 50, rng, t, false, clerk));
     St.payWages(save, 50); St.resolveTrips(save, t, rng);
     t += 50000; save.lastSeen = t;
-    if (s % 600 === 0) { security(); upkeep(); runBank(d); runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
+    if (s % 600 === 0) { watchDuty(); security(); upkeep(); runBank(d); runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
     if (save.branch) tally(Br.step(save, 50, rng, t));
     if (Sh.rescue(save, hour)) note('scrap bin');
   }
@@ -311,3 +324,4 @@ console.log('EARNED', save.earned, 'coins', save.coins);
 if (WEARING) console.log('wear: repairs', repairs, ' broke', broke, ' spent', wearSpent, ' (' + (100 * wearSpent / (save.earned || 1)).toFixed(1) + ' % of earnings)');
 if (THIEVING) console.log('thieves: robbed', robbed, ' caught', caught, ' turned away', turned, ' lost pieces worth', lostWorth, ' from the till', lostTill, ' (' + (100 * (lostWorth + lostTill) / (save.earned || 1)).toFixed(1) + ' % of earnings)');
 { const r = St.runnerOf(save); console.log('runner: ' + (r ? r.name + ' guard ' + Run.strength(r).guard + ' fight ' + Run.strength(r).fight : 'none') + ' · hunts', hunts, ' memorials', (save.memorials || []).length, (save.memorials || []).map(m => m.name).join(', ')); }
+if (MONSTERING) console.log('monsters:', monsters, ' kept off', kept, ' came', came, ' bills', monsterBills, ' (' + (100 * monsterBills / (save.earned || 1)).toFixed(2) + ' % of earnings) · wards', Mon.wardsOf(save).map(c => c.name).join(', ') || 'none');

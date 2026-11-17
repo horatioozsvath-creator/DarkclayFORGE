@@ -57,6 +57,25 @@ export const GEAR = {
   levels: [[0.01, 'LOW'], [0.04, 'MODERATE'], [0.1, 'HIGH'], [Infinity, 'DEADLY']],
   hurtDays: [2, 4], healer: 30, hunt: { base: 0.45, fight: 0.04, level: 0.02, tonic: 0.15, max: 0.95 }, bounty: 120, bountyRenown: 8,
 };
+// MONSTERS (milestone 23): now and then (about one day in 30, from the rung each needs) something threatens the town: the rumour, then
+// sightings, then three days on, the night it comes. Meanwhile the Watch posts a big order on the board: filled in time, the attack is
+// kept off the lanes (renown); each piece paid half again its worth. Short of it, the night it comes: a repair bill (damage × (1 + rung) / 2), a shelf knocked
+// over (its pieces safe in the back room), customers scared off for a while; while it's about, every road twice as dangerous. Wards
+// (an oil from the kettle, a lens or a pane from the glass, three at most) cut the damage and keep some thieves off.
+export const WEAPONS = ['falchion', 'dagger', 'axe', 'staff', 'shortbow', 'longbow'];
+export const MONSTERS = { odds: 30, warnD: 3, afterD: 1, pays: 1.5, roadX: 2,
+  wards: { max: 3, pieces: ['oil', 'lens', 'pane'], soft: 6 },
+  kinds: {
+    wolves: { name: 'Wolves in the lanes', rung: 2, renown: 15, damage: 300, fearH: 24,
+      lines: ['A carter says a pack has come down off the high pasture.', 'Wolves seen at the edge of town at dusk: a dog was taken.', 'The pack came into the lanes in the night.'],
+      order: [{ any: ['axe', 'falchion', 'dagger'], n: 2, least: 0, word: 'blades' }, { any: ['arrows'], n: 2, least: 0, word: 'sheaves of arrows' }] },
+    wight: { name: 'A grave-wight on the ford road', rung: 3, renown: 25, damage: 900, fearH: 36,
+      lines: ['Lights in the old barrows past the ford, the ferryman says.', 'A traveller came in white-faced: something walked the ford road at night.', 'The wight came up the ford road in the night.'],
+      order: [{ any: WEAPONS, n: 2, least: 0, metal: 'silver', word: 'silver weapons' }, { any: ['lens', 'pane'], n: 1, least: 0, word: 'a lens or a pane, for a lantern' }] },
+    deep: { name: 'Something out of the deep doors', rung: 5, renown: 40, damage: 3000, fearH: 48,
+      lines: ['The delvers say the deep doors were warm to the touch.', 'Something big has been heard moving below the town.', 'It came up out of the deep doors in the night.'],
+      order: [{ any: WEAPONS, n: 3, least: 1, word: 'Fine or better weapons' }, { any: ['helm', 'hood'], n: 2, least: 1, word: 'Fine or better helms or hoods' }, { any: ['shortbow', 'longbow'], n: 1, least: 1, word: 'a Fine or better bow' }] },
+  } };
 // THIEVES (milestone 21): from SOUGHT, now and then a gang starts working the lanes (about one day in odds[rung], more with a richer
 // shelf, ref: the shelf's worth that counts as usual for a rung). The rumour comes first; from the next day, on each night away (4 hours
 // or more) while they're about (4 days), they try the shop: in (strike), less with a lock; a night guard turns most away and catches

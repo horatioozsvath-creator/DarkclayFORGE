@@ -1,10 +1,11 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE RUNNER'S GEAR AND THE ROAD'S DANGER, with no page access: pieces you made, carried by the runner (off the shelves while they're
 // carried), potions used up on the road, the chance of harm on the hard roads, and the hunt for a gang. Spared on a gentler Reach.
-import { GEAR, ROUTES, TIERS } from './data.js?v=41';
-import { rung } from './growth.js?v=41';
-import { threatsOn } from './bank.js?v=41';
-import { levelOf } from './rules.js?v=41';
+import { GEAR, ROUTES, TIERS } from './data.js?v=42';
+import { rung } from './growth.js?v=42';
+import { threatsOn } from './bank.js?v=42';
+import { levelOf } from './rules.js?v=42';
+import { roadX } from './monsters.js?v=42';
 
 const D = 24 * 3600000;
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
@@ -22,8 +23,8 @@ export function strength(p) {
 // on a road: the chance of being hurt, and of being killed
 export function risk(save, p, route, now) {
   const d = GEAR.danger[route]; if (!d || !threatsOn(save, now)) return { hurt: 0, die: 0 };
-  const s = strength(p), f = 6 / (6 + s.guard + s.fight / 2);
-  return { hurt: d.hurt * f, die: d.die * f * f };
+  const s = strength(p), f = 6 / (6 + s.guard + s.fight / 2), x = roadX(save, now);   // a monster about: every road twice as dangerous
+  return { hurt: Math.min(0.9, d.hurt * f * x), die: d.die * f * f * x };
 }
 // the road's risk level, as the runner is kitted now, and bare: { word, cls, hurt, die, bare, cut } (cut: how much the gear takes off)
 export function riskLevel(save, p, route, now) {

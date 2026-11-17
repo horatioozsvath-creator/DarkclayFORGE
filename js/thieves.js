@@ -1,10 +1,11 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THIEVES, with no page access: a gang heard of first (the rumour), then their nights: on a night away they try the shop. A lock, a
 // strongbox and a night guard against them. What they take waits for the hunt (milestone 22). Spared on a gentler Reach (bank.js).
-import { THIEVES, RENOWN } from './data.js?v=41';
-import { rung } from './growth.js?v=41';
-import { threatsOn } from './bank.js?v=41';
-import { guardOf } from './staff.js?v=41';
+import { THIEVES, RENOWN } from './data.js?v=42';
+import { rung } from './growth.js?v=42';
+import { threatsOn } from './bank.js?v=42';
+import { guardOf } from './staff.js?v=42';
+import { wardCut } from './monsters.js?v=42';
 
 const H = 3600000, D = 24 * H;
 const dayOf = ms => Math.floor(ms / D);
@@ -22,7 +23,7 @@ export function doorOdds(save) {
   const g = guardOf(save), lock = has(save, 'lock') ? THIEVES.lock.x : 1;
   const stop = g ? (g.trait === 'stout' ? THIEVES.guard.stout : THIEVES.guard.stop) : 0;
   const caught = g ? (g.trait === 'watchful' ? THIEVES.guard.watchful : THIEVES.guard.catch) : 0;
-  return { in: THIEVES.strike * lock * (1 - stop), caught };
+  return { in: THIEVES.strike * lock * (1 - stop) * (1 - wardCut(save) / 2), caught };   // wards keep some off too
 }
 // a word for the risk tonight
 export function riskWord(save, now) {
