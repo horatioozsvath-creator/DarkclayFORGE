@@ -22,9 +22,9 @@
 <meta property="og:image:height" content="630">
 <meta property="og:url" content="https://horatioozsvath-creator.github.io/DarkclayFORGE/">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="css/fonts.css?v=43">
-<link rel="stylesheet" href="css/working.css?v=43">
-<link rel="stylesheet" href="css/game.css?v=43">
+<link rel="stylesheet" href="css/fonts.css?v=44">
+<link rel="stylesheet" href="css/working.css?v=44">
+<link rel="stylesheet" href="css/game.css?v=44">
 </head>
 <body>
 <!-- an unofficial copy: says where the real game is (js/main.js OFFICIAL) -->
@@ -182,13 +182,16 @@
   <!-- THE SHOP: the floor, the shelf, the back room, the ledger -->
   <main id="vShop" hidden>
     <header class="top"><div><div class="kicker" id="shopKicker">THE MAKER'S SHOP · OPEN</div><h1>The Shop</h1></div><div class="tally" id="tally"></div></header>
-    <section class="floor" id="floor" aria-label="The shop floor">
+    <section class="cview" id="cview" aria-label="Behind the counter"></section>
+    <div class="rbtns left cv-acts" id="cvActs"><button class="seg" id="toArrange">ARRANGE THE SHOP</button><button class="seg" id="visitMine3">VISIT MY SHOP · SHARE</button></div>
+    <section class="floor" id="floor" aria-label="The shop floor" hidden>
       <div class="door" aria-hidden="true"><i></i></div>
       <div class="visitor" id="visitor"></div>
       <div class="counter" aria-hidden="true"></div>
     </section>
     <div class="diobar" id="dioBar" hidden>
       <span class="views"><button class="seg" data-view="shop">THE SHOP FRONT</button><button class="seg" data-view="work">THE WORKSHOP</button><button class="seg" data-view="hall" id="viewHall" hidden>THE HALL</button></span>
+      <button class="seg go" id="toCounter">BACK TO THE COUNTER</button>
       <button class="seg" id="arrangeBtn">ARRANGE</button>
       <button class="seg" id="visitMine">VISIT MY SHOP · SHARE</button>
       <span class="diohint" id="dioHint"></span>
@@ -432,6 +435,6 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js" } }</script>
-<script type="module" src="js/main.js?v=43"></script>
+<script type="module" src="js/main.js?v=44"></script>
 </body>
 </html>

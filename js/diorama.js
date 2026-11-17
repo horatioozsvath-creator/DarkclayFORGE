@@ -3,9 +3,10 @@
 // in to the counter. Loaded only when the shop is opened. Three.js comes through the page's import map as 'three'.
 import * as THREE from 'three';
 import { GLTFLoader } from '../vendor/three/loaders/GLTFLoader.js';
-import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=43';
-import { ART } from './card.js?v=43';
-import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=43';
+import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=44';
+import { ART } from './card.js?v=44';
+import { faceCanvas, CW, CH } from './cardface.js?v=44';
+import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=44';
 
 const MODELS = 'assets/models/', M = '?m=10';   // bump m when tools/models.sh rebuilds them
 const FIGURES = { folk: 'folk', guard: 'dwarf', traveller: 'carter', delver: 'bard', factor: 'chandler', collector: 'herbalist', steward: 'chandler', master: 'herbalist', seller: 'carter', maker: 'smith', clerk: 'chandler' };
@@ -48,7 +49,7 @@ function placed(src, fp) {
 
 // ---------- the card stands: each shelf place shows its piece as a small upright card, drawn onto a canvas ----------
 const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
-const CW = 256, CH = 360, CARD_W = 0.56, CARD_H = CARD_W * CH / CW;
+const CARD_W = 0.56, CARD_H = CARD_W * CH / CW;
 // the card shelf's baize slope (tools/station_props.py SLOPE_FRONT, SLOPE_BACK, BOARD): a card rests on it against the front lip
 const SLOPE = (() => {
   const [fz, fy] = [0.38, 0.76], [bz, by] = [-0.32, 1.22], B = 0.04, L = Math.hypot(fz - bz, by - fy);
@@ -70,55 +71,10 @@ LAYOUTS.plinth = ROW(0.12, 1.02 + 0.017, Math.PI * 40 / 180, 0.42, [0]);
 LAYOUTS.hallcase = LAYOUTS[2].slice(0, 3);
 const placeOf = e => (LAYOUTS[e.lv] || LAYOUTS[0])[e.spot] || LAYOUTS[0][0];
 const modelOf = it => it.kind === 'shelf' ? (SHELF_LEVELS[it.lv | 0] || SHELF_LEVELS[0]).model : FURNITURE[it.kind].model;
-const arts = {};
-const LONG = new Set(['falchion', 'dagger', 'axe', 'shortbow', 'longbow', 'staff', 'arrows']);
-const CROP = { ring: 0.36, helm: 0.4, goblet: 0.32, pane: 0.45, salve: 0.42, lens: 0.72 };   // how much of a wide picture's middle the piece fills
-function artImage(p) {
-  const tint = /^#[0-9a-f]{6}$/i.test(p.tint || '') ? p.tint : '#c9c5be', key = (p.art || 'falchion') + tint;
-  if (arts[key]) return arts[key];
-  const svg = (ART[p.art] || ART.falchion)(tint).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
-  return arts[key] = new Promise(ok => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => ok(null); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); });
-}
-function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
-function fitText(g, text, max, size, weight) {
-  let s = size; do { g.font = weight + ' ' + s + 'px Alegreya, Georgia, serif'; s -= 1; } while (g.measureText(text).width > max && s > 12);
-}
-// a canvas texture of the card's front: the tier's frame, its picture, its name, the price on the shelf
+// a card's face: js/cardface.js draws it; here it's a texture, updated when the picture comes in
 export async function cardFace(c, price) {
-  const t = TIER[c.tier] || TIER.common, cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
-  const g = cv.getContext('2d'), tex = new THREE.CanvasTexture(cv);
-  tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
-  const draw = im => {
-    g.clearRect(0, 0, CW, CH);
-    roundRect(g, 0, 0, CW, CH, 22); g.fillStyle = '#0e0b09'; g.fill();
-    roundRect(g, 6, 6, CW - 12, CH - 12, 18); g.fillStyle = t.c; g.fill();
-    roundRect(g, 16, 16, CW - 32, CH - 32, 12); g.fillStyle = '#140e0a'; g.fill();
-    g.fillStyle = t.c; g.textAlign = 'center'; g.textBaseline = 'middle';
-    fitText(g, t.name.toUpperCase(), CW - 50, 24, 800); g.fillText(t.name.toUpperCase(), CW / 2, 40);
-    // the picture, large: a long piece (a blade, a bow) set corner to corner, as it would hang on a display
-    const ax = 26, ay = 60, aw = CW - 52, ah = 196;
-    g.fillStyle = '#2a1c12'; g.fillRect(ax, ay, aw, ah);
-    if (im) {
-      const ar = im.width / im.height || 3; g.save(); g.beginPath(); g.rect(ax, ay, aw, ah); g.clip(); g.translate(ax + aw / 2, ay + ah / 2);
-      if (LONG.has(c.art)) { g.rotate(-Math.atan2(ah, aw)); const w = Math.hypot(aw, ah) * 0.98; g.drawImage(im, -w / 2, -w / ar / 2, w, w / ar); }
-      else {   // the rest sit in the middle of a wide picture: only that middle is drawn, as large as it goes
-        const f = CROP[c.art] || 0.62, sw = im.width * f, sar = sw / im.height, w = Math.min(aw * 0.92, ah * 0.92 * sar);
-        g.drawImage(im, (im.width - sw) / 2, 0, sw, im.height, -w / 2, -w / sar / 2, w, w / sar);
-      }
-      g.restore();
-    }
-    if (c.count > 0) { g.fillStyle = '#0e0b09'; g.fillRect(CW - 86, ay + 4, 56, 38); g.fillStyle = '#ece0c6'; g.font = '800 30px Alegreya, Georgia, serif'; g.fillText('×' + c.count, CW - 58, ay + 24); }
-    g.fillStyle = '#e8c464'; fitText(g, price + ' c', CW - 44, 62, 800); g.fillText(price + ' c', CW / 2, 302);
-    if (t.foil) {   // Old-Blood's foil, still: a sheen across the frame (only the frame)
-      g.save(); g.beginPath(); g.roundRect(6, 6, CW - 12, CH - 12, 18); g.roundRect(16, 16, CW - 32, CH - 32, 12); g.clip('evenodd');
-      const sh = g.createLinearGradient(0, 0, CW, CH);
-      sh.addColorStop(0.25, 'rgba(255,255,255,0)'); sh.addColorStop(0.42, 'rgba(255,255,255,.75)'); sh.addColorStop(0.5, 'rgba(225,205,255,.5)'); sh.addColorStop(0.62, 'rgba(255,255,255,0)');
-      g.fillStyle = sh; g.fillRect(0, 0, CW, CH); g.restore();
-    }
-    tex.needsUpdate = true;
-  };
-  draw(null);
-  draw(await artImage(c));
+  let tex = null;
+  await faceCanvas(c, price, cv => { if (!tex) { tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4; } tex.needsUpdate = true; });
   return tex;
 }
 // the "+N c" that rises over the counter when a piece sells
@@ -142,7 +98,7 @@ function makeStand(slot, shelfId, tex, at) {
   return s;
 }
 
-export async function create(host, { onTap } = {}) {
+export async function create(host, { onTap, folk = true } = {}) {   // folk: false, no customers (arranging only)
   let renderer;
   try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { return null; }
   try { palette = (await (await fetch(MODELS + 'palette.json' + M)).json()).slots; } catch (e) { palette = {}; }
@@ -429,10 +385,10 @@ export async function create(host, { onTap } = {}) {
       if (changed) { for (const slot of [...stands.keys()]) dropStand(slot); for (const o of itemObjs.values()) itemsG.remove(o); itemObjs.clear(); for (const [id, p] of [...people]) { peopleG.remove(p.obj); people.delete(id); } }
       view = v; room = r; const s = sizeOf(r);
       if (changed || s.w !== size.w || s.d !== size.d || !roomG.children.length) { size = { w: s.w, d: s.d }; buildRoom(); fitCamera(); }
-      syncItems(); setStaff(save); drawMarks(); setQueue(lastQueue);
+      syncItems(); setStaff(save); drawMarks(); if (folk) setQueue(lastQueue);
     },
     get view() { return view; },
-    setQueue, walkIn, sold,
+    setQueue: folk ? setQueue : () => {}, walkIn: folk ? walkIn : () => {}, sold: folk ? sold : () => {},
     setShelf(list) { shown = list; drawStands(); },
     arrange(on, sel = null) { arranging = on; selected = sel; drawMarks(); dirty = true; },
     canPlace(it) { return fits(room, it, it.id); },

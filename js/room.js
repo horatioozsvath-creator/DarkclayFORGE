@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The shop's two rooms, with no page access: the shop front (counter, shelves, decor; where customers come) and the workshop
 // behind it (the forge, the anvil and every station). A grid each, what stands on it, buying, moving, selling back, growing.
-import { FURNITURE, ROOM_SIZES, WORK_SIZES, HALL_SIZES, HALL, DOOR_Z, WORK_DOOR_X, SHELF_COSTS, SHELF_LEVELS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=43';
-import { wallCharm, hallCharm } from './growth.js?v=43';
+import { FURNITURE, ROOM_SIZES, WORK_SIZES, HALL_SIZES, HALL, DOOR_Z, WORK_DOOR_X, SHELF_COSTS, SHELF_LEVELS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=44';
+import { wallCharm, hallCharm } from './growth.js?v=44';
 
 export const SIZES = { shop: ROOM_SIZES, work: WORK_SIZES, hall: HALL_SIZES };
 export const sizeOf = room => SIZES[room.kind || 'shop'][room.size || 0];

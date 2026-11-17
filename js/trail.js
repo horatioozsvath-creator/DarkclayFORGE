@@ -2,10 +2,10 @@
 // THE TRAIL OF THE NINE, with no page access: the shards of Veric, one for each Mythic. The trail opens OF THE REACH, and with it every
 // clue (release 37: before, each waited on its Relic), so shards and parts are gathered alongside the Relics. From its source: below the deep doors (staff.js), a Court order (shop.js), or the
 // fallen star (a rare town event, claimed from the notice board).
-import { MYTHICS, RELICS, TRAIL, PART_WORK, PART_PATTERN, OLD_BLOOD, PATTERNS } from './data.js?v=43';
-import { rung } from './growth.js?v=43';
-import { owns } from './room.js?v=43';
-import { levelOf, stationOf } from './rules.js?v=43';
+import { MYTHICS, RELICS, TRAIL, PART_WORK, PART_PATTERN, OLD_BLOOD, PATTERNS } from './data.js?v=44';
+import { rung } from './growth.js?v=44';
+import { owns } from './room.js?v=44';
+import { levelOf, stationOf } from './rules.js?v=44';
 
 export const open = save => rung(save) >= TRAIL.rung;
 export const hasShard = (save, id) => (save.shards || []).includes(id);

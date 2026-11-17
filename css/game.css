@@ -635,3 +635,27 @@ h1, .tname, .screenbar .t { font-family: var(--carve); font-weight: 900; letter-
 .word { margin: 10px 0; padding: 10px 12px; border-left: 3px solid var(--bronze); background: rgba(0,0,0,.25); }
 .word b { display: block; font: 900 12px var(--carve); letter-spacing: .16em; color: var(--bronze); margin-bottom: 4px; }
 .word p { margin: 4px 0 0; font: italic 500 14px/1.4 var(--display); color: var(--bone-dim); }
+
+/* ---------- behind the counter (milestone 25): the painted view and what's laid over it ---------- */
+.cview { margin: 0 -16px; position: relative; }
+.cv-stage { position: relative; width: 100%; aspect-ratio: 16 / 9; max-height: 72vh; overflow: hidden; background: #0e0906; touch-action: pan-y; transition: opacity .18s; }
+@media (max-width: 640px) and (orientation: portrait) { .cv-stage { aspect-ratio: 390 / 430; max-height: none; } }
+.cv-stage.turning { opacity: .35; }
+.cv-stage > *, .cv-folk > *, .cv-cards > * { position: absolute; }
+.cv-bg, .cv-fg { max-width: none; pointer-events: none; user-select: none; }
+.cv-folk, .cv-cards, .cv-hot { inset: 0; }
+.cv-folk { pointer-events: none; } .cv-cards { pointer-events: none; }
+.cv-who { max-width: none; pointer-events: none; }
+.cv-shadow { border-radius: 50%; background: radial-gradient(ellipse at center, rgba(0,0,0,.5), rgba(0,0,0,0) 70%); }
+.cv-card { left: 0; top: 0; transform-origin: 0 0; image-rendering: auto; filter: drop-shadow(0 2px 2px rgba(0,0,0,.5)); }
+.cv-hot { overflow: visible; }
+.cv-place { fill: rgba(232,196,100,0); stroke: rgba(232,196,100,0); stroke-width: 2; cursor: pointer; transition: fill .15s, stroke .15s; }
+.cv-place.empty { stroke: rgba(232,196,100,.28); stroke-dasharray: 5 4; }
+.cv-place.none { pointer-events: none; stroke: none; }
+.cv-place:hover, .cv-place:focus { fill: rgba(232,196,100,.12); stroke: rgba(232,196,100,.8); }
+.cv-door { fill: rgba(255,140,60,0); cursor: pointer; } .cv-door:hover { fill: rgba(255,140,60,.12); }
+.cv-turns { display: flex; gap: 4px; padding: 6px 0 0; } .cv-turns .seg { flex: 1; min-height: 34px; font-size: 11px; padding: 2px 4px; }
+.cv-acts { margin-top: 6px; }
+@media (max-width: 420px) { .cv-turns .seg { font-size: 9.5px; } }
+.cv-bg { z-index: 0; } .cv-cards { z-index: 1; } .cv-folk { z-index: 2; } .cv-fg { z-index: 3; } .cv-hot { z-index: 4; }   /* back to front, each its own layer */
+.visitor[hidden], .cv-acts[hidden], .cview[hidden] { display: none !important; }
