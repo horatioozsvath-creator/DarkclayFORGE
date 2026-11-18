@@ -3,12 +3,12 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, COURT_FOUND, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE, REG_CLUE_ODDS } from './data.js?v=60';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=60';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=60';
-import { charmGap, placeGift } from './room.js?v=60';
-import * as Trail from './trail.js?v=60';
-import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=60';
+  APPRENTICE, HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, ORDER_TIME, ORDER_PAYS, SELLERS, COURT_FOUND, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE, REG_CLUE_ODDS } from './data.js?v=61';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=61';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=61';
+import { charmGap, placeGift } from './room.js?v=61';
+import * as Trail from './trail.js?v=61';
+import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=61';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -215,7 +215,7 @@ export function visit(save, rng, now, c = richer(save, newCustomer(rng, save), r
       save.coins += price; save.sold = (save.sold || 0) + 1; save.earned = (save.earned || 0) + price;
       takeOne(save, e.card);
       entry.sold = { name: e.card.name, tier: e.card.tier, price, full: priceAt(e.card, e.tag), tag: e.tag, id: e.card.id };
-      if (e.tag !== 'cheap') fame(save, 1);
+      if (e.tag !== 'cheap') fame(save, fameOf(e.card));
       entry.line = '"' + LINES.sold[c.mood] + '"' + (o.by ? ' Sold by ' + o.by + (o.rate && o.rate < 1 ? ', who kept ' + (priceAt(e.card, e.tag) - price) + ' c.' : '.') : '');
       if (o.by) entry.by = o.by;
       if (o.restock && !save.shelf[e.slot]) {
@@ -342,7 +342,7 @@ export function haggle(save, cardId, choice, now) {
     return { outcome: 'counter', price: offer, over: true };
   }
   const [what, at] = HAGGLE_TABLE[mood][choice].split(':');
-  if (what === 'sold') { practise(save, choice === 'ask' ? 2 : 1); if (choice !== 'meet') fame(save, 1); const entry = sellAt(save, c, e.card, price, choice, now); next(save); return { outcome: 'sold', price, entry }; }
+  if (what === 'sold') { practise(save, choice === 'ask' ? 2 : 1); if (choice !== 'meet') fame(save, fameOf(e.card)); const entry = sellAt(save, c, e.card, price, choice, now); next(save); return { outcome: 'sold', price, entry }; }
   if (what === 'counter') {
     const offer = Math.min(purse, hagglePrice(e.card, e.tag, at, haggleMult(save)));
     c.counter = { id: e.card.id, price: offer, asked: price };
@@ -366,7 +366,7 @@ export function split(save, now) {
   if (!card) return null;
   const mid = splitPrice(c.counter), purse = purseFor(save, c, card), mood = moodFor(c, card, save);
   if (mid <= purse && mood !== 'PINCHED') {
-    practise(save, 2); fame(save, 1);
+    practise(save, 2); fame(save, fameOf(card));
     const entry = sellAt(save, c, card, mid, 'split', now); next(save);
     return { outcome: 'sold', price: mid, entry };
   }
@@ -466,6 +466,8 @@ function storyFilled(save, o, now) {
   const g = placeGift(save, s.gift);
   return { thanks: s.steps[o.step].thanks, gift: s.gift, stored: !!g.stored };
 }
+// a sale's renown: an apprentice's piece carries their name, not yours, so it brings less (milestone 36)
+export const fameOf = card => card && card.byApprentice ? APPRENTICE.renown : 1;
 export function postOrder(save, rng, now) {
   // a regular with a story to go on, more often than not
   const ready = storiesReady(save, now || 0);

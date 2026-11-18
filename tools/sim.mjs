@@ -17,6 +17,7 @@ import * as Th from '../js/thieves.js';
 import * as Run from '../js/runner.js';
 import * as Mon from '../js/monsters.js';
 import * as Liv from '../js/living.js';
+import * as Ap from '../js/apprentice.js';
 import { BRANCH, RELICS, MYTHICS } from '../js/data.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD } from '../js/data.js';
 
@@ -80,7 +81,7 @@ function makeOne(hour) {
   if (lvl(c.id) >= 5 && rng() < 0.3) S.earned = S.whiteHeat = true;
   const res = R.finish(S, 'quench');
   const p = R.makePiece({ patternId: c.id, picks: c.picks, result: res, picked: null, maker: 'Bot', rng, now: t });
-  save.cards.unshift(p); made++;
+  save.cards.unshift(p); made++; save.benchAt = t;
   if (WEARING) { const st = R.stationOf(c.id).id; Wear.addWear(save, st, 'work', t); if (Wear.isBroken(save, st, t)) { broke++; const r = Wear.rebuild(save, st, t); if (r.ok) wearSpent += r.cost; } }
   (save.trades[c.id] = save.trades[c.id] || { xp: 0 }).xp += R.xpFor(res);
   const tag = 'fair';
@@ -89,7 +90,7 @@ function makeOne(hour) {
 }
 // the big sales: a piece over 1,000 c, an Old-Blood piece, and who bought them
 const big = { over1000: 0, oldBlood: 0, by: {} };
-function tally(entries) { (entries || []).forEach(e => { if (!e.sold) return; if (e.sold.price >= 1000) big.over1000++; if (e.sold.tier === 'oldblood') big.oldBlood++; if (e.sold.price >= 1000 || e.sold.tier === 'oldblood') big.by[e.type] = (big.by[e.type] || 0) + 1; }); }
+function tally(entries) { (entries || []).forEach(e => { if (!e.sold) return; if (apIds.has(e.sold.id)) { apSold += e.sold.price; apN++; } if (e.sold.price >= 1000) big.over1000++; if (e.sold.tier === 'oldblood') big.oldBlood++; if (e.sold.price >= 1000 || e.sold.tier === 'oldblood') big.by[e.type] = (big.by[e.type] || 0) + 1; }); }
 // a master's last working: a Rare that qualifies (on the shelf or in the back), its materials bought if they're for sale this hour.
 // A steady player finishes it with no crack about half the time at trade 6, better with each level after.
 function tryOldBlood(hour) {
@@ -204,6 +205,14 @@ function nineWork(day) {
     return;
   }
 }
+// the apprentice (milestone 36; APPR=0 turns it off): hired from FAMED when one's looking for work, set to WHAT'S SHORT
+const APPR = process.env.APPR !== '0';
+let benched = 0, apprDay = null; const apIds = new Set(); let apSold = 0, apN = 0;
+function hireApprentice(day) {
+  if (!APPR || Ap.apprenticeOf(save) || G.rung(save) < 4) return;
+  const c = St.candidates(save, Math.floor(t / H)).find(x => x.role === 'apprentice');
+  if (c && save.coins > St.hireFee(c) + 1000 && St.hire(save, c)) { apprDay = day; note('took on an apprentice: ' + c.name); }
+}
 // a special order (a story's step too): delivered from the back room if something there fills it
 let orders = 0, stories = 0;
 function fillOrder() {
@@ -309,14 +318,14 @@ for (let d = 1; d <= days; d++) {
     makeOne(hour);
     const c = St.clerkOf(save), clerk = c && !save.unpaid ? St.clerkTerms(c) : null;
     tally(Sh.shopStep(save, 50, rng, t, false, clerk));
-    St.payWages(save, 50); St.resolveTrips(save, t, rng);
+    St.payWages(save, 50); St.resolveTrips(save, t, rng); { const bm = Ap.step(save, 50, rng, t); benched += bm.length; bm.forEach(r => apIds.add(r.piece.id)); }
     t += 50000; save.lastSeen = t;
-    if (s % 600 === 0) { fair(); watchDuty(); security(); upkeep(); runBank(d); runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
+    if (s % 600 === 0) { fair(); watchDuty(); security(); upkeep(); runBank(d); runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); hireApprentice(d); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
     if (save.branch) tally(Br.step(save, 50, rng, t));
     if (Sh.rescue(save, hour)) note('scrap bin');
   }
   // the night: away for 14 hours
-  const from = save.lastSeen, a = St.catchUp(save, t + 14 * H, rng); if (a) tally(a.sold);
+  const from = save.lastSeen, a = St.catchUp(save, t + 14 * H, rng); if (a) (a.made || []).forEach(c => apIds.add(c.id)); if (a) tally(a.sold);
   if (THIEVING) { const th = Th.night(save, from, t + 14 * H, rng, a ? a.coins : 0); if (th) { if (th.robbed) { robbed++; lostWorth += th.took.reduce((x, c) => x + c.worth, 0); lostTill += th.till; note('ROBBED by ' + th.gang + ': ' + th.took.map(c => c.name).join(', ') + (th.till ? ', ' + th.till + ' c' : '')); } else if (th.caught) caught++; else turned++; } }
   if (save.branch) tally(Br.away(save, from, t + 14 * H, rng, St.awayCap(save)).sold); t += 14 * H; save.lastSeen = t;
   const day = (save.earned || 0) - start;
@@ -346,6 +355,7 @@ if (process.env.WHY) for (const id of Object.keys(MYTHICS)) console.log('  nine 
   'parts', [0, 1, 2].filter(i => Trail.hasPart(save, id, i)).length, 'relic', MYTHICS[id].relic, (save.relicsMade || []).includes(MYTHICS[id].relic) ? 'made' : 'not', save.cards.some(c => c.relic === MYTHICS[id].relic && c.tier === 'relic') ? 'held' : 'gone', 'src', MYTHICS[id].shard);
 if (BANKING) console.log('bank: borrowed on day', loanDay, ' interest paid', interestPaid, ' owed now', Bank.bankOf(save).loan, ' second shop from day', branchDay);
 console.log('EARNED', save.earned, 'coins', save.coins);
+{ const a = Ap.apprenticeOf(save); if (APPR) console.log('apprentice: ' + (a ? a.name + ' (' + (a.trait) + ') from day ' + apprDay + ', made ' + (a.made || 0) + ' (open ' + benched + ') sold ' + apN + ' for ' + apSold + ' spent ' + (a.spent || 0) + '  trades ' + Ap.skills(a).slice(0, 5).map(x => x.id + ' ' + x.level).join(', ') : 'none')); }
 if (WEARING) console.log('wear: repairs', repairs, ' broke', broke, ' spent', wearSpent, ' (' + (100 * wearSpent / (save.earned || 1)).toFixed(1) + ' % of earnings)');
 if (THIEVING) console.log('thieves: robbed', robbed, ' caught', caught, ' turned away', turned, ' lost pieces worth', lostWorth, ' from the till', lostTill, ' (' + (100 * (lostWorth + lostTill) / (save.earned || 1)).toFixed(1) + ' % of earnings)');
 { const r = St.runnerOf(save); console.log('runner: ' + (r ? r.name + ' guard ' + Run.strength(r).guard + ' fight ' + Run.strength(r).fight : 'none') + ' · hunts', hunts, ' memorials', (save.memorials || []).length, (save.memorials || []).map(m => m.name).join(', ')); }

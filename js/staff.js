@@ -1,14 +1,15 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=60';
-import { levelOf, makePiece, partOptions } from './rules.js?v=60';
-import { awayStep } from './shop.js?v=60';
-import { wageMult, capBonus, rung } from './growth.js?v=60';
-import * as Trail from './trail.js?v=60';
-import { TRAIL, MONSTERS } from './data.js?v=60';
-import * as Run from './runner.js?v=60';
-import * as Mon from './monsters.js?v=60';
+import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=61';
+import { levelOf, makePiece, partOptions } from './rules.js?v=61';
+import { awayStep } from './shop.js?v=61';
+import { wageMult, capBonus, rung } from './growth.js?v=61';
+import * as Trail from './trail.js?v=61';
+import { TRAIL, MONSTERS } from './data.js?v=61';
+import * as Run from './runner.js?v=61';
+import * as Mon from './monsters.js?v=61';
+import * as Ap from './apprentice.js?v=61';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -181,7 +182,7 @@ export function catchUp(save, to, rng) {
   save.lastSeen = to;
   if (!from || to <= from) return null;
   const elapsed = (to - from) / 1000, counted = Math.min(elapsed, awayCap(save) * 3600);
-  const sum = { elapsed, counted, capped: elapsed > counted, sold: [], restocked: [], coins: 0, cut: 0, missed: 0, wages: 0, trips: [], unpaid: false, clerk: null };
+  const sum = { elapsed, counted, capped: elapsed > counted, sold: [], restocked: [], coins: 0, cut: 0, missed: 0, wages: 0, trips: [], unpaid: false, clerk: null, made: [] };
   const c = clerkOf(save);
   for (let t = 0; t < counted; t += 60) {
     const dt = Math.min(60, counted - t), at = from + (t + dt) * 1000;
@@ -189,13 +190,15 @@ export function catchUp(save, to, rng) {
     const r = awayStep(save, dt, rng, at, terms);
     sum.sold.push(...r.sold); r.sold.forEach(e => e.restocked && sum.restocked.push(e.restocked.name)); sum.restocked.push(...(r.tidied || [])); sum.missed += r.missed; sum.cut += r.cut;
     if (terms) { sum.clerk = terms.name; r.sold.forEach(() => gain(c, 1)); }
+    sum.made.push(...Ap.step(save, dt, rng, at).map(r => r.piece));   // the apprentice at the bench (milestone 36)
     sum.wages += payWages(save, dt);
     if (save.unpaid) sum.unpaid = true;
   }
+  if (sum.made.length) sum.apprentice = Ap.apprenticeOf(save).name;
   sum.coins = sum.sold.reduce((a, e) => a + e.sold.price, 0);
   save.sold = (save.sold || 0); save.earned = (save.earned || 0);
   sum.trips = resolveTrips(save, to, rng);
   // worth telling: a sale, a trip home, wages behind, or customers who found no one to serve them
-  if (!sum.sold.length && !sum.trips.length && !sum.unpaid && !(sum.missed && !c)) return null;
+  if (!sum.sold.length && !sum.trips.length && !sum.made.length && !sum.unpaid && !(sum.missed && !c)) return null;
   return sum;
 }

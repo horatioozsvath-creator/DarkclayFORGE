@@ -785,7 +785,14 @@ export const ROLES = {
   clerk: { word: 'COUNTER CLERK', wage: 4, line: 'Minds the shop while you work and while you\'re away.' },
   runner: { word: 'RUNNER', wage: 3, line: 'Goes out on the roads for materials, old pieces and now and then a found tile.' },
   guard: { word: 'NIGHT GUARD', wage: 5, line: 'Keeps the shop at night: most break-ins stop at the door, and some thieves are caught.', rung: 3 },
+  apprentice: { word: 'APPRENTICE', wage: 4, line: 'Works at the bench while you\'re away and while you work: plain pieces of patterns you know, from what\'s in the back.', rung: 4 },
 };
+// the apprentice (milestone 36, docs/LEGACY-PLAN.md): a piece every `every` minutes of the shop's clock (open, or away up to the cap),
+// Common or Fine, from the back room's common materials (never a rare thing, never a relic material); short of something common, they
+// buy it while the purse keeps `keep` coins over (unless told not to); never more than `most` of a pattern waiting in the back; a sale of theirs brings `renown` (a quarter of yours). Their own trade in each pattern grows by `learn` a piece
+// (`beside`× while you've worked a piece in the last `besideMin` minutes), never past trade `top`.
+// fine: [the odds of a Fine piece at trade 1, more a level, at most]; flaw: [the odds of a flawed one at trade 1, less a level, at least]
+export const APPRENTICE = { every: 30, swift: 0.75, top: 5, learn: 3, beside: 2, besideMin: 20, thrifty: 0.25, keep: 300, most: 2, renown: 0.25, fine: [0.1, 0.08, 0.45], flaw: [0.3, 0.05, 0.05], careful: 0.5 };
 export const TRAITS = {
   guard: [
     { id: 'watchful', word: 'Watchful', line: 'catches more of them' },
@@ -797,6 +804,12 @@ export const TRAITS = {
     { id: 'early', word: 'Early riser', line: 'keeps the shop two hours longer while you\'re away' },
     { id: 'tidy', word: 'Tidy', line: 'fills every empty place on the shelf from the back room, not only the one a sale left' },
     { id: 'quick', word: 'Quick learner', line: 'learns half as fast again' },
+  ],
+  apprentice: [
+    { id: 'careful', word: 'Careful', line: 'half as many flawed pieces' },
+    { id: 'swift', word: 'Swift', line: 'a piece a quarter sooner' },
+    { id: 'thrifty', word: 'Thrifty', line: 'one piece in four costs nothing' },
+    { id: 'bright', word: 'Bright', line: 'learns half as fast again' },
   ],
   runner: [
     { id: 'surefoot', word: 'Sure-footed', line: 'trips take a fifth less time' },
