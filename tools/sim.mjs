@@ -35,7 +35,8 @@ Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
 // FOUND=0: only the patterns known from the start; otherwise (milestone 33's balance run) every hidden pattern found from day one
 // START=n: begin n calendar days later (the town's board, and so the fallen star, is the same in every shop on a day)
 const FOUND = process.env.FOUND !== '0';
-if (FOUND) save.book = { found: Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden), tries: [], clues: [], seen: 0 };
+// (the coast's own patterns only on the coast, milestone 40)
+if (FOUND) save.book = { found: Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden && (!PATTERNS[id].coast || (process.env.REGION && process.env.REGION !== 'reach'))), tries: [], clues: [], seen: 0 };
 const OLD = process.env.OLD !== '0', TOWN = process.env.TOWN !== '0', BRANCHES = process.env.BRANCH !== '0';   // TOWN=0: the bot ignores the notice board   // OLD=0: a run without Old-Blood, to compare
 let t = Date.UTC(2026, 10, 1, 9) + (+process.env.START || 0) * 86400000, log = [], made = 0, oldTried = 0, oldMade = 0, spent = { mats: 0, staff: 0, tools: 0, room: 0 };
 // FROM=file: a first generation's save at its end (SAVEOUT=file writes one); it's handed on to its apprentice, and the run plays the

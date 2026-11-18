@@ -1,38 +1,38 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, APPRENTICE, LEGACY, TRAITS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE } from './data.js?v=64';
-import * as R from './rules.js?v=64';
-import * as Sh from './shop.js?v=64';
-import * as St from './staff.js?v=64';
-import * as Rm from './room.js?v=64';
-import * as G from './growth.js?v=64';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=64';
-import * as Snd from './sound.js?v=64';
-import * as CV from './counter.js?v=64';
-import * as Town from './town.js?v=64';
-import * as V from './visit.js?v=64';
-import * as Br from './branch.js?v=64';
-import * as Bank from './bank.js?v=64';
-import * as Wear from './wear.js?v=64';
-import * as Th from './thieves.js?v=64';
-import * as Run from './runner.js?v=64';
-import * as Src from './sources.js?v=64';
-import * as Mon from './monsters.js?v=64';
-import * as Liv from './living.js?v=64';
-import * as Hl from './hall.js?v=64';
-import * as Trail from './trail.js?v=64';
-import * as Rg from './region.js?v=64';
-import * as Disc from './discover.js?v=64';
-import { ICONS, emblem, watch } from './icons.js?v=64';
-import { drawFlyer, flyerBlob } from './flyer.js?v=64';
-import * as Ap from './apprentice.js?v=64';
-import * as Leg from './legacy.js?v=64';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=64';
-import { card, ART } from './card.js?v=64';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=64';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=64';
+import { KINDS, KC, TIERS, APPRENTICE, LEGACY, TRAITS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE } from './data.js?v=65';
+import * as R from './rules.js?v=65';
+import * as Sh from './shop.js?v=65';
+import * as St from './staff.js?v=65';
+import * as Rm from './room.js?v=65';
+import * as G from './growth.js?v=65';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=65';
+import * as Snd from './sound.js?v=65';
+import * as CV from './counter.js?v=65';
+import * as Town from './town.js?v=65';
+import * as V from './visit.js?v=65';
+import * as Br from './branch.js?v=65';
+import * as Bank from './bank.js?v=65';
+import * as Wear from './wear.js?v=65';
+import * as Th from './thieves.js?v=65';
+import * as Run from './runner.js?v=65';
+import * as Src from './sources.js?v=65';
+import * as Mon from './monsters.js?v=65';
+import * as Liv from './living.js?v=65';
+import * as Hl from './hall.js?v=65';
+import * as Trail from './trail.js?v=65';
+import * as Rg from './region.js?v=65';
+import * as Disc from './discover.js?v=65';
+import { ICONS, emblem, watch } from './icons.js?v=65';
+import { drawFlyer, flyerBlob } from './flyer.js?v=65';
+import * as Ap from './apprentice.js?v=65';
+import * as Leg from './legacy.js?v=65';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=65';
+import { card, ART } from './card.js?v=65';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=65';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=65';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 64;
+const VERSION = 65;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayZERO_FORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -288,10 +288,12 @@ function tryOpen(st, keep) {
 function renderBook() {
   if (!$('book')) return;
   const b = Disc.bookOf(save), sts = Object.keys(TRY_ROLES).filter(st => Rm.owns(save, st));
-  const found = Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden && Sh.knows(save, id)), all = Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden);
+  // another region's patterns aren't in the book here until found (milestone 40)
+  const here = id => Rg.findsHere(save, id) || Sh.knows(save, id);
+  const found = Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden && Sh.knows(save, id)), all = Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden && here(id));
   $('bookWord').textContent = found.length + ' OF ' + all.length + ' FOUND';
   const page = st => {
-    const ids = Disc.hiddenAt(st);
+    const ids = Disc.hiddenAt(st).filter(here);
     return '<h3 class="stationhead">' + STATIONS[st].word + '</h3><div class="bookgrid">' + ids.map(id => {
       const p = PATTERNS[id], k = Sh.knows(save, id), g = Disc.gateOf(save, id);
       return '<div class="bookpat' + (k ? ' known' : '') + '"><div class="art">' + ART[p.art](k ? '#c9c5be' : '#1c1612') + (k ? '' : '<i>?</i>') + '</div><b>' + (k ? p.name : '?') + '</b><small>' + esc(k ? p.kind : p.hidden.look) + '</small>'
@@ -518,7 +520,7 @@ let floorShown = null;
 let cvw = null, cvP = null, iso = false, cvSig = '', cvFront = null;
 function counterView() {
   $('cview').hidden = false; $('cvActs').hidden = false; $('floor').hidden = true; $('dioBar').hidden = true;
-  if (!cvP) cvP = import('./counter.js?v=64').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
+  if (!cvP) cvP = import('./counter.js?v=65').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
   else if (cvw) cvw.show(save, Sh.priceAt);
 }
 // a place on the painted wall: its piece (take it down), or empty (hang one from the back room)
@@ -533,7 +535,7 @@ function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   if (!iso) { counterView(); tip('shop', $('cview')); return; }
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=64').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=65').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -777,7 +779,7 @@ function renderOrder() {
   if (!o) return;
   if (o.mythic) return renderCourtOrder(o);
   const fit = save.cards.filter(c => Sh.fills(o, c) && !G.onWall(save, c.id) && !G.onHall(save, c.id));   // what can be handed over (the wall's and the Hall's stay up)
-  const story = o.story && STORIES.find(x => x.id === o.story);
+  const story = o.story && Sh.storiesOf(save).find(x => x.id === o.story);
   $('orderBody').innerHTML = (story ? '<div class="storystep">' + esc(Sh.storyWho(save, story).split(',')[0].toUpperCase()) + '\'S STORY · ' + (o.step + 1) + ' OF ' + story.steps.length + '</div>' : '') + '<div class="who">FROM ' + esc(o.who.toUpperCase()) + ' · "' + esc(o.line) + '"</div>'
     + '<div class="ask">' + esc(Sh.orderWord(o)).replace(/^./, x => x.toUpperCase()) + '</div>'
     + '<div class="note">Pays <span class="pays">' + o.pays + ' c</span>, ' + (o.story ? 'two and a half times' : o.court && !o.shard && !o.mythic ? 'three times' : 'twice') + ' what such a piece is worth, whatever you hand in.' + (story && o.step === story.steps.length - 1 ? ' The last of their story: they\'ll leave a gift.' : '') + '</div>'
@@ -858,10 +860,11 @@ $('hallExpand').onclick = () => { if (Rm.expand(save, 'hall')) { hallNote = 'The
 // the regulars and how far along their stories are
 function regularsHtml() {
   const now = Date.now(), owns = p => PATTERNS[p] && Rm.owns(save, PATTERNS[p].station || 'forge');
-  return '<div class="regulars"><h3 class="subhead">THE REGULARS</h3>' + STORIES.map(s => {
+  const list = Sh.storiesOf(save).filter(s => !s.blueprint || RELICS[s.blueprint]);   // a blueprint not in the game yet: not shown (milestone 41)
+  return '<div class="regulars"><h3 class="subhead">THE REGULARS</h3>' + list.map(s => {
     const st = Sh.storyOf(save, s.id), done = st.step >= s.steps.length, step = s.steps[st.step];
     const dots = s.steps.map((_, i) => '<i class="' + (i < st.step ? 'on' : '') + '"></i>').join('');
-    const first = s.after && Sh.storyOf(save, s.after).step < STORIES.find(x => x.id === s.after).steps.length;
+    const first = s.after && Sh.storyOf(save, s.after).step < list.find(x => x.id === s.after).steps.length;
     if (s.after && (first || G.rung(save) < s.rung) && !st.step) return '<div class="regular"><b>' + esc(Sh.storyWho(save, s)) + '</b><span class="dots"></span><span>A great story, after their first is told, when the shop is ' + RENOWN[s.rung].word + '.</span></div>';
     const word = done ? 'Their story is told. ' + (s.blueprint ? 'Their gift: the blueprint of ' + RELICS[s.blueprint].name + '.' : 'Their gift: ' + FURNITURE[s.gift].name + '.')
       : save.order && save.order.story === s.id ? 'Waiting on their order now.'
@@ -2089,7 +2092,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=64').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=65').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -2168,7 +2171,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=64').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=65').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }

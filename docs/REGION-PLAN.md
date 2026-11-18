@@ -1,6 +1,6 @@
 # Over the pass: a plan for a new region (milestones 39–42)
 
-Status: planned and decided (2026-11-18). Milestone 39 (Saltby, hidden) built in release 64 (docs/MILESTONE-39.md: the coast earns about what the Reach does in the sim). Builds on release 63 (the legacy).
+Status: planned and decided (2026-11-18). Milestone 39 (Saltby, hidden) built in release 64 (docs/MILESTONE-39.md: the coast earns about what the Reach does in the sim). Milestone 40 (the folk and finds, hidden) in release 65 (docs/MILESTONE-40.md). Builds on release 63 (the legacy).
 
 ## What it's for
 

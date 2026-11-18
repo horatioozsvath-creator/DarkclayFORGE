@@ -4,12 +4,12 @@
 // cut out to stand in front of the customers), with what changes laid over it in 2D: your cards on the painted shelves (each card's
 // face skewed onto its place), the customers as pictures at their standing spots, and the places and the doorway to tap.
 // The pure parts (fit, the skew, who stands where) are exported for the tests; create() needs a page.
-import { faceCanvas, CW, CH } from './cardface.js?v=64';
-import { LOOKS, POOLS, REGULARS } from './folk.js?v=64';
-import { FURNITURE, TIERS } from './data.js?v=64';
-import { shelfSpots } from './room.js?v=64';
-import { isBroken } from './wear.js?v=64';
-import { threatsOn } from './bank.js?v=64';
+import { faceCanvas, CW, CH } from './cardface.js?v=65';
+import { LOOKS, POOLS, REGULARS } from './folk.js?v=65';
+import { FURNITURE, TIERS } from './data.js?v=65';
+import { shelfSpots } from './room.js?v=65';
+import { isBroken } from './wear.js?v=65';
+import { threatsOn } from './bank.js?v=65';
 
 export const VIEWS = ['left', 'counter', 'right', 'back'];
 export const VIEW_WORD = { left: 'LEFT WALL', counter: 'THE COUNTER', right: 'RIGHT WALL', back: 'THE BACK ROOM' };
@@ -31,7 +31,8 @@ export function dressingOf(save, now) {
   const r = save.robbery, m = save.monster;
   if (threats && r && r.at && now >= r.at && now - r.at < DOOR_MEND_H * HOUR) over.push('boards');
   if (threats && m && m.done === 'came' && m.doneAt && now - m.doneAt < PATCH_H * HOUR) over.push('mended');
-  for (const it of room.items || []) if (FURNITURE[it.kind] && FURNITURE[it.kind].gift && !over.includes(it.kind)) over.push(it.kind);
+  // a gift's picture: its own, or the one it borrows (look: the Greyshore's gifts are drawn as the Reach's, milestone 40)
+  for (const it of room.items || []) { const f = FURNITURE[it.kind], k = f && (f.look || it.kind); if (f && f.gift && !over.includes(k)) over.push(k); }
   const shelves = [];
   shelfSpots(room).forEach((sp, i) => { let s = shelves[shelves.length - 1]; if (!s || s.id !== sp.shelf) shelves.push(s = { id: sp.shelf, lv: sp.lv, places: [] }); s.places.push(i); });
   return { size, cold: isBroken(save, 'forge', now), over, wards: (save.wards || []).filter(Boolean), shelves };

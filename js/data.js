@@ -48,7 +48,7 @@ export const TRAIL = { rung: 6, deep: 0.35, court: 0.4, courtLeast: 2, star: 2, 
 // Hurt: off 2–4 days and a healer's bill; one piece of armour broken (never a Relic or Mythic). Potions, two at most, used up: a salve
 // heals a wound on the road (not hurt), a draught keeps a dying runner alive (hurt instead), a tonic and an oil help on any hard road.
 export const GEAR = {
-  slots: { weapon: ['falchion', 'dagger', 'axe', 'staff', 'shortbow', 'longbow', 'spear', 'mace', 'shortsword', 'warhammer', 'sling', 'club', 'wand', 'crossbow'], offhand: ['shield'], head: ['helm', 'hood'], body: ['jerkin', 'cloak'], hands: ['gloves'], feet: ['boots'], ring: ['ring', 'beads'], pack: ['satchel'], light: ['lantern'] },
+  slots: { weapon: ['falchion', 'dagger', 'axe', 'staff', 'shortbow', 'longbow', 'spear', 'mace', 'shortsword', 'warhammer', 'sling', 'club', 'wand', 'crossbow', 'harpoon', 'trident'], offhand: ['shield'], head: ['helm', 'hood'], body: ['jerkin', 'cloak', 'oilskin'], hands: ['gloves'], feet: ['boots'], ring: ['ring', 'beads'], pack: ['satchel'], light: ['lantern'] },
   slotWord: { weapon: 'WEAPON', head: 'HEAD', body: 'BODY', hands: 'HANDS', feet: 'FEET', ring: 'RING', pack: 'PACK', offhand: 'OFF HAND', light: 'LIGHT' },
   // a satchel: a runner brings home this much more (common things) for each step of its power; a poultice: a hurt mends in this share of the days, the healer's bill halved
   pack: 0.1, poultice: 0.5,
@@ -486,23 +486,65 @@ Object.assign(PATTERNS, {
       hints: { head: 'a clear sand', haft: 'a frame, forged at the forge', binding: 'a cap and a handle: bronze or iron' },
       asks: ['"A lantern for the road. Glass in an iron frame."', '"Do you make lanterns? Clear glass, a forged frame, a bronze cap."'],
       board: 'POSTED: The lamp-carriers of the deep want lanterns: clear glass in a forged frame.' } },
+  // THE GREYSHORE'S (milestone 40, docs/REGION-PLAN.md): found only on the coast (coast: true: its tries, clues, asks and board are
+  // the coast's), made anywhere once found. Each is found with a coastal material (whalebone, pine tar, forged tines, kelp ash and
+  // brass), so no try in the Reach can come near one; their first options are the Reach's, so a maker back over the pass can make them.
+  harpoon: { name: 'Harpoon', trade: 'Harpoons', kind: 'HARPOON · THROWN', art: 'harpoon', dice: [1, 8], dmg: [3, 9], speed: 1.2, reach: 2.4, skill: 'SPEARS', value: 58, bars: 2, want: 'weapon', coast: true,
+    parts: [{ part: 'Head', metals: FORGE_METALS },
+      { part: 'Shaft', opts: [{ name: 'Ash', mat: 'ash' }, { name: 'Rowan', mat: 'rowan', val: 1.05 }, { name: 'Bog oak', mat: 'bogoak', rare: true }, { name: 'Whalebone', mat: 'whalebone', val: 1.15 }] },
+      { part: 'Line', opts: [{ name: 'Cord', mat: 'cord' }, { name: 'Gut', mat: 'gut' }, { name: 'Wyvern sinew', mat: 'sinew', rare: true }] }],
+    affixes: weaponAffixes.concat('bleeding'), lore: ['A barbed head on a line: what it goes into, it keeps.', 'The barbs sit back true: it goes in clean and won\'t come out.', 'Thrown from a rolling deck, it still finds the fish.', 'An old whaler\'s iron: three bulls taken, and it came home every time.'],
+    hidden: { look: 'A WEAPON · THROWN, ON A LINE', gate: { trades: ['spear', 'dagger'], level: 3 }, try: { head: ['iron', 'steel', 'brass'], haft: ['whalebone'], binding: ['cord', 'gut'] },
+      hints: { head: 'a metal for the barbed head', haft: 'a shaft that floats and doesn\'t split: whalebone', binding: 'a line to haul it back' },
+      asks: ['"A harpoon, if you make them. A barbed head on a whalebone shaft."', '"The whale boats want irons. Whalebone and a good barb, on a line."', '"You don\'t make harpoons? On the coast? A whalebone shaft, a cord line."'],
+      board: 'POSTED: The whale boats want harpoons: a barbed iron head on a whalebone shaft, and a line.' } },
+  oilskin: { name: 'Oilskin', trade: 'Oilskins', kind: 'OILSKIN · BODY', art: 'oilskin', armour: 2, weight: 2, value: 40, bars: 2, want: 'armour', station: 'stretcher', coast: true,
+    parts: [{ part: 'Hide', metals: HIDES_ALL }, { part: 'Proofing', opts: [{ name: 'Beeswax', mat: 'wax' }, { name: 'Pine tar', mat: 'tar', val: 1.15 }] },
+      { part: 'Thread', opts: [{ name: 'Waxed cord', mat: 'cord' }, { name: 'Gut', mat: 'gut' }, { name: 'Silver thread', mat: 'silverthread', rare: true }] }],
+    affixes: wearAffixes, lore: ['The sea runs off it and the wind can\'t find a way in.', 'Proofed true: not a drop through, seam or shoulder.', 'A deck coat: slept in, hauled in, never wet through.', 'They say a skipper wore one like it through the great gale, and came home dry.'],
+    hidden: { look: 'SOMETHING TO WEAR · AGAINST THE SEA', gate: { trades: ['cloak', 'jerkin'], level: 3 }, try: { head: ['deer', 'goat'], haft: ['tar'], binding: ['cord'] },
+      hints: { head: 'a supple hide', haft: 'something to proof it against the sea: pine tar', binding: 'a thread that won\'t rot: waxed cord' },
+      asks: ['"An oilskin for the boat. A hide, tarred, sewn with waxed cord."', '"You don\'t make oilskins? Tar the hide and the sea can\'t touch you."'],
+      board: 'POSTED: The fleet wants oilskins for the winter fishing: a hide proofed with pine tar, sewn with waxed cord.' } },
+  trident: { name: 'Trident', trade: 'Tridents', kind: 'TRIDENT · TWO HANDS', art: 'trident', dice: [1, 10], dmg: [4, 10], speed: 1.0, reach: 2.4, skill: 'SPEARS', value: 64, bars: 2, want: 'weapon', station: 'bowbench', two: 'forge', coast: true,
+    parts: [{ part: 'Shaft', metals: WOODS }, { part: 'Tines', opts: [{ name: 'Forged tines', mat: 'arrowheads' }] }, { part: 'Binding', opts: [{ name: 'Cord', mat: 'cord' }, { name: 'Gut', mat: 'gut' }, { name: 'Wyvern sinew', mat: 'sinew', rare: true }] }],
+    affixes: weaponAffixes, lore: ['Three points, and the fish has nowhere to go.', 'The tines sit even: it strikes where you look, all three.', 'Fisher\'s spear or watchman\'s: it holds a quay as well as a creek.', 'The sea-chapel\'s carving holds one like it, and says the sea once gave it back.'],
+    hidden: { look: 'A WEAPON · THREE POINTS · TWO STATIONS', gate: { trades: ['staff', 'shortbow'], level: 3 }, try: { head: ['yew', 'oak'], haft: ['arrowheads'], binding: ['cord', 'gut'] },
+      hints: { head: 'a long, straight shaft: yew or oak', haft: 'three forged heads, for the tines', binding: 'something to lash them on: cord or gut' },
+      asks: ['"A trident, for the creek. A yew shaft, three forged heads lashed on."', '"Can you make a fishing spear? Three points, a long shaft."'],
+      board: 'POSTED: The creek fishers want tridents: three forged heads lashed to a yew shaft.' } },
+  pitch: { name: 'Pitch-proofing', trade: 'Pitch', kind: 'PITCH · A BATCH', art: 'pitch', potency: 8, value: 20, bars: 2, batch: 3, want: 'brew', station: 'kettle', coast: true,
+    parts: [{ part: 'Root', metals: HERBS }, { part: 'Water', opts: [{ name: 'Spring water', mat: 'springwater' }, { name: 'Moonwell water', mat: 'moonwater', rare: true }] },
+      { part: 'Base', opts: [{ name: 'Beeswax', mat: 'wax' }, { name: 'Pine tar', mat: 'tar', val: 1.2 }] }],
+    affixes: brewAffixes, lore: ['Brushed on hot, it keeps the wet out of wood and rope and leather.', 'It goes on thin and dries hard.', 'Every boat in the harbour smells of it in spring.', 'A hull pitched with this sailed round the world, and her seams never wept.'],
+    hidden: { look: 'FROM THE KETTLE · AGAINST THE WET', gate: { trades: ['oil'], level: 3 }, try: { head: ['emberroot'], haft: ['springwater'], binding: ['tar'] },
+      hints: { head: 'a fierce root: emberroot', haft: 'clean spring water', binding: 'pine tar, boiled in' },
+      asks: ['"Pitch, for the boat\'s seams. Tar boiled with a root, they say."', '"Do you make pitch-proofing? Emberroot, spring water and pine tar."'],
+      board: 'POSTED: The boatyard wants pitch: emberroot and pine tar, boiled in spring water.' } },
+  spyglass: { name: 'Spyglass', trade: 'Spyglasses', kind: 'SPYGLASS · A GLASS', art: 'spyglass', clarity: 9, value: 54, bars: 2, want: 'glass', station: 'glass', coast: true,
+    parts: [{ part: 'Glass', metals: SANDS }, { part: 'Flux', opts: FLUX }, { part: 'Tube', opts: [{ name: 'Bronze', mat: 'bronze' }, { name: 'Silver', mat: 'silver', rare: true }, { name: 'Brass', mat: 'brass', val: 1.2 }] }],
+    affixes: glassAffixes, lore: ['Two lenses in a tube, and the far shore comes close.', 'Ground true: the horizon stands still in it.', 'A ship\'s master sees the weather a day before it comes.', 'Through one like this a queen watched her fleet come home, and counted every sail.'],
+    hidden: { look: 'GLASS · TO SEE FAR', gate: { trades: ['lens'], level: 3 }, try: { head: ['clearsand', 'seasand'], haft: ['kelpash'], binding: ['brass'] },
+      hints: { head: 'the clearest sand', haft: 'the coast\'s own flux: kelp ash', binding: 'a brass tube' },
+      asks: ['"A spyglass, for the boat. Clear glass, a brass tube."', '"Every master wants a glass. Kelp ash for the flux, they say, and brass."'],
+      board: 'POSTED: The harbour-master wants spyglasses: clear glass fluxed with kelp ash, in a brass tube.' } },
 });
 // TRY SOMETHING NEW at the forge: the three things you put together, and the families a near miss is told by
 // (only: the first role takes the station's own material, the one the working's strip comes from; pick: the empty choice's words;
 // line: how the station's TRY SOMETHING NEW reads)
 export const TRY_ROLES = {
   forge: [{ id: 'head', word: 'HEAD', fams: ['metal'], pick: 'choose a metal' }, { id: 'haft', word: 'HAFT OR GRIP', fams: ['wood', 'leather', 'cord', 'horn'] }, { id: 'binding', word: 'BINDING', fams: ['leather', 'cord', 'horn', 'wood'] }],
-  stretcher: [{ id: 'head', word: 'HIDE', only: HIDES, fams: ['leather'], pick: 'choose a hide' }, { id: 'haft', word: 'LINING, STRAP OR A FORGED PART', fams: ['cord', 'leather', 'forged'] }, { id: 'binding', word: 'THREAD OR LOOP', fams: ['cord', 'leather'] }],
+  stretcher: [{ id: 'head', word: 'HIDE', only: HIDES, fams: ['leather'], pick: 'choose a hide' }, { id: 'haft', word: 'LINING, STRAP OR A FORGED PART', fams: ['cord', 'leather', 'forged', 'pitch'] }, { id: 'binding', word: 'THREAD OR LOOP', fams: ['cord', 'leather'] }],
   bowbench: [{ id: 'head', word: 'WOOD', only: WOODS, fams: ['wood'], pick: 'choose a wood' }, { id: 'haft', word: 'GRIP, STONE OR A FORGED PART', fams: ['leather', 'stone', 'forged'] }, { id: 'binding', word: 'STUDS OR BINDING', fams: ['horn', 'cord'] }],
-  kettle: [{ id: 'head', word: 'HERB OR ROOT', only: HERBS, fams: ['herb'], pick: 'choose a herb' }, { id: 'haft', word: 'WATER OR CLOTH', fams: ['water', 'cord'] }, { id: 'binding', word: 'BINDER', fams: ['binder'] }],
+  kettle: [{ id: 'head', word: 'HERB OR ROOT', only: HERBS, fams: ['herb'], pick: 'choose a herb' }, { id: 'haft', word: 'WATER OR CLOTH', fams: ['water', 'cord'] }, { id: 'binding', word: 'BINDER', fams: ['binder', 'pitch'] }],
   glass: [{ id: 'head', word: 'SAND', only: SANDS, fams: ['sand'], pick: 'choose a sand' }, { id: 'haft', word: 'FLUX OR A FORGED PART', fams: ['flux', 'forged'] }, { id: 'binding', word: 'COLOUR OR BACKING', fams: ['colour', 'metal'] }],
 };
 export const TRY_LINE = { forge: 'Put a head, a haft and a binding together', stretcher: 'Put a hide, a lining, strap or forged part and a thread together', bowbench: 'Put a wood, a grip, stone or forged part and a binding together',
   kettle: 'Put a herb, a water or cloth and a binder together', glass: 'Put a sand, a flux or forged part and a colour or backing together' };
-export const TRY_FAMILY = { metal: ['iron', 'bronze', 'steel', 'silver', 'darkclay', 'blackwater', 'starmetal'], wood: ['ash', 'rowan', 'birch', 'yew', 'oak', 'oldyew', 'bogoak'],
-  leather: ['wrap', 'strap', 'sharkhide', 'deer', 'goat'], cord: ['cord', 'gut', 'silk', 'linen', 'wool', 'sinew', 'silverthread'], horn: ['horn', 'bone'],
+export const TRY_FAMILY = { metal: ['iron', 'bronze', 'steel', 'silver', 'darkclay', 'blackwater', 'starmetal', 'brass'], wood: ['ash', 'rowan', 'birch', 'yew', 'oak', 'oldyew', 'bogoak'],
+  leather: ['wrap', 'strap', 'sharkhide', 'deer', 'goat'], cord: ['cord', 'gut', 'silk', 'linen', 'wool', 'sinew', 'silverthread'], horn: ['horn', 'bone', 'whalebone'],
   // the other stations' (milestone 32)
-  herb: HERBS, water: ['springwater', 'moonwater'], binder: ['honey', 'wax', 'tallow'], sand: SANDS, flux: ['potash', 'lime'], colour: ['cobalt', 'starglass'], stone: ['gem', 'heartstone'],
+  herb: HERBS, water: ['springwater', 'moonwater'], binder: ['honey', 'wax', 'tallow'], sand: SANDS, flux: ['potash', 'lime', 'kelpash'], pitch: ['tar'], colour: ['cobalt', 'starglass'], stone: ['gem', 'heartstone'],
   // milestone 33: parts forged for the other stations
   forged: ['arrowheads', 'ferrule', 'boss', 'lath', 'lampframe'] };
 export const STUDY_RENOWN = 3, FIND_RENOWN = 5;   // renown for a pattern found by trying, or learned from an old piece
@@ -986,6 +1028,12 @@ export const FURNITURE = {
   bramsbarrels: { name: 'Bram\'s barrels', fp: [1, 1], charm: 3, model: 'barrels', room: 'shop', fixed: true, gift: true, line: 'The best from the far valley.' },
   corrowstatue: { name: 'The Corrow king', fp: [1, 1], charm: 6, model: 'statue', scale: 0.5, room: 'shop', fixed: true, gift: true, line: 'Lady Corrow\'s grandmother\'s king, in stone.' },
   marrowrail: { name: 'Marrow\'s herbs', fp: [2, 1], charm: 4, model: 'herbrail', room: 'shop', fixed: true, gift: true, line: 'They do better with you.' },
+  // the Greyshore's (milestone 40): the Reach's gifts' models, and their pictures in the counter view (look)
+  widowlights: { name: 'Nan Tregear\'s lights', fp: [1, 1], charm: 4, model: 'candlestand', room: 'shop', fixed: true, gift: true, look: 'kettycandles', line: 'They burned in her window for his boat.' },
+  quaypennant: { name: 'The harbour watch\'s pennant', fp: [1, 1], charm: 4, model: 'banner', scale: 0.6, room: 'shop', fixed: true, gift: true, look: 'watchbanner', line: 'The watch flies your mark on the quay.' },
+  herringbarrels: { name: 'Gil Hobb\'s herring', fp: [1, 1], charm: 3, model: 'barrels', room: 'shop', fixed: true, gift: true, look: 'bramsbarrels', line: 'The first of the year\'s herring, salted.' },
+  figurehead: { name: 'The Penrose figurehead', fp: [1, 1], charm: 6, model: 'statue', scale: 0.5, room: 'shop', fixed: true, gift: true, look: 'corrowstatue', line: 'Off the first Penrose ship, carved in oak.' },
+  kelprail: { name: 'Ama Penhale\'s kelp', fp: [2, 1], charm: 4, model: 'herbrail', room: 'shop', fixed: true, gift: true, look: 'marrowrail', line: 'It dries better by your fire.' },
 };
 export const SHELF_COSTS = [800, 1800, 3600, 6400, 10000, 14400];   // the 3rd shelf to the 8th
 export const MAX_SHELVES = 8;
@@ -1091,17 +1139,17 @@ export const REGIONS = {
     // what comes over the pass costs half as much again
     dear: { oldyew: 1.5, blacksand: 1.5, darkclay: 1.15, winterfox: 1.5 },
     customers: {
-      folk: { weight: 30, wants: ['dagger', 'ring', 'any', 'dagger', 'armour', 'gloves', 'boots', 'salve', 'brew', 'oil', 'beads', 'cloak', 'sling'],
+      folk: { weight: 30, wants: ['dagger', 'ring', 'any', 'dagger', 'armour', 'gloves', 'boots', 'salve', 'brew', 'oil', 'beads', 'cloak', 'sling', 'oilskin', 'pitch'],
         names: ['a net-mender', 'a fishwife', 'a cooper off the quay', 'a boy with his savings', 'a widow from the harbour lane', 'a salt-raker'] },
-      guard: { weight: 25, wants: ['falchion', 'spear', 'helm', 'weapon', 'dagger', 'shortsword', 'crossbow', 'armour', 'oil', 'cloak', 'mace', 'shield', 'weapon', 'axe', 'brew', 'arrows', 'lantern'],
+      guard: { weight: 25, wants: ['falchion', 'spear', 'helm', 'weapon', 'dagger', 'shortsword', 'crossbow', 'armour', 'oil', 'cloak', 'mace', 'shield', 'weapon', 'axe', 'brew', 'arrows', 'lantern', 'trident', 'oilskin'],
         names: ['a man of the harbour watch', 'a revenue man', 'the lighthouse keeper', 'a marine off a Crown ship'] },
-      traveller: { weight: 20, wants: ['any', 'ring', 'weapon', 'dagger', 'boots', 'armour', 'cloak', 'satchel', 'goblet', 'glass', 'tonic', 'lantern', 'beads', 'draught', 'poultice'],
+      traveller: { weight: 20, wants: ['any', 'ring', 'weapon', 'dagger', 'boots', 'armour', 'cloak', 'satchel', 'goblet', 'glass', 'tonic', 'lantern', 'beads', 'draught', 'poultice', 'oilskin', 'spyglass'],
         names: ['a ship\'s master', 'a passenger waiting on the tide', 'a pilgrim to the sea-chapel', 'a merchant off the packet'] },
-      delver: { weight: 15, wants: ['weapon', 'helm', 'lantern', 'any', 'armour', 'draught', 'brew', 'dagger', 'spear', 'satchel', 'boots', 'lens', 'mirror', 'crossbow', 'gloves', 'shortsword', 'tonic', 'oil', 'shield', 'warhammer', 'poultice'],
+      delver: { weight: 15, wants: ['weapon', 'helm', 'lantern', 'any', 'armour', 'draught', 'brew', 'dagger', 'spear', 'satchel', 'boots', 'lens', 'mirror', 'crossbow', 'gloves', 'shortsword', 'tonic', 'oil', 'shield', 'warhammer', 'poultice', 'harpoon', 'oilskin'],
         names: ['a wreck-diver', 'a salvager off the bar', 'a lamp-diver', 'one of the Low-Tide crew'] },
-      hunter: { weight: 12, wants: ['spear', 'spear', 'arrows', 'shortbow', 'gloves', 'boots', 'oil', 'salve', 'cloak', 'satchel', 'sling', 'dagger', 'any'],
+      hunter: { weight: 12, wants: ['spear', 'spear', 'arrows', 'shortbow', 'gloves', 'boots', 'oil', 'salve', 'cloak', 'satchel', 'sling', 'dagger', 'any', 'harpoon', 'harpoon', 'trident', 'oilskin', 'pitch'],
         names: ['a fisher', 'a sealer', 'a harpooner off the whale boats', 'a wildfowler from the marsh'] },
-      factor: { weight: 7, wants: ['ring', 'glass', 'lens', 'goblet', 'mirror', 'ink', 'any', 'lantern', 'beads'], names: ['a shipping factor', 'the harbour-master\'s clerk', 'a salt merchant'] },
+      factor: { weight: 7, wants: ['ring', 'glass', 'lens', 'goblet', 'mirror', 'ink', 'any', 'lantern', 'beads', 'spyglass'], names: ['a shipping factor', 'the harbour-master\'s clerk', 'a salt merchant'] },
       collector: { names: ['a collector of maker\'s marks', 'a captain who collects blades'] },
       steward: { names: ['a shipowner', 'a merchant prince', 'the harbour-master', 'a bishop\'s chamberlain'] },
     },
@@ -1137,9 +1185,9 @@ export const REGIONS = {
     hot: [
       { id: 'watch', line: 'The harbour watch is buying helms.', patterns: ['helm'] },
       { id: 'press', line: 'The press-gang is ashore: every man wants a blade.', patterns: ['falchion', 'dagger', 'shortsword'] },
-      { id: 'squall', line: 'Squalls off the sea all week.', patterns: ['cloak', 'hood', 'boots'] },
-      { id: 'fleet', line: 'The fleet is fitting out.', patterns: ['spear', 'gloves', 'oil'] },
-      { id: 'whales', line: 'Whales off the point: the boats are going out.', patterns: ['spear', 'arrows', 'satchel'] },
+      { id: 'squall', line: 'Squalls off the sea all week.', patterns: ['cloak', 'hood', 'boots', 'oilskin'] },
+      { id: 'fleet', line: 'The fleet is fitting out.', patterns: ['spear', 'gloves', 'oil', 'pitch', 'spyglass'] },
+      { id: 'whales', line: 'Whales off the point: the boats are going out.', patterns: ['harpoon', 'spear', 'arrows', 'satchel'] },
       { id: 'fever', line: 'A ship\'s fever in the harbour lanes.', patterns: ['draught', 'salve', 'tonic'] },
       { id: 'light', line: 'The lighthouse wants new glass.', patterns: ['lens', 'pane', 'lantern'] },
       { id: 'packet', line: 'The packet\'s passengers are buying.', patterns: ['ring', 'goblet', 'beads'] },
@@ -1182,5 +1230,112 @@ export const REGIONS = {
     news: { kept: 'The harbour watch\'s sergeant has been made captain, they say, for holding the lanes.', robbed: 'A fish stall on the quay was turned over by the same lot that robbed you.',
       branch: 'They talk of your shop back over the pass, at the Landing, too.', street: 'Fish Street', inn: 'the Anchor' },
     rivals: ['Tamsin Kell of the harbour', 'the Penhale brothers', 'Old Joss the shipwright', 'a smith off a Crown ship', 'a journeyman from over the pass'],
+    // SALTBY'S FOLK (milestone 40): six families who have never heard of the line. Each regular's clues are for patterns still to find
+    // (the coast's own among them). Their stories: five first ones (a gift each: the Reach's gifts' models, in the coast's words) and
+    // five great ones, each ending in a blueprint of the coast's Relics (milestone 41: until those exist, a great story doesn't come)
+    regulars: [
+      { who: 'Sergeant Hessa Crane, of the harbour watch', wants: ['falchion', 'spear', 'helm', 'jerkin', 'shortsword', 'crossbow', 'shield', 'harpoon', 'trident'], line: 'For the harbour watch. Half our blades are rust and string.', fig: '#7a8aa0',
+        clues: { trident: '"The creek men fish with tridents. A yew shaft, three heads the smith forges, lashed on with cord."', shield: '"The quay wants shields against the wreckers. A hide face, an iron boss, a leather rim."', spear: '"A boarding spear\'s only a dagger that\'s grown up. Iron, ash, a cord binding."' } },
+      { who: 'Dame Isolde Penrose, a shipowner', wants: ['ring', 'falchion', 'staff', 'lens', 'goblet', 'mirror', 'lantern', 'spyglass', 'beads'], least: 1, line: 'Something with a maker\'s mark worth the name.', fig: '#a07ab8',
+        clues: { spyglass: '"My masters want glasses to see the weather coming. Clear glass, kelp ash for the flux, a brass tube."', lantern: '"A ship\'s lantern for my cabin: clear glass in a forged frame, a bronze cap."', mirror: '"A looking-glass. Clear sand, potash, a silver backing. I won\'t have tin."' } },
+      { who: 'Gil Hobb, a skipper', wants: ['dagger', 'spear', 'boots', 'gloves', 'cloak', 'satchel', 'harpoon', 'oilskin'], line: 'For my crew. Gutting knives that hold an edge, mind.', fig: '#8a9a6a',
+        clues: { harpoon: '"A harpoon\'s a barbed iron on a whalebone shaft, and a line you can haul. Whalebone floats, see."', oilskin: '"Tar a hide, sew it with waxed cord, and the sea can\'t find you. That\'s an oilskin."', satchel: '"My lads want satchels for the boat. Deer hide, a strap, waxed cord."' } },
+      { who: 'Nan Tregear, a fisherman\'s widow', wants: ['ring', 'cloak'], metal: 'silver', line: 'A silver ring for the sea to keep.', fig: '#a08a6a',
+        clues: { cloak: '"He had a goat-hide cloak, lined with wool, sewn with silk. The sea gave it back. Not him."', beads: '"Blue beads, the kind the pedlars sell. River sand, lime and cobalt."' } },
+      { who: 'Ama Penhale, the herbwife', wants: ['tonic', 'draught', 'salve', 'poultice', 'ink', 'pitch'], line: 'My kettle\'s cracked in the cold. Brew for me this once.', fig: '#8a9a6a',
+        clues: { pitch: '"Pitch is only emberroot and pine tar, boiled in spring water. The boatyard can\'t get enough."', poultice: '"A poultice: mending herbs on linen, sealed with honey. Not a salve, mind."', ink: '"Ink is a root boiled black. Emberroot, spring water, a little wax to hold it."' } },
+      { who: 'Kit Rook, a ship\'s boy', wants: ['dagger', 'sling', 'club'], line: 'A knife. My own. I\'ve saved my shares for it.', fig: '#a08a6a',
+        clues: { club: '"The dock lads carry oak clubs with bone set in the head. Strap grips."', sling: '"A sling, for the gulls. Just a hide cup and some cord."' } },
+    ],
+    stories: [
+      { id: 'tregear', fam: 'tregear', who: 'Nan Tregear, a fisherman\'s widow', fig: '#a08a6a', gift: 'widowlights', renown: 10, steps: [
+        { patterns: ['ring'], metal: 'silver', least: 0, line: 'A silver ring for the sea to keep. His boat never came home.', thanks: 'I let it go off the harbour wall at dawn. The gulls were quiet.' },
+        { patterns: ['dagger'], least: 0, line: 'My boy\'s going out on Gil Hobb\'s boat. A knife for the nets.', thanks: 'He cut a seal loose with it, his first week. Came home proud.' },
+        { patterns: ['oilskin', 'cloak'], least: 1, line: 'He\'s taken a berth on a deep-water boat. Keep the sea off him.', thanks: 'Take these. I kept them lit in the window for his father. Keep them lit for your shop.' } ] },
+      { id: 'crane', fam: 'crane', who: 'Sergeant Hessa Crane, of the harbour watch', fig: '#7a8aa0', gift: 'quaypennant', renown: 15, steps: [
+        { patterns: ['falchion'], least: 0, line: 'For the harbour watch. Half our blades are rust and string.', thanks: 'Held the quay with it against the wreckers.' },
+        { patterns: ['helm', 'jerkin'], least: 1, line: 'New men off the boats. Cover them. Good work, not pretty.', thanks: 'Not a scratch on them after the riot at the fish market.' },
+        { patterns: ['spear', 'falchion'], least: 2, line: 'The harbour-master wants one from you. Your best.', thanks: 'The watch flies your mark on the quay now. Hang this where the boats can see it.' } ] },
+      { id: 'hobb', fam: 'hobb', who: 'Gil Hobb, a skipper', fig: '#8a9a6a', gift: 'herringbarrels', renown: 10, steps: [
+        { patterns: ['dagger'], least: 0, line: 'For my crew. Gutting knives that hold an edge, mind.', thanks: 'They argue over who gets to carry it.' },
+        { patterns: ['boots', 'gloves'], least: 0, line: 'The winter fishing\'s coming. Hands and feet go first.', thanks: 'Not a frostbitten finger on the boat.' },
+        { patterns: ['harpoon', 'spear'], least: 1, line: 'Whales off the point, and the big ones fight. Something with a barb.', thanks: 'A barrel of the first herring of the year. Yours, salted.' } ] },
+      { id: 'penrose', fam: 'penrose', who: 'Dame Isolde Penrose, a shipowner', fig: '#a07ab8', gift: 'figurehead', renown: 25, steps: [
+        { patterns: ['ring'], least: 1, line: 'Something with a maker\'s mark worth the name.', thanks: 'It was admired at the shipowners\' dinner. I said where it came from.' },
+        { patterns: ['falchion', 'spyglass', 'staff'], least: 2, line: 'A gift for the admiral. It must not shame me.', thanks: 'The admiral asked your name.' },
+        { patterns: ['ring', 'goblet', 'lens'], least: 2, line: 'My son takes his first ship out. The finest thing you can make, for the master\'s cabin.', thanks: 'The figurehead off my grandfather\'s first ship. She belongs in a maker\'s shop.' } ] },
+      { id: 'penhale', fam: 'penhale', who: 'Ama Penhale, the herbwife', fig: '#8a9a6a', gift: 'kelprail', renown: 10, steps: [
+        { patterns: ['draught'], least: 0, line: 'My kettle\'s cracked in the cold. Brew for me this once.', thanks: 'The ship\'s fever on the quay broke on it.' },
+        { patterns: ['salve'], least: 1, line: 'The ropewalk boys burn their hands on the tar. Something kind.', thanks: 'They come to me singing now. Unheard of.' },
+        { patterns: ['tonic'], least: 2, line: 'Old Joss the shipwright can\'t sleep for his bones. A tonic worth his last nights.', thanks: 'Hang my kelp in your shop. It dries better by your fire.' } ] },
+      // the great stories: from RENOWNED, after the first; five steps and a blueprint of the coast's Relics at the end (milestone 41)
+      { id: 'crane2', fam: 'crane', after: 'crane', rung: 5, who: 'Captain Hessa Crane', fig: '#7a8aa0', blueprint: 'tidewarden', renown: 40, steps: [
+        { patterns: ['helm'], least: 2, line: 'They made me captain. The watch needs helms worthy of the quay.', thanks: 'The quay\'s never looked so sure of itself.' },
+        { patterns: ['falchion'], least: 2, line: 'Wreckers burned a ship at her moorings. My sergeants need blades.', thanks: 'The ship\'s refloated. The wreckers aren\'t.' },
+        { patterns: ['jerkin', 'oilskin'], least: 2, line: 'Winter on the harbour wall. Keep my men alive.', thanks: 'Not one lost to the cold or the sea.' },
+        { patterns: ['spear', 'trident'], least: 3, line: 'Raiders off the sea, in long boats. Your best, and better.', thanks: 'We held the harbour mouth. Your work held.' },
+        { patterns: ['falchion'], least: 3, line: 'One more. For the harbour gate itself, to hang over it.', thanks: 'The first harbour-captain\'s pattern, from the watch-house chest. Make it real.' } ] },
+      { id: 'tregear2', fam: 'tregear', after: 'tregear', rung: 5, who: 'Nan Tregear, a grandmother now', fig: '#a08a6a', blueprint: 'drownedring', renown: 40, steps: [
+        { patterns: ['ring'], least: 1, line: 'My boy\'s wed. A ring for his bride, from the same hands as mine.', thanks: 'She cried. Good tears.' },
+        { patterns: ['dagger'], least: 2, line: 'A grandson! A little knife, for when he\'s grown.', thanks: 'It\'s in the sea-chest, waiting for him.' },
+        { patterns: ['oilskin', 'cloak'], least: 2, line: 'My boy\'s mate on a deep-water boat now. Keep the sea off him, again.', thanks: 'He came home from the long fishing.' },
+        { patterns: ['ring'], least: 3, line: 'My own ring\'s worn thin with the salt. Silver, the best you\'ve got.', thanks: 'It doesn\'t feel like an old woman\'s hand any more.' },
+        { patterns: ['ring'], least: 3, line: 'One last thing. A ring for the sea, beside his, when my time comes.', thanks: 'The pattern of my husband\'s ring, scratched in his sea-chest lid. You should have it.' } ] },
+      { id: 'hobb2', fam: 'hobb', after: 'hobb', rung: 5, who: 'Gil Hobb, master of three boats', fig: '#8a9a6a', blueprint: 'hobbsbarb', renown: 40, steps: [
+        { patterns: ['boots', 'gloves'], least: 2, line: 'I run three boats now. Gear for my best men.', thanks: 'They fished the winter through.' },
+        { patterns: ['harpoon', 'spear'], least: 2, line: 'Whales again, and bigger. Something that holds them.', thanks: 'Not a line lost all season.' },
+        { patterns: ['oilskin', 'jerkin'], least: 2, line: 'The deep-water fishing in winter. Keep my lads dry.', thanks: 'They came in singing.' },
+        { patterns: ['dagger', 'harpoon'], least: 3, line: 'My son takes the first boat out alone. Give him your best.', thanks: 'He came back taller than he went.' },
+        { patterns: ['harpoon'], least: 3, line: 'The longest hunt there is: the old bull whale off the point. I\'m going myself, one last time.', thanks: 'My grandfather\'s harpoon-pattern. Make it, and it\'ll hold anything that swims.' } ] },
+      { id: 'penrose2', fam: 'penrose', after: 'penrose', rung: 5, who: 'Dame Isolde Penrose, dowager', fig: '#a07ab8', blueprint: 'tidecup', renown: 40, steps: [
+        { patterns: ['goblet', 'ring'], least: 2, line: 'My granddaughter\'s christening. Something to drink her health from.', thanks: 'The governor\'s wife asked who made it. I lied, to keep you to myself.' },
+        { patterns: ['spyglass', 'lens'], least: 2, line: 'My eyes are going, and I would still watch my ships come in.', thanks: 'I saw the Merry Penrose round the point, from my own window.' },
+        { patterns: ['falchion', 'staff'], least: 3, line: 'My grandson takes command of a Crown ship. He must carry your work.', thanks: 'He went aboard with it. The whole quay looked.' },
+        { patterns: ['ring'], least: 3, line: 'The Penrose ring went down with my husband\'s ship. Make it again, better.', thanks: 'It\'s on the head of the family\'s hand, where it belongs.' },
+        { patterns: ['goblet'], least: 3, line: 'The house\'s cup cracked. It has never cracked, not in three hundred years of storms.', thanks: 'The pattern of the old cup. Make the true one, and the house is yours to drink in.' } ] },
+      { id: 'penhale2', fam: 'penhale', after: 'penhale', rung: 5, who: 'Ama Penhale, healer of the harbour', fig: '#8a9a6a', blueprint: 'penhalebalm', renown: 40, steps: [
+        { patterns: ['draught'], least: 2, line: 'The ship\'s fever is back, and worse. I can\'t brew fast enough.', thanks: 'The quay is quiet again. Good quiet.' },
+        { patterns: ['salve'], least: 2, line: 'A fire in the ropewalk. Burns on half the street.', thanks: 'Every one of them healed clean.' },
+        { patterns: ['pitch', 'salve'], least: 2, line: 'The watch\'s gear is rotting in the wet. And their hands are worse.', thanks: 'Crane says the watch-house smells of my garden now.' },
+        { patterns: ['tonic'], least: 3, line: 'I\'m old, and the sea keeps me awake. Brew me something worth sleeping for.', thanks: 'I dreamed of my mother. First time in fifty years.' },
+        { patterns: ['salve'], least: 3, line: 'The sea-chapel wants a balm for the blessing of the boats. Your very best.', thanks: 'The old chapel\'s balm, from the crypt. They said to give it to the one who can make it.' } ] },
+    ],
+    // a coastal generation on (from the line's second on the coast): the families' grandchildren, their first names by coastal
+    // generation; they ask what their grandparents asked, and remember the old maker
+    lineFolk: {
+      crane: { first: ['Tegen', 'Brannock', 'Morwen', 'Jory'], who: '{first} Crane, of the harbour watch', line: 'For the watch. My grandmother swore by this forge.',
+        remember: 'My grandmother held the quay with a blade from {master}. It hangs in the watch-house still.' },
+      penrose: { first: ['Elowen', 'Kerra', 'Isolde', 'Demelza'], who: 'Dame {first} Penrose', line: 'Something with a mark worth the name, as Grandmother had.',
+        remember: 'Grandmother kept a ring from {master} on the hand she signed with. I would have one too.' },
+      hobb: { first: ['Davey', 'Wat', 'Pascoe', 'Gil'], who: '{first} Hobb, a skipper', line: 'For my crew. My grandfather swore by your knives.',
+        remember: 'My grandfather took the old bull whale with an iron from {master}. It hangs over our door.' },
+      tregear: { first: ['Lowdy', 'Nan', 'Bersaba', 'Tamsin'], who: '{first} Tregear', line: 'A silver ring, as my grandmother had.',
+        remember: 'My grandmother bought a silver ring here, from {master}. The sea has the other one.' },
+      penhale: { first: ['Wenna', 'Ama', 'Jenifer', 'Rosen'], who: '{first} Penhale, the herbwife', line: 'Grandmother\'s kettle is mine now, and cracked like hers. Brew for me.',
+        remember: 'Grandmother said {master} was the only maker who\'d brew for her. I hope it runs in the trade.' },
+      rook: { first: ['Kit', 'Ned', 'Hob', 'Sam'], who: '{first} Rook, a ship\'s boy', line: 'A knife. My own. My grandfather had his from here.',
+        remember: 'My grandfather saved his shares for a knife from {master}. He used it till it was a sliver.' },
+    },
+    folkOf: { 'Sergeant Hessa Crane, of the harbour watch': 'crane', 'Dame Isolde Penrose, a shipowner': 'penrose', 'Gil Hobb, a skipper': 'hobb', 'Nan Tregear, a fisherman\'s widow': 'tregear',
+      'Ama Penhale, the herbwife': 'penhale', 'Kit Rook, a ship\'s boy': 'rook' },
+    // the board's posts for the Reach's hidden patterns, in the coast's words (the coast's own carry theirs)
+    boards: {
+      spear: 'POSTED: The harbour watch wants boarding spears: an iron head lashed with cord to an ash haft.',
+      mace: 'POSTED: The revenue men want maces: an iron head on a rowan haft, a strap grip.',
+      shortsword: 'POSTED: The marines off the Crown ship want short swords: steel, a horn grip, a leather wrap.',
+      warhammer: 'POSTED: The boatyard wants hammers that drive a trenail through oak: an iron head on an oak haft, a strap grip.',
+      cloak: 'POSTED: The packet\'s passengers want cloaks for the crossing: goatskin, wool-lined, sewn with silk.',
+      satchel: 'POSTED: The divers want satchels to bring things up in: deer hide, a strap, waxed cord.',
+      sling: 'POSTED: The gull-scarers on the saltpans want slings: a hide cup, cord, a leather loop.',
+      shield: 'POSTED: The harbour watch wants shields against the wreckers: a hide face, a forged boss, a leather rim.',
+      club: 'POSTED: The dock lads want oak clubs with bone set in the head, and strap grips.',
+      wand: 'POSTED: The sea-chapel wants wands for the blessing: yew or birch, a gem set in, bound in silk.',
+      crossbow: 'POSTED: The lighthouse wants crossbows to keep the wreckers off: a stock, a forged lath, a gut string.',
+      poultice: 'POSTED: The sea-chapel wants poultices for the fever lanes: mending herbs on linen, sealed with honey.',
+      ink: 'POSTED: The harbour-master\'s clerks want ink for the manifests: a dark root boiled in spring water, waxed thick.',
+      mirror: 'POSTED: The watch advise a silver-backed mirror by every door on the quay. The glassmakers should make them.',
+      beads: 'POSTED: The fishwives want blue beads against the evil eye: river sand, lime and cobalt.',
+      lantern: 'POSTED: The fleet wants ship\'s lanterns: clear glass in a forged frame, a bronze or iron cap.',
+    },
   },
 };

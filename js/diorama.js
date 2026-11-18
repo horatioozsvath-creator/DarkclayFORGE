@@ -3,10 +3,10 @@
 // in to the counter. Loaded only when the shop is opened. Three.js comes through the page's import map as 'three'.
 import * as THREE from 'three';
 import { GLTFLoader } from '../vendor/three/loaders/GLTFLoader.js';
-import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=64';
-import { ART } from './card.js?v=64';
-import { faceCanvas, CW, CH } from './cardface.js?v=64';
-import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=64';
+import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=65';
+import { ART } from './card.js?v=65';
+import { faceCanvas, CW, CH } from './cardface.js?v=65';
+import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=65';
 
 const MODELS = 'assets/models/', M = '?m=10';   // bump m when tools/models.sh rebuilds them
 const FIGURES = { folk: 'folk', guard: 'dwarf', traveller: 'carter', delver: 'bard', factor: 'chandler', collector: 'herbalist', steward: 'chandler', master: 'herbalist', seller: 'carter', maker: 'smith', clerk: 'chandler' };
@@ -112,7 +112,7 @@ export async function create(host, { onTap, folk = true } = {}) {   // folk: fal
   const camera = new THREE.OrthographicCamera(-5, 5, 3, -3, 0.1, 100);
   const roomG = new THREE.Group(), itemsG = new THREE.Group(), peopleG = new THREE.Group(), markG = new THREE.Group(), flyG = new THREE.Group();
   scene.add(roomG, itemsG, peopleG, markG, flyG);
-  let room = null, dirty = true, arranging = false, selected = null, size = { w: 6, d: 5 }, view = 'shop', cold = false;   // cold: the forge broken, its fire out
+  let room = null, dirty = true, arranging = false, selected = null, size = { w: 6, d: 5 }, view = 'shop', cold = false, sea = false;   // sea: a shop on the coast (milestone 40)   // cold: the forge broken, its fire out
   const itemObjs = new Map();   // item id → its group
   const people = new Map();     // customer id → { obj, path, at, gone }
   let shown = [];               // the shelf's pieces: [{ slot, shelf, side, card, price }]
@@ -147,7 +147,8 @@ export async function create(host, { onTap, folk = true } = {}) {   // folk: fal
   function buildRoom() {
     roomG.clear();
     const { w, d } = size, hall = view === 'hall', work = view === 'work' || hall;   // the Hall: a gallery, its door back to the shop as the workshop's
-    const [f1, f2, wb, wl] = hall ? ['#6a6258', '#7a7266', '#8a8070', '#827868'] : work ? ['#3e3a36', '#48433e', '#5a524a', '#524a42'] : ['#4a3424', '#54392a', '#6a5040', '#5e4636'];
+    // the shop front on the coast: scrubbed boards and whitewashed walls
+    const [f1, f2, wb, wl] = hall ? ['#6a6258', '#7a7266', '#8a8070', '#827868'] : work ? ['#3e3a36', '#48433e', '#5a524a', '#524a42'] : sea ? ['#5e5244', '#685a4a', '#bdb6a6', '#b1aa9a'] : ['#4a3424', '#54392a', '#6a5040', '#5e4636'];
     const floor = toonBox(w, 0.12, d, f1); floor.position.set(w / 2, -0.06, d / 2); floor.userData.floor = true; roomG.add(floor);
     for (let x = 0; x < w; x++) for (let z = 0; z < d; z++) if ((x + z) % 2) { const t = toonBox(0.98, 0.01, 0.98, f2); t.position.set(x + 0.5, 0.005, z + 0.5); roomG.add(t); }
     if (work) { const back = toonBox(w + 0.2, 2.6, 0.2, wb); back.position.set(w / 2, 1.3, -0.1); roomG.add(back); }
@@ -165,6 +166,11 @@ export async function create(host, { onTap, folk = true } = {}) {   // folk: fal
     if (work) { const through = new THREE.Mesh(new THREE.PlaneGeometry(1, 2.1), new THREE.MeshBasicMaterial({ color: 0x3a2414 })); through.rotation.y = Math.PI / 2; through.position.set(-0.22, 1.05, DOOR_Z + 0.5); through.userData.door = 'shop'; roomG.add(through); }
     const lintel = toonBox(0.24, 0.5, 1.1, '#3b2414'); lintel.position.set(-0.1, 2.35, DOOR_Z + 0.5); roomG.add(lintel);
     const step = toonBox(0.6, 0.06, 1, '#2a1c12'); step.position.set(-0.3, 0.03, DOOR_Z + 0.5); roomG.add(step);
+    if (sea && !work) {   // on the coast: grey sea through the street door, and a ship's lantern hung by it
+      const out = new THREE.Mesh(new THREE.PlaneGeometry(1, 2.1), new THREE.MeshBasicMaterial({ color: 0x7d929a })); out.rotation.y = Math.PI / 2; out.position.set(-0.5, 1.05, DOOR_Z + 0.5); roomG.add(out);
+      const lamp = toonBox(0.16, 0.24, 0.16, '#d4b04a'); lamp.position.set(0.12, 2.0, DOOR_Z - 0.18); roomG.add(lamp);
+      const glow = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.14, 0.1), new THREE.MeshBasicMaterial({ color: 0xffd27a })); glow.position.copy(lamp.position); roomG.add(glow);
+    }
     ember.position.set(hall ? w / 2 : work ? 1 : WORK_DOOR_X + 0.5, hall ? 2.2 : 1.2, hall ? d / 2 : work ? 1.2 : 0.4);
     ember.intensity = hall ? 4 : work ? (cold ? 0.35 : 6) : (cold ? 0.6 : 2.5);
   }
@@ -383,8 +389,9 @@ export async function create(host, { onTap, folk = true } = {}) {   // folk: fal
     setRoom(r, save) {
       const v = r.kind === 'work' || r.kind === 'hall' ? r.kind : 'shop', changed = v !== view || r !== room;
       if (changed) { for (const slot of [...stands.keys()]) dropStand(slot); for (const o of itemObjs.values()) itemsG.remove(o); itemObjs.clear(); for (const [id, p] of [...people]) { peopleG.remove(p.obj); people.delete(id); } }
+      const coast = !!(save && save.region && save.region !== 'reach'), seaChanged = coast !== sea; sea = coast;
       view = v; room = r; const s = sizeOf(r);
-      if (changed || s.w !== size.w || s.d !== size.d || !roomG.children.length) { size = { w: s.w, d: s.d }; buildRoom(); fitCamera(); }
+      if (changed || seaChanged || s.w !== size.w || s.d !== size.d || !roomG.children.length) { size = { w: s.w, d: s.d }; buildRoom(); fitCamera(); }
       syncItems(); setStaff(save); drawMarks(); if (folk) setQueue(lastQueue);
     },
     get view() { return view; },

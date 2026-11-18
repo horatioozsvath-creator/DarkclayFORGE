@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE REGIONS (milestone 39), with no page access: where a save works (save.region; none is the Reach) and the region's own tables.
 // The Reach's are data.js's own tables, so a Reach save plays exactly as before; another region names only what differs (REGIONS).
-import { REGIONS, SUPPLIERS, CUSTOMERS, SELLERS, ROUTES, THIEVES, MONSTERS, TOWN_HOT, TOWN_COLD, TOWN_EVENTS, SEASONS, RENOWN, REACH_RUNG, MATS } from './data.js?v=64';
+import { REGIONS, SUPPLIERS, CUSTOMERS, SELLERS, ROUTES, THIEVES, MONSTERS, TOWN_HOT, TOWN_COLD, TOWN_EVENTS, SEASONS, RENOWN, REACH_RUNG, MATS, PATTERNS } from './data.js?v=65';
 
 export const REACH = 'reach';
 export const idOf = r => (r && REGIONS[r] ? r : REACH);
@@ -63,3 +63,21 @@ export const news = (save, k, base) => ((regionOf(save).news || {})[k]) || base;
 
 // ---------- renown: the top rung is the region's own ----------
 export const rungWord = (save, i) => i === REACH_RUNG ? regionOf(save).top : RENOWN[i].word;
+
+// ---------- the folk (milestone 40): the regulars, their stories, their grandchildren ----------
+export const regulars = (save, base) => own(regionId(save), 'regulars', base);
+export const stories = (save, base) => own(regionId(save), 'stories', base);
+export const lineFolk = (save, base) => own(regionId(save), 'lineFolk', base);
+export const folkOf = (save, base) => own(regionId(save), 'folkOf', base);
+// a coastal generation on, the grandchildren ask what their grandparents asked: the region's stories in their own steps' words
+export const lineStories = (save, base) => isReach(save) ? base : once('lines:' + regionId(save), () => Object.fromEntries((regionOf(save).stories || [])
+  .map(s => [s.id, { fam: s.fam, who: (regionOf(save).lineFolk[s.fam] || {}).who || s.who, steps: s.steps.map(st => [st.line, st.thanks]) }])));
+// which generation of the line in this region: the Reach counts every generation (as milestone 38 did); another region, the ones
+// that worked there (the first to cross is its first)
+export const localGen = save => isReach(save) ? ((save && save.gen) || 1) : 1 + ((save && save.line) || []).filter(r => idOf(r.region) === regionId(save)).length;
+
+// ---------- the patterns (milestone 40): a region's own are found only there (tries, clues, asks, the board); made anywhere ----------
+export const findsHere = (save, id) => { const p = PATTERNS[id]; return !!p && (!p.coast || !isReach(save)); };
+export const boardOf = (save, id) => ((regionOf(save).boards || {})[id]) || PATTERNS[id].hidden.board;
+// the patterns an old piece (a runner's find, a seller's) can be of, here
+export const piecePatterns = save => once('pieces:' + regionId(save), () => Object.keys(PATTERNS).filter(k => !PATTERNS[k].makes && findsHere(save, k)));

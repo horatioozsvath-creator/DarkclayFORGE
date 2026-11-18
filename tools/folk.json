@@ -272,28 +272,48 @@
  },
  "regulars": [
   [
-   "Ollo Vance",
+   "\\bVance\\b",
    "vance"
   ],
   [
-   "^Ketty Moss",
+   "^\\w+ Moss\\b",
    "ketty"
   ],
   [
-   "^Bram Oakes",
+   "\\bOakes\\b",
    "bram"
   ],
   [
-   "^Lady Ysmay Corrow(?!'s)",
+   "^Lady \\w+ Corrow(?!'s)",
    "corrow"
   ],
   [
-   "^Marrow",
+   "^(\\w+ )?Marrow\\b(?!')",
    "marrow"
   ],
   [
    "^The Court",
    "herald"
+  ],
+  [
+   "\\bCrane\\b",
+   "vance"
+  ],
+  [
+   "^\\w+ Tregear\\b",
+   "ketty"
+  ],
+  [
+   "\\bHobb\\b",
+   "bram"
+  ],
+  [
+   "^Dame \\w+ Penrose(?!'s)",
+   "corrow"
+  ],
+  [
+   "^\\w+ Penhale\\b(?!')",
+   "marrow"
   ]
  ]
 }

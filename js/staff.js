@@ -1,16 +1,16 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=64';
-import { levelOf, makePiece, partOptions } from './rules.js?v=64';
-import { awayStep } from './shop.js?v=64';
-import { wageMult, capBonus, rung } from './growth.js?v=64';
-import * as Trail from './trail.js?v=64';
-import { TRAIL, MONSTERS } from './data.js?v=64';
-import * as Run from './runner.js?v=64';
-import * as Mon from './monsters.js?v=64';
-import * as Ap from './apprentice.js?v=64';
-import * as Rg from './region.js?v=64';
+import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=65';
+import { levelOf, makePiece, partOptions } from './rules.js?v=65';
+import { awayStep } from './shop.js?v=65';
+import { wageMult, capBonus, rung } from './growth.js?v=65';
+import * as Trail from './trail.js?v=65';
+import { TRAIL, MONSTERS } from './data.js?v=65';
+import * as Run from './runner.js?v=65';
+import * as Mon from './monsters.js?v=65';
+import * as Ap from './apprentice.js?v=65';
+import * as Rg from './region.js?v=65';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -124,7 +124,7 @@ export function haul(save, p, route, rng, now) {
   if (r.gem && rng() < r.gem) mats.gem = (mats.gem || 0) + 1;
   let piece = null, tile = null;
   if (r.piece && rng() < r.piece) {
-    const ids = Object.keys(PATTERNS).filter(k => !PATTERNS[k].makes), pattern = pick(ids, rng), metals = partOptions(pattern)[0].opts;
+    const ids = Rg.piecePatterns(save), pattern = pick(ids, rng), metals = partOptions(pattern)[0].opts;
     piece = makePiece({ patternId: pattern, picks: [Math.floor(rng() * Math.min(3, metals.length)), 0, 0],
       result: { tier: rng() < 0.35 ? 1 : 0, flawed: false, worked: Math.floor(rng() * 20), strikes: 20, heats: 2, cracks: Math.floor(rng() * 3) }, maker: 'an old maker', rng, now });
   }

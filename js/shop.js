@@ -3,13 +3,13 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  APPRENTICE, HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, LINE_FOLK, LINE_STORIES, FOLK_OF, ORDER_TIME, ORDER_PAYS, SELLERS, COURT_FOUND, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE, REG_CLUE_ODDS } from './data.js?v=64';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=64';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=64';
-import { charmGap, placeGift } from './room.js?v=64';
-import * as Trail from './trail.js?v=64';
-import * as Rg from './region.js?v=64';
-import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=64';
+  APPRENTICE, HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, LINE_FOLK, LINE_STORIES, FOLK_OF, ORDER_TIME, ORDER_PAYS, SELLERS, COURT_FOUND, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE, REG_CLUE_ODDS } from './data.js?v=65';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=65';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=65';
+import { charmGap, placeGift } from './room.js?v=65';
+import * as Trail from './trail.js?v=65';
+import * as Rg from './region.js?v=65';
+import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=65';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -152,7 +152,7 @@ export const knows = (save, id) => !!PATTERNS[id] && (!PATTERNS[id].hidden || ((
 export const ASK_ODDS = 0.12;
 function asking(save, c, rng, now) {
   const own = st => !st || st === 'forge' || (save.stations || []).includes(st);
-  const left = Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden && !knows(save, id) && own(PATTERNS[id].station));
+  const left = Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden && !knows(save, id) && own(PATTERNS[id].station) && Rg.findsHere(save, id));
   if (!left.length || rng() >= ASK_ODDS) return;
   const id = left[Math.floor(rng() * left.length)], asks = PATTERNS[id].hidden.asks, line = asks[Math.floor(rng() * asks.length)];
   c.tell = line; c.asks = id;
@@ -409,7 +409,7 @@ export function newSeller(rng, hour, now, save) {
     const n = rare ? 1 : 2 + Math.floor(rng() * 4);
     c.offer = { type: 'mats', mat, n, price: Math.max(1, Math.round(priceOf(mat, hour, save) * n * (rare ? 0.6 : 0.7))) };
   } else {
-    const ids = Object.keys(PATTERNS).filter(k => !PATTERNS[k].makes), pattern = ids[Math.floor(rng() * ids.length)], metals = partOptions(pattern)[0].opts;
+    const ids = Rg.piecePatterns(save), pattern = ids[Math.floor(rng() * ids.length)], metals = partOptions(pattern)[0].opts;
     const m = Math.floor(rng() * Math.min(3, metals.length)), tier = rng() < 0.3 ? 1 : 0, cracks = Math.floor(rng() * 3);
     const card = makePiece({ patternId: pattern, picks: [m, 0, 0], result: { tier, flawed: false, worked: Math.floor(rng() * 20), strikes: 20, heats: 2, cracks },
       maker: 'an old maker', rng, now });
@@ -442,21 +442,26 @@ const ownsPattern = (save, p) => !!PATTERNS[p] && knows(save, p) && (!PATTERNS[p
 // ---------- a generation on (milestone 38): the regulars' grandchildren, in their own words; {master} is the old maker ----------
 export const genOf = save => (save && save.gen) || 1;
 export const say = (save, t) => t.replace(/\{master\}/g, (save && save.lineOf) || 'your master');
-const folkWho = (save, fam, tmpl) => { const f = LINE_FOLK[fam]; return tmpl.replace('{first}', f.first[Math.min(genOf(save) - 2, f.first.length - 1)]); };
-const lineStory = (save, s) => genOf(save) > 1 ? LINE_STORIES[s.id] : null;
+// the region's own (milestone 40): the coast's families count the generations that worked there (Rg.localGen); the Reach's, every one
+const folkWho = (save, fam, tmpl) => { const f = Rg.lineFolk(save, LINE_FOLK)[fam]; return tmpl.replace('{first}', f.first[Math.min(Rg.localGen(save) - 2, f.first.length - 1)]); };
+const lineStory = (save, s) => Rg.localGen(save) > 1 ? Rg.lineStories(save, LINE_STORIES)[s.id] : null;
+export const storiesOf = save => Rg.stories(save, STORIES);
+export const regularsOf = save => Rg.regulars(save, REGULARS);
 export const storyWho = (save, s) => { const l = lineStory(save, s); return l ? folkWho(save, l.fam, l.who) : s.who; };
 export function storyStep(save, s, i) { const st = s.steps[i], l = lineStory(save, s); return l && st ? { ...st, line: say(save, l.steps[i][0]), thanks: say(save, l.steps[i][1]) } : st; }
 // a regular as they come in this generation: the grandchild's name and words (the same wants), the family's key
 export function regularOf(save, r) {
-  const fam = FOLK_OF[r.who]; if (genOf(save) < 2 || !fam) return r;
-  return { ...r, who: folkWho(save, fam, LINE_FOLK[fam].who), line: say(save, LINE_FOLK[fam].line), fam };
+  const fam = Rg.folkOf(save, FOLK_OF)[r.who], F = Rg.lineFolk(save, LINE_FOLK); if (Rg.localGen(save) < 2 || !fam) return r;
+  return { ...r, who: folkWho(save, fam, F[fam].who), line: say(save, F[fam].line), fam };
 }
 export const storyOf = (save, id) => (save.stories || {})[id] || { step: 0, next: 0 };
 // the stories whose next step can come in now: not finished, rested since the last, with a pattern this shop can make
 export function storiesReady(save, now) {
-  return STORIES.filter(s => {
+  const list = storiesOf(save);
+  return list.filter(s => {
     const st = storyOf(save, s.id), step = s.steps[st.step];
-    if (s.after) { const before = STORIES.find(x => x.id === s.after); if (storyOf(save, s.after).step < before.steps.length) return false; }   // a great story: after the first
+    if (s.blueprint && !RELICS[s.blueprint]) return false;   // a blueprint not in the game yet (the coast's Relics, milestone 41)
+    if (s.after) { const before = list.find(x => x.id === s.after); if (storyOf(save, s.after).step < before.steps.length) return false; }   // a great story: after the first
     if (s.rung && rung(save) < s.rung) return false;
     return step && now >= (st.next || 0) && step.patterns.some(p => ownsPattern(save, p));
   });
@@ -470,7 +475,7 @@ function postStory(save, s, rng, now) {
 }
 // a step filled: the story moves on, and comes back after a rest; the last step leaves its gift and some renown
 function storyFilled(save, o, now) {
-  const s = STORIES.find(x => x.id === o.story); if (!s) return null;
+  const s = storiesOf(save).find(x => x.id === o.story); if (!s) return null;
   save.stories = save.stories || {};
   const step = o.step + 1, done = step >= s.steps.length;
   save.stories[s.id] = { step, next: now + STORY_GAP * 3600000 };
@@ -517,14 +522,14 @@ export function postOrder(save, rng, now) {
   // a RENOWNED shop with a blueprint not yet made: now and then a regular orders that Relic (filled only by it)
   const bps = rung(save) >= 5 ? (save.blueprints || []).filter(id => !(save.relicsMade || []).includes(id) && ownsPattern(save, RELICS[id].pattern)) : [];
   if (bps.length && rng() < 0.12) {
-    const id = bps[Math.floor(rng() * bps.length)], pattern = RELICS[id].pattern, r = regularOf(save, REGULARS.find(x => x.wants.includes(pattern)) || REGULARS[1]);
+    const id = bps[Math.floor(rng() * bps.length)], pattern = RELICS[id].pattern, r = regularOf(save, regularsOf(save).find(x => x.wants.includes(pattern)) || regularsOf(save)[1]);
     save.order = { who: r.who, fig: r.fig, pattern, least: RELIC_WORK.tier, metal: null, line: 'They say you have the pattern of ' + RELICS[id].name + '. I would have it, whatever it costs.', posted: save.clock || 0, relic: id,
       due: (save.clock || 0) + ORDER_TIME[1] * 4, pays: orderPays(pattern, null, RELIC_WORK.tier) };
     return log(save, { at: now, who: r.who, fig: r.fig, mood: 'EAGER', want: pattern, sold: null, order: 'posted', line: 'Left a special order: ' + RELICS[id].name + '.' });
   }
   // a regular asks only for what this shop's stations can make
   const owns = p => ownsPattern(save, p);
-  const regs = REGULARS.filter(x => x.wants.some(owns)), r = regularOf(save, regs[Math.floor(rng() * regs.length)]), can = r.wants.filter(owns);
+  const regs = regularsOf(save).filter(x => x.wants.some(owns)), r = regularOf(save, regs[Math.floor(rng() * regs.length)]), can = r.wants.filter(owns);
   const hot = save.town ? can.filter(p => demandOf(save.town, p) > 0) : [];
   const pattern = hot.length && rng() < 0.5 ? hot[Math.floor(rng() * hot.length)] : can[Math.floor(rng() * can.length)];
   let least = r.least != null ? r.least : (rng() < 0.35 ? 1 : 0);
@@ -533,7 +538,7 @@ export function postOrder(save, rng, now) {
   let metal = r.metal && metalIndex(pattern, r.metal) >= 0 ? r.metal : null;
   if (!metal && rng() < 0.3) { const ok = ['iron', 'bronze', 'steel'].filter(m => metalIndex(pattern, m) >= 0); metal = ok[Math.floor(rng() * ok.length)]; }
   // a generation on, each family says its word about the old maker once, with its first order
-  let line = r.line; if (r.fam && !(save.remembered || []).includes(r.fam)) { line = say(save, LINE_FOLK[r.fam].remember); save.remembered = (save.remembered || []).concat(r.fam); }
+  let line = r.line; if (r.fam && !(save.remembered || []).includes(r.fam)) { line = say(save, Rg.lineFolk(save, LINE_FOLK)[r.fam].remember); save.remembered = (save.remembered || []).concat(r.fam); }
   save.order = { who: r.who, fig: r.fig, pattern, least, metal, line, posted: save.clock || 0,
     due: (save.clock || 0) + ORDER_TIME[0] + rng() * (ORDER_TIME[1] - ORDER_TIME[0]), pays: orderPays(pattern, metal, least) };
   const clue = rng() < REG_CLUE_ODDS ? regularClue(save, r, rng, now) : null;
@@ -543,7 +548,7 @@ export function postOrder(save, rng, now) {
 // a regular's word about a pattern still to find at a station you have (milestone 33), written into THE MAKER'S BOOK once
 export function regularClue(save, r, rng, now) {
   const has = st => !st || st === 'forge' || (save.stations || []).includes(st);
-  const ids = Object.keys(r.clues || {}).filter(id => PATTERNS[id] && PATTERNS[id].hidden && !knows(save, id) && has(PATTERNS[id].station));
+  const ids = Object.keys(r.clues || {}).filter(id => PATTERNS[id] && PATTERNS[id].hidden && !knows(save, id) && has(PATTERNS[id].station) && Rg.findsHere(save, id));
   const book = save.book || (save.book = { found: [], tries: [], clues: [], seen: 0 }), fresh = ids.filter(id => !book.clues.some(c => c.line === r.clues[id]));
   const pool = fresh.length ? fresh : ids; if (!pool.length) return null;
   const id = pool[Math.floor(rng() * pool.length)], line = r.clues[id];

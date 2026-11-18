@@ -1,11 +1,11 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // WHERE THINGS COME FROM (milestone 30), with no page access: for any material, every way to get it (a seller, a station that makes
 // it, a part forged at once, a runner's roads, the Deep), and when a seller who doesn't have it this hour next will.
-import { MATS, FORGED_PARTS, PATTERNS, STATIONS, REGIONS } from './data.js?v=64';
-import * as Rg from './region.js?v=64';
-import { linesOf, sells } from './shop.js?v=64';
-import { COMMONS } from './staff.js?v=64';
-import { partOptions } from './rules.js?v=64';
+import { MATS, FORGED_PARTS, PATTERNS, STATIONS, REGIONS } from './data.js?v=65';
+import * as Rg from './region.js?v=65';
+import { linesOf, sells } from './shop.js?v=65';
+import { COMMONS } from './staff.js?v=65';
+import { partOptions } from './rules.js?v=65';
 
 // in the save's region (milestone 39): its suppliers, its roads' names, what its runners bring back; none: the Reach
 const roadsOf = save => test => Object.values(Rg.routes(save)).filter(r => !r.hunt && test(r)).map(r => r.name);
