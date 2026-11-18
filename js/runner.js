@@ -1,11 +1,11 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE RUNNER'S GEAR AND THE ROAD'S DANGER, with no page access: pieces you made, carried by the runner (off the shelves while they're
 // carried), potions used up on the road, the chance of harm on the hard roads, and the hunt for a gang. Spared on a gentler Reach.
-import { GEAR, ROUTES, TIERS, MONSTERS } from './data.js?v=61';
-import { rung } from './growth.js?v=61';
-import { threatsOn } from './bank.js?v=61';
-import { levelOf } from './rules.js?v=61';
-import { roadX, huntKind } from './monsters.js?v=61';
+import { GEAR, ROUTES, TIERS, MONSTERS } from './data.js?v=62';
+import { rung } from './growth.js?v=62';
+import { threatsOn } from './bank.js?v=62';
+import { levelOf } from './rules.js?v=62';
+import { roadX, huntKind } from './monsters.js?v=62';
 
 const D = 24 * 3600000;
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));

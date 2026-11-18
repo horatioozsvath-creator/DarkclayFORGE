@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The shop's two rooms, with no page access: the shop front (counter, shelves, decor; where customers come) and the workshop
 // behind it (the forge, the anvil and every station). A grid each, what stands on it, buying, moving, selling back, growing.
-import { FURNITURE, ROOM_SIZES, WORK_SIZES, HALL_SIZES, HALL, DOOR_Z, WORK_DOOR_X, SHELF_COSTS, SHELF_LEVELS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=61';
-import { wallCharm, hallCharm } from './growth.js?v=61';
+import { FURNITURE, ROOM_SIZES, WORK_SIZES, HALL_SIZES, HALL, DOOR_Z, WORK_DOOR_X, SHELF_COSTS, SHELF_LEVELS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=62';
+import { wallCharm, hallCharm, heirloomCharm } from './growth.js?v=62';
 
 export const SIZES = { shop: ROOM_SIZES, work: WORK_SIZES, hall: HALL_SIZES };
 export const sizeOf = room => SIZES[room.kind || 'shop'][room.size || 0];
@@ -84,7 +84,7 @@ export function upgradeShelf(save, id) {
   return { level: it.lv, places: next.places };
 }
 // the shop front's charm, and the wall's pieces with it, under the one cap (the workshop's decor is for the maker's eyes only)
-export function charm(room, save) { return Math.min(CHARM_MAX, room.items.reduce((c, i) => c + (FURNITURE[i.kind].charm || 0) + (i.kind === 'shelf' ? SHELF_LEVELS[levelOf(i)].charm || 0 : 0), 0) + (save ? wallCharm(save) + hallCharm(save) : 0)); }
+export function charm(room, save) { return Math.min(CHARM_MAX, room.items.reduce((c, i) => c + (FURNITURE[i.kind].charm || 0) + (i.kind === 'shelf' ? SHELF_LEVELS[levelOf(i)].charm || 0 : 0), 0) + (save ? wallCharm(save) + hallCharm(save) + heirloomCharm(save) : 0)); }
 // how much sooner customers come for the room's charm (a multiplier on the gap between them)
 export const charmGap = save => save.room ? 1 / (1 + charm(save.room, save) * CHARM_STEP) : 1;
 

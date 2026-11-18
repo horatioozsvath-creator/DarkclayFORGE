@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // Growth, with no page access: tools, the maker's level and perks, renown, the display wall.
-import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS, HALL_RENOWN, HALL_CHARM, MYTHICS, NINE } from './data.js?v=61';
-import { levelOf, MAX_LEVEL } from './rules.js?v=61';
+import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS, HALL_RENOWN, HALL_CHARM, MYTHICS, NINE, LEGACY } from './data.js?v=62';
+import { levelOf, MAX_LEVEL } from './rules.js?v=62';
 
 // ---------- tools ----------
 export const has = (save, id) => (save.tools || []).includes(id);
@@ -19,7 +19,8 @@ export function buyTool(save, id) {
 }
 
 // ---------- the maker: level from all practice, a point a level, perks in order ----------
-export const practice = save => Object.values(save.trades || {}).reduce((a, t) => a + (t.xp || 0), 0) + ((save.haggle || {}).xp || 0);
+// an heir's head start in trade isn't their practice in this shop: the maker's level (and the skill points) counts from what they do here
+export const practice = save => Math.max(0, Object.values(save.trades || {}).reduce((a, t) => a + (t.xp || 0), 0) - (save.inheritedXp || 0)) + ((save.haggle || {}).xp || 0);
 export const makerLevel = save => levelOf(Math.floor(practice(save) / 2));
 export const perked = (save, id) => (save.perks || []).includes(id);
 export const pointsLeft = save => Math.max(0, makerLevel(save).level - 1 - (save.perks || []).length);
@@ -42,6 +43,7 @@ export function kitOf(save) {
   const kit = { hammer: 0, gloves: 0, good: 0, widen: 1, coolX: 1, fine: 0 };
   const add = k => { if (!k) return; for (const [key, v] of Object.entries(k)) kit[key] = key === 'widen' || key === 'coolX' ? kit[key] * v : key === 'hammer' ? Math.max(kit.hammer, v) : kit[key] + v; };
   (save.tools || []).forEach(id => TOOLS[id] && add(TOOLS[id].kit));
+  add(heirTrait(save).kit);   // the heir's trait, for good (milestone 37)
   ALL.forEach(p => perked(save, p.id) && add(p.kit));
   return kit;
 }
@@ -83,7 +85,12 @@ export function unhang(save, id) { save.wall = (save.wall || []).filter(x => x !
 // ---------- perks the shop reads ----------
 export const patienceOf = (save, base) => base + (perked(save, 'patient') ? 20 : 0);
 export const haggleMult = save => perked(save, 'tongue') ? 1.05 : 1;
-export const wageMult = save => perked(save, 'wages') ? 0.8 : 1;
+export const wageMult = save => (perked(save, 'wages') ? 0.8 : 1) * (heirTrait(save).wage || 1);
+// the heir's trait (milestone 37): {} for a first maker
+export const heirTrait = save => (save && save.heirTrait && LEGACY.trait[save.heirTrait]) || {};
+export const xpMult = save => heirTrait(save).xp || 1;
+// the heirloom (milestone 37): over the shop door, never for sale; charm as it would bring in the Hall, no renown (the heir earns that)
+export const heirloomCharm = save => save && save.heirloom ? HALL_CHARM[save.heirloom.tier] || 0 : 0;
 export const capBonus = save => perked(save, 'hours') ? 2 : 0;
 // on the slower curve (milestone 7): the mood at Haggling 3 (about twenty haggles), the purse at 4 (about as many as Haggling 6 took before)
 export const readLevels = save => perked(save, 'read') ? { mood: 1, purse: 2 } : { mood: 3, purse: 4 };

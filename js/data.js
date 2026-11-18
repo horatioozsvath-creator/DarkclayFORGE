@@ -793,6 +793,11 @@ export const ROLES = {
 // (`beside`× while you've worked a piece in the last `besideMin` minutes), never past trade `top`.
 // fine: [the odds of a Fine piece at trade 1, more a level, at most]; flaw: [the odds of a flawed one at trade 1, less a level, at least]
 export const APPRENTICE = { every: 30, swift: 0.75, top: 5, learn: 3, beside: 2, besideMin: 20, thrifty: 0.25, keep: 300, most: 2, renown: 0.25, fine: [0.1, 0.08, 0.45], flaw: [0.3, 0.05, 0.05], careful: 0.5 };
+// THE LEGACY (milestone 37, docs/LEGACY-PLAN.md): handing the forge on to the apprentice, a Maker of the Nine's choice. The heir's
+// purse, how long the apprentice must have been with you, their head start in trade, and their trait for good (small, each)
+export const LEGACY = { purse: 300, days: 14, top: 5, rest: 2,
+  trait: { careful: { kit: { widen: 1.06 }, line: 'the heat band a little wider' }, swift: { kit: { coolX: 0.92 }, line: 'the work cools a little slower' },
+    thrifty: { wage: 0.9, line: 'the staff\'s wages a tenth lower' }, bright: { xp: 1.15, line: 'trades learned a little faster' } } };
 export const TRAITS = {
   guard: [
     { id: 'watchful', word: 'Watchful', line: 'catches more of them' },

@@ -19,7 +19,7 @@ export function peekSlots() {
 export function clearSlot(n) { try { localStorage.removeItem(keyOf(n)); return true; } catch (e) { return false; } }
 const KEY = () => keyOf(activeSlot());
 // v1 still: a milestone 1 save reads as it is, the shop's fields filled in from here (its pieces go in the back)
-const fresh = () => ({ v: 1, maker: 'the Maker', trades: {}, found: ['ember'], chosen: [], picks: {}, cards: [], made: 0,
+export const fresh = () => ({ v: 1, maker: 'the Maker', trades: {}, found: ['ember'], chosen: [], picks: {}, cards: [], made: 0,
   coins: 60, mats: { iron: 5, bronze: 2, cord: 3, wrap: 1, ash: 1, wool: 1, strap: 1 }, slots: 4, shelf: [], ledger: [], sold: 0, earned: 0, shopNext: 6, curve: 2 });
 
 // a random id for this shop: a visit link carries it, so a flyer's copy can't be taken from your own shop (nothing personal in it)
