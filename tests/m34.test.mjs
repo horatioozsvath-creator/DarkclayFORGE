@@ -105,3 +105,11 @@ test('a kept-off monster can still be hunted until a day after; a runner sent co
   const back = St.resolveTrips(s, T0 + 2 * D + H + ROUTES.beast.h * H + 1, () => 0.5);
   assert.equal(back.length, 1); assert.ok(back[0].beast.won || back[0].road.died); assert.equal(s.monster.hunting, false);
 });
+
+test('a Relic one of the Nine still grows from is at stake; not once that Mythic is made, and never a plain piece', async () => {
+  const relic = { id: 'g', pattern: 'falchion', tier: 'relic', relic: 'gatewarden', name: 'Gatewarden', worth: 5000 };
+  const { MYTHICS } = await import('../js/data.js'), m = Object.keys(MYTHICS).find(k => MYTHICS[k].relic === 'gatewarden');
+  assert.equal(Sh.mythicAtStake({ mythicsMade: [] }, relic), m);
+  assert.equal(Sh.mythicAtStake({ mythicsMade: [m] }, relic), null, 'its Mythic made: nothing at stake');
+  assert.equal(Sh.mythicAtStake({}, { ...relic, tier: 'oldblood', relic: undefined }), null);
+});

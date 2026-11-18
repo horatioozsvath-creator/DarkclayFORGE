@@ -49,3 +49,9 @@ Asked for: finish what the earlier milestones left out, and the targets not met.
 
 Tests: tests/m34.test.mjs (8); older tests updated for the new rules (Relic from a Rare, trade 7, parts at 4, the Factor, the Court's
 shard orders at Rare). 240 in all.
+
+## Release 59: keep it for the Nine
+- A Relic that one of the Nine still grows from (its Mythic not made yet) says so on its card: **KEEP IT FOR THE NINE**, with the Mythic's
+  name. Sold, it's gone for good, and that Mythic with it.
+- The game asks first before such a Relic goes on a shelf (here, from the result, or at the second shop) or to an order (a regular's
+  Relic order). Once its Mythic is made, nothing is asked. `Sh.mythicAtStake`. Tests: 241.
