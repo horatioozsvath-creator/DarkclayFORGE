@@ -1,9 +1,10 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // A LIVING REACH, with no page access: the word in town each day (some true, some not: what's coming, who's about, what's selling,
 // how the regulars are doing after what happened), and the guild fair (one piece entered, judged, a prize for the first three).
-import { LIVING, SEASONS, PATTERNS } from './data.js?v=63';
-import { rung } from './growth.js?v=63';
-import { seasonOf, seasonDay, fairOn } from './town.js?v=63';
+import { LIVING, PATTERNS } from './data.js?v=64';
+import * as Rg from './region.js?v=64';
+import { rung } from './growth.js?v=64';
+import { seasonOf, seasonDay, fairOn } from './town.js?v=64';
 
 const D = 24 * 3600000;
 const dayOf = ms => Math.floor(ms / D);
@@ -25,25 +26,25 @@ const GOSSIP = [
 ];
 // the word in town today: one or two true things first, then a bit of gossip
 export function rumours(save, now) {
-  const d = dayOf(now), rng = seeded(d * 4099 + 7), out = [], s = seasonOf(d), sd = seasonDay(d);
+  const d = dayOf(now), rng = seeded(d * 4099 + 7), out = [], rg = Rg.regionId(save), SEASONS = Rg.seasonsIn(rg), s = seasonOf(d, rg), sd = seasonDay(d);
   const g = save.gang && now < save.gang.until ? save.gang : null, m = save.monster, r = save.robbery;
   if (sd < 2) out.push('The season has turned: ' + s.name.toLowerCase() + '. ' + s.line);
   else if (sd >= LIVING.seasonD - 2) out.push('They say ' + SEASONS[(SEASONS.indexOf(s) + 1) % SEASONS.length].name.toLowerCase() + ' comes early this year.');
   const toFair = (LIVING.fair.at - (d % LIVING.fair.every) + LIVING.fair.every) % LIVING.fair.every;
   if (toFair > 0 && toFair <= 3) out.push('The guild fair is in ' + toFair + (toFair === 1 ? ' day' : ' days') + '. The judges like a piece worth looking at twice.');
-  if (g) out.push('Someone saw ' + g.name + ' counting doors on Bridge Street.');
-  if (m && m.done === 'kept') out.push('Sergeant Vance has been made captain of the night watch, they say, for holding the lanes.');
+  if (g) out.push('Someone saw ' + g.name + ' counting doors on ' + Rg.news(save, 'street', 'Bridge Street') + '.');
+  if (m && m.done === 'kept') out.push(Rg.news(save, 'kept', 'Sergeant Vance has been made captain of the night watch, they say, for holding the lanes.'));
   if (m && m.done === 'hunted') out.push('They\'re still talking about it in the taverns: your runner brought the beast down.');
   if (m && m.done === 'came') out.push('The carpenters can\'t keep up: half the lanes have something to mend.');
-  if (r && r.done && now - r.at < 5 * D) out.push('The Watch drank to your runner at the Bell last night.');
-  else if (r && !r.done && now < r.trail) out.push('Ketty Moss\'s stall was turned over by the same lot that robbed you.');
+  if (r && r.done && now - r.at < 5 * D) out.push('The Watch drank to your runner at ' + Rg.news(save, 'inn', 'the Bell') + ' last night.');
+  else if (r && !r.done && now < r.trail) out.push(Rg.news(save, 'robbed', 'Ketty Moss\'s stall was turned over by the same lot that robbed you.'));
   // what's selling: the pattern you've sold most of lately
   const sold = {}; (save.ledger || []).slice(0, 30).forEach(e => { if (e.sold && e.want && PATTERNS[e.want]) sold[e.want] = (sold[e.want] || 0) + 1; });
   const top = Object.entries(sold).sort((a, b) => b[1] - a[1])[0];
   if (top && top[1] >= 3 && rng() < 0.6) out.push('Your ' + PATTERNS[top[0]].name.toLowerCase() + 's are the talk of the lanes.');
-  if (save.branch && rng() < 0.4) out.push('They talk of your shop at the Landing, too.');
+  if (save.branch && rng() < 0.4) out.push(Rg.news(save, 'branch', 'They talk of your shop at the Landing, too.'));
   const true2 = out.sort(() => rng() - 0.5).slice(0, 2);
-  return true2.concat(pick(GOSSIP, rng));
+  return true2.concat(pick(Rg.gossip(save, GOSSIP), rng));
 }
 // ---------- the guild fair ----------
 const RIVALS = ['Garran Steelhand of the Landing', 'the Ashby sisters', 'Old Wyn of Dunmere', 'Hob the bowyer', 'a journeyman from the Abbey'];
@@ -54,7 +55,7 @@ export function enterFair(save, cardId, now, rng) {
   if (!fairOpen(save, now)) return { why: save.fairDay === dayOf(now) ? 'you\'ve entered this fair' : 'the fair isn\'t on' };
   const c = save.cards.find(x => x.id === cardId); if (!c || c.sample) return { why: 'not one of yours' };
   const rg = rung(save), base = LIVING.fair.rivals[rg], [lo, hi] = LIVING.fair.spread;
-  const rivals = [0, 1, 2].map(i => ({ who: RIVALS[(dayOf(now) + i) % RIVALS.length], score: Math.round(base * (lo + rng() * (hi - lo))) })).sort((a, b) => b.score - a.score);
+  const rivals = [0, 1, 2].map(i => ({ who: Rg.rivals(save, RIVALS)[(dayOf(now) + i) % Rg.rivals(save, RIVALS).length], score: Math.round(base * (lo + rng() * (hi - lo))) })).sort((a, b) => b.score - a.score);
   const place = 1 + rivals.filter(x => x.score > c.worth).length, p = LIVING.fair.prizes[place - 1];
   const coins = p ? p[0] * (1 + rg) : 0, renown = p ? p[1] : 0;
   save.coins += coins; save.renown = (save.renown || 0) + renown; save.fairDay = dayOf(now);

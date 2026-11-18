@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as Sh from '../js/shop.js';
 import * as R from '../js/rules.js';
+import * as Rg from '../js/region.js';
 import { PATTERNS, CUSTOMERS, MATS, SUPPLIERS, TIERS } from '../js/data.js';
 
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -26,6 +27,8 @@ test('every material is sold somewhere (but relic materials, found only below th
   for (const id of Object.keys(MATS).filter(id => !MATS[id].relic)) {
     const where = [];
     for (let h = 0; h < 48; h++) if (Sh.sells(id, h)) where.push(h);
+    // the Greyshore's are sold on the coast (milestone 39)
+    if (MATS[id].coast) { assert.ok(!where.length && Rg.soldIn('greyshore', id), id + ' is sold on the coast, not in the Reach'); continue; }
     assert.ok(where.length > 0, id + ' is sold within two days');
     for (let h = 0; h < 48; h++) { const p = Sh.priceOf(id, h); assert.ok(p >= Math.floor(MATS[id].price * 0.85) && p <= Math.ceil(MATS[id].price * 1.2) + 1, id); }
   }

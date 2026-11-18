@@ -1,11 +1,12 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE RUNNER'S GEAR AND THE ROAD'S DANGER, with no page access: pieces you made, carried by the runner (off the shelves while they're
 // carried), potions used up on the road, the chance of harm on the hard roads, and the hunt for a gang. Spared on a gentler Reach.
-import { GEAR, ROUTES, TIERS, MONSTERS } from './data.js?v=63';
-import { rung } from './growth.js?v=63';
-import { threatsOn } from './bank.js?v=63';
-import { levelOf } from './rules.js?v=63';
-import { roadX, huntKind } from './monsters.js?v=63';
+import { GEAR, ROUTES, TIERS, MONSTERS } from './data.js?v=64';
+import { rung } from './growth.js?v=64';
+import { threatsOn } from './bank.js?v=64';
+import { levelOf } from './rules.js?v=64';
+import { roadX, huntKind } from './monsters.js?v=64';
+import * as Rg from './region.js?v=64';
 
 const D = 24 * 3600000;
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
@@ -90,7 +91,7 @@ export function road(save, p, route, rng, now) {
 export function lose(save, p, route, now) {
   const g = gearOf(p); Object.values(g).forEach(c => save.cards.unshift(c));
   save.staff = (save.staff || []).filter(x => x !== p);
-  save.memorials = (save.memorials || []).concat({ name: p.name, at: now, where: ROUTES[route].from });
+  save.memorials = (save.memorials || []).concat({ name: p.name, at: now, where: Rg.routes(save)[route].from });
 }
 // ---------- the hunt: after the gang, while the trail is warm ----------
 export const huntOpen = (save, now) => !!(save.robbery && !save.robbery.done && now < save.robbery.trail);

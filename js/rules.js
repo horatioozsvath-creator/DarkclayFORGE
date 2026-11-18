@@ -1,7 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK } from './data.js?v=63';
+import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS } from './data.js?v=64';
+import * as Rg from './region.js?v=64';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -33,10 +34,15 @@ export const slotsFor = l => l < 3 ? 0 : l < 5 ? 1 : l < 7 ? 2 : 3;
 export const xpFor = r => r.instant ? 0 : r.dropped ? 1 : 2 + r.tier + (r.cracks === 0 ? 1 : 0);
 
 // ---------- the parts ----------
-export function partOptions(patternId) {
-  return PATTERNS[patternId].parts.map(p => p.metals
+// with a save (what a screen offers): another region's materials are left off the end of each part's list, unless they're sold here
+// or the maker has some (milestone 39: they come last, so the picks of what's left don't move)
+export function partOptions(patternId, save) {
+  const all = PATTERNS[patternId].parts.map(p => p.metals
     ? { part: p.part, opts: p.metals.map(id => ({ id, ...METALS[id] })) }
     : { part: p.part, opts: p.opts });
+  if (!save) return all;
+  const rg = Rg.regionId(save), away = o => { const m = o.mat || o.id; return MATS[m] && MATS[m].coast && !Rg.soldIn(rg, m) && !((save.mats || {})[m] > 0); };
+  return all.map(g => { let n = g.opts.length; while (n > 1 && away(g.opts[n - 1])) n--; return n === g.opts.length ? g : { ...g, opts: g.opts.slice(0, n) }; });
 }
 export function chosenParts(patternId, picks) {
   return partOptions(patternId).map((p, i) => p.opts[(picks && picks[i]) || 0] || p.opts[0]);

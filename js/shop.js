@@ -3,12 +3,13 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  APPRENTICE, HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, LINE_FOLK, LINE_STORIES, FOLK_OF, ORDER_TIME, ORDER_PAYS, SELLERS, COURT_FOUND, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE, REG_CLUE_ODDS } from './data.js?v=63';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=63';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=63';
-import { charmGap, placeGift } from './room.js?v=63';
-import * as Trail from './trail.js?v=63';
-import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=63';
+  APPRENTICE, HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, LINE_FOLK, LINE_STORIES, FOLK_OF, ORDER_TIME, ORDER_PAYS, SELLERS, COURT_FOUND, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE, REG_CLUE_ODDS } from './data.js?v=64';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=64';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=64';
+import { charmGap, placeGift } from './room.js?v=64';
+import * as Trail from './trail.js?v=64';
+import * as Rg from './region.js?v=64';
+import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=64';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -31,7 +32,7 @@ export function takeMats(save, rec) {
   rec.forEach(r => { save.mats[r.mat] -= r.n; if (!save.mats[r.mat]) delete save.mats[r.mat]; });
   return true;
 }
-export const recipeCost = (rec, hour) => rec.reduce((c, r) => c + priceOf(r.mat, hour) * r.n, 0);
+export const recipeCost = (rec, hour, save) => rec.reduce((c, r) => c + priceOf(r.mat, hour, save) * r.n, 0);
 
 // ---------- suppliers: prices drift on the hour ----------
 export const hourOf = ms => Math.floor(ms / 3600000);
@@ -42,18 +43,19 @@ function hash(a, b) {   // a small, steady hash of an hour and a name: the same 
   return (h >>> 0) / 4294967296;
 }
 export const drift = (hour, id) => 0.85 + 0.35 * hash(hour, id);
-export const priceOf = (id, hour) => Math.max(1, Math.round(MATS[id].price * drift(hour, id)));
+// with a save: what comes from far off costs more in its region (milestone 39: over the pass, half as much again)
+export const priceOf = (id, hour, save) => Math.max(1, Math.round(MATS[id].price * drift(hour, id) * (save ? Rg.dearOf(save, id) : 1)));
 // what a supplier has this hour: its staple lines, and a pedlar's pick of rare ones
 export function linesOf(supplier, hour) {
   const rare = (supplier.rare || []).slice().sort((a, b) => hash(hour, supplier.id + a) - hash(hour, supplier.id + b)).slice(0, supplier.pick || 99);
   return supplier.lines.concat(rare);
 }
-// open to this shop: the Crown's factor only from RENOWNED (milestone 34); without a save, every supplier
-export const suppliersFor = save => SUPPLIERS.filter(s => !s.rung || (save && rung(save) >= s.rung));
+// open to this shop: its region's (milestone 39), the Crown's factor only from RENOWNED (milestone 34); without a save, the Reach's
+export const suppliersFor = save => Rg.suppliers(save).filter(s => !s.rung || (save && rung(save) >= s.rung));
 export const sells = (id, hour, save) => (save ? suppliersFor(save) : SUPPLIERS.filter(s => !s.rung)).some(s => linesOf(s, hour).includes(id));
 export function buy(save, id, n, hour) {
   if (!sells(id, hour, save)) return false;
-  const cost = priceOf(id, hour) * n;
+  const cost = priceOf(id, hour, save) * n;
   if (save.coins < cost) return false;
   save.coins -= cost; save.mats[id] = (save.mats[id] || 0) + n;
   return true;
@@ -171,7 +173,7 @@ export const purseFor = (save, c, card) => Math.round(c.purse * purseMultFor(sav
 export function customerWeights(save) {
   const r = save ? rung(save) : 0, ob = save ? Math.min(2, save.cards.filter(c => c.tier === 'oldblood' && (onShelf(save, c.id) >= 0 || onWall(save, c.id))).length) : 0;
   const ev = save ? eventOf(save.town) : null, tw = (save && save.townWeights) || {}, em = id => ((ev && ev.weights && ev.weights[id]) || 1) * (tw[id] || 1);
-  return CUSTOMERS.map(c => {
+  return Rg.customers(save).map(c => {
     if (!c.rich) return c.weight * em(c.id);
     const rr = c.rich.cap ? Math.min(r, c.rich.cap) : r;
     let w = rr >= c.rich.from ? c.rich.step * (rr - c.rich.from + 1) : 0;
@@ -180,7 +182,7 @@ export function customerWeights(save) {
   });
 }
 export function newCustomer(rng, save) {
-  const t = weighted(CUSTOMERS, customerWeights(save), rng);
+  const t = weighted(Rg.customers(save), customerWeights(save), rng);
   return { type: t.id, who: pick(t.names, rng), want: pick(t.wants, rng), purse: Math.round(t.purse[0] + rng() * (t.purse[1] - t.purse[0])),
     mood: weighted(MOODS, t.moods, rng), least: t.least || 0, fig: t.fig };
 }
@@ -287,7 +289,7 @@ export function awayStep(save, dt, rng, at, clerk) {
 export function arrive(save, rng, now, present, clerk = null) {
   if (!save.order && (save.clock || 0) >= (save.orderNext ?? 180) && rng() < 0.2) return [postOrder(save, rng, now)];
   if (present && save.queue.length < QUEUE_MAX) {
-    const c = rng() < SELLER_ODDS ? newSeller(rng, Math.floor(now / 3600000), now) : { ...richer(save, newCustomer(rng, save), rng), kind: 'buyer' };
+    const c = rng() < SELLER_ODDS ? newSeller(rng, Math.floor(now / 3600000), now, save) : { ...richer(save, newCustomer(rng, save), rng), kind: 'buyer' };
     c.tell = c.kind === 'buyer' ? TELLS[c.mood][Math.floor(rng() * TELLS[c.mood].length)] : '';
     c.wait = patienceOf(save, PATIENCE); c.shows = 0; c.id = 'v' + Math.floor(rng() * 1e9).toString(36);
     if (c.kind === 'buyer') asking(save, c, rng, now);
@@ -399,13 +401,13 @@ export function sendAway(save, now) {
 // ---------- sellers: what customers bring in to sell ----------
 const SELL_MATS = ['iron', 'iron', 'bronze', 'steel', 'steel', 'silver', 'wrap', 'sharkhide', 'silk', 'gem', 'darkclay'];
 const SELL_RARE = ['blackwater', 'bogoak', 'winterfox', 'starglass'];
-export function newSeller(rng, hour, now) {
-  const s = SELLERS[Math.floor(rng() * SELLERS.length)];
+export function newSeller(rng, hour, now, save) {
+  const sellers = Rg.sellers(save), mats = Rg.sellMats(save, SELL_MATS), rares = Rg.sellRare(save, SELL_RARE), s = sellers[Math.floor(rng() * sellers.length)];
   const c = { kind: 'seller', who: s.who, fig: s.fig, type: 'seller', mood: 'WARY', want: 'any' };
   if (s.kind === 'mats') {
-    const rare = rng() < 0.3, mat = rare ? SELL_RARE[Math.floor(rng() * SELL_RARE.length)] : SELL_MATS[Math.floor(rng() * SELL_MATS.length)];
+    const rare = rng() < 0.3, mat = rare ? rares[Math.floor(rng() * rares.length)] : mats[Math.floor(rng() * mats.length)];
     const n = rare ? 1 : 2 + Math.floor(rng() * 4);
-    c.offer = { type: 'mats', mat, n, price: Math.max(1, Math.round(priceOf(mat, hour) * n * (rare ? 0.6 : 0.7))) };
+    c.offer = { type: 'mats', mat, n, price: Math.max(1, Math.round(priceOf(mat, hour, save) * n * (rare ? 0.6 : 0.7))) };
   } else {
     const ids = Object.keys(PATTERNS).filter(k => !PATTERNS[k].makes), pattern = ids[Math.floor(rng() * ids.length)], metals = partOptions(pattern)[0].opts;
     const m = Math.floor(rng() * Math.min(3, metals.length)), tier = rng() < 0.3 ? 1 : 0, cracks = Math.floor(rng() * 3);
@@ -660,7 +662,7 @@ export function rescue(save, hour) {
   if (save.cards.length) return false;
   const m = save.mats, cheapest = recipe('dagger', [0, 0, 0]);
   if (canMake(m, cheapest)) return false;
-  if (save.coins >= recipeCost(short(m, cheapest).map(r => ({ mat: r.mat, n: r.n - r.have })), hour)) return false;
+  if (save.coins >= recipeCost(short(m, cheapest).map(r => ({ mat: r.mat, n: r.n - r.have })), hour, save)) return false;
   cheapest.forEach(r => { m[r.mat] = Math.max(m[r.mat] || 0, r.n); });
   return true;
 }

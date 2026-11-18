@@ -2,13 +2,15 @@
 // MONSTERS, with no page access: something threatens the town (the rumour, the sightings, the night it comes); the Watch's order to
 // arm them, filled from the back room; the night it comes if it isn't; and the wards (an oil, a lens, a pane) that soften it.
 // Spared on a gentler Reach (bank.js).
-import { MONSTERS, GEAR, TIERS } from './data.js?v=63';
-import { rung } from './growth.js?v=63';
-import { threatsOn } from './bank.js?v=63';
+import { MONSTERS, GEAR, TIERS } from './data.js?v=64';
+import { rung } from './growth.js?v=64';
+import { threatsOn } from './bank.js?v=64';
+import * as Rg from './region.js?v=64';
 
 const H = 3600000, D = 24 * H;
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
-export const kindOf = m => m && MONSTERS.kinds[m.id];
+// in the words of the region it came in (milestone 39: m.region, none in the Reach)
+export const kindOf = m => m && Rg.monsterKind(m.id, m.region);
 // what it is now: 'rumour' (the first day), 'sighted', 'came' or 'kept' (done), or null
 export function stageOf(save, now) {
   const m = save.monster; if (!m) return null;
@@ -25,6 +27,7 @@ export function plan(save, now, rng) {
   const kinds = Object.keys(MONSTERS.kinds).filter(k => rung(save) >= MONSTERS.kinds[k].rung); if (!kinds.length) return null;
   const id = kinds[Math.floor(rng() * kinds.length)], k = MONSTERS.kinds[id];
   save.monster = { id, heard: now, comes: now + MONSTERS.warnD * D, got: k.order.map(() => 0) };
+  if (!Rg.isReach(save)) save.monster.region = Rg.regionId(save);
   return save.monster;
 }
 // the Watch's order: a piece that answers a line of it
@@ -81,7 +84,7 @@ export function roadX(save, now) {
 }
 
 // ---------- the hunt (milestone 34): a runner after the beast, from the sightings to a day after it's done ----------
-export const huntKind = save => save.monster && MONSTERS.hunt.kinds[save.monster.id];
+export const huntKind = save => save.monster && Rg.huntKind(save.monster.id, save.monster.region);
 export const huntOpen = (save, now) => { const m = save.monster, st = stageOf(save, now); return !!(m && huntKind(save) && st && st !== 'rumour' && !m.hunted && threatsOn(save, now)); };
 // back from the hunt (odds taken as they set out): brought down, or it got away. Brought down before the night: it won't come
 // heard: the one they set out after (another may have come since: then it's gone, and they come back with nothing)

@@ -251,20 +251,25 @@ export const METALS = {
   oak: { name: 'Oak', adj: 'Oak', strip: [9, 4, 5, 2], widen: .85, line: 'dense: a narrower band, more GREATs and more splits', dmg: 1.2, val: 1.4, tint: '#8a6238', level: 3 },
   oldyew: { name: 'Old yew', adj: 'Old-yew', strip: [9, 4, 5, 2], widen: 1.15, line: 'centuries in the grain: more GREATs, and a forgiving band', dmg: 1.35, val: 2.2, tint: '#6a3a1e', level: 5 },
   sharkhide: { name: 'Shark hide', adj: 'Sharkskin', strip: [9, 4, 5, 2], widen: .85, line: 'tough: a narrower band, more GREATs and more tears', dmg: 1.3, val: 1.6, tint: '#6a7a80', level: 3 },
+  // the Greyshore's (milestone 39): brass at the forge, sealskin at the stretcher
+  brass: { name: 'Brass', strip: [11, 2, 3, 4], widen: 1.2, line: 'bright and forgiving: a wide band, and salt won\'t touch it', dmg: .95, val: 1.2, tint: '#d4b04a', level: 2 },
+  sealskin: { name: 'Sealskin', adj: 'Sealskin', strip: [10, 3, 4, 3], widen: 1.1, line: 'oily and supple: a kinder band, and it sheds the wet', dmg: 1.05, val: 1.2, tint: '#5a5850', level: 2 },
 };
 const BLADE_METALS = ['iron', 'bronze', 'steel', 'silver', 'darkclay'];
 const HIDES = ['deer', 'goat', 'sharkhide'];
+// what a part offers: the above, and the Greyshore's last (milestone 39); tries keep to the above
+const FORGE_METALS = BLADE_METALS.concat('brass'), HIDES_ALL = HIDES.concat('sealskin');
 const WOODS = ['yew', 'birch', 'oak', 'oldyew'];
 const HERBS = ['mending', 'sleepmoss', 'emberroot', 'ghostcap'];
 const SANDS = ['clearsand', 'riversand', 'blacksand', 'seasand'];
-const FLUX = [{ name: 'Potash', mat: 'potash' }, { name: 'Lime', mat: 'lime' }];
-const COLOUR = [{ name: 'Clear' }, { name: 'Cobalt', mat: 'cobalt', val: 1.2 }, { name: 'Starglass', mat: 'starglass', rare: true }];
+const FLUX = [{ name: 'Potash', mat: 'potash' }, { name: 'Lime', mat: 'lime' }, { name: 'Kelp ash', mat: 'kelpash' }];
+const COLOUR = [{ name: 'Clear' }, { name: 'Cobalt', mat: 'cobalt', val: 1.2 }, { name: 'Starglass', mat: 'starglass', rare: true }, { name: 'Red coral', mat: 'coral', rare: true }];
 const glassAffixes = ['moonlit', 'spiritsighted', 'startouched', 'learned', 'coinsense', 'hallowed'];
 const WATER = [{ name: 'Well water' }, { name: 'Spring water', mat: 'springwater', val: 1.05 }, { name: 'Moonwell water', mat: 'moonwater', rare: true }];
-const BINDER = [{ name: 'Honey', mat: 'honey' }, { name: 'Beeswax', mat: 'wax' }, { name: 'Tallow', mat: 'tallow' }];
+const BINDER = [{ name: 'Honey', mat: 'honey' }, { name: 'Beeswax', mat: 'wax' }, { name: 'Tallow', mat: 'tallow' }, { name: 'Ambergris', mat: 'ambergris', rare: true }];
 const brewAffixes = ['learned', 'startouched', 'warmlined', 'weatherproof', 'graveward', 'steady', 'quiet'];
 const STRINGS = [{ name: 'Gut', mat: 'gut' }, { name: 'Silk', mat: 'silk', val: 1.1 }, { name: 'Wyvern sinew', mat: 'sinew', rare: true }];
-const NOCKS = [{ name: 'Horn', mat: 'horn' }, { name: 'Bone', mat: 'bone' }, { name: 'Starmetal', mat: 'starmetal', rare: true }];
+const NOCKS = [{ name: 'Horn', mat: 'horn' }, { name: 'Bone', mat: 'bone' }, { name: 'Starmetal', mat: 'starmetal', rare: true }, { name: 'Whalebone', mat: 'whalebone', val: 1.1 }];
 const bowAffixes = ['strongdrawn', 'quicknocked', 'farflying', 'balanced', 'keen', 'quiet', 'hallowed', 'deepborn'];
 const RARE_LEVEL = 5;   // the trade level that opens a pattern's rare part
 
@@ -272,42 +277,42 @@ const weaponAffixes = ['keen', 'biting', 'balanced', 'parrying', 'crushing', 'st
 const helmAffixes = ['warmlined', 'turning', 'quiet', 'lightstrapped', 'weatherproof', 'graveward', 'unyielding'];
 const ringAffixes = ['coinsense', 'learned', 'startouched', 'moonlit', 'spiritsighted'];
 const wearAffixes = ['warmlined', 'turning', 'quiet', 'lightstrapped', 'weatherproof', 'graveward', 'unyielding', 'steady'];
-const LINING = [{ name: 'Wool', mat: 'wool' }, { name: 'Linen', mat: 'linen', val: 1.05 }, { name: 'Winter fox', mat: 'winterfox', rare: true }];
+const LINING = [{ name: 'Wool', mat: 'wool' }, { name: 'Linen', mat: 'linen', val: 1.05 }, { name: 'Winter fox', mat: 'winterfox', rare: true }, { name: 'Sailcloth', mat: 'sailcloth', val: 1.05 }];
 const THREAD = [{ name: 'Gut', mat: 'gut' }, { name: 'Waxed cord', mat: 'cord' }, { name: 'Silver thread', mat: 'silverthread', rare: true }];
 
 // parts[0] takes a metal and sets the strip; the others are named options, a rare one turning a GOOD into a TRUE
 export const PATTERNS = {
   falchion: { name: 'Falchion', trade: 'Falchions', kind: 'SWORD · ONE HAND', art: 'falchion', dice: [1, 8], dmg: [4, 9], speed: 1.4, reach: 1.6, skill: 'SWORDPLAY', value: 80, bars: 3, want: 'weapon',
-    parts: [{ part: 'Blade', metals: BLADE_METALS },
-      { part: 'Guard', opts: [{ name: 'Iron', mat: 'iron' }, { name: 'Bronze', mat: 'bronze' }, { name: 'Blackwater iron', mat: 'blackwater', rare: true }] },
+    parts: [{ part: 'Blade', metals: FORGE_METALS },
+      { part: 'Guard', opts: [{ name: 'Iron', mat: 'iron' }, { name: 'Bronze', mat: 'bronze' }, { name: 'Blackwater iron', mat: 'blackwater', rare: true }, { name: 'Drowned silver', mat: 'drownedsilver', rare: true }] },
       { part: 'Grip', opts: [{ name: 'Leather wrap', mat: 'wrap' }, { name: 'Shark hide', mat: 'sharkhide', val: 1.1 }, { name: 'Cord', mat: 'cord' }] }],
     affixes: weaponAffixes, lore: ['Sound work. It does what a blade does.', 'Sound work, and a little more. It does what a blade does, and it does it first.', 'The curve runs true from guard to point. Folk will ask who made it.', 'Old blood in the steel: it remembers every hand that ever held a sword.'] },
   dagger: { name: 'Dagger', trade: 'Daggers', kind: 'DAGGER · ONE HAND', art: 'dagger', dice: [1, 4], dmg: [1, 4], speed: 2.0, reach: 1.0, skill: 'DAGGERS', value: 24, bars: 1, want: 'weapon',
-    parts: [{ part: 'Blade', metals: BLADE_METALS },
-      { part: 'Guard', opts: [{ name: 'None' }, { name: 'Iron', mat: 'iron', val: 1.15 }, { name: 'Blackwater iron', mat: 'blackwater', rare: true }] },
+    parts: [{ part: 'Blade', metals: FORGE_METALS },
+      { part: 'Guard', opts: [{ name: 'None' }, { name: 'Iron', mat: 'iron', val: 1.15 }, { name: 'Blackwater iron', mat: 'blackwater', rare: true }, { name: 'Drowned silver', mat: 'drownedsilver', rare: true }] },
       { part: 'Grip', opts: [{ name: 'Cord', mat: 'cord' }, { name: 'Leather wrap', mat: 'wrap' }, { name: 'Horn', mat: 'horn', val: 1.1 }] }],
     affixes: weaponAffixes, lore: ['A plain knife for plain work.', 'It sits in the hand as if it grew there.', 'Thin as a reed and twice as patient.', 'It was a knife once. Now it is the knife, and it knows it.'] },
   axe: { name: 'Axe', trade: 'Axe heads', kind: 'AXE · ONE HAND', art: 'axe', dice: [1, 8], dmg: [3, 10], speed: 1.0, reach: 1.5, skill: 'AXEWORK', value: 44, bars: 2, want: 'weapon',
-    parts: [{ part: 'Head', metals: BLADE_METALS },
+    parts: [{ part: 'Head', metals: FORGE_METALS },
       { part: 'Haft', opts: [{ name: 'Ash', mat: 'ash' }, { name: 'Rowan', mat: 'rowan', val: 1.05 }, { name: 'Bog oak', mat: 'bogoak', rare: true }] },
       { part: 'Wrap', opts: [{ name: 'Leather wrap', mat: 'wrap' }, { name: 'Cord', mat: 'cord' }] }],
     affixes: weaponAffixes.concat('bleeding'), lore: ['It splits wood and it splits shields.', 'The beard hooks, the edge bites, the haft forgives.', 'A head like this outlives three hafts and two owners.', 'Kings have been crowned for less than the stroke this was made for.'] },
   helm: { name: 'Helm', trade: 'Helms', kind: 'HELM', art: 'helm', armour: 4, weight: 3, value: 56, bars: 3, want: 'helm',
-    parts: [{ part: 'Plate', metals: BLADE_METALS },
+    parts: [{ part: 'Plate', metals: FORGE_METALS },
       { part: 'Lining', opts: [{ name: 'Wool', mat: 'wool' }, { name: 'Silk', mat: 'silk', val: 1.15 }, { name: 'Winter fox', mat: 'winterfox', rare: true }] },
       { part: 'Strap', opts: [{ name: 'Leather', mat: 'strap' }, { name: 'Cord', mat: 'cord' }] }],
     affixes: helmAffixes, lore: ['It keeps the rain off and most of the rest.', 'Raised true: no seam for a blade to find.', 'The dome rings like a bell when struck, and the wearer stands.', 'Struck once, it sings; struck twice, the striker thinks again.'] },
   ring: { name: 'Ring', trade: 'Rings', kind: 'RING', art: 'ring', value: 20, bars: 1, want: 'ring',
     parts: [{ part: 'Band', metals: ['bronze', 'iron', 'silver', 'darkclay'] },
-      { part: 'Stone', opts: [{ name: 'None' }, { name: 'Rough gem', mat: 'gem', val: 1.6 }, { name: 'Starglass', mat: 'starglass', rare: true }] },
+      { part: 'Stone', opts: [{ name: 'None' }, { name: 'Rough gem', mat: 'gem', val: 1.6 }, { name: 'Starglass', mat: 'starglass', rare: true }, { name: 'Pearl', mat: 'pearl', rare: true }] },
       { part: 'Setting', opts: [{ name: 'Plain' }, { name: 'Claw' }] }],
     affixes: ringAffixes, lore: ['A plain band, honestly round.', 'It catches the light and a little luck.', 'Small work is the hardest work. This is small work done right.', 'It fits whoever it chooses, and it does not choose often.'] },
   // the stretcher's
   jerkin: { name: 'Jerkin', trade: 'Jerkins', kind: 'COAT · CHEST', art: 'jerkin', armour: 3, weight: 4, value: 55, bars: 3, want: 'armour', station: 'stretcher',
-    parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
+    parts: [{ part: 'Hide', metals: HIDES_ALL }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
     affixes: wearAffixes, lore: ['It keeps the wind out and the shape in.', 'Stitched close: it moves when you move.', 'The seams are the work: not one of them will give.', 'Leather like this was a beast that never lost a fight.'] },
   hood: { name: 'Hood', trade: 'Hoods', kind: 'HOOD · HEAD', art: 'hood', armour: 1, weight: 1, value: 22, bars: 1, want: 'helm', station: 'stretcher',
-    parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
+    parts: [{ part: 'Hide', metals: HIDES_ALL }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
     affixes: wearAffixes, lore: ['Rain off, ears warm.', 'It sits close and keeps out more than weather.', 'A hood a scout would trade a horse for.', 'Pull it up and the road forgets your face.'] },
   // the glass's: lenses, goblets and panes are pieces; bottles go to the store room for the kettle (makes: what a working yields)
   lens: { name: 'Lens', trade: 'Lenses', kind: 'LENS', art: 'lens', clarity: 10, value: 40, bars: 2, want: 'glass', station: 'glass',
@@ -349,10 +354,10 @@ export const PATTERNS = {
     parts: [{ part: 'Shafts', metals: WOODS }, { part: 'Heads', opts: [{ name: 'Forged heads', mat: 'arrowheads' }] }, { part: 'Fletching', opts: [{ name: 'Goose', mat: 'goose' }, { name: 'Raven', mat: 'raven', val: 1.1 }] }],
     affixes: ['strongdrawn', 'farflying', 'biting', 'hallowed', 'bleeding'], lore: ['Twenty of them, all alike, which is the point.', 'Straight shafts and honest heads.', 'Each one fletched as if it were the only one.', 'Twenty arrows, and every one of them comes home.'] },
   gloves: { name: 'Gloves', trade: 'Gloves', kind: 'GLOVES · HANDS', art: 'gloves', armour: 1, weight: 1, value: 24, bars: 1, want: 'armour', station: 'stretcher',
-    parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
+    parts: [{ part: 'Hide', metals: HIDES_ALL }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
     affixes: wearAffixes, lore: ['Work gloves: the work is yours.', 'They fit like they were measured. They were.', 'Ten fingers of good leather and not a seam that rubs.', 'Put them on and your hands remember a craft you never learned.'] },
   boots: { name: 'Boots', trade: 'Boots', kind: 'BOOTS · FEET', art: 'boots', armour: 2, weight: 2, value: 40, bars: 2, want: 'armour', station: 'stretcher',
-    parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
+    parts: [{ part: 'Hide', metals: HIDES_ALL }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: THREAD }],
     affixes: wearAffixes, lore: ['Dry feet are half of any road.', 'Broken in before they leave the shop.', 'They\'ll outlast the roads they walk.', 'They have walked to the edge of the map and come back with stories.'] },
 };
 // FOUND BY TRYING (milestone 31, docs/DISCOVERY-PLAN.md): patterns no one hands you. Each is found at its station by TRY SOMETHING NEW
@@ -360,7 +365,7 @@ export const PATTERNS = {
 // hints: what the clue says when a choice is wrong for it; asks: what a customer says, asking for one you don't make yet.
 Object.assign(PATTERNS, {
   spear: { name: 'Spear', trade: 'Spears', kind: 'SPEAR · REACH', art: 'spear', dice: [1, 8], dmg: [3, 8], speed: 1.3, reach: 2.6, skill: 'SPEARS', value: 50, bars: 2, want: 'weapon',
-    parts: [{ part: 'Head', metals: BLADE_METALS },
+    parts: [{ part: 'Head', metals: FORGE_METALS },
       { part: 'Haft', opts: [{ name: 'Ash', mat: 'ash' }, { name: 'Yew', mat: 'yew', val: 1.05 }, { name: 'Bog oak', mat: 'bogoak', rare: true }] },
       { part: 'Binding', opts: [{ name: 'Cord', mat: 'cord' }, { name: 'Gut', mat: 'gut' }] }],
     affixes: weaponAffixes, lore: ['A point on a stick, and a long way between you and the trouble.', 'The head sits true on the haft: it goes where you look.', 'Boar, wolf or worse: it keeps them at the end of it.', 'An old spear never misses its first throw. This one hasn\'t thrown yet.'],
@@ -369,7 +374,7 @@ Object.assign(PATTERNS, {
       asks: ['"Got a spear? Ash and iron, like my father\'s."', '"A boar spear, if you make them. A long haft, the head lashed on with cord."', '"The pikes want spears. Straight ash, a lashed head. You don\'t make them?"'],
       board: 'POSTED: The pikes want spears: an iron head lashed with cord to an ash haft.' } },
   mace: { name: 'Mace', trade: 'Maces', kind: 'MACE · ONE HAND', art: 'mace', dice: [1, 6], dmg: [4, 8], speed: 1.0, reach: 1.3, skill: 'MACES', value: 46, bars: 2, want: 'weapon',
-    parts: [{ part: 'Head', metals: BLADE_METALS },
+    parts: [{ part: 'Head', metals: FORGE_METALS },
       { part: 'Haft', opts: [{ name: 'Rowan', mat: 'rowan' }, { name: 'Birch', mat: 'birch' }, { name: 'Bog oak', mat: 'bogoak', rare: true }] },
       { part: 'Grip', opts: [{ name: 'Leather strap', mat: 'strap' }] }],
     affixes: weaponAffixes, lore: ['No edge to keep: just weight, and where you put it.', 'Flanged clean: it rings when it lands.', 'Mail doesn\'t stop it. Mail just changes shape.', 'It has ended arguments older than the town.'],
@@ -378,8 +383,8 @@ Object.assign(PATTERNS, {
       asks: ['"A mace, for the watch. A short rowan haft and a strap on it."', '"You make maces? Something with weight, a strap round the grip."'],
       board: 'POSTED: The watch want maces: a short rowan haft and a strapped grip.' } },
   shortsword: { name: 'Shortsword', trade: 'Shortswords', kind: 'SWORD · ONE HAND', art: 'shortsword', dice: [1, 6], dmg: [3, 7], speed: 1.6, reach: 1.2, skill: 'SWORDPLAY', value: 62, bars: 2, want: 'weapon',
-    parts: [{ part: 'Blade', metals: BLADE_METALS },
-      { part: 'Grip', opts: [{ name: 'Horn', mat: 'horn' }, { name: 'Bone', mat: 'bone' }, { name: 'Starmetal', mat: 'starmetal', rare: true }] },
+    parts: [{ part: 'Blade', metals: FORGE_METALS },
+      { part: 'Grip', opts: [{ name: 'Horn', mat: 'horn' }, { name: 'Bone', mat: 'bone' }, { name: 'Starmetal', mat: 'starmetal', rare: true }, { name: 'Whalebone', mat: 'whalebone', val: 1.1 }] },
       { part: 'Wrap', opts: [{ name: 'Leather wrap', mat: 'wrap' }] }],
     affixes: weaponAffixes, lore: ['Short enough for a lane, long enough for the trouble in it.', 'Quick out of the scabbard and quicker back.', 'Balanced on a finger, and it stays there.', 'A soldier\'s sword that outlived every soldier who carried it.'],
     hidden: { look: 'A WEAPON · ONE HAND, A BLADE', gate: { trades: ['dagger'], level: 5 }, try: { head: ['steel', 'darkclay'], haft: ['horn', 'bone'], binding: ['wrap'] },
@@ -387,7 +392,7 @@ Object.assign(PATTERNS, {
       asks: ['"A shortsword: steel, a horn grip. The kind the river crews carry."', '"Not a dagger. Longer. Steel, with a wrapped grip."'],
       board: 'POSTED: The river crews want shortswords: steel, a horn grip, a leather wrap.' } },
   warhammer: { name: 'War hammer', trade: 'War hammers', kind: 'WAR HAMMER · TWO HANDS', art: 'warhammer', dice: [1, 10], dmg: [5, 12], speed: 0.8, reach: 1.7, skill: 'HAMMERS', value: 90, bars: 3, want: 'weapon',
-    parts: [{ part: 'Head', metals: BLADE_METALS },
+    parts: [{ part: 'Head', metals: FORGE_METALS },
       { part: 'Haft', opts: [{ name: 'Oak', mat: 'oak' }, { name: 'Old yew', mat: 'oldyew', val: 1.2 }, { name: 'Bog oak', mat: 'bogoak', rare: true }] },
       { part: 'Grip', opts: [{ name: 'Leather strap', mat: 'strap' }, { name: 'Leather wrap', mat: 'wrap' }] }],
     affixes: weaponAffixes, lore: ['A smith\'s hammer that went to war.', 'The head is balanced to come down, and it does.', 'Doors, shields, the things behind them.', 'They say it was swung at a mountain once. The mountain moved.'],
@@ -397,21 +402,21 @@ Object.assign(PATTERNS, {
       board: 'POSTED: The delvers\' hall wants war hammers on oak hafts, for the deep doors.' } },
   // found by trying at the other stations (milestone 32)
   cloak: { name: 'Cloak', trade: 'Cloaks', kind: 'CLOAK · BODY', art: 'cloak', armour: 2, weight: 2, value: 48, bars: 2, want: 'armour', station: 'stretcher',
-    parts: [{ part: 'Hide', metals: HIDES }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: [{ name: 'Silk', mat: 'silk' }, { name: 'Silver thread', mat: 'silverthread', rare: true }] }],
+    parts: [{ part: 'Hide', metals: HIDES_ALL }, { part: 'Lining', opts: LINING }, { part: 'Thread', opts: [{ name: 'Silk', mat: 'silk' }, { name: 'Silver thread', mat: 'silverthread', rare: true }] }],
     affixes: wearAffixes, lore: ['Rain off the shoulders and the wind kept out.', 'It falls straight and it moves when you do.', 'A road cloak: slept in, ridden in, never wet through.', 'They say a cloak like this went over the high pass in winter, and its wearer with it.'],
     hidden: { look: 'SOMETHING TO WEAR · OVER ALL', gate: { trades: ['jerkin'], level: 3 }, try: { head: ['goat'], haft: ['wool', 'linen'], binding: ['silk'] },
       hints: { head: 'a light, easy hide: goat', haft: 'a warm lining, wool or linen', binding: 'a fine thread that won\'t show: silk' },
       asks: ['"A cloak for the road. Goatskin, lined with wool."', '"You don\'t make cloaks? Something light, sewn fine, silk thread."', '"A riding cloak, wool-lined. My old one\'s more holes than cloak."'],
       board: 'POSTED: The carters\' guild wants road cloaks, goatskin and wool-lined, sewn with silk.' } },
   satchel: { name: 'Satchel', trade: 'Satchels', kind: 'SATCHEL · A PACK', art: 'satchel', armour: 1, weight: 2, value: 36, bars: 2, want: 'armour', station: 'stretcher',
-    parts: [{ part: 'Hide', metals: HIDES }, { part: 'Strap', opts: [{ name: 'Leather strap', mat: 'strap' }] }, { part: 'Thread', opts: [{ name: 'Waxed cord', mat: 'cord' }, { name: 'Gut', mat: 'gut' }, { name: 'Silver thread', mat: 'silverthread', rare: true }] }],
+    parts: [{ part: 'Hide', metals: HIDES_ALL }, { part: 'Strap', opts: [{ name: 'Leather strap', mat: 'strap' }] }, { part: 'Thread', opts: [{ name: 'Waxed cord', mat: 'cord' }, { name: 'Gut', mat: 'gut' }, { name: 'Silver thread', mat: 'silverthread', rare: true }] }],
     affixes: wearAffixes, lore: ['Room for the day\'s needs and a little over.', 'The strap sits flat; the flap stays shut.', 'A runner\'s satchel: it comes home fuller than it went.', 'Old as the roads, and it has carried more than one fortune home.'],
     hidden: { look: 'SOMETHING TO CARRY', gate: { trades: ['gloves', 'boots'], level: 3 }, try: { head: ['deer', 'sharkhide'], haft: ['strap'], binding: ['cord'] },
       hints: { head: 'a hide that takes a load: deer, or tougher', haft: 'a leather strap to carry it by', binding: 'a waxed cord to sew it' },
       asks: ['"A satchel, deerskin, a good strap. For the long road."', '"Got anything to carry my things in? Stitched with waxed cord, mind."'],
       board: 'POSTED: The post-riders want satchels: stout hide, a leather strap, cord-stitched.' } },
   sling: { name: 'Sling', trade: 'Slings', kind: 'SLING · RANGED', art: 'sling', dice: [1, 4], dmg: [2, 5], speed: 1.4, range: 20, skill: 'SLINGS', value: 20, bars: 1, want: 'weapon', station: 'stretcher',
-    parts: [{ part: 'Cup', metals: HIDES }, { part: 'Cords', opts: [{ name: 'Waxed cord', mat: 'cord' }, { name: 'Gut', mat: 'gut' }, { name: 'Wyvern sinew', mat: 'sinew', rare: true }] }, { part: 'Loop', opts: [{ name: 'Leather wrap', mat: 'wrap' }] }],
+    parts: [{ part: 'Cup', metals: HIDES_ALL }, { part: 'Cords', opts: [{ name: 'Waxed cord', mat: 'cord' }, { name: 'Gut', mat: 'gut' }, { name: 'Wyvern sinew', mat: 'sinew', rare: true }] }, { part: 'Loop', opts: [{ name: 'Leather wrap', mat: 'wrap' }] }],
     affixes: weaponAffixes, lore: ['A shepherd\'s weapon: a stone and a good arm.', 'It whirls quiet and lets go clean.', 'Crows, foxes, the odd thief: it keeps them honest.', 'A giant fell to one, the story goes. A small one, but still.'],
     hidden: { look: 'A WEAPON · THROWN', gate: null, try: { head: ['deer', 'goat'], haft: ['cord', 'gut'], binding: ['wrap'] },
       hints: { head: 'a soft hide for the cup', haft: 'two long cords, cord or gut', binding: 'a leather wrap for the finger loop' },
@@ -461,7 +466,7 @@ Object.assign(PATTERNS, {
       board: 'POSTED: For the spring fair: blue glass beads wanted, cobalt, by the string.' } },
   // two hands to make it (milestone 33): a part forged at the forge, brought to another station
   shield: { name: 'Shield', trade: 'Shields', kind: 'SHIELD · OFF HAND', art: 'shield', armour: 3, weight: 4, value: 58, bars: 2, want: 'armour', station: 'stretcher', two: 'forge',
-    parts: [{ part: 'Face', metals: HIDES }, { part: 'Boss', opts: [{ name: 'Forged boss', mat: 'boss' }] }, { part: 'Rim', opts: [{ name: 'Leather wrap', mat: 'wrap' }, { name: 'Leather strap', mat: 'strap' }, { name: 'Wyvern sinew', mat: 'sinew', rare: true }] }],
+    parts: [{ part: 'Face', metals: HIDES_ALL }, { part: 'Boss', opts: [{ name: 'Forged boss', mat: 'boss' }] }, { part: 'Rim', opts: [{ name: 'Leather wrap', mat: 'wrap' }, { name: 'Leather strap', mat: 'strap' }, { name: 'Wyvern sinew', mat: 'sinew', rare: true }] }],
     affixes: ['parrying', 'unyielding', 'steady', 'turning', 'graveward', 'weatherproof'], lore: ['A hide on a frame, and something between you and the blow.', 'The boss rings and the face holds.', 'A shield that has turned a spear will turn a sword without thinking.', 'Every blow it ever took is still in it, and none of them got through.'],
     hidden: { look: 'ARMOUR · OFF HAND · TWO STATIONS', gate: { trades: ['jerkin'], level: 3 }, try: { head: ['deer', 'sharkhide'], haft: ['boss'], binding: ['wrap', 'strap'] },
       hints: { head: 'a stout hide for the face: deer or shark', haft: 'a boss for the middle, forged at the forge', binding: 'a leather rim: a wrap or a strap' },
@@ -475,7 +480,7 @@ Object.assign(PATTERNS, {
       asks: ['"A crossbow, like they have in the far valley. A stock, an iron lath."', '"Can you make a crossbow? Oak, a forged lath, a gut string."'],
       board: 'POSTED: The far-valley wall wants crossbows: a stock, a forged lath, a gut string.' } },
   lantern: { name: 'Lantern', trade: 'Lanterns', kind: 'LANTERN · A LIGHT', art: 'lantern', clarity: 8, value: 50, bars: 2, want: 'glass', station: 'glass', two: 'forge',
-    parts: [{ part: 'Glass', metals: SANDS }, { part: 'Frame', opts: [{ name: 'Forged frame', mat: 'lampframe' }] }, { part: 'Cap', opts: [{ name: 'Iron', mat: 'iron' }, { name: 'Bronze', mat: 'bronze', val: 1.1 }, { name: 'Silver', mat: 'silver', rare: true }] }],
+    parts: [{ part: 'Glass', metals: SANDS }, { part: 'Frame', opts: [{ name: 'Forged frame', mat: 'lampframe' }] }, { part: 'Cap', opts: [{ name: 'Iron', mat: 'iron' }, { name: 'Bronze', mat: 'bronze', val: 1.1 }, { name: 'Silver', mat: 'silver', rare: true }, { name: 'Brass', mat: 'brass', val: 1.15 }] }],
     affixes: glassAffixes, lore: ['A flame that stays lit in the wind.', 'Clear glass, a good frame: the light goes where it\'s wanted.', 'The deep roads are a little less deep with one of these.', 'It was lit in the first winter, and it has not gone out.'],
     hidden: { look: 'A LIGHT · TWO STATIONS', gate: { trades: ['pane', 'goblet'], level: 3 }, try: { head: ['clearsand', 'seasand'], haft: ['lampframe'], binding: ['bronze', 'iron'] },
       hints: { head: 'a clear sand', haft: 'a frame, forged at the forge', binding: 'a cap and a handle: bronze or iron' },
@@ -573,6 +578,13 @@ export const MATS = {
   heartstone: { name: 'Heartstone', price: 3000, relic: true }, moonsilver: { name: 'Moonsilver', price: 3500, relic: true },
   wyrmhide: { name: 'Wyrm-hide', price: 3000, relic: true }, ghostyew: { name: 'Ghost-yew', price: 2800, relic: true },
   starcore: { name: 'Starglass core', price: 4000, relic: true }, moonmead: { name: 'Moon-mead', price: 2500, relic: true },
+  // the Greyshore's (milestone 39, docs/REGION-PLAN.md): sold on the coast over the pass, not in the Reach. coast: true keeps them out
+  // of the Reach's runner hauls and pedlar; their options come last in each part, so no old save's picks move
+  sealskin: { name: 'Sealskin', price: 8, coast: true }, brass: { name: 'Brass bar', price: 12, unit: 'bar', coast: true },
+  whalebone: { name: 'Whalebone', price: 6, coast: true }, sailcloth: { name: 'Sailcloth', price: 4, coast: true },
+  tar: { name: 'Pine tar', price: 2, coast: true }, kelpash: { name: 'Kelp ash', price: 1, coast: true }, salt: { name: 'Salt', price: 1, coast: true },
+  ambergris: { name: 'Ambergris', price: 60, rare: true, coast: true }, pearl: { name: 'Pearl', price: 50, rare: true, coast: true },
+  coral: { name: 'Red coral', price: 45, rare: true, coast: true }, drownedsilver: { name: 'Drowned silver', price: 55, rare: true, coast: true },
 };
 // pick: how many of its rare lines a pack carries in an hour (0: all of them, always)
 export const SUPPLIERS = [
@@ -1043,4 +1055,132 @@ export const FORGED_PARTS = {
   boss: { name: 'A shield boss', from: { iron: 1 }, makes: 1, for: 'stretcher', line: 'an iron dome for the middle of a shield' },
   lath: { name: 'A crossbow lath', from: { iron: 1 }, makes: 1, for: 'bowbench', line: 'a forged bow of iron, and its trigger' },
   lampframe: { name: 'A lantern frame', from: { iron: 1 }, makes: 1, for: 'glass', line: 'an iron cage for a lantern\'s glass' },
+};
+
+// ---------- the regions (milestone 39, docs/REGION-PLAN.md) ----------
+// Each save works in one region (save.region; none is the Reach). The Reach's tables are the ones above; another region names only
+// what differs, read through js/region.js: its suppliers (and what comes dear over the pass), who comes in (by the same kinds:
+// names, wants, weights), who sells to you, the runner's roads (the same roads in its own words, so their dangers and finds hold),
+// what a runner brings back, the gangs, the monsters (the same three kinds in its own words), the notice board, the seasons, the news,
+// the guild fair's rivals and the top rung's word. Hidden in milestone 39: only an heir can go over the pass, from milestone 42.
+export const REGIONS = {
+  reach: { id: 'reach', name: 'the Reach', town: 'the town', top: 'OF THE REACH', line: 'A mining town under the high pasture, with the deep doors below it.' },
+  greyshore: { id: 'greyshore', name: 'the Greyshore', town: 'Saltby', top: 'OF THE SHORE',
+    line: 'A grey harbour town over the pass: fishers, sailors and salvagers, and a drowned town out past the bar.',
+    rescue: '<b>The chandler\'s scrap box.</b> Old Merrin leaves you a bar and a cord, enough for a dagger.',
+    suppliers: [
+      { id: 'chandler', tab: 'CHANDLER', name: 'Merrin\'s Chandlery', kind: 'METAL AND STORES', line: 'Bars, brass and ship\'s stores; shield bosses, lantern frames and forged heads, dear.',
+        lines: ['iron', 'bronze', 'steel', 'brass', 'silver', 'boss', 'lampframe', 'arrowheads', 'ferrule', 'lath'] },
+      { id: 'ropewalk', tab: 'ROPEWALK', name: 'The Ropewalk', kind: 'ROPE, CLOTH AND TAR', line: 'Cord by the fathom, sailcloth, linen, wraps and straps, and tar.',
+        lines: ['cord', 'sailcloth', 'linen', 'tar', 'wrap', 'strap', 'wool', 'silk', 'ash', 'rowan'] },
+      { id: 'quay', tab: 'THE QUAY', name: 'The Fish Quay', kind: 'HIDES, BONE AND GUT', line: 'Seal and shark off the boats, whalebone, gut and feathers; deer and goat from inland.',
+        lines: ['sealskin', 'sharkhide', 'whalebone', 'gut', 'deer', 'goat', 'horn', 'bone', 'goose', 'raven'] },
+      { id: 'saltpans', tab: 'SALTPANS', name: 'The Saltpans', kind: 'SAND, SALT AND ASH', line: 'Sea-glass sand by the sack, kelp ash for flux, salt, lime and cobalt.',
+        lines: ['seasand', 'clearsand', 'riversand', 'kelpash', 'salt', 'potash', 'lime', 'cobalt'] },
+      { id: 'herbs', tab: 'HERBS', name: 'Ama Penhale\'s Garden', kind: 'THE HERBALIST', line: 'Herbs from the cliff gardens, honey, wax, spring water and bottles.',
+        lines: ['mending', 'sleepmoss', 'emberroot', 'ghostcap', 'springwater', 'honey', 'wax', 'tallow', 'bottle'] },
+      { id: 'boatyard', tab: 'BOATYARD', name: 'Kell\'s Boatyard', kind: 'TIMBER', line: 'Staves from the shipwright\'s offcuts: yew, birch and oak, seasoned for a hull.',
+        lines: ['yew', 'birch', 'oak'] },
+      { id: 'carrier', tab: 'THE CARRIER', name: 'The Pass Carrier', kind: 'OVER THE PASS', line: 'What the coast doesn\'t have, carted over the pass from the Reach: old yew, black sand, darkclay steel, winter fox. Half as dear again.',
+        lines: ['oldyew', 'blacksand', 'darkclay', 'winterfox'] },
+      { id: 'factor', tab: 'THE FACTOR', name: 'The Crown\'s Factor', kind: 'RELIC MATERIALS', line: 'For makers the Crown has heard of: two of the relic materials, changing on the hour, very dear.', lines: [],
+        rare: ['heartstone', 'moonsilver', 'wyrmhide', 'ghostyew', 'starcore', 'moonmead'], pick: 2, rung: 5 },
+      { id: 'pack', tab: 'SMUGGLER', name: 'Jory Cask\'s Boat', kind: 'A SMUGGLER', line: 'Gems always; rare things, two at a time, changing on the hour, and no questions.', lines: ['gem'],
+        rare: ['ambergris', 'pearl', 'coral', 'drownedsilver', 'blackwater', 'bogoak', 'starglass', 'silverthread', 'sinew', 'starmetal', 'moonwater'], pick: 2 },
+    ],
+    // what comes over the pass costs half as much again
+    dear: { oldyew: 1.5, blacksand: 1.5, darkclay: 1.15, winterfox: 1.5 },
+    customers: {
+      folk: { weight: 30, wants: ['dagger', 'ring', 'any', 'dagger', 'armour', 'gloves', 'boots', 'salve', 'brew', 'oil', 'beads', 'cloak', 'sling'],
+        names: ['a net-mender', 'a fishwife', 'a cooper off the quay', 'a boy with his savings', 'a widow from the harbour lane', 'a salt-raker'] },
+      guard: { weight: 25, wants: ['falchion', 'spear', 'helm', 'weapon', 'dagger', 'shortsword', 'crossbow', 'armour', 'oil', 'cloak', 'mace', 'shield', 'weapon', 'axe', 'brew', 'arrows', 'lantern'],
+        names: ['a man of the harbour watch', 'a revenue man', 'the lighthouse keeper', 'a marine off a Crown ship'] },
+      traveller: { weight: 20, wants: ['any', 'ring', 'weapon', 'dagger', 'boots', 'armour', 'cloak', 'satchel', 'goblet', 'glass', 'tonic', 'lantern', 'beads', 'draught', 'poultice'],
+        names: ['a ship\'s master', 'a passenger waiting on the tide', 'a pilgrim to the sea-chapel', 'a merchant off the packet'] },
+      delver: { weight: 15, wants: ['weapon', 'helm', 'lantern', 'any', 'armour', 'draught', 'brew', 'dagger', 'spear', 'satchel', 'boots', 'lens', 'mirror', 'crossbow', 'gloves', 'shortsword', 'tonic', 'oil', 'shield', 'warhammer', 'poultice'],
+        names: ['a wreck-diver', 'a salvager off the bar', 'a lamp-diver', 'one of the Low-Tide crew'] },
+      hunter: { weight: 12, wants: ['spear', 'spear', 'arrows', 'shortbow', 'gloves', 'boots', 'oil', 'salve', 'cloak', 'satchel', 'sling', 'dagger', 'any'],
+        names: ['a fisher', 'a sealer', 'a harpooner off the whale boats', 'a wildfowler from the marsh'] },
+      factor: { weight: 7, wants: ['ring', 'glass', 'lens', 'goblet', 'mirror', 'ink', 'any', 'lantern', 'beads'], names: ['a shipping factor', 'the harbour-master\'s clerk', 'a salt merchant'] },
+      collector: { names: ['a collector of maker\'s marks', 'a captain who collects blades'] },
+      steward: { names: ['a shipowner', 'a merchant prince', 'the harbour-master', 'a bishop\'s chamberlain'] },
+    },
+    sellers: [
+      { who: 'Jory Cask, a smuggler', fig: '#7a8a9a', kind: 'mats' },
+      { who: 'a diver back from the wreck', fig: '#9a6a5a', kind: 'mats' },
+      { who: 'a beachcomber', fig: '#a09070', kind: 'piece' },
+      { who: 'a drowned man\'s widow', fig: '#a08a6a', kind: 'piece' },
+    ],
+    sellMats: ['iron', 'iron', 'bronze', 'brass', 'steel', 'wrap', 'sharkhide', 'sealskin', 'whalebone', 'silk', 'gem'],
+    sellRare: ['ambergris', 'pearl', 'coral', 'drownedsilver'],
+    routes: {
+      yard: { name: 'Down to the harbour', from: 'the harbour' },
+      ford: { name: 'The fishing villages', from: 'the fishing villages' },
+      reach: { name: 'Out to the islands', from: 'the islands' },
+      deep: { name: 'The drowned town at low tide', from: 'the drowned town' },
+      below: { name: 'Below the drowned town', from: 'below the drowned town' },
+    },
+    commons: ['iron', 'iron', 'bronze', 'brass', 'steel', 'wrap', 'cord', 'cord', 'sailcloth', 'tar', 'salt', 'sealskin', 'sealskin', 'sharkhide', 'whalebone',
+      'whalebone', 'gut', 'linen', 'kelpash', 'strap', 'deer', 'goose', 'bone', 'horn'],
+    gangs: [['the Wreckers of Gull Point', 'out to the point'], ['the False Lights', 'along the dunes'], ['Saul Kemp\'s boat', 'out past the bar'], ['the Tarry Hands', 'down the quay'],
+      ['the Salt Crew', 'up the creek']],
+    monsters: {
+      wolves: { name: 'Sea-wolves on the dunes', lines: ['A sealer says a pack has come along the dunes from the north.', 'Sea-wolves seen on the strand at dusk: a dog was taken.', 'The pack came up off the strand in the night.'] },
+      wight: { name: 'The drowned on the causeway', lines: ['Lights out on the old causeway at low water, the ferryman says.', 'A fisher came in white-faced: something walked up out of the sea at night.', 'The drowned came up the causeway in the night.'] },
+      deep: { name: 'Something out of the drowned town', lines: ['The divers say the water over the drowned town was warm.', 'Something big has been seen moving under the bar.', 'It came up out of the sea in the night.'] },
+    },
+    hunts: {
+      wolves: { trophy: 'The Dune-Wolf\'s Pelt', lore: 'Grey and salt-stiff, bigger than any dog on the coast. It led the pack down the strand.' },
+      wight: { trophy: 'The Drowned Captain\'s Ring', lore: 'Green bronze off a hand that held a wheel a hundred years under. It stopped walking when this came off.' },
+      deep: { trophy: 'A Scale of the Thing Below', lore: 'Wet still, years after. No blade in the town would cut it but the one that did.' },
+    },
+    hot: [
+      { id: 'watch', line: 'The harbour watch is buying helms.', patterns: ['helm'] },
+      { id: 'press', line: 'The press-gang is ashore: every man wants a blade.', patterns: ['falchion', 'dagger', 'shortsword'] },
+      { id: 'squall', line: 'Squalls off the sea all week.', patterns: ['cloak', 'hood', 'boots'] },
+      { id: 'fleet', line: 'The fleet is fitting out.', patterns: ['spear', 'gloves', 'oil'] },
+      { id: 'whales', line: 'Whales off the point: the boats are going out.', patterns: ['spear', 'arrows', 'satchel'] },
+      { id: 'fever', line: 'A ship\'s fever in the harbour lanes.', patterns: ['draught', 'salve', 'tonic'] },
+      { id: 'light', line: 'The lighthouse wants new glass.', patterns: ['lens', 'pane', 'lantern'] },
+      { id: 'packet', line: 'The packet\'s passengers are buying.', patterns: ['ring', 'goblet', 'beads'] },
+      { id: 'rust', line: 'Salt air: every edge is rusting.', patterns: ['oil'] },
+      { id: 'dive', line: 'A new wreck found on the bar: the divers are buying.', patterns: ['lantern', 'helm', 'draught', 'dagger'] },
+    ],
+    cold: [
+      { id: 'smuggled', line: 'Smuggled knives are cheap on the quay.', patterns: ['dagger'] },
+      { id: 'beachglass', line: 'Sea-glass beads by the basket from the beachcombers.', patterns: ['beads'] },
+      { id: 'armoury', line: 'A Crown ship sold off its old helms.', patterns: ['helm'] },
+      { id: 'almoner', line: 'The sea-chapel is handing out draughts.', patterns: ['draught'] },
+      { id: 'deck', line: 'Nobody draws a longbow on a rolling deck.', patterns: ['longbow'] },
+      { id: 'inland', line: 'Axes are for the inland folk.', patterns: ['axe'] },
+    ],
+    events: [
+      { id: 'regatta', name: 'The regatta', line: 'Boats from every cove race the bar, and the quay is thick with folk.', effect: 'More customers, more travellers and folk.', gap: 0.7, weights: { folk: 2, traveller: 2 } },
+      { id: 'press', name: 'The press-gang', line: 'A Crown ship is in, and every man ashore wants a blade before they take him.', effect: 'Guards and divers crowd in, carrying more.', gap: 0.9, weights: { guard: 3, delver: 2 }, purse: 1.15 },
+      { id: 'blessing', name: 'The blessing of the boats', line: 'The priest blesses the fleet, and the town spends what the sea gave.', effect: 'Every buyer a step keener, purses fuller.', purse: 1.2, keen: true },
+      { id: 'packet', name: 'The packet is in', line: 'The packet from over the sea ties up for the night.', effect: 'Factors and travellers with deep purses.', gap: 0.85, weights: { factor: 3, traveller: 2, steward: 2 }, purse: 1.1 },
+      { id: 'wreckers', name: 'Wreckers\' lights on the point', line: 'A ship went on the rocks last night. The lanes are shut early, and those about want steel.', effect: 'Half the customers, but they carry a third more.', gap: 1.8, weights: { guard: 3 }, purse: 1.35 },
+      { id: 'herring', name: 'The herring are in', line: 'The whole town is on the boats or at the gutting tables.', effect: 'Fewer customers, but the fishers come in flush.', gap: 1.3, weights: { hunter: 3 }, purse: 1.1 },
+      { id: 'gale', name: 'A three-day gale', line: 'Spray over the harbour wall. Only the desperate are out.', effect: 'Fewer customers.', gap: 1.5, weight: 2 },
+    ],
+    seasons: [
+      { id: 'spring', name: 'Spring', line: 'The boats go back out, and every net and line wants mending.', patterns: ['spear', 'gloves', 'oil', 'satchel', 'dagger'], gap: 1 },
+      { id: 'summer', name: 'Summer', line: 'The packets run and the quay is full of strangers.', patterns: ['ring', 'goblet', 'beads', 'cloak', 'draught'], gap: 0.9 },
+      { id: 'autumn', name: 'Autumn', line: 'The herring run, and the storms after it.', patterns: ['spear', 'boots', 'falchion', 'salve', 'oil'], gap: 1 },
+      { id: 'winter', name: 'Winter', line: 'Gales shut the harbour mouth: few ships, and everyone wants to keep dry.', patterns: ['hood', 'cloak', 'boots', 'gloves', 'tonic', 'salve'], gap: 1.15 },
+    ],
+    gossip: [
+      'A mermaid was seen off the point, says a man who was very drunk at the time.',
+      'The harbour-master\'s cat has been to sea more often than the harbour-master.',
+      'Two fishers came to blows over a lobster pot at the Anchor. The lobster got away.',
+      'The sea-chapel bell rang on its own last night. The priest says it was the wind.',
+      'A beachcomber found a gold coin with a queen on it no one can name.',
+      'The ropewalk is three fathoms short, and nobody will say who took it.',
+      'They say the drowned town\'s bells can be heard at the lowest tides.',
+      'A tinker is selling charts of the bar. Every one of them is different.',
+    ],
+    news: { kept: 'The harbour watch\'s sergeant has been made captain, they say, for holding the lanes.', robbed: 'A fish stall on the quay was turned over by the same lot that robbed you.',
+      branch: 'They talk of your shop back over the pass, at the Landing, too.', street: 'Fish Street', inn: 'the Anchor' },
+    rivals: ['Tamsin Kell of the harbour', 'the Penhale brothers', 'Old Joss the shipwright', 'a smith off a Crown ship', 'a journeyman from over the pass'],
+  },
 };

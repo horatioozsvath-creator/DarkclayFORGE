@@ -3,11 +3,11 @@
 // shop's clock (open, and away up to the cap). Plain pieces (Common or Fine) of patterns the shop knows, at a station it owns, from
 // the back room's common materials. Their own trade in each pattern grows with each piece, faster while you work beside them,
 // never past trade 5: a master is made, not trained.
-import { APPRENTICE, PATTERNS, MATS } from './data.js?v=63';
-import { levelOf, xpToNext, makePiece } from './rules.js?v=63';
-import { recipe, short, takeMats, knows, inBack, sells, priceOf, buy } from './shop.js?v=63';
-import { owns } from './room.js?v=63';
-import * as Wear from './wear.js?v=63';
+import { APPRENTICE, PATTERNS, MATS } from './data.js?v=64';
+import { levelOf, xpToNext, makePiece } from './rules.js?v=64';
+import { recipe, short, takeMats, knows, inBack, sells, priceOf, buy } from './shop.js?v=64';
+import { owns } from './room.js?v=64';
+import * as Wear from './wear.js?v=64';
 
 const A = APPRENTICE, PICKS = [0, 0, 0];
 export const apprenticeOf = save => (save.staff || []).find(p => p.role === 'apprentice');
@@ -34,7 +34,7 @@ export function gate(save, id, now, p) {
   if (rec.some(r => MATS[r.mat] && (MATS[r.mat].rare || MATS[r.mat].relic))) return { ok: false, why: 'it takes a rare thing' };
   const sh = short(save.mats || {}, rec), hour = Math.floor((now || 0) / 3600000);
   if (sh.length && buys(p) && sh.every(r => sells(r.mat, hour, save))) {
-    const cost = sh.reduce((c, r) => c + priceOf(r.mat, hour) * (r.n - r.have), 0);
+    const cost = sh.reduce((c, r) => c + priceOf(r.mat, hour, save) * (r.n - r.have), 0);
     if ((save.coins || 0) - cost >= A.keep) return { ok: true, rec, buy: sh, cost };
   }
   if (sh.length) return { ok: false, why: 'short of ' + sh.map(r => (MATS[r.mat] || { name: r.mat }).name.toLowerCase()).join(', '), short: sh };

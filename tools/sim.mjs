@@ -28,7 +28,10 @@ function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) 
 const rng = seeded(seed0);
 const save = { v: 1, maker: 'Bot', trades: {}, found: ['ember'], chosen: [], picks: {}, cards: [], made: 0,
   coins: 60, mats: { iron: 5, bronze: 2, cord: 3, wrap: 1, ash: 1, wool: 1, strap: 1 }, slots: 4, shelf: [], ledger: [], sold: 0, earned: 0, shopNext: 6, queue: [] };
-save.uid = 'sim' + seed0; Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
+save.uid = 'sim' + seed0;
+// REGION=greyshore: a shop on the coast over the pass (milestone 39); none, the Reach
+if (process.env.REGION && process.env.REGION !== 'reach') save.region = process.env.REGION;
+Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
 // FOUND=0: only the patterns known from the start; otherwise (milestone 33's balance run) every hidden pattern found from day one
 // START=n: begin n calendar days later (the town's board, and so the fallen star, is the same in every shop on a day)
 const FOUND = process.env.FOUND !== '0';
@@ -41,7 +44,7 @@ if (process.env.FROM) {
   const old = JSON.parse(fs.readFileSync(process.env.FROM, 'utf8')); t = old.lastSeen;
   const n = Leg.heirloomsFor(Leg.gen(old) + 1), r = Leg.handOn(old, Leg.heirlooms(old).slice(0, n).map(c => c.id), t);
   if (!r.ok) { console.log('not handed on: ' + r.why); process.exit(1); }
-  Object.keys(save).forEach(k => delete save[k]); Object.assign(save, r.save, { queue: [], shopNext: 6 }); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
+  Object.keys(save).forEach(k => delete save[k]); Object.assign(save, r.save, { queue: [], shopNext: 6 }); if (process.env.REGION && process.env.REGION !== 'reach') save.region = process.env.REGION; Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
   console.log('handed on to ' + save.maker + ' (' + save.heirTrait + '), generation ' + save.gen + '; shards: ' + JSON.stringify(save.shardWhere));
 }
 const H = 3600000, lvl = id => R.levelOf((save.trades[id] || {}).xp || 0).level, note = m => log.push('  ' + m);
@@ -68,10 +71,10 @@ function choose(hour) {
       if ((m.level || 1) > lvl(id)) return;
       const picks = [mi, 0, 0], rec = Sh.recipe(id, picks), short = Sh.short(save.mats, rec);
       if (short.some(x => !Sh.sells(x.mat, hour, save))) return;
-      const cost = short.reduce((c, x) => c + Sh.priceOf(x.mat, hour) * (x.n - x.have), 0);
+      const cost = short.reduce((c, x) => c + Sh.priceOf(x.mat, hour, save) * (x.n - x.have), 0);
       if (cost > save.coins) return;
       const o = save.order, forOrder = o && o.pattern === id && (!o.metal || o.metal === m.id) && !Sh.inBack(save).some(x => Sh.fills(o, x));   // making to order
-      const worth = PATTERNS[id].value * m.val * 1.4 * (forOrder ? 4 : 1), score = worth - Sh.recipeCost(rec, hour) + (lvl(id) < 3 ? 15 : 0) + (CHASE && chasing(id) ? (lvl(id) < OLD_BLOOD.level + 1 ? 250 : 120) : 0);
+      const worth = PATTERNS[id].value * m.val * 1.4 * (forOrder ? 4 : 1), score = worth - Sh.recipeCost(rec, hour, save) + (lvl(id) < 3 ? 15 : 0) + (CHASE && chasing(id) ? (lvl(id) < OLD_BLOOD.level + 1 ? 250 : 120) : 0);
       if (!best || score > best.score) best = { id, picks, short, score };
     });
   }
@@ -110,7 +113,7 @@ function tryOldBlood(hour) {
     const slot = Sh.onShelf(save, c.id); if (slot >= 0) Sh.takeDown(save, slot);
     if (!Sh.canRework(save, c)) { if (slot >= 0) Sh.place(save, c.id, slot); continue; }
     const cost = Sh.reworkCost(c), short = Sh.short(save.mats, cost);
-    const coins = short.reduce((n, x) => n + Sh.priceOf(x.mat, hour) * (x.n - x.have), 0);
+    const coins = short.reduce((n, x) => n + Sh.priceOf(x.mat, hour, save) * (x.n - x.have), 0);
     if (short.some(x => !Sh.sells(x.mat, hour, save)) || save.coins - coins < 300) { if (slot >= 0) Sh.place(save, c.id, slot); continue; }
     short.forEach(x => { const b = save.coins; Sh.buy(save, x.mat, x.n - x.have, hour); spent.mats += b - save.coins; });
     Sh.takeMats(save, cost); oldTried++;

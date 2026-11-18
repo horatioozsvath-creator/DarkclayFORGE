@@ -1,15 +1,16 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=63';
-import { levelOf, makePiece, partOptions } from './rules.js?v=63';
-import { awayStep } from './shop.js?v=63';
-import { wageMult, capBonus, rung } from './growth.js?v=63';
-import * as Trail from './trail.js?v=63';
-import { TRAIL, MONSTERS } from './data.js?v=63';
-import * as Run from './runner.js?v=63';
-import * as Mon from './monsters.js?v=63';
-import * as Ap from './apprentice.js?v=63';
+import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=64';
+import { levelOf, makePiece, partOptions } from './rules.js?v=64';
+import { awayStep } from './shop.js?v=64';
+import { wageMult, capBonus, rung } from './growth.js?v=64';
+import * as Trail from './trail.js?v=64';
+import { TRAIL, MONSTERS } from './data.js?v=64';
+import * as Run from './runner.js?v=64';
+import * as Mon from './monsters.js?v=64';
+import * as Ap from './apprentice.js?v=64';
+import * as Rg from './region.js?v=64';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -99,13 +100,13 @@ export function sendRunner(save, route, now, id) {
   return true;
 }
 export const COMMONS = ['iron', 'iron', 'iron', 'bronze', 'bronze', 'steel', 'wrap', 'cord', 'ash', 'wool', 'strap', 'horn', 'rowan', 'silk', 'sharkhide', 'deer', 'deer', 'goat', 'gut', 'linen', 'yew', 'birch', 'goose', 'bone'];
-const RARES = Object.keys(MATS).filter(id => MATS[id].rare);
+// a runner's commons and rare finds are the region's (milestone 39): the Reach's are these, and never the coast's
 export const RELIC_MATS = Object.keys(MATS).filter(id => MATS[id].relic);
 export function haul(save, p, route, rng, now) {
-  const r = ROUTES[route], l = levelOfP(p), mats = {};
+  const r = ROUTES[route], l = levelOfP(p), mats = {}, COMMON = Rg.commons(save, COMMONS), RARES = Rg.raresIn(Rg.regionId(save));
   // the Deep can come back with nothing much: a few common things, no more
   // a good weapon: fewer trips below that come to nothing
-  if (r.empty && rng() < r.empty * 6 / (6 + Run.strength(p).fight)) { for (let i = 0; i < 2; i++) { const m = pick(COMMONS, rng); mats[m] = (mats[m] || 0) + 1; } return { mats, piece: null, tile: null, empty: true }; }
+  if (r.empty && rng() < r.empty * 6 / (6 + Run.strength(p).fight)) { for (let i = 0; i < 2; i++) { const m = pick(COMMON, rng); mats[m] = (mats[m] || 0) + 1; } return { mats, piece: null, tile: null, empty: true }; }
   if (r.relic) { for (const odds of r.relic) if (rng() < odds) { const m = pick(RELIC_MATS, rng); mats[m] = (mats[m] || 0) + 1; } }
   // a blueprint, now and then: one of the Deep's still to be found
   let blueprint = null;
@@ -118,7 +119,7 @@ export function haul(save, p, route, rng, now) {
     if (pool.length) blueprint = pick(good.length ? good : pool, rng);
   }
   const n = Math.round((r.commons[0] + rng() * (r.commons[1] - r.commons[0])) * (1 + 0.08 * (l - 1)) * (p.trait === 'keen' ? 1.2 : 1) * Run.packBonus(p));
-  for (let i = 0; i < n; i++) { const m = pick(COMMONS, rng); mats[m] = (mats[m] || 0) + 1; }
+  for (let i = 0; i < n; i++) { const m = pick(COMMON, rng); mats[m] = (mats[m] || 0) + 1; }
   for (let i = 0; i < r.rare; i++) { const m = pick(RARES, rng); mats[m] = (mats[m] || 0) + 1; }
   if (r.gem && rng() < r.gem) mats.gem = (mats.gem || 0) + 1;
   let piece = null, tile = null;
