@@ -41,7 +41,7 @@ test('the trail: closed until OF THE REACH; then every clue is open, Relic made 
 
 test('shards: below the deep doors now and then; the Court\'s orders; the fallen star, once on its day', () => {
   const s = reach(), runner = { id: 'r', role: 'runner', name: 'Kit', trait: 'keen', xp: 0 }, rng = seeded(3);
-  let got = 0; for (let i = 0; i < 1000; i++) { const h = St.haul(s, runner, 'below', rng, 0); if (h.shard) { got++; assert.equal(MYTHICS[h.shard].shard, 'deep'); } }
+  let got = 0; for (let i = 0; i < 1000; i++) { const h = St.haul(s, runner, 'below', rng, 0); if (h.shard && MYTHICS[h.shard].shard === 'deep') got++; else if (h.shard) assert.equal(MYTHICS[h.shard].shard, 'star', 'or a star\'s, now and then (milestone 35)'); }
   assert.ok(got > 200 && got < 400, got + ' of 1000 (about one trip in three)');
   // the Court: a Rare or better piece of the Relic's kind (milestone 34: was Old-Blood); its shard with the pay
   let court = null; for (let i = 0; i < 200 && !court; i++) { const t = reach(); Sh.postOrder(t, seeded(i), 0); if (t.order.shard) court = t; }

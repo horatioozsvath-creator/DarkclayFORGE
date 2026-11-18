@@ -39,7 +39,7 @@ export const MYTHICS = {
   morning: { name: 'The Window of Morning', relic: 'corrowgoblet', shard: 'star', parts: [['forge', 'a leading'], ['stretcher', 'a hanging'], ['kettle', 'a staining']],
     powers: [['Poison shows', 'what would harm clouds in its light'], ['First light', 'the room it hangs in wakes rested'], ['The long view', 'through it, the town as it will be']], lore: 'The Corrows\' cup, melted and blown into the window of a hall.' },
 };
-export const TRAIL = { rung: 6, deep: 0.35, court: 0.4, courtLeast: 2 };   // courtLeast: the Court's shard orders ask a Rare or better (milestone 34: was Old-Blood)
+export const TRAIL = { rung: 6, deep: 0.35, court: 0.4, courtLeast: 2, star: 2, starBelow: 0.08 };   // courtLeast: the Court's shard orders ask a Rare or better (milestone 34: was Old-Blood); star: the shards a fallen star brings (milestone 35: was 1); starBelow: the odds a trip below finds one of the star's instead (milestone 35)
 // milestone 18: the Court asks for each Mythic once (half the orders while one is waiting), paying twice its worth; all Nine made is
 // the ending: the maker's mark becomes Maker of the Nine and the Hall's charm doubles
 // GEAR AND DANGER (milestone 22): the runner carries what you made. Slots by the piece's kind; each piece's power by its tier (a flawed

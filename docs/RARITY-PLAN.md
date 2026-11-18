@@ -1,6 +1,6 @@
 # Rarity to Mythic: the full ladder for every station
 
-Status: built, milestones 11–18 (releases 22–36), all six tiers of Darkclay Zero's ladder (`data/zero/tiers.json`). The pace was tuned again in release 58 (milestone 34, below): all Nine by day 99–120 in half the sim's runs, not quite three months. Builds on release 21.
+Status: built, milestones 11–18 (releases 22–36), all six tiers of Darkclay Zero's ladder (`data/zero/tiers.json`). The pace was tuned again in releases 58 and 60 (milestones 34 and 35, below): all Nine in every one of ten sim runs, days 72–109, median about day 87. Builds on release 21.
 This plan takes every station up the last two: **Relic** (named, one of a kind) and **Mythic** (the Nine).
 
 ## The ladder
@@ -262,3 +262,32 @@ Mostly the game's rules, not the bot's skill. The levers were stacked, each run 
   three months is close for most runs but not met**; the tail is the bot's fixed success odds for the workings (a Relic a third of the
   time, a Mythic a quarter) and which stations it practises. Earnings are unchanged (about 2.05 M by day 120).
 - The Mythic working itself is as hard as before: three WHITE HEATs, the narrowest band, not one crack.
+
+## Release 60: the Nine in three months (milestone 35)
+
+**A correction to release 58 first.** Its sim had a slip: the line that takes a Mythic working's materials sat inside a comment, so
+the bot tried its Mythics without paying for them. The figures above are a little rosy for that. Fixed now.
+
+**How it's measured now.** 120 days on seeds 1–10, each seed starting on a different date (`START`, seed × 13 days): the town's board,
+and so the fallen star, is the same in every shop on a day, so runs that all start on one date all meet the same stars. A sim day is
+one 45-minute session and a night away, about 15 hours on the clock; the days below are play days. Someone who plays once a day sees
+more of the calendar for each play day than the bot does, so for the star these figures are on the slow side.
+
+**The sim, made more like a player** (old rules, before the changes below): it buys a Relic's rare material from the Crown's Factor
+(it had waited for the Deep); it keeps making a pattern whose Relic is still to make, for a Rare to work it from (not only to trade 7);
+it fills an order from the shelf as well as the back room (it had missed most of the Court's shard orders); it never kits its runner
+out with a Relic (a Relic tonic carried is drunk on the road) nor sells a Mythic to the Court's offer.
+
+| Rules | All Nine made | Last of the Nine |
+|---|---|---|
+| before (with the sim as above) | 6 of 10 (the rest 6–8) | days 79–119 |
+| **after** (the three changes below) | **10 of 10** | **days 72–109, median about 87; 6 of 10 by day 90, 9 by day 95** |
+
+- **A fallen star brings two shards** (was one). Three of the Nine's shards lie where a star falls, about one calendar day in ten,
+  but the calendar is lumpy: a start in the wrong week met no star for six weeks after the trail opened, and stalled at 6 of the Nine.
+- **So a star's shard can also turn up below the deep doors** (8 % of the trips that bring no shard of the Deep's own), for the
+  long gaps between stars.
+- **Below the deep doors, on the trail: the blueprints the Nine grow from first.** The Deep handed out any blueprint still to find,
+  the Roadwalkers and Brannoc's Salve among them, so a trip could find one no Mythic needs while the lens or the tonic waited.
+- **All Nine in about three months: met** (median about day 87 of play). The workings are as hard as before.
+- Earnings are unchanged (about 2.0 M by day 120).

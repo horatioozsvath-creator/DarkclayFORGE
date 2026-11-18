@@ -1,14 +1,14 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP } from './data.js?v=59';
-import { levelOf, makePiece, partOptions } from './rules.js?v=59';
-import { awayStep } from './shop.js?v=59';
-import { wageMult, capBonus, rung } from './growth.js?v=59';
-import * as Trail from './trail.js?v=59';
-import { TRAIL, MONSTERS } from './data.js?v=59';
-import * as Run from './runner.js?v=59';
-import * as Mon from './monsters.js?v=59';
+import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=60';
+import { levelOf, makePiece, partOptions } from './rules.js?v=60';
+import { awayStep } from './shop.js?v=60';
+import { wageMult, capBonus, rung } from './growth.js?v=60';
+import * as Trail from './trail.js?v=60';
+import { TRAIL, MONSTERS } from './data.js?v=60';
+import * as Run from './runner.js?v=60';
+import * as Mon from './monsters.js?v=60';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -109,10 +109,12 @@ export function haul(save, p, route, rng, now) {
   // a blueprint, now and then: one of the Deep's still to be found
   let blueprint = null;
   if (r.relic && rng() < BLUEPRINT_DEEP) {
-    // any blueprint still to be found, one for a station the maker is good at (trade 7 and up in something there) if there is one
+    // any blueprint still to be found, one for a station the maker is good at (trade 7 and up in something there) if there is one.
+    // On the trail of the Nine, one a Mythic grows from first (milestone 35)
     const left = Object.keys(RELICS).filter(k => !(save.blueprints || []).includes(k) && !(save.relicsMade || []).includes(k));
-    const good = left.filter(k => Trail.stationLevel(save, PATTERNS[RELICS[k].pattern].station || 'forge') >= 7);
-    if (left.length) blueprint = pick(good.length ? good : left, rng);
+    const nine = Trail.open(save) ? left.filter(k => Object.values(MYTHICS).some(m => m.relic === k)) : [], pool = nine.length ? nine : left;
+    const good = pool.filter(k => Trail.stationLevel(save, PATTERNS[RELICS[k].pattern].station || 'forge') >= 7);
+    if (pool.length) blueprint = pick(good.length ? good : pool, rng);
   }
   const n = Math.round((r.commons[0] + rng() * (r.commons[1] - r.commons[0])) * (1 + 0.08 * (l - 1)) * (p.trait === 'keen' ? 1.2 : 1) * Run.packBonus(p));
   for (let i = 0; i < n; i++) { const m = pick(COMMONS, rng); mats[m] = (mats[m] || 0) + 1; }
@@ -129,6 +131,10 @@ export function haul(save, p, route, rng, now) {
   // on the trail of the Nine: a shard that lies below, now and then
   let shard = null; const below = r.relic ? Trail.pending(save, 'deep') : [];
   if (below.length && rng() < TRAIL.deep) shard = pick(below, rng);
+  // a star's shard, now and then, carried down where it fell long ago: the star falls on the same days in every shop, and can go
+  // weeks without falling (milestone 35)
+  const fell = !shard && r.relic ? Trail.pending(save, 'star') : [];
+  if (fell.length && rng() < TRAIL.starBelow) shard = pick(fell, rng);
   return { mats, piece, tile, blueprint, shard };
 }
 // trips that have come home by `now`: their hauls put away. Returns what each brought.

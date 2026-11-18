@@ -2,10 +2,10 @@
 // THE TRAIL OF THE NINE, with no page access: the shards of Veric, one for each Mythic. The trail opens OF THE REACH, and with it every
 // clue (release 37: before, each waited on its Relic), so shards and parts are gathered alongside the Relics. From its source: below the deep doors (staff.js), a Court order (shop.js), or the
 // fallen star (a rare town event, claimed from the notice board).
-import { MYTHICS, RELICS, TRAIL, PART_WORK, PART_PATTERN, OLD_BLOOD, PATTERNS } from './data.js?v=59';
-import { rung } from './growth.js?v=59';
-import { owns } from './room.js?v=59';
-import { levelOf, stationOf } from './rules.js?v=59';
+import { MYTHICS, RELICS, TRAIL, PART_WORK, PART_PATTERN, OLD_BLOOD, PATTERNS } from './data.js?v=60';
+import { rung } from './growth.js?v=60';
+import { owns } from './room.js?v=60';
+import { levelOf, stationOf } from './rules.js?v=60';
 
 export const open = save => rung(save) >= TRAIL.rung;
 export const hasShard = (save, id) => (save.shards || []).includes(id);
@@ -18,13 +18,13 @@ export function give(save, id) {
   save.shards = (save.shards || []).concat(id);
   return true;
 }
-// the fallen star: on its day, once, the first shard waiting there
+// the fallen star: on its day, once, the shards waiting there, up to TRAIL.star of them (milestone 35: was one)
 export function claimStar(save, town) {
   if (!town || town.event !== 'starfall') return { why: 'no star fell today' };
   if (save.starDay === town.day) return { why: 'you\'ve been out to it today' };
   const p = pending(save, 'star'); if (!p.length) return { why: open(save) ? 'no shard of yours lies there' : 'the trail isn\'t open to you yet' };
-  save.starDay = town.day; give(save, p[0]);
-  return { shard: p[0] };
+  save.starDay = town.day; const shards = p.slice(0, TRAIL.star); shards.forEach(id => give(save, id));
+  return { shard: shards[0], shards };
 }
 export const relicOf = id => RELICS[MYTHICS[id].relic];
 

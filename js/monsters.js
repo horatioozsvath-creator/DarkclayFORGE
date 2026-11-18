@@ -2,9 +2,9 @@
 // MONSTERS, with no page access: something threatens the town (the rumour, the sightings, the night it comes); the Watch's order to
 // arm them, filled from the back room; the night it comes if it isn't; and the wards (an oil, a lens, a pane) that soften it.
 // Spared on a gentler Reach (bank.js).
-import { MONSTERS, GEAR, TIERS } from './data.js?v=59';
-import { rung } from './growth.js?v=59';
-import { threatsOn } from './bank.js?v=59';
+import { MONSTERS, GEAR, TIERS } from './data.js?v=60';
+import { rung } from './growth.js?v=60';
+import { threatsOn } from './bank.js?v=60';
 
 const H = 3600000, D = 24 * H;
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));

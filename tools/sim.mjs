@@ -27,13 +27,15 @@ const save = { v: 1, maker: 'Bot', trades: {}, found: ['ember'], chosen: [], pic
   coins: 60, mats: { iron: 5, bronze: 2, cord: 3, wrap: 1, ash: 1, wool: 1, strap: 1 }, slots: 4, shelf: [], ledger: [], sold: 0, earned: 0, shopNext: 6, queue: [] };
 Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
 // FOUND=0: only the patterns known from the start; otherwise (milestone 33's balance run) every hidden pattern found from day one
+// START=n: begin n calendar days later (the town's board, and so the fallen star, is the same in every shop on a day)
 const FOUND = process.env.FOUND !== '0';
 if (FOUND) save.book = { found: Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden), tries: [], clues: [], seen: 0 };
 const OLD = process.env.OLD !== '0', TOWN = process.env.TOWN !== '0', BRANCHES = process.env.BRANCH !== '0';   // TOWN=0: the bot ignores the notice board   // OLD=0: a run without Old-Blood, to compare
-let t = Date.UTC(2026, 10, 1, 9), log = [], made = 0, oldTried = 0, oldMade = 0, spent = { mats: 0, staff: 0, tools: 0, room: 0 };
+let t = Date.UTC(2026, 10, 1, 9) + (+process.env.START || 0) * 86400000, log = [], made = 0, oldTried = 0, oldMade = 0, spent = { mats: 0, staff: 0, tools: 0, room: 0 };
 const H = 3600000, lvl = id => R.levelOf((save.trades[id] || {}).xp || 0).level, note = m => log.push('  ' + m);
 
-// on the trail (CHASE=0 turns it off): from RENOWNED, a pattern with a blueprint whose Relic isn't made yet is practised to trade 7, and
+// on the trail (CHASE=0 turns it off): from RENOWNED, a pattern with a blueprint whose Relic isn't made yet is practised to trade 7, then
+// still made often (for a Rare to work it from, milestone 35), and
 // its Old-Blood pieces are kept in the back for the Relic working
 const CHASE = process.env.CHASE !== '0';
 const chasing = id => G.rung(save) >= 5 && (save.blueprints || []).some(b => RELICS[b].pattern === id && !(save.relicsMade || []).includes(b));
@@ -57,7 +59,7 @@ function choose(hour) {
       const cost = short.reduce((c, x) => c + Sh.priceOf(x.mat, hour) * (x.n - x.have), 0);
       if (cost > save.coins) return;
       const o = save.order, forOrder = o && o.pattern === id && (!o.metal || o.metal === m.id) && !Sh.inBack(save).some(x => Sh.fills(o, x));   // making to order
-      const worth = PATTERNS[id].value * m.val * 1.4 * (forOrder ? 4 : 1), score = worth - Sh.recipeCost(rec, hour) + (lvl(id) < 3 ? 15 : 0) + (CHASE && chasing(id) && lvl(id) < OLD_BLOOD.level + 1 ? 250 : 0);
+      const worth = PATTERNS[id].value * m.val * 1.4 * (forOrder ? 4 : 1), score = worth - Sh.recipeCost(rec, hour) + (lvl(id) < 3 ? 15 : 0) + (CHASE && chasing(id) ? (lvl(id) < OLD_BLOOD.level + 1 ? 250 : 120) : 0);
       if (!best || score > best.score) best = { id, picks, short, score };
     });
   }
@@ -158,8 +160,8 @@ function relicWork(day) {
     if (!g.ok && g.why.length === 1 && /back room/.test(g.why[0])) { toBack(c); g = Sh.relicFor(save, c); }
     if (!g.ok) continue;
     const cost = Sh.relicCost(c, g.relic), short = Sh.short(save.mats, cost);
-    if (short.some(x => RELICS[g.relic].mat === x.mat)) continue;
-    short.forEach(x => Sh.buy(save, x.mat, x.n - x.have, Math.floor(t / H)));
+    short.forEach(x => Sh.buy(save, x.mat, x.n - x.have, Math.floor(t / H)));   // the relic material too, from the Crown's factor when it has it
+    if (Sh.short(save.mats, cost).length) continue;
     if (!Sh.takeMats(save, cost)) continue;
     relicTried++;
     if (rng() < 0.35) {
@@ -191,7 +193,8 @@ function nineWork(day) {
     if (!g.ok && save.hall && g.why.length === 1 && /back room/.test(g.why[0])) { for (const k of Object.keys(save.hall.shown || {})) if (save.hall.shown[k] === relic.id) delete save.hall.shown[k]; g = Sh.mythicFor(save, relic); }
     if (!g.ok) continue;
     const cost = Sh.mythicCost(relic, id);
-    buyShort(cost);   // the relic material from the Crown's factor, when it has it this hour (milestone 34) if (!Sh.takeMats(save, cost)) continue;
+    buyShort(cost);   // the relic material from the Crown's factor, when it has it this hour (milestone 34)
+    if (!Sh.takeMats(save, cost)) continue;
     mythicTried++;
     if (rng() < 0.25) {
       const p = R.mythicPiece({ ...relic, tier: 'mythic' }, id);
@@ -206,7 +209,10 @@ let orders = 0, stories = 0;
 function fillOrder() {
   const o = save.order; if (!o) return;
   // on the trail, a Relic whose Mythic isn't made yet is kept for it, not sold to a regular's order
-  const c = Sh.inBack(save).filter(x => Sh.fills(o, x) && !(CHASE && x.tier === 'relic' && !(save.mythicsMade || []).some(id => MYTHICS[id].relic === x.relic))).sort((a, b) => a.worth - b.worth)[0];
+  // from the back room, or off the shelf (milestone 35: a player takes the piece down for an order; the bot had looked only in the back)
+  if (o.mythic) return;   // the Court's offer for one of the Nine: kept, as before
+  const c = save.cards.filter(x => !x.sample && !x.keep && Sh.fills(o, x) && !(CHASE && x.tier === 'relic' && !(save.mythicsMade || []).some(id => MYTHICS[id].relic === x.relic))).sort((a, b) => a.worth - b.worth)[0];
+  if (c) toBack(c);
   if (c && Sh.deliver(save, c.id, t)) { orders++; if (o.story) stories++; }
 }
 // the second shop: set up once it can be afforded with plenty over, then kept stocked from the back room, best first
@@ -224,7 +230,8 @@ const KITTING = process.env.KIT !== '0';
 let hunts = 0;
 function kit(r) {
   if (!KITTING) return;
-  for (const c of Sh.inBack(save).filter(c => !c.sample && Run.canCarry(c)).sort((a, b) => b.worth - a.worth)) {
+  // never a piece FILL THE SHELVES keeps back (a Relic, a Mythic, one ready for its Relic): a Relic tonic carried is drunk (milestone 35)
+  for (const c of Sh.inBack(save).filter(c => !c.sample && !Sh.keepBack(save, c) && Run.canCarry(c)).sort((a, b) => b.worth - a.worth)) {
     if (Run.isPotion(c)) { if (Run.potionsOf(r).length < 2) Run.equip(save, r, c.id); }
     else if (!Run.gearOf(r)[Run.slotOf(c)]) Run.equip(save, r, c.id);
   }
