@@ -704,6 +704,78 @@ export const REGULARS = [
   { who: 'Tib Harrow', wants: ['dagger', 'sling', 'club'], line: 'A knife. My own. I\'ve saved for it.', fig: '#a08a6a',
     clues: { club: '"The big lads have oak clubs with bone in the head. Strap grips."', sling: '"I want a sling. Just a hide cup and some cord."' } },
 ];
+// THE NEXT GENERATION (milestone 38): a generation on, the regulars' grandchildren come in. A family each: its first names by
+// generation (the second to the fifth, the last kept after), the plain order's line, and a word about the old maker ({master}),
+// said once. Their stories (LINE_STORIES) ask the same kinds of piece, in their own words.
+export const LINE_FOLK = {
+  vance: { first: ['Tamsin', 'Orrin', 'Bel', 'Hal'], who: '{first} Vance, of the watch', line: 'For the gate. My grandfather swore by this forge.',
+    remember: 'My grandfather held the gate with a falchion from {master}. It hangs in the guardhouse still.' },
+  corrow: { first: ['Ysolde', 'Merren', 'Avis', 'Linnet'], who: 'Lady {first} Corrow', line: 'Something with a mark worth the name, as Grandmother had.',
+    remember: 'My grandmother had a ring from your master, {master}. She was buried with it.' },
+  bram: { first: ['Cob', 'Ivo', 'Jory', 'Pell'], who: '{first} Oakes, a drover', line: 'For my drovers. Good ones, like in the old stories.',
+    remember: 'Grandfather said {master} once shod the whole drive. He told it every winter.' },
+  ketty: { first: ['Nell', 'Ada', 'Wenna', 'Rose'], who: '{first} Moss', line: 'A silver ring. Grandmother bought hers here.',
+    remember: 'My grandmother lit candles for {master}\'s shop every year until she died.' },
+  marrow: { first: ['Sorrel', 'Bryony', 'Tansy', 'Yarrow'], who: '{first} Marrow, the herbalist', line: 'My kettle\'s cracked. It always is, in our family.',
+    remember: 'Grandmother Marrow said {master} brewed better than she did. She never said that of anyone else.' },
+  tib: { first: ['Wat', 'Dunny', 'Kit', 'Ned'], who: '{first} Harrow', line: 'A knife. My grandfather saved for his, here. I have too.',
+    remember: 'My grandfather\'s knife was from {master}. He was buried with it on his belt.' },
+};
+// the regulars' families, by the name they had a generation ago
+export const FOLK_OF = { 'Sergeant Ollo Vance': 'vance', 'Lady Ysmay Corrow': 'corrow', 'Bram Oakes, a drover': 'bram', 'Ketty Moss, a widow': 'ketty', 'Marrow, the herbalist': 'marrow', 'Tib Harrow': 'tib' };
+// the stories a generation on: the family, who's telling it, and each step's [line, thanks] (patterns, tiers and gifts as before)
+export const LINE_STORIES = {
+  ketty: { fam: 'ketty', who: '{first} Moss', steps: [
+    ['My grandmother bought a silver ring here, from {master}. I\'d have one like it, for my husband.', 'He won\'t take it off, not even to wash.'],
+    ['My girl\'s going out with the drovers. A knife she can trust.', 'She showed it to the whole lane.'],
+    ['She\'s joined the watch, like her great-grandfather. Keep her head.', 'Take these. Grandmother lit them for {master}\'s shop. Light them for yours.'] ] },
+  vance: { fam: 'vance', who: '{first} Vance, of the watch', steps: [
+    ['The gate still has my grandfather\'s falchion. The rest of us need blades too.', 'The new blade hangs beside the old one, and holds its own.'],
+    ['Recruits again, green as grass. Cover them.', 'Every one came back from the patrol.'],
+    ['The captain wants one from this forge, as his grandfather had. Your best.', 'The watch flew {master}\'s mark. Now it flies yours. Hang this where they\'ll see it.'] ] },
+  bram: { fam: 'bram', who: '{first} Oakes, a drover', steps: [
+    ['My grandfather\'s drovers swore by {master}\'s knives. Mine want the same.', 'They argue over who carries it, like in the old stories.'],
+    ['The road\'s as long as it ever was.', 'Not one lame at the ford.'],
+    ['Wolves on the high road again. Grandfather said this forge saw them off.', 'A barrel from the far valley, as Grandfather gave. Yours.'] ] },
+  corrow: { fam: 'corrow', who: 'Lady {first} Corrow', steps: [
+    ['Something with a maker\'s mark worth the name. My grandmother wore {master}\'s.', 'It was admired. I said it came from the same door as hers.'],
+    ['A gift for the young duke. It must not shame the house.', 'The duke asked your name, and your master\'s.'],
+    ['I marry in spring. The finest thing you can make.', 'The old king, in stone. Grandmother gave {master} one like him. He belongs here too.'] ] },
+  marrow: { fam: 'marrow', who: '{first} Marrow, the herbalist', steps: [
+    ['Grandmother brewed at {master}\'s kettle once. Mine\'s cracked too. Brew for me.', 'The lane\'s fever broke on it, as it did for her.'],
+    ['The tannery boys still burn their hands. Something kind.', 'They come to me singing. She\'d have laughed.'],
+    ['Old Wenna\'s granddaughter can\'t sleep. A tonic worth her nights.', 'Hang my herbs in your shop, as she hung hers in your master\'s.'] ] },
+  vance2: { fam: 'vance', who: 'Captain {first} Vance', steps: [
+    ['They made me captain, as they made my grandfather. The watch needs helms worthy of the gate.', 'The gate looks sure of itself again.'],
+    ['Raiders on the mill road. My sergeants need blades.', 'The mill stands. The raiders don\'t.'],
+    ['A hard winter on the walls. Keep my people alive.', 'Not one lost to the cold.'],
+    ['Old enemies on the high road. Your best, and better.', 'We held. Your work held, as {master}\'s did.'],
+    ['One more, for the gate itself. Grandfather\'s hangs there; let yours hang beside it.', 'The first gate-captain\'s pattern, from the guardhouse vault. {master} knew it. Now it\'s yours to make.'] ] },
+  ketty2: { fam: 'ketty', who: '{first} Moss, a mother now', steps: [
+    ['My son\'s to wed. A ring for his bride, from the forge that made my grandmother\'s.', 'She cried. Good tears.'],
+    ['A grandchild on the way! A little knife, for when they\'re grown.', 'It\'s in the chest, waiting.'],
+    ['My son\'s a sergeant now. Keep his head.', 'He came home from the high road.'],
+    ['My own ring\'s worn thin. Silver, the best you have.', 'My hand feels young again.'],
+    ['Grandmother\'s ring is in the ground with her. Make me one to match it, for when I go.', 'Her husband\'s ring-pattern. {master} had it from her. Now you should.'] ] },
+  bram2: { fam: 'bram', who: '{first} Oakes, master drover', steps: [
+    ['Three herds now, like my grandfather. Boots for my best.', 'To the coast and back, dry-shod.'],
+    ['Wolves, and bigger than the stories. Something that reaches them.', 'Not a calf lost.'],
+    ['The high pass in winter. Keep my lads warm.', 'They came down singing.'],
+    ['My daughter takes the first herd out alone. Your best for her.', 'She came back taller than she went.'],
+    ['The longest drive, to the sea. Grandfather did it on {master}\'s boots. I\'ll do it on yours.', 'His boot-pattern. Make them, and they\'ll go anywhere.'] ] },
+  corrow2: { fam: 'corrow', who: 'Lady {first} Corrow, of the house', steps: [
+    ['A christening in the house. Something to drink the child\'s health from.', 'The duchess asked who made it. I kept you to myself.'],
+    ['My eyes are going, as hers did. Something fine to read by.', 'I read her letters again. She wrote of {master}.'],
+    ['My son is to be knighted. He must carry your work.', 'He knelt with it. The whole hall looked.'],
+    ['The Corrow ring was lost again, after the old maker\'s day. Make it once more.', 'It\'s on the family\'s hand, where it belongs.'],
+    ['The house\'s cup is gone, with the Nine. Three hundred years, and gone.', 'The pattern of the old cup. Make the true one again.'] ] },
+  marrow2: { fam: 'marrow', who: '{first} Marrow, healer of the lanes', steps: [
+    ['Fever in the lanes, the worst since Grandmother\'s day.', 'The lanes are quiet again. Good quiet.'],
+    ['A fire at the tannery. Half the street burned.', 'Healed clean, every one.'],
+    ['The watch\'s blades rust and their hands crack. Help them both.', 'Captain Vance says the gate smells of my garden.'],
+    ['I sleep as badly as she did. Brew me something worth sleeping for.', 'I dreamed of her. First time in years.'],
+    ['The abbey wants a salve for the saint\'s feast. Your very best.', 'The saint\'s own recipe, from the abbey cellars. They said this forge should have it, as the last one did.'] ] },
+};
 // a regular leaving an order now and then drops a word about a pattern you've still to find (milestone 33)
 export const REG_CLUE_ODDS = 0.35;
 // regulars with stories: three orders over days (the next comes back STORY_GAP hours after the last was filled), a gift for the shop
@@ -796,6 +868,9 @@ export const APPRENTICE = { every: 30, swift: 0.75, top: 5, learn: 3, beside: 2,
 // THE LEGACY (milestone 37, docs/LEGACY-PLAN.md): handing the forge on to the apprentice, a Maker of the Nine's choice. The heir's
 // purse, how long the apprentice must have been with you, their head start in trade, and their trait for good (small, each)
 export const LEGACY = { purse: 300, days: 14, top: 5, rest: 2,
+  // milestone 38: from the third generation, two heirlooms and the town's welcome (the shop starts KNOWN); nothing grows past the fifth
+  heirlooms: [1, 1, 2], welcomeFrom: 3, lore: { starBelow: 2, court: 1.5 },   // the line's lore, from the second generation: where to look
+  welcome: 2, cap: 5, sources: { deep: 3, court: 3, star: 3 },
   trait: { careful: { kit: { widen: 1.06 }, line: 'the heat band a little wider' }, swift: { kit: { coolX: 0.92 }, line: 'the work cools a little slower' },
     thrifty: { wage: 0.9, line: 'the staff\'s wages a tenth lower' }, bright: { xp: 1.15, line: 'trades learned a little faster' } } };
 export const TRAITS = {

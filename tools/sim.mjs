@@ -18,6 +18,8 @@ import * as Run from '../js/runner.js';
 import * as Mon from '../js/monsters.js';
 import * as Liv from '../js/living.js';
 import * as Ap from '../js/apprentice.js';
+import * as Leg from '../js/legacy.js';
+import fs from 'node:fs';
 import { BRANCH, RELICS, MYTHICS } from '../js/data.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD } from '../js/data.js';
 
@@ -26,13 +28,22 @@ function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) 
 const rng = seeded(seed0);
 const save = { v: 1, maker: 'Bot', trades: {}, found: ['ember'], chosen: [], picks: {}, cards: [], made: 0,
   coins: 60, mats: { iron: 5, bronze: 2, cord: 3, wrap: 1, ash: 1, wool: 1, strap: 1 }, slots: 4, shelf: [], ledger: [], sold: 0, earned: 0, shopNext: 6, queue: [] };
-Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
+save.uid = 'sim' + seed0; Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
 // FOUND=0: only the patterns known from the start; otherwise (milestone 33's balance run) every hidden pattern found from day one
 // START=n: begin n calendar days later (the town's board, and so the fallen star, is the same in every shop on a day)
 const FOUND = process.env.FOUND !== '0';
 if (FOUND) save.book = { found: Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden), tries: [], clues: [], seen: 0 };
 const OLD = process.env.OLD !== '0', TOWN = process.env.TOWN !== '0', BRANCHES = process.env.BRANCH !== '0';   // TOWN=0: the bot ignores the notice board   // OLD=0: a run without Old-Blood, to compare
 let t = Date.UTC(2026, 10, 1, 9) + (+process.env.START || 0) * 86400000, log = [], made = 0, oldTried = 0, oldMade = 0, spent = { mats: 0, staff: 0, tools: 0, room: 0 };
+// FROM=file: a first generation's save at its end (SAVEOUT=file writes one); it's handed on to its apprentice, and the run plays the
+// second generation (milestone 38's pace). The heirlooms: the best the old shop has.
+if (process.env.FROM) {
+  const old = JSON.parse(fs.readFileSync(process.env.FROM, 'utf8')); t = old.lastSeen;
+  const n = Leg.heirloomsFor(Leg.gen(old) + 1), r = Leg.handOn(old, Leg.heirlooms(old).slice(0, n).map(c => c.id), t);
+  if (!r.ok) { console.log('not handed on: ' + r.why); process.exit(1); }
+  Object.keys(save).forEach(k => delete save[k]); Object.assign(save, r.save, { queue: [], shopNext: 6 }); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
+  console.log('handed on to ' + save.maker + ' (' + save.heirTrait + '), generation ' + save.gen + '; shards: ' + JSON.stringify(save.shardWhere));
+}
 const H = 3600000, lvl = id => R.levelOf((save.trades[id] || {}).xp || 0).level, note = m => log.push('  ' + m);
 
 // on the trail (CHASE=0 turns it off): from RENOWNED, a pattern with a blueprint whose Relic isn't made yet is practised to trade 7, then
@@ -83,7 +94,7 @@ function makeOne(hour) {
   const p = R.makePiece({ patternId: c.id, picks: c.picks, result: res, picked: null, maker: 'Bot', rng, now: t });
   save.cards.unshift(p); made++; save.benchAt = t;
   if (WEARING) { const st = R.stationOf(c.id).id; Wear.addWear(save, st, 'work', t); if (Wear.isBroken(save, st, t)) { broke++; const r = Wear.rebuild(save, st, t); if (r.ok) wearSpent += r.cost; } }
-  (save.trades[c.id] = save.trades[c.id] || { xp: 0 }).xp += R.xpFor(res);
+  (save.trades[c.id] = save.trades[c.id] || { xp: 0 }).xp += Math.round(R.xpFor(res) * G.xpMult(save));
   const tag = 'fair';
   if (Sh.place(save, p.id, null, tag) < 0) { /* the shelf is full: it waits in the back */ }
   return true;
@@ -113,6 +124,21 @@ function tryOldBlood(hour) {
     if (slot >= 0 && !(took && CHASE && chasing(c.pattern))) Sh.place(save, (took ? save.cards.find(x => x.id === c.id) : c).id, slot);
     return;
   }
+}
+// the Court's shard order (milestone 38): a Rare asked for, and none in hand. A player reworks a Fine one up (the bot had waited on a
+// Rare to come out of a plain working, and the order lapsed again and again)
+let courtRw = 0;
+function courtRework(hour) {
+  const o = save.order; if (!o || !o.shard || save.cards.some(x => !x.sample && !x.keep && x.tier !== 'relic' && x.tier !== 'mythic' && Sh.fills(o, x))) return;   // a Relic is kept for its Mythic, as fillOrder keeps it
+  const c = save.cards.filter(x => x.pattern === o.pattern && x.tier === 'fine' && !x.sample).sort((a, b) => b.worth - a.worth)[0]; if (!c) return;
+  const slot = Sh.onShelf(save, c.id); if (slot >= 0) Sh.takeDown(save, slot);
+  if (!Sh.canRework(save, c)) { if (slot >= 0) Sh.place(save, c.id, slot); return; }
+  const cost = Sh.reworkCost(c), short = Sh.short(save.mats, cost);
+  if (short.some(x => !Sh.sells(x.mat, hour, save))) { if (slot >= 0) Sh.place(save, c.id, slot); return; }
+  short.forEach(x => { const b = save.coins; Sh.buy(save, x.mat, x.n - x.have, hour); spent.mats += b - save.coins; });
+  Sh.takeMats(save, cost); courtRw++;
+  const took = rng() < Math.min(0.8, 0.4 + 0.05 * lvl(c.pattern));
+  if (took) { const p = R.remakePiece({ card: c, res: { tier: 2, flawed: false, worked: 10, strikes: 24, heats: 2, cracks: 0 }, picked: null, rng, now: t }); save.cards[save.cards.indexOf(c)] = p; note('reworked for the Court: ' + p.name); }
 }
 // following the notice board: what the town wants goes on the shelf at DEAR, in place of what it doesn't (from the back room)
 function restock() {
@@ -200,7 +226,7 @@ function nineWork(day) {
     if (rng() < 0.25) {
       const p = R.mythicPiece({ ...relic, tier: 'mythic' }, id);
       save.cards[save.cards.indexOf(relic)] = p; save.mythicsMade = (save.mythicsMade || []).concat(id); mythics.push(id + ' d' + day);
-      note('ONE OF THE NINE: ' + p.name + (G.isNine(save) ? ' · MAKER OF THE NINE' : ''));
+      note('ONE OF THE NINE: ' + p.name + (G.isNine(save) ? ' · MAKER OF THE NINE' : '')); if (G.isNine(save) && !save.nineAt) save.nineAt = t;
     }
     return;
   }
@@ -211,7 +237,7 @@ let benched = 0, apprDay = null; const apIds = new Set(); let apSold = 0, apN = 
 function hireApprentice(day) {
   if (!APPR || Ap.apprenticeOf(save) || G.rung(save) < 4) return;
   const c = St.candidates(save, Math.floor(t / H)).find(x => x.role === 'apprentice');
-  if (c && save.coins > St.hireFee(c) + 1000 && St.hire(save, c)) { apprDay = day; note('took on an apprentice: ' + c.name); }
+  if (c && save.coins > St.hireFee(c) + 1000 && St.hire(save, c)) { apprDay = day; Ap.apprenticeOf(save).hiredAt = t; note('took on an apprentice: ' + c.name); }
 }
 // a special order (a story's step too): delivered from the back room if something there fills it
 let orders = 0, stories = 0;
@@ -320,7 +346,7 @@ for (let d = 1; d <= days; d++) {
     tally(Sh.shopStep(save, 50, rng, t, false, clerk));
     St.payWages(save, 50); St.resolveTrips(save, t, rng); { const bm = Ap.step(save, 50, rng, t); benched += bm.length; bm.forEach(r => apIds.add(r.piece.id)); }
     t += 50000; save.lastSeen = t;
-    if (s % 600 === 0) { fair(); watchDuty(); security(); upkeep(); runBank(d); runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); hireApprentice(d); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
+    if (s % 600 === 0) { fair(); watchDuty(); security(); upkeep(); runBank(d); runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); courtRework(hour); hireApprentice(d); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
     if (save.branch) tally(Br.step(save, 50, rng, t));
     if (Sh.rescue(save, hour)) note('scrap bin');
   }
@@ -363,3 +389,4 @@ if (MONSTERING) console.log('monsters:', monsters, ' kept off', kept, ' came', c
 console.log('guild fairs: first', fairs[0], ' second', fairs[1], ' third', fairs[2], ' no prize', fairs[3]);
 // DUMP=path: write the save at the end (for a look at it in the game, slot 3)
 if (process.env.DUMP) (await import('node:fs')).writeFileSync(process.env.DUMP, JSON.stringify(save));
+if (process.env.SAVEOUT) { save.lastSeen = t; fs.writeFileSync(process.env.SAVEOUT, JSON.stringify(save)); }

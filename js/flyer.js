@@ -1,10 +1,11 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE FLYER: a shop's invitation drawn as a card (600 × 840), shared as an image with the shop's link. Page only (a canvas).
-import { TIERS } from './data.js?v=62';
-import { ART } from './card.js?v=62';
+import { TIERS } from './data.js?v=63';
+import { ART } from './card.js?v=63';
 
 const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
 const W = 600, H = 840;
+const GEN_WORD = n => ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth'][n - 1] || n + 'th';
 const LONG = new Set(['falchion', 'dagger', 'axe', 'shortbow', 'longbow', 'staff', 'arrows']);
 function rr(g, x, y, w, h, r) { g.beginPath(); g.roundRect(x, y, w, h, r); }
 function fit(g, text, max, size, weight, family = 'Alegreya, Georgia, serif') {
@@ -33,7 +34,7 @@ export async function drawFlyer(shop, card) {
   g.fillStyle = '#e8c464'; g.font = '800 22px Alegreya, Georgia, serif'; g.fillText('NOW OPEN · ' + shop.renown, W / 2, 84);
   const name = shop.maker + (/s$/i.test(shop.maker) ? '\'' : '\'s');
   g.fillStyle = '#ece0c6'; fit(g, name, W - 110, 56, 800); g.fillText(name, W / 2, 146);
-  g.font = '500 34px Alegreya, Georgia, serif'; g.fillText('forge & shop', W / 2, 196);
+  { const sub = shop.gen > 1 ? 'forge & shop · ' + GEN_WORD(shop.gen) + ' of the line' : 'forge & shop'; fit(g, sub, W - 110, 34, 500); g.fillText(sub, W / 2, 196); }
   // the featured piece
   const ax = 66, ay = 236, aw = W - 132, ah = 270;
   g.fillStyle = '#2a1c12'; g.fillRect(ax, ay, aw, ah);

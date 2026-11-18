@@ -1,6 +1,6 @@
 # The legacy: a plan (milestones 36–38)
 
-Status: planned and decided (2026-11-18). Milestone 36 (the apprentice) built in release 61 (docs/MILESTONE-36.md); 37 (handing on) in release 62 (docs/MILESTONE-37.md: the heirloom hangs over the door, not in the Hall); 38 to come.
+Status: planned and decided (2026-11-18). Milestone 36 (the apprentice) built in release 61 (docs/MILESTONE-36.md); 37 (handing on) in release 62 (docs/MILESTONE-37.md: the heirloom hangs over the door, not in the Hall); 38 (the next generation) in release 63 (docs/MILESTONE-38.md: a second generation makes all Nine in about 68 days in the sim, against about 98 for the first).
 
 ## What it's for
 

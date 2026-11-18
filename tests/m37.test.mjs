@@ -38,7 +38,7 @@ test('the heirloom: an Old-Blood piece, Relic or Mythic of your own; chosen when
   assert.deepEqual(Leg.heirlooms(s).map(c => c.id), ['m1', 'r1'], 'best first, no flyer copies');
   assert.equal(Leg.handOn(s, null, NOW).ok, false, 'choose one');
   assert.equal(Leg.handOn(s, 'c1', NOW).ok, false, 'a common piece can\'t pass on');
-  const bare = Leg.handOn(nine({ cards: [] }), null, NOW); assert.ok(bare.ok); assert.equal(bare.save.heirloom, null);
+  const bare = Leg.handOn(nine({ cards: [] }), null, NOW); assert.ok(bare.ok); assert.deepEqual(bare.save.heirlooms, []);
 });
 
 test('the heir\'s shop: a fresh climb with what the line keeps', () => {
@@ -56,9 +56,9 @@ test('the heir\'s shop: a fresh climb with what the line keeps', () => {
   assert.equal(Object.keys(s.trades).length, Object.keys(PATTERNS).length);
   assert.equal(G.makerLevel(s).level, 1, 'the head start isn\'t practice: skill points are earned again');
   // the heirloom: out of the cards, over the door, charm but no renown
-  assert.equal(s.heirloom.name, myth.name); assert.equal(s.heirloom.from, 'Old Hand'); assert.ok(!s.cards.some(c => c.id === 'm1'));
+  assert.equal(s.heirlooms[0].name, myth.name); assert.equal(s.heirlooms[0].from, 'Old Hand'); assert.ok(!s.cards.some(c => c.id === 'm1'));
   assert.equal(G.heirloomCharm(s), HALL_CHARM.mythic); assert.equal(G.renownOf(s), 0);
-  const room = Rm.defaultShop(); assert.equal(Rm.charm(room, s) - Rm.charm(room, { ...s, heirloom: null }), HALL_CHARM.mythic);
+  const room = Rm.defaultShop(); assert.equal(Rm.charm(room, s) - Rm.charm(room, { ...s, heirlooms: [] }), HALL_CHARM.mythic);
   // the old save is untouched
   assert.equal(old.coins, 90000); assert.equal(old.maker, 'Old Hand');
 });

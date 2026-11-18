@@ -3,14 +3,22 @@
 // The heir's shop is built fresh, with only what the line keeps: the book (patterns found, tries, clues), the blueprints, the found
 // tiles, the heir's trades (their own, up to trade 5; trade 2 in the rest), their trait for good and one heirloom over the door. The
 // old shop goes into the line's record, with its save code (its own record left out, so nothing nests).
-import { LEGACY, PATTERNS, HALL, MYTHICS, TIERS } from './data.js?v=62';
-import { isNine, renownOf } from './growth.js?v=62';
-import { levelOf, xpToNext } from './rules.js?v=62';
-import { apprenticeOf, TOP_XP } from './apprentice.js?v=62';
-import { fresh, toCode } from './save.js?v=62';
+import { LEGACY, PATTERNS, HALL, MYTHICS, TIERS, RENOWN } from './data.js?v=63';
+import { scatter } from './trail.js?v=63';
+import { isNine, renownOf } from './growth.js?v=63';
+import { levelOf, xpToNext } from './rules.js?v=63';
+import { apprenticeOf, TOP_XP } from './apprentice.js?v=63';
+import { fresh, toCode } from './save.js?v=63';
 
 const DAY = 86400000;
 export const gen = save => save.gen || 1;
+// how many heirlooms pass to the next generation (two from the third: milestone 38)
+export const heirloomsFor = nextGen => LEGACY.heirlooms[Math.min(nextGen, LEGACY.heirlooms.length) - 1];
+// the heirlooms over the door: a list (release 62 kept one, as save.heirloom)
+export const loomsOf = save => save.heirlooms || (save.heirloom ? [save.heirloom] : []);
+// a small seeded rng: the scatter is fixed for a shop and a generation
+const seeded = seed => { let x = seed >>> 0; return () => { x = (x + 0x6D2B79F5) >>> 0; let t = x; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+const hash = t => { let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
 // when they were taken on: hiredAt, or for those hired in release 61 the hour in their id ('h<hour>-<i>')
 export function hiredAt(p) {
   if (!p) return null; if (p.hiredAt) return p.hiredAt;
@@ -36,28 +44,33 @@ export function heirTrades(p) {
   return out;
 }
 // what the line's record keeps of a shop: enough to read, not the whole save (that's the code)
-export function recordOf(save, now, heirloom) {
+export function recordOf(save, now, looms) {
   const old = { ...save }; delete old.line;
   const hall = Object.values((save.hall || {}).shown || {}).map(id => (save.cards || []).find(c => c.id === id)).filter(Boolean).map(c => c.name);
   return { gen: gen(save), maker: save.maker, lineOf: save.lineOf || null, trait: save.heirTrait || null, startedAt: save.startedAt || null, nineAt: save.nineAt || null, handedAt: now,
     days: save.startedAt && save.nineAt ? Math.round((save.nineAt - save.startedAt) / DAY) : null, renown: renownOf(save), made: save.made || 0, sold: save.sold || 0,
-    earned: save.earned || 0, heirloom: heirloom ? { name: heirloom.name, tier: heirloom.tier } : null, hall, nine: Object.keys(MYTHICS).filter(id => (save.mythicsMade || []).includes(id)).length,
+    earned: save.earned || 0, heirloom: looms[0] ? { name: looms[0].name, tier: looms[0].tier } : null, heirlooms: looms.map(x => ({ name: x.name, tier: x.tier })), hall, nine: Object.keys(MYTHICS).filter(id => (save.mythicsMade || []).includes(id)).length,
     code: toCode(old) };
 }
 // the heir's shop, from the old one: a new object (the old save is left as it was). heirloomId: a card from heirlooms(), or null.
-export function handOn(save, heirloomId, now) {
+export function handOn(save, picked, now) {
   const c = canHandOn(save, now); if (!c.ok) return c;
-  const p = c.heir, list = heirlooms(save), loom = heirloomId ? list.find(x => x.id === heirloomId) : null;
-  if (heirloomId && !loom) return { ok: false, why: 'that piece can\'t pass on' };
-  if (!heirloomId && list.length) return { ok: false, why: 'choose the heirloom' };
-  const rec = recordOf(save, now, loom), book = save.book ? JSON.parse(JSON.stringify(save.book)) : undefined;
+  const ids = [...new Set([].concat(picked || []))], n = heirloomsFor(gen(save) + 1), p = c.heir, list = heirlooms(save), looms = ids.map(id => list.find(x => x.id === id));
+  if (looms.some(x => !x)) return { ok: false, why: 'that piece can\'t pass on' };
+  if (looms.length > n) return { ok: false, why: 'only ' + n + ' can pass on' };
+  if (looms.length < Math.min(n, list.length)) return { ok: false, why: n > 1 ? 'choose the heirlooms' : 'choose the heirloom' };
+  const loom = looms[0] || null, rec = recordOf(save, now, looms), book = save.book ? JSON.parse(JSON.stringify(save.book)) : undefined;
   const next = { ...fresh(),
     // the player's own: the shop's id (its links), settings, what they've been told
     uid: save.uid, kept: (save.kept || []).slice(), gentle: save.gentle, hintsOff: save.hintsOff, seen: (save.seen || []).slice(), backupAt: save.backupAt, curve: 2,
     // what the line keeps
     book, blueprints: (save.blueprints || []).slice(), found: (save.found || ['ember']).slice(), picks: JSON.parse(JSON.stringify(save.picks || {})),
     trades: heirTrades(p), maker: p.name, heirTrait: p.trait, lineOf: save.maker, gen: gen(save) + 1, startedAt: now, lastSeen: now,
-    heirloom: loom ? { ...JSON.parse(JSON.stringify(loom)), heirloom: true, from: save.maker } : null,
+    heirlooms: looms.map(x => ({ ...JSON.parse(JSON.stringify(x)), heirloom: true, from: save.maker })),
+    // the Nine scattered again: their shards lie in new places this generation (milestone 38)
+    shardWhere: scatter(seeded(hash((save.uid || '') + ':' + (gen(save) + 1)))),
+    // from the third generation, the town's welcome: the shop starts KNOWN
+    renown: gen(save) + 1 >= LEGACY.welcomeFrom ? RENOWN[LEGACY.welcome].at : 0,
     line: (save.line || []).concat(rec),
     coins: LEGACY.purse };
   next.inheritedXp = Object.values(next.trades).reduce((a, t) => a + t.xp, 0);   // the head start: not counted to the maker's level

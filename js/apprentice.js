@@ -3,11 +3,11 @@
 // shop's clock (open, and away up to the cap). Plain pieces (Common or Fine) of patterns the shop knows, at a station it owns, from
 // the back room's common materials. Their own trade in each pattern grows with each piece, faster while you work beside them,
 // never past trade 5: a master is made, not trained.
-import { APPRENTICE, PATTERNS, MATS } from './data.js?v=62';
-import { levelOf, xpToNext, makePiece } from './rules.js?v=62';
-import { recipe, short, takeMats, knows, inBack, sells, priceOf, buy } from './shop.js?v=62';
-import { owns } from './room.js?v=62';
-import * as Wear from './wear.js?v=62';
+import { APPRENTICE, PATTERNS, MATS } from './data.js?v=63';
+import { levelOf, xpToNext, makePiece } from './rules.js?v=63';
+import { recipe, short, takeMats, knows, inBack, sells, priceOf, buy } from './shop.js?v=63';
+import { owns } from './room.js?v=63';
+import * as Wear from './wear.js?v=63';
 
 const A = APPRENTICE, PICKS = [0, 0, 0];
 export const apprenticeOf = save => (save.staff || []).find(p => p.role === 'apprentice');
