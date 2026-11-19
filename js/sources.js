@@ -1,16 +1,17 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // WHERE THINGS COME FROM (milestone 30), with no page access: for any material, every way to get it (a seller, a station that makes
 // it, a part forged at once, a runner's roads, the Deep), and when a seller who doesn't have it this hour next will.
-import { MATS, FORGED_PARTS, PATTERNS, STATIONS, REGIONS, MINE } from './data.js?v=72';
-import * as Rg from './region.js?v=72';
-import { linesOf, sells } from './shop.js?v=72';
-import { COMMONS } from './staff.js?v=72';
-import { partOptions } from './rules.js?v=72';
+import { MATS, FORGED_PARTS, PATTERNS, STATIONS, REGIONS, MINE } from './data.js?v=73';
+import * as Rg from './region.js?v=73';
+import { linesOf, sells } from './shop.js?v=73';
+import { COMMONS } from './staff.js?v=73';
+import { partOptions } from './rules.js?v=73';
+import { atBottom } from './mine.js?v=73';
 
 // the first gallery a material is dug in, in either mine (milestone 46)
 const gallery = mat => Math.min(...['dig', 'wheal'].flatMap(id => partOptions(id)[0].opts.filter(o => o.ore === mat).map(o => o.gallery)));
 // in the save's region (milestone 39): its suppliers, its roads' names, what its runners bring back; none: the Reach
-const roadsOf = save => test => Object.values(Rg.routes(save)).filter(r => !r.hunt && test(r)).map(r => r.name);
+const roadsOf = save => test => Object.values(Rg.routes(save)).filter(r => !r.hunt && (!r.bottom || atBottom(save)) && test(r)).map(r => r.name);
 // [{ kind: 'forged' | 'made' | 'sold' | 'pedlar' | 'runner' | 'deep', word, ...}] in the order worth trying
 export function sourcesOf(mat, save) {
   const m = MATS[mat], out = [], roadNames = roadsOf(save), SUPPLIERS = Rg.suppliers(save);
@@ -33,6 +34,7 @@ export function sourcesOf(mat, save) {
   if (!out.some(x => x.kind === 'sold' || x.kind === 'pedlar')) Object.values(REGIONS).filter(g => g.id !== Rg.regionId(save) && Rg.soldIn(g.id, mat)).forEach(g =>
     out.push({ kind: 'away', region: g.id, word: 'Sold in ' + g.name + (g.id === Rg.REACH ? '' : ', over the pass') + ', not here.' }));
   if (m.relic) out.push({ kind: 'deep', roads: roadNames(r => r.relic), word: 'Only from below the deep doors: a runner\'s longest road, from RENOWNED.' });
+  if (m.relic && atBottom(save)) out.push({ kind: 'dug', word: 'Now and then in the rock at the bottom of the mine, to your own hand at the face; and a runner can go below through the mine.' });
   else if (m.rare && Rg.raresIn(Rg.regionId(save)).includes(mat)) out.push({ kind: 'runner', roads: roadNames(r => r.rare > 0), word: 'A runner finds it on the longer roads: ' + roadNames(r => r.rare > 0).join(', ') + '.' });
   else if (!m.rare && Rg.commons(save, COMMONS).includes(mat)) out.push({ kind: 'runner', roads: roadNames(r => r.commons[1] > 0), word: 'A runner brings it back from any road.' });
   if (mat === 'gem') out.push({ kind: 'runner', roads: roadNames(r => r.gem), word: 'A runner finds one now and then at ' + roadNames(r => r.gem).join(', ').toLowerCase() + '.' });

@@ -1,18 +1,18 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=72';
-import { levelOf, makePiece, partOptions } from './rules.js?v=72';
-import { awayStep } from './shop.js?v=72';
-import { wageMult, capBonus, rung } from './growth.js?v=72';
-import * as Trail from './trail.js?v=72';
-import { TRAIL, MONSTERS } from './data.js?v=72';
-import * as Run from './runner.js?v=72';
-import * as Mon from './monsters.js?v=72';
-import * as Ap from './apprentice.js?v=72';
-import * as Rg from './region.js?v=72';
-import * as Mine from './mine.js?v=72';
-import * as Mi from './miner.js?v=72';
+import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=73';
+import { levelOf, makePiece, partOptions } from './rules.js?v=73';
+import { awayStep } from './shop.js?v=73';
+import { wageMult, capBonus, rung } from './growth.js?v=73';
+import * as Trail from './trail.js?v=73';
+import { TRAIL, MONSTERS } from './data.js?v=73';
+import * as Run from './runner.js?v=73';
+import * as Mon from './monsters.js?v=73';
+import * as Ap from './apprentice.js?v=73';
+import * as Rg from './region.js?v=73';
+import * as Mine from './mine.js?v=73';
+import * as Mi from './miner.js?v=73';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -95,7 +95,7 @@ export const tripHours = (p, route) => ROUTES[route].h * (p.trait === 'surefoot'
 // id: which runner (the first, when it isn't given). Only one runner goes after a gang at a time.
 export function sendRunner(save, route, now, id) {
   const p = id ? runners(save).find(x => x.id === id) : runnerOf(save), r = ROUTES[route];
-  if (!p || p.trip || !r || save.unpaid || save.coins < r.fee || (r.rung && rung(save) < r.rung) || Run.hurtNow(p, now) || (r.hunt && (!Run.huntOpen(save, now) || save.robbery.hunting))
+  if (!p || p.trip || !r || save.unpaid || save.coins < r.fee || (r.rung && rung(save) < r.rung) || (r.bottom && !Mine.atBottom(save)) || Run.hurtNow(p, now) || (r.hunt && (!Run.huntOpen(save, now) || save.robbery.hunting))
     || (r.beast && (!Mon.huntOpen(save, now) || save.monster.hunting))) return false;
   save.coins -= r.fee;
   p.trip = { route, left: now, back: now + tripHours(p, route) * H };
@@ -135,11 +135,12 @@ export function haul(save, p, route, rng, now) {
   const missing = Object.keys(FOUND).filter(id => !save.found.includes(id));
   if (r.tile && missing.length && rng() < r.tile * (p.trait === 'lucky' ? 2 : 1)) tile = pick(missing, rng);
   // on the trail of the Nine: a shard that lies below, now and then
-  let shard = null; const below = r.relic ? Trail.pending(save, 'deep') : [];
+  // (not by way of the mine: it doesn't change the trail, milestone 48)
+  let shard = null; const below = r.relic && !r.noShard ? Trail.pending(save, 'deep') : [];
   if (below.length && rng() < TRAIL.deep) shard = pick(below, rng);
   // a star's shard, now and then, carried down where it fell long ago: the star falls on the same days in every shop, and can go
   // weeks without falling (milestone 35)
-  const fell = !shard && r.relic ? Trail.pending(save, 'star') : [];
+  const fell = !shard && r.relic && !r.noShard ? Trail.pending(save, 'star') : [];
   if (fell.length && rng() < Trail.starBelowOf(save)) shard = pick(fell, rng);
   return { mats, piece, tile, blueprint, shard };
 }

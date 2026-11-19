@@ -100,7 +100,8 @@ test('the patterns: the mine\'s make no piece, are wanted by no one, and aren\'t
   const old = { ...shop({ maker: 'Old Hand', renown: 5000, trades: { dig: { xp: xpAt(5) } }, curve: 2 }), cards: [], staff: [{ id: 'a1', role: 'apprentice', name: 'Pip Hollis', trait: 'careful', hiredAt: NOW - 20 * 86400000, skill: {} }], mythicsMade: ['vericsedge', 'ironcrown', 'ringofnine', 'mantle', 'longsong', 'staffofosk', 'vericsdraught', 'farsight', 'morning'] };
   Mine.open(old, NOW);
   const h = Leg.handOn(old, [], NOW); assert.ok(h.ok, h.why);
-  assert.ok(!h.save.trades.dig && !h.save.trades.smelt, 'the heir learns the face from the start (the line\'s mine is milestone 48\'s)');
+  // the line's mine (milestone 48): the galleries kept, the face and the smelting at the rest's trade
+  assert.equal(R.levelOf(h.save.trades.dig.xp).level, 2); assert.equal(R.levelOf(h.save.trades.smelt.xp).level, 2); assert.deepEqual(h.save.mine.galleries, { reach: 1 });
 });
 
 test('the stage draws every pattern\'s working, wide and tall (milestone 45\'s fix: five forge patterns had no shape, and it threw)', async () => {

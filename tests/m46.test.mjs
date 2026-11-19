@@ -24,21 +24,21 @@ test('the third and fourth galleries: trade 5 and SOUGHT, trade 6 and FAMED, coi
   assert.equal(Mine.galleryName(s, 3), 'The darkclay seam'); assert.equal(Mine.galleryName(s, 4), 'The old workings');
   const c = shop({ region: 'greyshore' }); Mine.open(c, NOW);
   assert.equal(Mine.galleryName(c, 3), 'Under the harbour'); assert.equal(Mine.nextGallery(c).name, 'The second level');
-  const deep = mine(4); assert.equal(Mine.nextGallery(deep), null); assert.equal(Mine.galleries(deep), Mine.deepest());
+  const deep = mine(4); assert.equal(Mine.nextGallery(deep).n, 5, 'the bottom next (milestone 48)'); assert.equal(Mine.galleries(deep), Mine.deepest() - 1);
 });
 
 test('the deep seams: darkclay ore to smelt, blackwater iron and starmetal a lump or two at a time; the coast\'s own', () => {
   const s = mine(4);
-  assert.deepEqual(Mine.seams(s).slice(4).map(x => [x.ore, x.gallery, x.level]), [['darkclayore', 3, 5], ['cobalt', 3, 5], ['blackwater', 4, 6], ['starmetal', 4, 6]]);
+  assert.deepEqual(Mine.seams(s).slice(4, 8).map(x => [x.ore, x.gallery, x.level]), [['darkclayore', 3, 5], ['cobalt', 3, 5], ['blackwater', 4, 6], ['starmetal', 4, 6]]);
   assert.deepEqual([0, 1, 2].map(t => R.yieldOf('dig', t, [4]).n), [3, 4, 6]);
   assert.deepEqual([0, 1, 2].map(t => R.yieldOf('dig', t, [6]).n), [1, 2, 3]);
   assert.deepEqual([0, 1, 2].map(t => R.yieldOf('dig', t, [7]).n), [1, 1, 2]);
   assert.deepEqual([0, 1, 2].map(t => R.yieldOf('dig', t, [5]).n), [4, 6, 8], 'a seam with no haul of its own: the pattern\'s');
   assert.equal(R.yieldOf('smelt', 1, [3]).mat, 'darkclay'); assert.ok(MATS.darkclayore.ore);
   const c = mine(4, { region: 'greyshore' });
-  assert.deepEqual(Mine.seams(c).slice(4).map(x => x.ore), ['seasand', 'darkclayore', 'drownedsilver', 'starmetal']);
+  assert.deepEqual(Mine.seams(c).slice(4, 8).map(x => x.ore), ['seasand', 'darkclayore', 'drownedsilver', 'starmetal']);
   const dry = [...Array(30).keys()].map(i => NOW + i * D).find(t => !Mine.isFlooded(s, 3, t));   // (2e12 is a wet day in the Reach)
-  assert.ok(Mine.seams(s).every(x => Mine.canDig(s, x.i, dry).ok));
+  assert.ok(Mine.seams(s).filter(x => x.gallery <= 4).every(x => Mine.canDig(s, x.i, dry).ok));
   // where they come from
   assert.ok(Src.sourcesOf('blackwater').some(x => x.kind === 'dug' && /Gallery 4/.test(x.word)));
   assert.ok(Src.sourcesOf('darkclayore').some(x => x.kind === 'dug' && /Gallery 3/.test(x.word)));

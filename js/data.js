@@ -78,7 +78,7 @@ export const GEAR = {
   power: { common: 1, fine: 2, rare: 3, oldblood: 5, relic: 8, mythic: 12 },
   potions: ['salve', 'draught', 'tonic', 'oil', 'poultice'], carry: 2,
   // every road has its danger (release 41: the short roads a little too); its risk level by hurt + 8 × killed: LOW, MODERATE, HIGH, DEADLY
-  danger: { yard: { hurt: 0.002, die: 0 }, ford: { hurt: 0.008, die: 0 }, reach: { hurt: 0.025, die: 0 }, deep: { hurt: 0.06, die: 0.002 }, below: { hurt: 0.12, die: 0.007 }, gang: { hurt: 0.18, die: 0.01 } },
+  danger: { yard: { hurt: 0.002, die: 0 }, ford: { hurt: 0.008, die: 0 }, reach: { hurt: 0.025, die: 0 }, deep: { hurt: 0.06, die: 0.002 }, below: { hurt: 0.12, die: 0.007 }, shaft: { hurt: 0.06, die: 0.003 }, gang: { hurt: 0.18, die: 0.01 } },
   levels: [[0.01, 'LOW'], [0.04, 'MODERATE'], [0.1, 'HIGH'], [Infinity, 'DEADLY']],
   hurtDays: [2, 4], healer: 30, hunt: { base: 0.45, fight: 0.04, level: 0.02, tonic: 0.15, max: 0.95 }, bounty: 120, bountyRenown: 8,
 };
@@ -292,12 +292,17 @@ export const WORKS = { face: FACE };
 export const MINE = { rung: 2, dig: { reach: 'dig', greyshore: 'wheal' },
   galleries: [null, { name: 'The old working' }, { name: 'The second level', level: 3, coins: 300, mats: { oak: 4 } },
     { name: 'The darkclay seam', level: 5, rung: 3, coins: 1200, mats: { oak: 8 }, deep: true },
-    { name: 'The old workings', level: 6, rung: 4, coins: 3000, mats: { oak: 12 }, deep: true }],
-  gname: { greyshore: [null, 'The old working', 'The second level', 'Under the harbour', 'The drowned level'] },
+    { name: 'The old workings', level: 6, rung: 4, coins: 3000, mats: { oak: 12 }, deep: true },
+    // milestone 48: the bottom. It breaks through into the deep below the doors (on the coast, into the drowned town from below)
+    { name: 'The bottom', level: 7, rung: 5, coins: 8000, mats: { oak: 16 }, deep: true, bottom: true }],
+  gname: { greyshore: [null, 'The old working', 'The second level', 'Under the harbour', 'The drowned level', 'Under the drowned town'] },
   names: { reach: 'Veric\'s old workings', greyshore: 'Wheal Isel' },
-  shore: { per: 4, perFall: 3, worn: 30, fall: 0.5, oak: [0, 2, 3, 5, 6], clear: [0, 40, 80, 250, 500] },
-  water: { deep: 3, rain: 0.18, tides: 15, drainH: 36, pump: [0, 0, 0, 60, 120] },
-  pocket: { from: 3, odds: 0.5, coins: [30, 90], piece: 0.5, blueprint: 0.12 } };
+  shore: { per: 4, perFall: 3, worn: 30, fall: 0.5, oak: [0, 2, 3, 5, 6, 8], clear: [0, 40, 80, 250, 500, 1000] },
+  water: { deep: 3, rain: 0.18, tides: 15, drainH: 36, pump: [0, 0, 0, 60, 120, 200] },
+  pocket: { from: 3, odds: 0.5, coins: [30, 90], piece: 0.5, blueprint: 0.12 },
+  // milestone 48. bottom: a working of your own at the bottom's face turns up a relic material `relic` of the time (a miner's never
+  // does: they don't know it for what it is), and never twice within gapD days. line: the heir keeps the galleries, their shoring gone old (s left of 100)
+  bottom: { relic: 0.05, gapD: 10 }, line: { old: 10 } };
 
 // strip: [GOOD, GREAT, CRACK, HOLD]. level: the trade level that opens the metal (a stand-in until suppliers sell it, milestone 2).
 export const METALS = {
@@ -340,6 +345,8 @@ export const METALS = {
   seam_cobalt: { name: 'Cobalt bed', adj: 'Cobalt', strip: [10, 3, 4, 3], line: 'blue earth for the glass', tint: '#3a5aa8', level: 5, ore: 'cobalt', gallery: 3 },
   seam_blackwater: { name: 'Blackwater lode', adj: 'Blackwater', strip: [7, 5, 6, 2], widen: .8, line: 'iron that was never smelted: it comes up ready, a lump or two', tint: '#2a3038', level: 6, ore: 'blackwater', gallery: 4, n: [1, 2, 3] },
   seam_starmetal: { name: 'Fallen star', adj: 'Starmetal', strip: [6, 6, 7, 1], widen: .7, line: 'a star that fell before the town: the narrowest band in the mine', tint: '#b8c8e8', level: 6, ore: 'starmetal', gallery: 4, n: [1, 1, 2] },
+  // milestone 48: the bottom's face, where the mine breaks into the deep
+  seam_bottom: { name: 'The deep floor', adj: 'Deep', strip: [7, 6, 6, 1], widen: .7, line: 'the old darkclay at the bottom, the richest in the Reach: and now and then something older in it', tint: '#6a4a5a', level: 7, ore: 'darkclayore', gallery: 5, n: [4, 6, 8] },
   // Wheal Isel, under Saltby: tin from the first gallery, the brass-ore below
   seam_wheal: { name: 'Wheal tin', adj: 'Tin', strip: [10, 3, 4, 3], line: 'the old wheal\'s tin, with the copper in it: it smelts to bronze', tint: '#5a5a50', level: 1, ore: 'tinstone', gallery: 1 },
   seam_blacksand: { name: 'Black sand bed', adj: 'Black sand', strip: [11, 2, 2, 5], widen: 1.15, line: 'soft, wet sand: a wider band; black sand for the glass', tint: '#4a4a52', level: 1, ore: 'blacksand', gallery: 1 },
@@ -350,6 +357,7 @@ export const METALS = {
   seam_iseldark: { name: 'Darkclay vein', adj: 'Darkclay', strip: [7, 6, 6, 1], widen: .7, line: 'a thin vein of Veric\'s darkclay, run under the pass: it smelts to darkclay steel', tint: '#8a6a78', level: 5, ore: 'darkclayore', gallery: 3, n: [2, 3, 5] },
   seam_drowned: { name: 'Drowned silver', adj: 'Drowned silver', strip: [7, 5, 6, 2], widen: .8, line: 'silver gone black under the sea: it comes up ready, a lump or two', tint: '#5a6a78', level: 6, ore: 'drownedsilver', gallery: 4, n: [1, 2, 3] },
   seam_iselstar: { name: 'Fallen star', adj: 'Starmetal', strip: [6, 6, 7, 1], widen: .7, line: 'a star that fell into the sea before the town: the narrowest band in the mine', tint: '#b8c8e8', level: 6, ore: 'starmetal', gallery: 4, n: [1, 1, 2] },
+  seam_drownedtown: { name: 'The drowned town\'s floor', adj: 'Drowned', strip: [7, 5, 6, 2], widen: .8, line: 'under the drowned town\'s streets, its silver: and now and then something older in it', tint: '#4a5a6a', level: 7, ore: 'drownedsilver', gallery: 5, n: [2, 3, 4] },
   // the ores, smelted at the forge (bar: what they come out as)
   ironstone: { name: 'Ironstone', adj: 'Iron', strip: [10, 3, 4, 3], line: 'the baseline: it smelts to iron bars', tint: '#9a5a44', level: 1, bar: 'iron' },
   tinstone: { name: 'Tinstone', adj: 'Bronze', strip: [11, 2, 2, 5], widen: 1.15, line: 'forgiving: it smelts to bronze', tint: '#c99a5a', level: 1, bar: 'bronze' },
@@ -635,9 +643,9 @@ Object.assign(PATTERNS, {
 // or the ore's bar). mine: shown only once the trapdoor is open. bars: 0, a seam takes nothing from the store room
 Object.assign(PATTERNS, {
   dig: { name: 'Digging', trade: 'Mining', kind: 'ORE · FROM THE FACE', art: 'ore', value: 0, bars: 0, station: 'face', mine: true, makes: { from: 'ore', n: [4, 6, 8] },
-    parts: [{ part: 'Seam', metals: ['seam_iron', 'seam_sand', 'seam_tin', 'seam_silver', 'seam_darkclay', 'seam_cobalt', 'seam_blackwater', 'seam_starmetal'] }], affixes: [], lore: ['', '', '', ''] },
+    parts: [{ part: 'Seam', metals: ['seam_iron', 'seam_sand', 'seam_tin', 'seam_silver', 'seam_darkclay', 'seam_cobalt', 'seam_blackwater', 'seam_starmetal', 'seam_bottom'] }], affixes: [], lore: ['', '', '', ''] },
   wheal: { name: 'Digging', trade: 'Mining', kind: 'ORE · FROM THE FACE', art: 'ore', value: 0, bars: 0, station: 'face', mine: true, tradeAs: 'dig', makes: { from: 'ore', n: [4, 6, 8] },
-    parts: [{ part: 'Seam', metals: ['seam_wheal', 'seam_blacksand', 'seam_calamine', 'seam_isel', 'seam_seaglass', 'seam_iseldark', 'seam_drowned', 'seam_iselstar'] }], affixes: [], lore: ['', '', '', ''] },
+    parts: [{ part: 'Seam', metals: ['seam_wheal', 'seam_blacksand', 'seam_calamine', 'seam_isel', 'seam_seaglass', 'seam_iseldark', 'seam_drowned', 'seam_iselstar', 'seam_drownedtown'] }], affixes: [], lore: ['', '', '', ''] },
   smelt: { name: 'Smelting', trade: 'Smelting', kind: 'BARS · FROM THE ORE', art: 'ore', value: 0, bars: 3, mine: true, makes: { from: 'bar', n: [4, 5, 6] },
     parts: [{ part: 'Ore', metals: ['ironstone', 'tinstone', 'silverore', 'darkclayore', 'calamine'] }], affixes: [], lore: ['', '', '', ''] },
 });
@@ -1096,6 +1104,9 @@ export const ROUTES = {
   deep: { name: 'Into the deep doors', from: 'the deep doors', h: 8, fee: 80, commons: [6, 10], rare: 2, piece: 0.5, tile: 0.3 },
   // the Deep: from RENOWNED. Long, dear, and it can come back with nothing much; relic: [the odds of one relic material, of a second]
   below: { name: 'Below the deep doors', from: 'below the deep doors', h: 12, fee: 400, commons: [4, 8], rare: 3, piece: 0.4, tile: 0.2, relic: [0.6, 0.15], empty: 0.15, rung: 5 },
+  // the way down through the mine (milestone 48): once it's broken through. Shorter and safer than the road to the doors, and dearer
+  // than the road's fee for the lamps and the winding; the Nine's shards aren't found that way (noShard: the mine doesn't change the trail)
+  shaft: { name: 'Down through the mine', from: 'below, by way of the mine', h: 9, fee: 300, commons: [4, 8], rare: 3, piece: 0.4, tile: 0.2, relic: [0.6, 0.15], empty: 0.15, bottom: true, noShard: true },
   // the hunt (milestone 22): only while a robbery's trail is warm; no haul, the stolen pieces back and a bounty if they catch them
   // the beast (milestone 34): only while a monster's about (from the sightings to a day after); its danger is the kind's (MONSTERS.hunt)
   beast: { name: 'Hunt the beast', from: 'the hunt', h: 6, fee: 50, commons: [0, 0], rare: 0, piece: 0, tile: 0, beast: true },
@@ -1324,6 +1335,7 @@ export const REGIONS = {
       reach: { name: 'Out to the islands', from: 'the islands' },
       deep: { name: 'The drowned town at low tide', from: 'the drowned town' },
       below: { name: 'Below the drowned town', from: 'below the drowned town' },
+      shaft: { name: 'Down through Wheal Isel', from: 'under the drowned town, by way of Wheal Isel' },
     },
     commons: ['iron', 'iron', 'bronze', 'brass', 'steel', 'wrap', 'cord', 'cord', 'sailcloth', 'tar', 'salt', 'sealskin', 'sealskin', 'sharkhide', 'whalebone',
       'whalebone', 'gut', 'linen', 'kelpash', 'strap', 'deer', 'goose', 'bone', 'horn'],

@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The town's wants, with no page access: what's in demand today and what's out of favour. It follows the real calendar day (UTC), so
 // every player sees the same notice board on the same day. The day's pick is kept on the save (save.town) for the shop's rules.
-import { DEMAND, EVENT_ODDS, LIVING } from './data.js?v=72';
-import * as Rg from './region.js?v=72';
+import { DEMAND, EVENT_ODDS, LIVING } from './data.js?v=73';
+import * as Rg from './region.js?v=73';
 
 export const dayOf = ms => Math.floor(ms / 86400000);
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }

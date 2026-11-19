@@ -23,7 +23,7 @@ import * as Leg from '../js/legacy.js';
 import * as Rg from '../js/region.js';
 import * as Mine from '../js/mine.js';
 import fs from 'node:fs';
-import { BRANCH, RELICS, MYTHICS } from '../js/data.js';
+import { BRANCH, RELICS, MYTHICS, MATS } from '../js/data.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD, RELIC_WORK } from '../js/data.js';
 
 const days = +process.argv[2] || 7, seed0 = +process.argv[3] || 1, SESSION_MIN = +process.argv[4] || 45;
@@ -121,6 +121,8 @@ let dug = 0, smelted = 0, mineBars = {}, mineSlot = 0;
 // for finding what a change does (milestone 46): DEEPEST=n, the bot opens no gallery past n; NOPOCKET, no pockets; NOSHORE, no shoring
 // (with DEEPEST=2 and NOSHORE, the run is release 70's to the byte, but for the shafts line)
 const DEEPEST = +process.env.DEEPEST || 9, NOPOCKET = !!process.env.NOPOCKET, NOSHORE = !!process.env.NOSHORE;
+// milestone 48: NOSHAFT, the bot never sends a runner down through the mine
+const NOSHAFT = !!process.env.NOSHAFT; let shaftTrips = 0, deepFinds = [], relicBought = 0;   // (relicBought: relic materials bought, from the Crown's factor)
 const shafts = { shored: 0, oak: 0, coins: 0, falls: 0, pumped: 0, wet: 0, pockets: {} };   // milestone 46
 // THE MINERS (milestone 47; MINERS=n, with MINE): the bot hires up to n miners once the trapdoor's open, set to the dearest open seam,
 // bare (no gear), and keeps the galleries shored for them
@@ -180,6 +182,8 @@ function mineOne(hour) {
   const sh = NOSHORE ? null : Mine.afterDig(save, seam.gallery, rng() < 0.4 ? 1 : 0, rng, t);   // a steady player's: a rockfall now and then
   if (sh && sh.fell) { shafts.falls++; note('the roof came in: gallery ' + seam.gallery); }   // (milestone 47: this line had slipped into the comment above, so falls went uncounted)
   const k = NOPOCKET ? null : Mine.pocket(save, seam.gallery, y.res.tier, rng, t);
+  const df = NOPOCKET ? null : Mine.deepFind(save, seam.gallery, rng, t);   // the bottom's face (milestone 48)
+  if (df) { deepFinds.push(df.mat); note('a relic material at the bottom of the mine: ' + df.mat); }
   if (k) { const w = Object.keys(k)[0]; shafts.pockets[w] = (shafts.pockets[w] || 0) + 1; if (k.piece) Sh.place(save, k.piece.id, null, 'fair'); if (k.blueprint) note('a blueprint in a pocket: ' + k.blueprint); }
   return true;
 }
@@ -265,13 +269,15 @@ function relicWork(day) {
   if (!r) { const c = St.candidates(save, Math.floor(t / H)).find(x => x.role === 'runner'); if (c && save.coins > St.hireFee(c) + 500) { St.hire(save, c); r = St.runnerOf(save); } }
   if (r && !r.trip) kit(r);
   if (r && !r.trip && Run.huntOpen(save, t)) { if (St.sendRunner(save, 'gang', t)) hunts++; }
-  if (r && !r.trip && save.coins > 900) St.sendRunner(save, 'below', t);
+  // the way down through the mine (milestone 48), once it's broken through, while no shard lies below (that way finds none)
+  const shaftOk = Mine.atBottom(save) && !NOSHAFT && !Trail.pending(save, 'deep').length && !Trail.pending(save, 'star').length;
+  if (r && !r.trip && save.coins > 900 && St.sendRunner(save, shaftOk ? 'shaft' : 'below', t) && shaftOk) shaftTrips++;
   for (const c of save.cards.filter(x => x.tier === 'oldblood' || x.tier === 'rare').sort((a, b) => (b.tier === 'oldblood') - (a.tier === 'oldblood'))) {   // an Old-Blood piece first, else a Rare (milestone 34)
     let g = Sh.relicFor(save, c);
     if (!g.ok && g.why.length === 1 && /back room/.test(g.why[0])) { toBack(c); g = Sh.relicFor(save, c); }
     if (!g.ok) continue;
     const cost = Sh.relicCost(c, g.relic), short = Sh.short(save.mats, cost);
-    short.forEach(x => Sh.buy(save, x.mat, x.n - x.have, Math.floor(t / H)));   // the relic material too, from the Crown's factor when it has it
+    short.forEach(x => { if (Sh.buy(save, x.mat, x.n - x.have, Math.floor(t / H)) && MATS[x.mat].relic) relicBought += x.n - x.have; });   // the relic material too, from the Crown's factor when it has it
     if (Sh.short(save.mats, cost).length) continue;
     if (!Sh.takeMats(save, cost)) continue;
     relicTried++;
@@ -304,7 +310,7 @@ function nineWork(day) {
     if (!g.ok && save.hall && g.why.length === 1 && /back room/.test(g.why[0])) { for (const k of Object.keys(save.hall.shown || {})) if (save.hall.shown[k] === relic.id) delete save.hall.shown[k]; g = Sh.mythicFor(save, relic); }
     if (!g.ok) continue;
     const cost = Sh.mythicCost(relic, id);
-    buyShort(cost);   // the relic material from the Crown's factor, when it has it this hour (milestone 34)
+    { const had = Object.fromEntries(cost.map(c => [c.mat, save.mats[c.mat] || 0])); buyShort(cost); cost.forEach(c => { if (MATS[c.mat] && MATS[c.mat].relic) relicBought += Math.max(0, (save.mats[c.mat] || 0) - had[c.mat]); }); }   // the relic material from the Crown's factor, when it has it this hour (milestone 34)
     if (!Sh.takeMats(save, cost)) continue;
     mythicTried++;
     if (rng() < 0.25) {
@@ -471,7 +477,7 @@ if (BANKING) console.log('bank: borrowed on day', loanDay, ' interest paid', int
 console.log('EARNED', save.earned, 'coins', save.coins);
 if (MINERS_N) console.log('miners: hauls', dugBy.hauls, ' brought', JSON.stringify(dugBy.mats), ' hurt', dugBy.hurt, ' beasts', dugBy.beasts, ' falls on them', dugBy.falls, ' hauls dropped', dugBy.lost);
 if (MINING) console.log('mine: dug', dug, ' smelted', smelted, ' galleries', Mine.galleries(save), ' mining trade', Mine.level(save), ' smelting trade', R.levelOf((save.trades.smelt || {}).xp || 0).level, ' brought up', JSON.stringify(mineBars), ' worth', Object.entries(mineBars).reduce((a, [m, n]) => a + Sh.priceOf(m, 0, save) * n, 0), 'c');
-if (MINING) console.log('shafts:', JSON.stringify(shafts));
+if (MINING) console.log('shafts:', JSON.stringify(shafts), ' bottom: relic finds', deepFinds.length, JSON.stringify(deepFinds), ' runners down the mine', shaftTrips, ' relic materials bought', relicBought);
 { const a = Ap.apprenticeOf(save); if (APPR) console.log('apprentice: ' + (a ? a.name + ' (' + (a.trait) + ') from day ' + apprDay + ', made ' + (a.made || 0) + ' (open ' + benched + ') sold ' + apN + ' for ' + apSold + ' spent ' + (a.spent || 0) + '  trades ' + Ap.skills(a).slice(0, 5).map(x => x.id + ' ' + x.level).join(', ') : 'none')); }
 if (WEARING) console.log('wear: repairs', repairs, ' broke', broke, ' spent', wearSpent, ' (' + (100 * wearSpent / (save.earned || 1)).toFixed(1) + ' % of earnings)');
 if (THIEVING) console.log('thieves: robbed', robbed, ' caught', caught, ' turned away', turned, ' lost pieces worth', lostWorth, ' from the till', lostTill, ' (' + (100 * (lostWorth + lostTill) / (save.earned || 1)).toFixed(1) + ' % of earnings)');

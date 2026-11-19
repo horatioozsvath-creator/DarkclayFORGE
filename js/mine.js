@@ -4,11 +4,11 @@
 // Each region has its own mine (the Reach's under the shop, Wheal Isel under Saltby): save.mine.galleries keeps how far down each is.
 // Milestone 46: the deep galleries, the shoring (save.mine.state[region][gallery]: s, the timbers left; fell, the roof's in; pumped,
 // when its water was last pumped out), the water and the pockets.
-import { MINE, PATTERNS, METALS, MATS, RENOWN, RELICS } from './data.js?v=72';
-import { levelOf, partOptions, makePiece } from './rules.js?v=72';
-import { rung } from './growth.js?v=72';
-import { threatsOn } from './bank.js?v=72';
-import * as Rg from './region.js?v=72';
+import { MINE, PATTERNS, METALS, MATS, RENOWN, RELICS } from './data.js?v=73';
+import { levelOf, partOptions, makePiece } from './rules.js?v=73';
+import { rung } from './growth.js?v=73';
+import { threatsOn } from './bank.js?v=73';
+import * as Rg from './region.js?v=73';
 
 const H = 3600000, D = 24 * H;
 
@@ -33,6 +33,24 @@ export function open(save, now) {
 // how far down this region's mine is (0: not opened here yet; the first gallery opens with the trapdoor, in either region)
 export const galleries = save => !save.mine ? 0 : (save.mine.galleries || {})[Rg.regionId(save)] || 1;
 export const deepest = () => MINE.galleries.length - 1;
+// broken through (milestone 48): this region's mine is down to the bottom, into the deep below the doors (on the coast, the drowned town)
+export const atBottom = save => !!save && !!save.mine && galleries(save) >= deepest();
+export const RELIC_ORE = Object.keys(MATS).filter(id => MATS[id].relic);
+// a working of your own at the bottom's face: now and then a relic material in the rock (never a miner's: they don't know it), never
+// twice within MINE.bottom.gapD days
+export function deepFind(save, g, rng, now) {
+  if (!save.mine || !(MINE.galleries[g] || {}).bottom || now - (save.mine.relicAt || 0) < MINE.bottom.gapD * D || rng() >= MINE.bottom.relic) return null;
+  const m = RELIC_ORE[Math.floor(rng() * RELIC_ORE.length)]; save.mats[m] = (save.mats[m] || 0) + 1; save.mine.relicAt = now; return { mat: m };
+}
+// the heir's mine (milestone 48): the galleries the line opened, in every region, their shoring gone old; nothing fallen, nothing pumped
+export function inherit(old, now) {
+  if (!old.mine) return null;
+  const galleries = { ...(old.mine.galleries || {}) }, state = {};
+  for (const [r, n] of Object.entries(galleries)) { state[r] = {}; for (let g = 1; g <= n; g++) state[r][g] = { s: MINE.line.old, fell: false, pumped: 0 }; }
+  return { at: now, galleries, state, from: old.maker };
+}
+// how deep a shop's mine went, in any region (for the line's record)
+export const depthOf = save => save.mine ? Math.max(1, ...Object.values(save.mine.galleries || {})) : 0;
 // a gallery's name in this region's mine
 export const galleryName = (save, g) => ((MINE.gname[Rg.regionId(save)] || [])[g]) || (MINE.galleries[g] || {}).name || '';
 // the mining trade: one between the regions (the Reach's DIGGING and the coast's share it: tradeAs)

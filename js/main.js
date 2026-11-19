@@ -1,40 +1,40 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, APPRENTICE, LEGACY, TRAITS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE, MINE } from './data.js?v=72';
-import * as R from './rules.js?v=72';
-import * as Sh from './shop.js?v=72';
-import * as St from './staff.js?v=72';
-import * as Rm from './room.js?v=72';
-import * as G from './growth.js?v=72';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=72';
-import * as Snd from './sound.js?v=72';
-import * as CV from './counter.js?v=72';
-import * as Town from './town.js?v=72';
-import * as V from './visit.js?v=72';
-import * as Br from './branch.js?v=72';
-import * as Bank from './bank.js?v=72';
-import * as Wear from './wear.js?v=72';
-import * as Th from './thieves.js?v=72';
-import * as Run from './runner.js?v=72';
-import * as Src from './sources.js?v=72';
-import * as Mon from './monsters.js?v=72';
-import * as Liv from './living.js?v=72';
-import * as Hl from './hall.js?v=72';
-import * as Trail from './trail.js?v=72';
-import * as Rg from './region.js?v=72';
-import * as Disc from './discover.js?v=72';
-import { ICONS, emblem, watch } from './icons.js?v=72';
-import { drawFlyer, flyerBlob } from './flyer.js?v=72';
-import * as Ap from './apprentice.js?v=72';
-import * as Mi from './miner.js?v=72';
-import * as Leg from './legacy.js?v=72';
-import * as Mine from './mine.js?v=72';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=72';
-import { card, ART } from './card.js?v=72';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=72';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=72';
+import { KINDS, KC, TIERS, APPRENTICE, LEGACY, TRAITS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE, MINE } from './data.js?v=73';
+import * as R from './rules.js?v=73';
+import * as Sh from './shop.js?v=73';
+import * as St from './staff.js?v=73';
+import * as Rm from './room.js?v=73';
+import * as G from './growth.js?v=73';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=73';
+import * as Snd from './sound.js?v=73';
+import * as CV from './counter.js?v=73';
+import * as Town from './town.js?v=73';
+import * as V from './visit.js?v=73';
+import * as Br from './branch.js?v=73';
+import * as Bank from './bank.js?v=73';
+import * as Wear from './wear.js?v=73';
+import * as Th from './thieves.js?v=73';
+import * as Run from './runner.js?v=73';
+import * as Src from './sources.js?v=73';
+import * as Mon from './monsters.js?v=73';
+import * as Liv from './living.js?v=73';
+import * as Hl from './hall.js?v=73';
+import * as Trail from './trail.js?v=73';
+import * as Rg from './region.js?v=73';
+import * as Disc from './discover.js?v=73';
+import { ICONS, emblem, watch } from './icons.js?v=73';
+import { drawFlyer, flyerBlob } from './flyer.js?v=73';
+import * as Ap from './apprentice.js?v=73';
+import * as Mi from './miner.js?v=73';
+import * as Leg from './legacy.js?v=73';
+import * as Mine from './mine.js?v=73';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=73';
+import { card, ART } from './card.js?v=73';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=73';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=73';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 72;
+const VERSION = 73;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayZERO_FORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -428,7 +428,7 @@ function showHandOn() {
     : '<p>The forge goes to <b>' + esc(p.name) + '</b>, a generation later, back over the pass in the Reach. The Nine of Veric lie scattered, and the Reach is yours to win back: a fresh climb, with what the line has learned.</p>';   // going home (milestone 44)
   openLook('<div class="ending"><div class="oldword" style="color:var(--t-mythic)">THE LEGACY</div><h2>Hand on the forge</h2>'
     + goes + cross
-    + '<p><b>The line keeps:</b> the book (every pattern found, every try and clue), the blueprints (known, not made), the found tiles, ' + esc(p.name) + '\'s trades (' + (own.length ? own.map(x => esc(PATTERNS[x.id].name) + ' ' + x.level).join(', ') + '; ' : '') + 'trade ' + LEGACY.rest + ' in the rest), their trait for good (' + esc(TRAITS.apprentice.find(t => t.id === p.trait)?.word || p.trait) + ': ' + esc(tr.line || '') + '), and ' + (n > 1 ? 'two heirlooms' : 'one heirloom') + '.' + welcome + '</p>'
+    + '<p><b>The line keeps:</b> the book (every pattern found, every try and clue), the blueprints (known, not made), the found tiles, ' + esc(p.name) + '\'s trades (' + (own.length ? own.map(x => esc(PATTERNS[x.id].name) + ' ' + x.level).join(', ') + '; ' : '') + 'trade ' + LEGACY.rest + ' in the rest), their trait for good (' + esc(TRAITS.apprentice.find(t => t.id === p.trait)?.word || p.trait) + ': ' + esc(tr.line || '') + ')' + (save.mine ? ', the mine (down to gallery ' + Mine.depthOf(save) + ', its shoring gone old: shore it again before you dig, and the face and smelting at trade ' + LEGACY.rest + ')' : '') + ', and ' + (n > 1 ? 'two heirlooms' : 'one heirloom') + '.' + welcome + '</p>'
     + '<p><b>Starts over:</b> coin (a purse of ' + LEGACY.purse + ' c), renown, the room, the stations (the forge only), the tools and skills, the staff, the shelves and the back room, the Bank, the Hall, the trail and its shards, the regulars, the second shop.</p>'
     + '<div class="oldword" style="margin-top:16px">' + (n > 1 ? 'THE HEIRLOOMS' : 'THE HEIRLOOM') + '</div>' + (list.length ? '<p>' + (n > 1 ? 'Two pieces' : 'One piece') + ' to hang over the new shop\'s door: never for sale, and ' + (n > 1 ? 'they draw' : 'it draws') + ' customers. The rest stays with your shop.</p><div class="handpick">' + pick + '</div>' : '<p>You have no Old-Blood piece, Relic or Mythic in the shop to pass on: the forge goes on without an heirloom.</p>')
     + '<div class="oldword" style="margin-top:16px">YOUR SHOP</div><p>Your shop is kept in the line\'s record, with its save code. Copy the code now too, if you want to keep it somewhere safe.</p><p class="note" id="handNote"></p></div>',
@@ -461,7 +461,7 @@ function renderLine() {
   $('line').innerHTML = (looms.length ? '<div class="fi have"><b>' + looms.map(h => '<span style="color:var(--t-' + h.tier + ')">' + esc(h.name) + '</span>').join(' · ') + '</b><span>' + (looms.length > 1 ? 'The heirlooms' : 'The heirloom') + ', from ' + esc(names([...new Set(looms.map(h => h.from))])) + ': over the shop door. Never for sale; ' + (looms.length > 1 ? 'they draw' : 'it draws') + ' customers (charm +' + G.heirloomCharm(save) + ').</span></div>' : '')
     + line.map(r => { const passed = r.heirlooms || (r.heirloom ? [r.heirloom] : []);
       const RL = Rg.legendIn(r.region);   // where that generation worked (milestone 42; an old record is the Reach's)
-      return '<div class="fi"><b>' + esc(genWord(r.gen)) + ' OF THE LINE · ' + esc(r.maker) + RL.ofLine + '</b><span>' + (r.nine >= 9 ? RL.maker + (r.days ? ', in ' + r.days + ' days' : '') : r.nine + ' of the Nine') + '. Renown ' + r.renown.toLocaleString() + '; ' + r.made.toLocaleString() + ' made, ' + r.sold.toLocaleString() + ' sold. '
+      return '<div class="fi"><b>' + esc(genWord(r.gen)) + ' OF THE LINE · ' + esc(r.maker) + RL.ofLine + '</b><span>' + (r.nine >= 9 ? RL.maker + (r.days ? ', in ' + r.days + ' days' : '') : r.nine + ' of the Nine') + '. Renown ' + r.renown.toLocaleString() + '; ' + r.made.toLocaleString() + ' made, ' + r.sold.toLocaleString() + ' sold. ' + (r.depth ? 'The mine down to gallery ' + r.depth + (r.depth >= Mine.deepest() ? ', the bottom' : '') + '. ' : '')
       + (passed.length ? 'Passed on ' + esc(names(passed.map(x => x.name))) + '.' : 'Passed on no heirloom.') + (r.hall.length ? ' In the Hall: ' + r.hall.map(esc).join(', ') + '.' : '') + '</span>'
       + (r.code ? '<button class="seg" data-linecode="' + (r.gen) + '">COPY ' + esc(r.maker.toUpperCase()) + '\'S SAVE CODE</button><span>Load it into another slot (THE FORGE › SAVE) to play that shop again.</span>' : '') + '</div>'; }).join('')
     + '<div class="fi"><b>' + esc(genWord(Leg.gen(save))) + ' OF THE LINE · ' + esc(save.maker) + Rg.legend(save).ofLine + '</b><span>Now at the forge' + (save.lineOf ? ', of the line of ' + esc(save.lineOf) : '') + '.</span></div>';
@@ -551,7 +551,7 @@ let floorShown = null;
 let cvw = null, cvP = null, iso = false, cvSig = '', cvFront = null;
 function counterView() {
   $('cview').hidden = false; $('cvActs').hidden = false; $('floor').hidden = true; $('dioBar').hidden = true;
-  if (!cvP) cvP = import('./counter.js?v=72').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
+  if (!cvP) cvP = import('./counter.js?v=73').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
   else if (cvw) cvw.show(save, Sh.priceAt);
 }
 // a place on the painted wall: its piece (take it down), or empty (hang one from the back room)
@@ -566,7 +566,7 @@ function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   if (!iso) { counterView(); tip('shop', $('cview')); return; }
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=72').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=73').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -1234,7 +1234,7 @@ function mineYieldHtml(res, y) {
   const m = MATS[y.mat], dug = R.stationOf(pat).id === 'face', tint = (S && S.metal && S.metal.tint) || '#9a5a44';
   const word = dug ? (MATS[y.mat].ore ? 'Into the store room: smelt it at the forge.' : ['clearsand', 'blacksand', 'seasand', 'cobalt'].includes(y.mat) ? 'Into the store room for the glass.' : 'Into the store room, ready to work.') : 'Into the store room, as good as the yard\'s.';
   return '<div class="yield"><div class="tier" style="color:' + TIERC[res.tier] + '">' + TIERS[res.tier].name.toUpperCase() + (dug ? ' HAUL' : ' SMELT') + '</div><div class="cd-art">' + ART.ore(tint) + '</div><h3>' + y.n + ' ' + esc(m.name.toLowerCase()) + (/bar$/.test(m.name) && y.n > 1 ? 's' : '') + (y.gem ? ', and a rough gem' : '') + '</h3><p>'
-    + word + ' You have ' + save.mats[y.mat] + '.' + (y.gem ? ' The gem was in the vein.' : '') + '</p>' + (y.pocket ? pocketHtml(y.pocket) : '') + '</div>';
+    + word + ' You have ' + save.mats[y.mat] + '.' + (y.gem ? ' The gem was in the vein.' : '') + '</p>' + (y.pocket ? pocketHtml(y.pocket) : '') + (y.deep ? '<p class="pocket">Something older than the seam came away with it: <b>' + esc(MATS[y.deep.mat].name) + '</b>, a relic material. It\'s in the store room.</p>' : '') + '</div>';
 }
 // a pocket broken into (milestone 46)
 function pocketHtml(k) {
@@ -1280,7 +1280,8 @@ function renderMine() {
   const nx = Mine.nextGallery(save);
   $('mineDepth').textContent = 'GALLERY ' + g + ' OF ' + Mine.deepest();
   $('mineDownWord').textContent = nx ? 'Below: ' + nx.name.toLowerCase() + ', gallery ' + nx.n + '. Opening it takes ' + nx.coins.toLocaleString() + ' c and ' + Object.entries(nx.mats).map(([m, k]) => k + ' ' + MATS[m].name.toLowerCase() + 's').join(', ') + ' to shore it, trade ' + nx.level + ' in mining' + (nx.rung ? ' and a shop ' + RENOWN[nx.rung].word : '') + '.'
-    + (nx.deep ? ' The deep galleries take water.' : '') + (nx.ok ? '' : ' Still to find: ' + nx.why.join(', ') + '.')
+    + (nx.bottom ? ' It\'s the bottom: the rock below sounds hollow.' : nx.deep ? ' The deep galleries take water.' : '') + (nx.ok ? '' : ' Still to find: ' + nx.why.join(', ') + '.')
+    : Mine.atBottom(save) ? (Rg.isReach(save) ? 'The bottom: the floor broke through into the deep below the doors.' : 'The bottom: the floor broke through into the drowned town, from below.') + ' Runners can go down through the mine (STAFF), a shorter, safer way than the road; and the deep floor\'s rock gives up a relic material now and then, to your own hand.'
     : 'As deep as the mine goes, for now. Below the old workings the rock is warm, and it sounds hollow under the pick.';
   $('mineDown').hidden = !nx; if (nx) { $('mineDown').textContent = 'OPEN GALLERY ' + nx.n; $('mineDown').disabled = !nx.ok; }
 }
@@ -1305,7 +1306,7 @@ function renderGalleries(g, now) {
   $('mineGalleries').querySelectorAll('[data-pump]').forEach(b => b.onclick = () => { const r = Mine.pump(save, +b.dataset.pump, Date.now()); mineNote = r.ok ? 'Pumped dry, for ' + r.cost + ' c.' : 'Not yet: ' + r.why + '.'; if (r.ok) Snd.play('coin'); done(); });
 }
 $('mineOpen').onclick = () => { const r = Mine.open(save, Date.now()); if (r.ok) { store(save); Snd.play('level'); show('mine'); tip('mine', $('mineSeams').closest('section')); } else mineNote = 'Not yet: ' + r.why + '.'; renderMine(); };
-$('mineDown').onclick = () => { const r = Mine.openGallery(save); mineNote = r.ok ? 'Gallery ' + r.n + ', ' + Mine.galleryName(save, r.n).toLowerCase() + ', is open, the roof shored with oak.' : 'Not yet: ' + r.why + '.'; if (r.ok) { store(save); coins(); Snd.play('level'); } renderMine(); };
+$('mineDown').onclick = () => { const r = Mine.openGallery(save); mineNote = r.ok ? (Mine.atBottom(save) ? 'The floor gave way under the pick: ' + Mine.galleryName(save, r.n).toLowerCase() + ' opens on ' + (Rg.isReach(save) ? 'the deep below the doors' : 'the drowned town, from below') + '. Runners can go down through the mine now (STAFF).' : 'Gallery ' + r.n + ', ' + Mine.galleryName(save, r.n).toLowerCase() + ', is open, the roof shored with oak.') : 'Not yet: ' + r.why + '.'; if (r.ok) { store(save); coins(); Snd.play('level'); } renderMine(); };
 
 function toStaff() { clearTimers(); S = null; rescueCheck(); show('staff'); coins(); renderStaff(); tip('staff', $('staffList').closest('section')); }
 let staffTick = 0;
@@ -1381,8 +1382,8 @@ function renderStaff() {
     else if (p.role === 'miner') status = minerHtml(p, now);
     else if (p.role === 'runner' && Run.hurtNow(p, now)) status = gearHtml(p) + '<div class="status bad">Hurt, resting: back on their feet in ' + hm((p.hurt - now) / 1000) + '.</div>';
     else if (p.trip) status = (p.role === 'runner' ? gearHtml(p) : '') + '<div class="status">' + Rg.routes(save)[p.trip.route].name + ' · back in <b data-back="' + p.trip.back + '">' + hm((p.trip.back - now) / 1000) + '</b></div>';
-    else status = gearHtml(p) + '<div class="status">Ready to go out. Send them on a road:</div><div class="routes">' + Object.entries(Rg.routes(save)).filter(([id, r]) => (!r.hunt || (Run.huntOpen(save, now) && !save.robbery.hunting)) && (!r.beast || (Mon.huntOpen(save, now) && !save.monster.hunting))).map(([id, r]) =>
-      '<button class="seg" data-send="' + id + '" data-who="' + p.id + '"' + (save.coins < r.fee || (r.rung && G.rung(save) < r.rung) ? ' disabled' : '') + '><span>' + r.name + '</span>' + riskBadge(p, id, now) + '<small>' + (r.rung && G.rung(save) < r.rung ? 'opens when the shop is ' + RENOWN[r.rung].word + ' · ' : '') + hm(St.tripHours(p, id) * 3600) + ' · ' + r.fee + ' c' + (r.beast ? ' · after ' + esc(Mon.kindOf(save.monster).name.toLowerCase()) + ': brought down ' + pct(Run.beastOdds(save, p)) + ' of the time · a bounty, a trophy, ' + MATS[Mon.huntKind(save).mat].name + ' · dangerous' : '') + (r.hunt ? ' · after ' + esc(save.robbery.gang) + ': ' + save.robbery.took.map(c => esc(c.name)).join(', ') + ' back, and a bounty, if they catch them · dangerous' : r.relic ? ' · relic materials, maybe · it can come back empty' : r.rare ? ' · rare things' : '') + (r.tile ? ' · a found tile, maybe' : '') + '</small></button>').join('') + '</div>';
+    else status = gearHtml(p) + '<div class="status">Ready to go out. Send them on a road:</div><div class="routes">' + Object.entries(Rg.routes(save)).filter(([id, r]) => (!r.bottom || Mine.atBottom(save)) && (!r.hunt || (Run.huntOpen(save, now) && !save.robbery.hunting)) && (!r.beast || (Mon.huntOpen(save, now) && !save.monster.hunting))).map(([id, r]) =>
+      '<button class="seg" data-send="' + id + '" data-who="' + p.id + '"' + (save.coins < r.fee || (r.rung && G.rung(save) < r.rung) ? ' disabled' : '') + '><span>' + r.name + '</span>' + riskBadge(p, id, now) + '<small>' + (r.rung && G.rung(save) < r.rung ? 'opens when the shop is ' + RENOWN[r.rung].word + ' · ' : '') + hm(St.tripHours(p, id) * 3600) + ' · ' + r.fee + ' c' + (r.beast ? ' · after ' + esc(Mon.kindOf(save.monster).name.toLowerCase()) + ': brought down ' + pct(Run.beastOdds(save, p)) + ' of the time · a bounty, a trophy, ' + MATS[Mon.huntKind(save).mat].name + ' · dangerous' : '') + (r.hunt ? ' · after ' + esc(save.robbery.gang) + ': ' + save.robbery.took.map(c => esc(c.name)).join(', ') + ' back, and a bounty, if they catch them · dangerous' : r.relic ? ' · relic materials, maybe · it can come back empty' + (r.noShard ? ' · no shard of the Nine is found this way' : '') : r.rare ? ' · rare things' : '') + (r.tile ? ' · a found tile, maybe' : '') + '</small></button>').join('') + '</div>';
     return '<div class="person">' + personHtml(p, true) + status + '<div class="rbtns left"><button class="seg" data-letgo="' + p.id + '">LET THEM GO</button></div></div>';
   }).join('') + memorialHtml() : '<div class="empty">No one works here but you. A clerk keeps the shop while you\'re away; a runner goes out for materials. See who\'s <button class="linkish" data-tabjump="hire">looking for work</button>.</div>' + memorialHtml();
   const cands = St.candidates(save, hour()), mins = 60 - new Date().getMinutes();
@@ -2016,6 +2017,8 @@ function complete(res, picked) {
     if (R.stationOf(pat).id === 'face') {   // the gallery's shoring wears, and a Rare haul down deep breaks into a pocket (milestone 46)
       const g = R.chosenParts(pat, picks())[0].gallery, now = Date.now(), sh = Mine.afterDig(save, g, (S && S.spalls) || 0, rng, now), nm = Mine.galleryName(save, g);
       yields.pocket = Mine.pocket(save, g, res.tier, rng, now);
+      yields.deep = Mine.deepFind(save, g, rng, now);   // the bottom's face: now and then a relic material (milestone 48)
+      if (yields.deep) { Snd.play('chime'); bookLine('At the bottom of the mine, in the rock: ' + MATS[yields.deep.mat].name + '.'); }
       if (yields.pocket) Snd.play('chime');
       if (yields.pocket && yields.pocket.blueprint) bookLine('A blueprint in a pocket in ' + nm.toLowerCase() + ': ' + RELICS[yields.pocket.blueprint].name + '.');
       if (sh && sh.fell) { setTimeout(() => toast('<b>THE ROOF CAME IN</b><br>You got out with the haul, but ' + esc(nm.toLowerCase()) + ' is shut till the fall\'s cleared and it\'s shored again. THE MINE › THE GALLERIES.'), 900); Snd.play('bell'); }
@@ -2263,7 +2266,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=72').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=73').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -2342,7 +2345,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=72').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=73').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }
