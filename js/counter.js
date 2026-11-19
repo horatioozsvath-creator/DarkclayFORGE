@@ -4,12 +4,12 @@
 // cut out to stand in front of the customers), with what changes laid over it in 2D: your cards on the painted shelves (each card's
 // face skewed onto its place), the customers as pictures at their standing spots, and the places and the doorway to tap.
 // The pure parts (fit, the skew, who stands where) are exported for the tests; create() needs a page.
-import { faceCanvas, CW, CH } from './cardface.js?v=67';
-import { LOOKS, POOLS, REGULARS } from './folk.js?v=67';
-import { FURNITURE, TIERS } from './data.js?v=67';
-import { shelfSpots } from './room.js?v=67';
-import { isBroken } from './wear.js?v=67';
-import { threatsOn } from './bank.js?v=67';
+import { faceCanvas, CW, CH } from './cardface.js?v=68';
+import { LOOKS, POOLS, REGULARS } from './folk.js?v=68';
+import { FURNITURE, TIERS } from './data.js?v=68';
+import { shelfSpots } from './room.js?v=68';
+import { isBroken } from './wear.js?v=68';
+import { threatsOn } from './bank.js?v=68';
 
 export const VIEWS = ['left', 'counter', 'right', 'back'];
 export const VIEW_WORD = { left: 'LEFT WALL', counter: 'THE COUNTER', right: 'RIGHT WALL', back: 'THE BACK ROOM' };
@@ -89,7 +89,9 @@ export const standing = (queue, spots) => (queue || []).slice(0, spots).map((c, 
 
 // ---------- the view on the page ----------
 const datas = {};
-const load = size => datas[size] || (datas[size] = fetch(BACKDROPS + 's' + size + '/backdrops.json' + BACKDROPS_V).then(r => r.json()).then(d => {
+// a shop on the coast has its own pictures (milestone 43: tools/backdrops.py SEA=1, assets/backdrops/sea/)
+export const dirOf = (save, size) => BACKDROPS + (save && save.region && save.region !== 'reach' ? 'sea/' : '') + 's' + size + '/';
+const load = dir => datas[dir] || (datas[dir] = fetch(dir + 'backdrops.json' + BACKDROPS_V).then(r => r.json()).then(d => {
   // how many shelf places the left wall has (every view shows some of them)
   d.K = 1 + Math.max(...Object.values(d).flatMap(v => Object.values(v).flatMap(r => (r.units || []).map(u => u.k))));
   return d;
@@ -128,8 +130,8 @@ export function create(host, on = {}) {
   function turn(v) { if (v === view) return; view = v; stage.classList.add('turning'); setTimeout(() => stage.classList.remove('turning'), 220); draw(); if (on.turned) on.turned(v); }
   async function draw() {
     const save = last; if (!save) return;
-    const dr = dressingOf(save, Date.now()), dir = BACKDROPS + 's' + dr.size + '/';
-    const my = ++token, d = await load(dr.size); if (my !== token) return;
+    const dr = dressingOf(save, Date.now()), dir = dirOf(save, dr.size);
+    const my = ++token, d = await load(dir); if (my !== token) return;
     host.querySelectorAll('[data-cv]').forEach(b => b.classList.toggle('go', b.dataset.cv === view));
     const W = stage.clientWidth, H = stage.clientHeight, shape = shapeFor(W, H), rec = d[view] && d[view][shape]; if (!rec) return;
     const [rw, rh] = rec.size, { s, ox, oy } = cover(W, H, rw, rh), at = ([x, y]) => [ox + x * s, oy + y * s];

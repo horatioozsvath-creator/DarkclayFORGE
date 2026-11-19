@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // A card's face as it stands on a shelf (the tier's frame, its picture, the price), drawn on a 2D canvas. Shared by the shop in 3D
 // (js/diorama.js, as a texture) and the counter view (js/counter.js, laid over the painted shelves). No page access beyond a canvas.
-import { TIERS } from './data.js?v=67';
-import { ART } from './card.js?v=67';
+import { TIERS } from './data.js?v=68';
+import { ART } from './card.js?v=68';
 
 const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
 export const CW = 256, CH = 360;

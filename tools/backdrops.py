@@ -15,6 +15,8 @@ workshop doorway) at two shapes (wide, and a phone held upright), for each shop 
 
 Run with Blender (headless), from the repository:
   blender -b -P tools/backdrops.py -- [size ...] [view ...]
+SEA=1: the Greyshore's shop (milestone 43): whitewashed walls, scrubbed boards, grey sea and sky through the door, a cooler daylight,
+into assets/backdrops/sea/s<size>/ (js/diorama.js's sea palette, so the two views match)
 Then bump BACKDROPS_V in js/counter.js so browsers fetch the new pictures.
 """
 import bpy, json, math, os, sys
@@ -27,6 +29,7 @@ args = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
 SIZES_WANTED = [int(a) for a in args if a.isdigit()] or [0, 1, 2]
 VIEWS_WANTED = [a for a in args if not a.isdigit()]
 QUICK = os.environ.get('QUICK')   # fewer samples, for tuning
+SEA = os.environ.get('SEA')   # the coast's shop (milestone 43)
 palette = json.load(open(os.path.join(MODELS, 'palette.json')))['slots']
 
 def lin(h):
@@ -104,26 +107,31 @@ def build(size):
         return pivot
 
     # ---------- the room (Blender axes: x across, y toward the door, z up; the counter at y = -1.75, the door at y = DY) ----------
-    wall = planks('Wall', '#6b4a30', '#2f1c10', 1.1, vertical=True)
-    floor = planks('Floor', '#5a3a24', '#2a170c', 0.9)
-    dark = flat('Beam', '#3b2414')
+    # the coast's: whitewash over the boards, the floor scrubbed pale, the beams tarred grey-brown (diorama.js PALETTES.sea)
+    wall = planks('Wall', '#8f887a', '#5e584d', 1.1, vertical=True) if SEA else planks('Wall', '#6b4a30', '#2f1c10', 1.1, vertical=True)
+    floor = planks('Floor', '#685a4a', '#3a3128', 0.9) if SEA else planks('Floor', '#5a3a24', '#2a170c', 0.9)
+    dark = flat('Beam', '#4e4438') if SEA else flat('Beam', '#3b2414')
     plane('Floor', HW * 2, DEPTH, (0, MID, 0), (0, 0, 0), floor)
     plane('WallL', DEPTH, 3.4, (-HW, MID, 1.7), (math.radians(90), 0, math.radians(90)), wall)
     plane('WallR', DEPTH, 3.4, (HW, MID, 1.7), (math.radians(90), 0, math.radians(-90)), wall)
     side = HW - 0.6
     for x in (-(0.6 + side / 2), 0.6 + side / 2): plane('WallD', side, 3.4, (x, DY, 1.7), (math.radians(90), 0, 0), wall)
     plane('WallDTop', 1.2, 1.2, (0, DY, 2.8), (math.radians(90), 0, 0), wall)
-    plane('Street', 1.2, 2.2, (0, DY + 0.15, 1.1), (math.radians(90), 0, 0), flat('Dusk', '#31435c', 1, emit=0.6))
+    if SEA:   # through the door: the quay's edge, the grey sea, a pale sky over it
+        plane('Sky', 1.2, 1.3, (0, DY + 0.15, 1.55), (math.radians(90), 0, 0), flat('Sky', '#7d8b93', 1, emit=0.28))
+        plane('Sea', 1.2, 0.75, (0, DY + 0.12, 0.62), (math.radians(90), 0, 0), flat('Sea', '#3e5058', 0.4, emit=0.3))
+        plane('Quay', 1.2, 0.25, (0, DY + 0.1, 0.125), (math.radians(90), 0, 0), flat('Quay', '#5a5650', 1, emit=0.25))
+    else: plane('Street', 1.2, 2.2, (0, DY + 0.15, 1.1), (math.radians(90), 0, 0), flat('Dusk', '#31435c', 1, emit=0.6))
     for w, h, x, z in [(0.16, 2.4, -0.68, 1.2), (0.16, 2.4, 0.68, 1.2), (1.52, 0.18, 0, 2.3)]: box('DoorFrame', (w, 0.18, h), (x, DY - 0.08, z), dark)
     # behind the counter: the back wall, a doorway to the workshop
     for x in (-(0.6 + side / 2), 0.6 + side / 2): plane('WallB', side, 3.4, (x, -3.6, 1.7), (math.radians(90), 0, math.radians(180)), wall)
     plane('WallBTop', 1.2, 1.2, (0, -3.6, 2.8), (math.radians(90), 0, math.radians(180)), wall)
     for w, h, x, z in [(0.16, 2.4, -0.68, 1.2), (0.16, 2.4, 0.68, 1.2), (1.52, 0.18, 0, 2.3)]: box('BackFrame', (w, 0.18, h), (x, -3.55, z), dark)
     plane('WorkFloor', 4, 4, (0, -5.6, 0.002), (0, 0, 0), floor)
-    wd = flat('WorkWall', '#2e1d12')
+    wd = flat('WorkWall', '#5a5246' if SEA else '#2e1d12')
     plane('WorkBack', 4, 3.4, (0, -7.4, 1.7), (math.radians(90), 0, 0), wd)
     for x in (-2, 2): plane('WorkSide', 4, 3.4, (x, -5.6, 1.7), (math.radians(90), 0, math.radians(90 if x < 0 else -90)), wd)
-    plane('Ceiling', HW * 2, DEPTH + 4, (0, MID - 2, 3.4), (math.radians(180), 0, 0), flat('Ceil', '#2a1a10'))
+    plane('Ceiling', HW * 2, DEPTH + 4, (0, MID - 2, 3.4), (math.radians(180), 0, 0), flat('Ceil', '#9a9384' if SEA else '#2a1a10'))
     y = DY - 1.0
     while y > -3.6: box('Beam', (HW * 2, 0.22, 0.22), (0, y, 3.25), dark); y -= 1.6
 
@@ -168,19 +176,19 @@ def build(size):
     light('POINT', 260, (1.0, 0.68, 0.38), (HW - 1.0, DY - 0.8, 1.7), 0.3)                  # the lamp by the door
     light('POINT', 120, (1.0, 0.75, 0.45), (1.35, -1.6, 1.25), 0.15)                      # the counter's candles
     for uy in S['units']: light('POINT', 180 * 2 / len(S['units']) + 30, (1.0, 0.6, 0.32), (-HW + 1.2, uy, 2.4), 0.6)  # over the shelves
-    light('AREA', 120, (0.5, 0.65, 0.9), (0, DY - 0.2, 1.6), 1.2, (math.radians(90), 0, 0))  # the street's dusk
+    light('AREA', 140 if SEA else 120, (0.72, 0.8, 0.88) if SEA else (0.5, 0.65, 0.9), (0, DY - 0.6, 1.6), 1.2 if not SEA else 1.6, (math.radians(90), 0, 0))  # the street's dusk (the sea's grey day)
     forge_light = light('POINT', 520, (1.0, 0.45, 0.18), (0.5, -6.1, 1.0), 0.4)             # the forge's glow
-    light('AREA', 90 + 20 * size, (1.0, 0.8, 0.6), (0, MID, 3.2), 4.0 + size * 1.5)
+    light('AREA', (90 + 20 * size) * (0.55 if SEA else 1), (0.9, 0.86, 0.8) if SEA else (1.0, 0.8, 0.6), (0, MID, 3.2), 4.0 + size * 1.5)
     if size: light('POINT', 120, (1.0, 0.62, 0.36), (0, DY - 2.4, 2.2), 0.5)              # a lamp hung mid-room in a bigger shop
     scene.world = bpy.data.worlds.new('w'); scene.world.use_nodes = True
-    bg = scene.world.node_tree.nodes['Background']; bg.inputs[0].default_value = (0.09, 0.055, 0.035, 1); bg.inputs[1].default_value = 0.35
+    bg = scene.world.node_tree.nodes['Background']; bg.inputs[0].default_value = (0.07, 0.075, 0.08, 1) if SEA else (0.09, 0.055, 0.035, 1); bg.inputs[1].default_value = 0.35
 
     for eng in ('BLENDER_EEVEE', 'BLENDER_EEVEE_NEXT'):
         try: scene.render.engine = eng; break
         except TypeError: pass
     try: scene.view_settings.view_transform = 'AgX'; scene.view_settings.look = 'AgX - Medium High Contrast'
     except TypeError: pass
-    scene.view_settings.exposure = 0.35
+    scene.view_settings.exposure = -0.15 if SEA else 0.35   # pale walls throw the light back: the coast's is shot darker
     scene.render.image_settings.file_format = 'WEBP'; scene.render.image_settings.quality = 80; scene.render.image_settings.color_mode = 'RGBA'
     for k, v in (('taa_render_samples', 24 if QUICK else 96), ('use_shadows', True), ('shadow_ray_count', 2), ('shadow_step_count', 8)):
         try: setattr(scene.eevee, k, v)
@@ -226,7 +234,7 @@ def views(size, S):
 SHAPES = {'wide': (1600, 900), 'tall': (780, 860)}
 
 for size in SIZES_WANTED:
-    OUT = os.path.join(ROOT, 'assets/backdrops', 's%d' % size); os.makedirs(OUT, exist_ok=True)
+    OUT = os.path.join(ROOT, 'assets/backdrops', *(['sea'] if SEA else []), 's%d' % size); os.makedirs(OUT, exist_ok=True)
     scene, UNITS, OVER, forge_light, S = build(size)
     cam = bpy.data.objects.new('cam', bpy.data.cameras.new('cam')); scene.collection.objects.link(cam); scene.camera = cam
     cam.data.sensor_fit = 'VERTICAL'; cam.data.clip_end = 60

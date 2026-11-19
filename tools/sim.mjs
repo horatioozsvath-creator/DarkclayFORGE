@@ -56,6 +56,8 @@ const H = 3600000, lvl = id => R.levelOf((save.trades[id] || {}).xp || 0).level,
 // still made often (for a Rare to work it from, milestone 35), and
 // its Old-Blood pieces are kept in the back for the Relic working
 const CHASE = process.env.CHASE !== '0';
+// a Rare or Old-Blood piece of it to work a Relic from (milestone 43: till there's one, the bot keeps making it, as a player would)
+const hasWorkable = id => save.cards.some(c => c.pattern === id && !c.sample && (c.tier === 'rare' || c.tier === 'oldblood'));
 // (milestone 42: the region's own Relics; an heir over the pass chases the Tide's, not the Reach's carried blueprints)
 const chasing = id => G.rung(save) >= 5 && (save.blueprints || []).some(b => RELICS[b].pattern === id && Rg.relicRegion(b) === Rg.regionId(save) && !(save.relicsMade || []).includes(b));
 // off the shelf and out of the Hall, into the back room (for a working)
@@ -71,7 +73,7 @@ function choose(hour) {
     if (!Rm.owns(save, PATTERNS[id].station || 'forge') || PATTERNS[id].makes || !Sh.knows(save, id)) continue;
     // six of it waiting unsold: make something else, as a player would; unless it's the piece a Relic waits on and the trade isn't there yet
     // (milestone 42: a player chasing a Relic keeps making it; the coast's bench never got there)
-    if (Sh.inBack(save).filter(c => c.pattern === id).length >= GLUT && !(CHASE && chasing(id) && (Trail.stationLevel(save, PATTERNS[id].station || 'forge') < RELIC_WORK.level || lvl(id) < RELIC_WORK.pattern))) continue;
+    if (Sh.inBack(save).filter(c => c.pattern === id).length >= GLUT && !(CHASE && chasing(id) && (Trail.stationLevel(save, PATTERNS[id].station || 'forge') < RELIC_WORK.level || lvl(id) < RELIC_WORK.pattern || !hasWorkable(id)))) continue;
     const metals = R.partOptions(id)[0].opts;
     metals.forEach((m, mi) => {
       if ((m.level || 1) > lvl(id)) return;
