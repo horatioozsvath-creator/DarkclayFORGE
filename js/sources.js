@@ -1,11 +1,11 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // WHERE THINGS COME FROM (milestone 30), with no page access: for any material, every way to get it (a seller, a station that makes
 // it, a part forged at once, a runner's roads, the Deep), and when a seller who doesn't have it this hour next will.
-import { MATS, FORGED_PARTS, PATTERNS, STATIONS, REGIONS, MINE } from './data.js?v=71';
-import * as Rg from './region.js?v=71';
-import { linesOf, sells } from './shop.js?v=71';
-import { COMMONS } from './staff.js?v=71';
-import { partOptions } from './rules.js?v=71';
+import { MATS, FORGED_PARTS, PATTERNS, STATIONS, REGIONS, MINE } from './data.js?v=72';
+import * as Rg from './region.js?v=72';
+import { linesOf, sells } from './shop.js?v=72';
+import { COMMONS } from './staff.js?v=72';
+import { partOptions } from './rules.js?v=72';
 
 // the first gallery a material is dug in, in either mine (milestone 46)
 const gallery = mat => Math.min(...['dig', 'wheal'].flatMap(id => partOptions(id)[0].opts.filter(o => o.ore === mat).map(o => o.gallery)));

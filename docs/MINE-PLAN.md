@@ -1,6 +1,6 @@
 # Under the shop: a plan for a mine (milestones 45–48)
 
-Status: planned and decided (2026-11-19): every choice at the end was taken as recommended (option 1 in each). Milestone 45 (the trapdoor) built in release 70 (docs/MILESTONE-45.md); milestone 46 (going down) in release 71 (docs/MILESTONE-46.md).
+Status: planned and decided (2026-11-19): every choice at the end was taken as recommended (option 1 in each). Milestone 45 (the trapdoor) built in release 70 (docs/MILESTONE-45.md); milestone 46 (going down) in release 71 (docs/MILESTONE-46.md); milestone 47 (miners) in release 72 (docs/MILESTONE-47.md).
 
 ## What it's for
 

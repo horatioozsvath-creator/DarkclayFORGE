@@ -1027,12 +1027,22 @@ export const ROLES = {
   runner: { word: 'RUNNER', wage: 3, line: 'Goes out on the roads for materials, old pieces and now and then a found tile.' },
   guard: { word: 'NIGHT GUARD', wage: 5, line: 'Keeps the shop at night: most break-ins stop at the door, and some thieves are caught.', rung: 3 },
   apprentice: { word: 'APPRENTICE', wage: 4, line: 'Works at the bench while you\'re away and while you work: plain pieces of patterns you know, from what\'s in the back.', rung: 4 },
+  // milestone 47: only once the trapdoor's open (mine)
+  miner: { word: 'MINER', wage: 4, line: 'Digs at the face while you serve and while you\'re away: the seam you set them to, slower than your own hand. The ore comes up for you to smelt.', mine: true },
 };
 // the apprentice (milestone 36, docs/LEGACY-PLAN.md): a piece every `every` minutes of the shop's clock (open, or away up to the cap),
 // Common or Fine, from the back room's common materials (never a rare thing, never a relic material); short of something common, they
 // buy it while the purse keeps `keep` coins over (unless told not to); never more than `most` of a pattern waiting in the back; a sale of theirs brings `renown` (a quarter of yours). Their own trade in each pattern grows by `learn` a piece
 // (`beside`× while you've worked a piece in the last `besideMin` minutes), never past trade `top`.
 // fine: [the odds of a Fine piece at trade 1, more a level, at most]; flaw: [the odds of a flawed one at trade 1, less a level, at least]
+// THE MINERS (milestone 47, docs/MINE-PLAN.md): a haul every `every` minutes of the shop's clock (strong: a quarter sooner), Common or
+// Fine (fine: [at level 1, more a level, at most]; canny: more), never Rare. One miner, a second once the third gallery's open. Each
+// working wears the shoring as yours does, with a rockfall `fall` of the time (steady: half as often). The roof coming in on them hurts
+// them hurtFall of the time; from gallery beast.from, something comes up out of the old workings odds of the time (half as often with a
+// night guard on the staff), and hurts them beast.hurt of the time (they drop the haul). Armour, a weapon and a lantern bring the hurt
+// down as on the road.
+export const MINERS = { every: 90, strong: 0.75, second: 3, fine: [0.08, 0.04, 0.35], canny: 0.1, fall: 0.4, steady: 0.5, hurtFall: 0.6,
+  beast: { from: 4, odds: 0.08, guard: 0.5, hurt: 0.7, words: { reach: 'a pale thing out of the old workings', greyshore: 'something out of the drowned level' } } };
 export const APPRENTICE = { every: 30, swift: 0.75, top: 5, learn: 3, beside: 2, besideMin: 20, thrifty: 0.25, keep: 300, most: 2, renown: 0.25, fine: [0.1, 0.08, 0.45], flaw: [0.3, 0.05, 0.05], careful: 0.5 };
 // THE LEGACY (milestone 37, docs/LEGACY-PLAN.md): handing the forge on to the apprentice, a Maker of the Nine's choice. The heir's
 // purse, how long the apprentice must have been with you, their head start in trade, and their trait for good (small, each)
@@ -1059,6 +1069,12 @@ export const TRAITS = {
     { id: 'swift', word: 'Swift', line: 'a piece a quarter sooner' },
     { id: 'thrifty', word: 'Thrifty', line: 'one piece in four costs nothing' },
     { id: 'bright', word: 'Bright', line: 'learns half as fast again' },
+  ],
+  miner: [
+    { id: 'strong', word: 'Strong', line: 'a haul a quarter sooner' },
+    { id: 'steady', word: 'Steady', line: 'half as many rockfalls' },
+    { id: 'canny', word: 'Canny', line: 'finds the better rock: more Fine hauls' },
+    { id: 'quick', word: 'Quick learner', line: 'learns half as fast again' },
   ],
   runner: [
     { id: 'surefoot', word: 'Sure-footed', line: 'trips take a fifth less time' },
