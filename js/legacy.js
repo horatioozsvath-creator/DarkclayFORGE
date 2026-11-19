@@ -3,13 +3,13 @@
 // The heir's shop is built fresh, with only what the line keeps: the book (patterns found, tries, clues), the blueprints, the found
 // tiles, the heir's trades (their own, up to trade 5; trade 2 in the rest), their trait for good and one heirloom over the door. The
 // old shop goes into the line's record, with its save code (its own record left out, so nothing nests).
-import { LEGACY, PATTERNS, HALL, MYTHICS, TIERS, RENOWN } from './data.js?v=69';
-import { scatter } from './trail.js?v=69';
-import { isNine, renownOf } from './growth.js?v=69';
-import { levelOf, xpToNext } from './rules.js?v=69';
-import { apprenticeOf, TOP_XP } from './apprentice.js?v=69';
-import { fresh, toCode } from './save.js?v=69';
-import * as Rg from './region.js?v=69';
+import { LEGACY, PATTERNS, HALL, MYTHICS, TIERS, RENOWN } from './data.js?v=70';
+import { scatter } from './trail.js?v=70';
+import { isNine, renownOf } from './growth.js?v=70';
+import { levelOf, xpToNext } from './rules.js?v=70';
+import { apprenticeOf, TOP_XP } from './apprentice.js?v=70';
+import { fresh, toCode } from './save.js?v=70';
+import * as Rg from './region.js?v=70';
 
 const DAY = 86400000;
 export const gen = save => save.gen || 1;
@@ -41,7 +41,8 @@ export const xpFor = lvl => { let x = 0; for (let l = 1; l < lvl; l++) x += xpTo
 // the heir's trades: their own (never past LEGACY.top, as they learned it), trade LEGACY.rest in every other pattern
 export function heirTrades(p) {
   const out = {}, rest = xpFor(LEGACY.rest);
-  Object.keys(PATTERNS).forEach(id => { out[id] = { xp: Math.max(rest, Math.min(TOP_XP, ((p.skill || {})[id]) || 0)) }; });
+  // (the mine's trades aren't handed on yet: the heir learns the face from the start; the line's mine is milestone 48's)
+  Object.keys(PATTERNS).filter(id => !PATTERNS[id].mine).forEach(id => { out[id] = { xp: Math.max(rest, Math.min(TOP_XP, ((p.skill || {})[id]) || 0)) }; });
   return out;
 }
 // what the line's record keeps of a shop: enough to read, not the whole save (that's the code)

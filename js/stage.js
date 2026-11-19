@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The stage: the fire, the anvil, the piece taking shape, the hammer and the heat meter, drawn on a 1280 × 720 canvas.
-import { FORGE, KC } from './data.js?v=69';
-import { trueZone } from './rules.js?v=69';
+import { FORGE, KC } from './data.js?v=70';
+import { trueZone } from './rules.js?v=70';
 
 // two layouts: wide (a desktop, a phone on its side) and tall (a phone held upright), the same drawing moved and scaled
 export const LAYOUTS = {
@@ -24,6 +24,14 @@ const SHAPES = {
   axe: { to: [[-70, -28], [0, -38], [70, -66], [130, -92], [180, -56], [180, 30], [130, 34], [70, 34], [0, 34], [-70, 28]] },
   helm: { to: [[-130, 34], [-122, -70], [0, -150], [122, -70], [130, 34], [100, 34], [50, 34], [0, 34], [-50, 34], [-100, 34]] },
   ring: { to: [[-74, -8], [-52, -62], [0, -82], [52, -62], [74, -8], [74, 8], [52, 34], [0, 34], [-52, 34], [-74, 8]], hole: true },
+  // the patterns found by trying (milestone 31) and the coast's harpoon, which had no shape here (milestone 45's fix: the stage threw)
+  spear: { to: [[-260, -8], [-100, -8], [60, -10], [200, -26], [300, 0], [300, 2], [200, 26], [60, 10], [-100, 8], [-260, 8]] },
+  shortsword: { to: [[-200, -16], [-60, -18], [80, -18], [200, -16], [290, 0], [290, 2], [200, 16], [80, 18], [-60, 18], [-200, 16]] },
+  mace: { to: [[-200, -12], [-40, -12], [80, -60], [170, -70], [230, -40], [230, 40], [170, 70], [80, 60], [-40, 12], [-200, 12]] },
+  warhammer: { to: [[-200, -12], [-20, -12], [60, -70], [160, -70], [200, -60], [200, 60], [160, 70], [60, 70], [-20, 12], [-200, 12]] },
+  harpoon: { to: [[-260, -8], [-60, -8], [120, -10], [170, -40], [300, 0], [300, 2], [170, 40], [120, 10], [-60, 8], [-260, 8]] },
+  // smelting (milestone 45): the ore runs together into a bloom
+  smelt: { to: [[-110, -20], [-60, -60], [0, -74], [60, -60], [110, -20], [110, 20], [60, 40], [0, 46], [-60, 40], [-110, 20]] },
 };
 
 // view: { flash, ring, ringC, sparks } — the moment-to-moment effects the page keeps
@@ -35,6 +43,7 @@ export function paint(g, S, view, dt, L = LAYOUTS.wide) {
   else if (c.id === 'bowbench') drawBench(g, S, view, L, heat, now, c);
   else if (c.id === 'kettle') drawKettle(g, S, view, L, heat, now, c);
   else if (c.id === 'glass') drawGlass(g, S, view, L, heat, now, c);
+  else if (c.id === 'face') drawFace(g, S, view, L, heat, now, c);
   else drawForge(g, S, view, L, heat, now, c);
   for (const s of view.sparks) { if (!s.init) { s.x = L.ax; s.y = L.ay - (c.id === 'stretcher' ? 200 : 80) * L.sc; s.init = 1; } s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 900 * dt; s.t -= dt; }
   view.sparks = view.sparks.filter(s => s.t > 0);
@@ -44,7 +53,7 @@ export function paint(g, S, view, dt, L = LAYOUTS.wide) {
 }
 
 function drawForge(g, S, view, L, heat, now, c) {
-  const shape = SHAPES[S.cfg.patternId];
+  const shape = SHAPES[S.cfg.patternId] || SHAPES.dagger;   // (a pattern with no shape of its own: the dagger's)
   const fx = 150, fy = 470;
   g.save(); g.translate(L.fx - fx, L.fy - fy);   // the fire
   const glow = g.createRadialGradient(fx, fy, 10, fx, fy, 260);
@@ -385,6 +394,63 @@ function drawGlass(g, S, view, L, heat, now, c) {
   g.restore();
 }
 
+// THE FACE (milestone 45): the rock, the seam running through it, the fire set against it, the hollow the pick opens, the pick
+const ROCK = [[-300, -200], [-120, -235], [80, -220], [280, -190], [320, -40], [300, 120], [180, 170], [-60, 160], [-260, 150], [-320, 20]];
+function drawFace(g, S, view, L, heat, now, c) {
+  g.fillStyle = '#15110e'; g.fillRect(0, 0, L.W, L.H);
+  // the gallery: timbers either side, a lamp
+  g.save(); g.translate(L.ax, L.ay); g.scale(L.sc, L.sc);
+  g.fillStyle = '#3a2a1c'; g.fillRect(-400, -420, 36, 560); g.fillRect(364, -420, 36, 560); g.fillRect(-400, -420, 800, 34);   // (inside the tall layout's width too)
+  const lamp = 0.8 + Math.sin(now / 260) * 0.05;
+  const lg = g.createRadialGradient(-330, -330, 4, -330, -330, 260); lg.addColorStop(0, 'rgba(255,190,110,' + 0.35 * lamp + ')'); lg.addColorStop(1, 'rgba(255,190,110,0)');
+  g.fillStyle = lg; g.fillRect(-640, -600, 520, 520);
+  g.fillStyle = '#e8b060'; g.beginPath(); g.arc(-330, -330, 10, 0, 7); g.fill();
+  // the rock: it warms toward orange in the fire
+  const t = Math.min(1, S.shape / 100), col = mix(c.colours, heat), fy = -40;
+  g.translate(0, fy);
+  if (view.flash > 0 && !S.inFire) g.translate((Math.random() - .5) * 8 * view.flash, (Math.random() - .5) * 8 * view.flash);
+  if (view.ring > 0) { g.save(); g.strokeStyle = view.ringC; g.globalAlpha = view.ring; g.lineWidth = 10 * view.ring; g.beginPath(); g.arc(0, 0, 80 + (1 - view.ring) * 420, 0, 7); g.stroke(); g.restore(); }
+  g.shadowColor = S.white > 0 ? '#fff2c4' : heat > 0.5 ? col : 'transparent'; g.shadowBlur = S.white > 0 ? 50 : heat > 0.5 ? 30 * heat : 0;
+  g.fillStyle = S.white > 0 ? '#e8d8b8' : col; g.strokeStyle = '#0e0b09'; g.lineWidth = 6;
+  g.beginPath(); ROCK.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath(); g.fill(); g.stroke(); g.shadowBlur = 0;
+  // the seam, across the rock
+  g.save(); g.beginPath(); ROCK.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath(); g.clip();
+  g.fillStyle = (S.metal && S.metal.tint) || '#9a5a44'; g.globalAlpha = 0.75;
+  g.beginPath(); g.moveTo(-340, -60); g.lineTo(340, -130); g.lineTo(340, -60); g.lineTo(-340, 20); g.closePath(); g.fill();
+  g.globalAlpha = 0.4; for (let i = 0; i < 9; i++) { g.beginPath(); g.arc(-280 + i * 70, -30 - i * 9 + (i % 2) * 18, 9, 0, 7); g.fill(); }
+  g.globalAlpha = 1; g.restore();
+  // the hollow the pick opens, and what's broken out lying in it
+  if (t > 0) {
+    g.fillStyle = '#0c0907'; g.beginPath(); g.ellipse(0, -50, 40 + 170 * t, 26 + 100 * t, -0.1, 0, 7); g.fill();
+    g.fillStyle = (S.metal && S.metal.tint) || '#9a5a44';
+    const lumps = Math.min(12, Math.floor(S.worked / 3) + (t >= 1 ? 2 : 0));
+    for (let i = 0; i < lumps; i++) { const a = i * 2.4, r = 30 + (i % 4) * 22; g.beginPath(); g.arc(Math.cos(a) * r * 1.6, -30 + Math.abs(Math.sin(a)) * r * 0.6, 10 + (i % 3) * 3, 0, 7); g.fill(); }
+  }
+  if (S.crackMarks.length) {
+    g.strokeStyle = '#0a0705'; g.lineWidth = 4;
+    S.crackMarks.forEach(r => { const x = -220 + r * 440; g.beginPath(); g.moveTo(x, -200); g.lineTo(x + 14, -150); g.lineTo(x - 6, -110); g.lineTo(x + 10, -60); g.stroke(); });
+  }
+  // the fire set against the foot of the face
+  if (S.inFire || heat > 0.3) {
+    const strong = S.inFire ? 0.7 : 0.25 * heat;
+    const fg = g.createRadialGradient(0, 150, 10, 0, 150, 300); fg.addColorStop(0, 'rgba(255,120,40,' + strong + ')'); fg.addColorStop(1, 'rgba(255,120,40,0)');
+    g.fillStyle = fg; g.fillRect(-320, -150, 640, 360);
+    if (S.inFire) { g.fillStyle = '#ff8a2a'; for (let i = 0; i < 7; i++) { const f = Math.sin(now / 160 + i) * 10; g.globalAlpha = 0.5; g.beginPath(); g.ellipse(-150 + i * 50, 150 - f, 16, 40 + f, 0, 0, 7); g.fill(); } g.globalAlpha = 1; }
+  }
+  g.fillStyle = '#2a201a'; g.fillRect(-340, 170, 680, 30);
+  g.restore();
+  // the pick: drawn back, it lands on a swing
+  if (S.phase === 'work' && !S.inFire) {
+    const f = view.flash, ang = 0.75 - f * 1.25;   // drawn back to the right; on a swing, into the face
+    g.save(); g.translate(L.ax + 300 * L.sc, L.ay + 120 * L.sc); g.scale(L.sc, L.sc); g.rotate(ang);
+    g.fillStyle = '#6a4a2a'; g.strokeStyle = '#000'; g.lineWidth = 5; g.fillRect(-12, -260, 24, 300); g.strokeRect(-12, -260, 24, 300);
+    g.fillStyle = '#9aa0a8'; g.beginPath(); g.moveTo(-150, -250); g.quadraticCurveTo(0, -300, 120, -262); g.lineTo(120, -246); g.quadraticCurveTo(0, -268, -150, -238); g.closePath(); g.fill(); g.stroke();
+    g.restore();
+  }
+  g.fillStyle = 'rgba(236,224,198,.6)'; g.font = '800 22px "Alegreya Sans", sans-serif'; g.textAlign = 'center';
+  g.fillText('THE FACE', L.ax, L.ay + 200 * L.sc);
+}
+
 function drawMeter(g, S, L, heat, now, c) {
   // the meter, with the band to strike in
   const mx = L.mx, my = L.my, mh = 470, mw = 44;
@@ -408,7 +474,7 @@ function drawMeter(g, S, L, heat, now, c) {
   g.fillText(c.meter, mx + mw / 2, my - 18);
   g.textAlign = 'right'; g.font = '700 15px "Alegreya Sans", sans-serif'; g.fillStyle = 'rgba(185,170,140,.9)';
   c.labels.forEach(([v, l]) => g.fillText(l, mx - 24, my + mh - v / 100 * mh - 4));
-  g.save(); g.translate(mx + mw + 20, (by0 + by1) / 2); g.rotate(Math.PI / 2); g.textAlign = 'center'; g.fillStyle = '#e8c464'; g.font = '800 14px "Alegreya Sans", sans-serif'; g.fillText(c.id === 'stretcher' ? 'STITCH HERE' : c.id === 'bowbench' ? 'BEND HERE' : c.id === 'kettle' ? 'STIR HERE' : c.id === 'glass' ? 'BLOW HERE' : 'STRIKE HERE', 0, 0); g.restore();
+  g.save(); g.translate(mx + mw + 20, (by0 + by1) / 2); g.rotate(Math.PI / 2); g.textAlign = 'center'; g.fillStyle = '#e8c464'; g.font = '800 14px "Alegreya Sans", sans-serif'; g.fillText(c.id === 'stretcher' ? 'STITCH HERE' : c.id === 'bowbench' ? 'BEND HERE' : c.id === 'kettle' ? 'STIR HERE' : c.id === 'face' ? 'SWING HERE' : c.id === 'glass' ? 'BLOW HERE' : 'STRIKE HERE', 0, 0); g.restore();
   if (S.white > 0) { g.fillStyle = 'rgba(255,242,196,' + (0.1 + 0.06 * Math.sin(now / 90)) + ')'; g.fillRect(0, 0, L.W, L.H); }
 }
 

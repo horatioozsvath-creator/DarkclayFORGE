@@ -37,7 +37,7 @@ test('a save with no region is in the Reach, reading the very same tables as bef
 });
 
 test('Saltby sells everything the Reach does, and the coast\'s own things; what comes over the pass is dearer', () => {
-  for (const id of Object.keys(MATS).filter(k => !MATS[k].relic)) {
+  for (const id of Object.keys(MATS).filter(k => !MATS[k].relic && !MATS[k].ore)) {   // (an ore is sold by no one: milestone 45)
     if (MATS[id].coast) { assert.ok(sold(coast(), id) && !sold(shop(), id), id + ': the coast\'s, sold only there'); continue; }
     if (sold(shop(), id)) assert.ok(sold(coast(), id), id + ' is sold on the coast too');
   }

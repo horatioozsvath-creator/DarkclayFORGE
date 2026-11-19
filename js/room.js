@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The shop's two rooms, with no page access: the shop front (counter, shelves, decor; where customers come) and the workshop
 // behind it (the forge, the anvil and every station). A grid each, what stands on it, buying, moving, selling back, growing.
-import { FURNITURE, ROOM_SIZES, WORK_SIZES, HALL_SIZES, HALL, DOOR_Z, WORK_DOOR_X, SHELF_COSTS, SHELF_LEVELS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=69';
-import { wallCharm, hallCharm, heirloomCharm } from './growth.js?v=69';
+import { FURNITURE, ROOM_SIZES, WORK_SIZES, HALL_SIZES, HALL, DOOR_Z, WORK_DOOR_X, SHELF_COSTS, SHELF_LEVELS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=70';
+import { wallCharm, hallCharm, heirloomCharm } from './growth.js?v=70';
 
 export const SIZES = { shop: ROOM_SIZES, work: WORK_SIZES, hall: HALL_SIZES };
 export const sizeOf = room => SIZES[room.kind || 'shop'][room.size || 0];
@@ -137,7 +137,7 @@ export function defaultHall() {
 export const hallSpots = room => room.items.filter(i => FURNITURE[i.kind].places).flatMap(i => Array.from({ length: FURNITURE[i.kind].places }, (_, k) => ({ item: i.id, kind: i.kind, spot: k, key: i.id + ':' + k })));
 
 // ---------- stations: set one up, and it stands in the workshop ----------
-export const owns = (save, id) => id === 'forge' || (save.stations || []).includes(id);
+export const owns = (save, id) => id === 'forge' || (id === 'face' ? !!save.mine : (save.stations || []).includes(id));   // the mine's face: the trapdoor opened (milestone 45)
 export function buyStation(save, id) {
   const st = STATIONS[id];
   if (!st || owns(save, id)) return { why: 'yours already' };

@@ -265,6 +265,23 @@ export const GLASS = {
   twist: 'Keep it soft. Too stiff, it shatters: the very next tile is a CRACK (from trade 3). Too hot, it sags: SHAPE slips back. It cools fastest of all.',
 };
 export const STATIONS = { forge: FORGE, stretcher: STRETCHER, bowbench: BENCH, kettle: KETTLE, glass: GLASS };
+// THE FACE (milestone 45, docs/MINE-PLAN.md): the mine's working, under the shop. Fire-setting: a fire against the rock makes it
+// brittle, then the pick. Too cold, the pick glances off and nothing turns over; too hot, the face spalls (a CRACK slips in, from
+// trade 3). Not one of the STATIONS: it's in no room, sold by no one, wanted by no customer; the trapdoor opens it (save.mine).
+export const FACE = {
+  id: 'face', name: 'FACE', word: 'THE FACE', tool: 'PICK', meter: 'THE ROCK', fire: 'SET THE FIRE', out: 'DRAW THE FIRE', close: 'HAUL IT', place: 'the fire',
+  heatIt: 'FIRE THE ROCK', band_: 'brittle band', strike: 'SWING', again: 'BACK TO THE FACE', made: ['swing', 'firing'],
+  band: [40, 80], drain: 6, cool: 4, rise: 30, over: 101, dryDead: true, spall: true,
+  colours: ['#3a3430', '#5a4a40', '#7a5a44', '#a86a3a', '#d8702a', '#f0a040'],
+  labels: [[0, 'COLD'], [40, 'BRITTLE'], [80, 'SPALLING']],
+  cold: 'TOO COLD · THE PICK GLANCES OFF',
+  twist: 'Fire the rock till it\'s brittle, then swing. Too cold, the pick glances off. Too hot, the face spalls: a rockfall (a CRACK slips in, from trade 3). It cools as you work: SET THE FIRE again.',
+};
+export const WORKS = { face: FACE };
+// the mine: the trapdoor from KNOWN; the second gallery from trade 3 at the face, for coin and oak to shore it. dig: each region's
+// working at the face (one trade between them: tradeAs)
+export const MINE = { rung: 2, dig: { reach: 'dig', greyshore: 'wheal' }, galleries: [null, { name: 'The old working' }, { name: 'The second level', level: 3, coins: 300, mats: { oak: 4 } }],
+  names: { reach: 'Veric\'s old workings', greyshore: 'Wheal Isel' } };
 
 // strip: [GOOD, GREAT, CRACK, HOLD]. level: the trade level that opens the metal (a stand-in until suppliers sell it, milestone 2).
 export const METALS = {
@@ -295,6 +312,22 @@ export const METALS = {
   // the Greyshore's (milestone 39): brass at the forge, sealskin at the stretcher
   brass: { name: 'Brass', strip: [11, 2, 3, 4], widen: 1.2, line: 'bright and forgiving: a wide band, and salt won\'t touch it', dmg: .95, val: 1.2, tint: '#d4b04a', level: 2 },
   sealskin: { name: 'Sealskin', adj: 'Sealskin', strip: [10, 3, 4, 3], widen: 1.1, line: 'oily and supple: a kinder band, and it sheds the wet', dmg: 1.05, val: 1.2, tint: '#5a5850', level: 2 },
+  // THE MINE (milestone 45, docs/MINE-PLAN.md). The seams worked at the face: each sets the strip as a metal does. ore: what comes up;
+  // gallery: the gallery it's in (1 with the trapdoor, 2 opened later); gem: a Rare haul brings a rough gem too
+  seam_iron: { name: 'Ironstone seam', adj: 'Ironstone', strip: [10, 3, 4, 3], line: 'the baseline: red rock with the iron in it', tint: '#9a5a44', level: 1, ore: 'ironstone', gallery: 1 },
+  seam_sand: { name: 'Sand bed', adj: 'Sand', strip: [11, 2, 2, 5], widen: 1.15, line: 'soft: a wider band, little falls; clear sand for the glass', tint: '#d8d0b0', level: 1, ore: 'clearsand', gallery: 1 },
+  seam_tin: { name: 'Tin lode', adj: 'Tin', strip: [9, 4, 5, 2], line: 'black tinstone with the copper in it: it smelts to bronze', tint: '#5a5a50', level: 3, ore: 'tinstone', gallery: 2 },
+  seam_silver: { name: 'Silver vein', adj: 'Silver', strip: [7, 5, 6, 2], widen: .85, line: 'a narrow vein: more GREATs and more falls; a Rare haul brings a rough gem', tint: '#dfe4ea', level: 3, ore: 'silverore', gallery: 2, gem: true },
+  // Wheal Isel, under Saltby: tin from the first gallery, the brass-ore below
+  seam_wheal: { name: 'Wheal tin', adj: 'Tin', strip: [10, 3, 4, 3], line: 'the old wheal\'s tin, with the copper in it: it smelts to bronze', tint: '#5a5a50', level: 1, ore: 'tinstone', gallery: 1 },
+  seam_blacksand: { name: 'Black sand bed', adj: 'Black sand', strip: [11, 2, 2, 5], widen: 1.15, line: 'soft, wet sand: a wider band; black sand for the glass', tint: '#4a4a52', level: 1, ore: 'blacksand', gallery: 1 },
+  seam_calamine: { name: 'Calamine lode', adj: 'Calamine', strip: [9, 4, 5, 2], line: 'pale zinc ore, with copper beside it: it smelts to brass', tint: '#c8c0a0', level: 3, ore: 'calamine', gallery: 2 },
+  seam_isel: { name: 'Silver vein', adj: 'Silver', strip: [7, 5, 6, 2], widen: .85, line: 'a narrow vein under the sea: more GREATs and more falls; a Rare haul brings a rough gem', tint: '#dfe4ea', level: 3, ore: 'silverore', gallery: 2, gem: true },
+  // the ores, smelted at the forge (bar: what they come out as)
+  ironstone: { name: 'Ironstone', adj: 'Iron', strip: [10, 3, 4, 3], line: 'the baseline: it smelts to iron bars', tint: '#9a5a44', level: 1, bar: 'iron' },
+  tinstone: { name: 'Tinstone', adj: 'Bronze', strip: [11, 2, 2, 5], widen: 1.15, line: 'forgiving: it smelts to bronze', tint: '#c99a5a', level: 1, bar: 'bronze' },
+  silverore: { name: 'Silver ore', adj: 'Silver', strip: [7, 5, 6, 2], coolX: 1.7, line: 'it cools fast: smelt it quickly to silver', tint: '#eef0f4', level: 1, bar: 'silver' },
+  calamine: { name: 'Calamine', adj: 'Brass', strip: [11, 2, 3, 4], widen: 1.2, line: 'bright and forgiving: it smelts to brass', tint: '#d4b04a', level: 1, bar: 'brass' },
 };
 const BLADE_METALS = ['iron', 'bronze', 'steel', 'silver', 'darkclay'];
 const HIDES = ['deer', 'goat', 'sharkhide'];
@@ -570,6 +603,16 @@ Object.assign(PATTERNS, {
       asks: ['"A spyglass, for the boat. Clear glass, a brass tube."', '"Every master wants a glass. Kelp ash for the flux, they say, and brass."'],
       board: 'POSTED: The harbour-master wants spyglasses: clear glass fluxed with kelp ash, in a brass tube.' } },
 });
+// the mine's (milestone 45): digging at the face and smelting at the forge make no piece, only materials (makes: from the seam's ore,
+// or the ore's bar). mine: shown only once the trapdoor is open. bars: 0, a seam takes nothing from the store room
+Object.assign(PATTERNS, {
+  dig: { name: 'Digging', trade: 'Mining', kind: 'ORE · FROM THE FACE', art: 'ore', value: 0, bars: 0, station: 'face', mine: true, makes: { from: 'ore', n: [4, 6, 8] },
+    parts: [{ part: 'Seam', metals: ['seam_iron', 'seam_sand', 'seam_tin', 'seam_silver'] }], affixes: [], lore: ['', '', '', ''] },
+  wheal: { name: 'Digging', trade: 'Mining', kind: 'ORE · FROM THE FACE', art: 'ore', value: 0, bars: 0, station: 'face', mine: true, tradeAs: 'dig', makes: { from: 'ore', n: [4, 6, 8] },
+    parts: [{ part: 'Seam', metals: ['seam_wheal', 'seam_blacksand', 'seam_calamine', 'seam_isel'] }], affixes: [], lore: ['', '', '', ''] },
+  smelt: { name: 'Smelting', trade: 'Smelting', kind: 'BARS · FROM THE ORE', art: 'ore', value: 0, bars: 3, mine: true, makes: { from: 'bar', n: [4, 5, 6] },
+    parts: [{ part: 'Ore', metals: ['ironstone', 'tinstone', 'silverore', 'calamine'] }], affixes: [], lore: ['', '', '', ''] },
+});
 // TRY SOMETHING NEW at the forge: the three things you put together, and the families a near miss is told by
 // (only: the first role takes the station's own material, the one the working's strip comes from; pick: the empty choice's words;
 // line: how the station's TRY SOMETHING NEW reads)
@@ -668,6 +711,9 @@ export const MATS = {
   tar: { name: 'Pine tar', price: 2, coast: true }, kelpash: { name: 'Kelp ash', price: 1, coast: true }, salt: { name: 'Salt', price: 1, coast: true },
   ambergris: { name: 'Ambergris', price: 60, rare: true, coast: true }, pearl: { name: 'Pearl', price: 50, rare: true, coast: true },
   coral: { name: 'Red coral', price: 45, rare: true, coast: true }, drownedsilver: { name: 'Drowned silver', price: 55, rare: true, coast: true },
+  // dug at the mine's face (milestone 45), sold by no one: smelted at the forge. ore: true keeps them out of every seller and haul
+  ironstone: { name: 'Ironstone', price: 5, ore: true }, tinstone: { name: 'Tinstone', price: 5, ore: true }, silverore: { name: 'Silver ore', price: 18, ore: true },
+  calamine: { name: 'Calamine', price: 7, ore: true, coast: true },
 };
 // pick: how many of its rare lines a pack carries in an hour (0: all of them, always)
 export const SUPPLIERS = [

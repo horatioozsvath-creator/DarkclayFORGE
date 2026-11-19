@@ -761,3 +761,5 @@ h1, .tname, .screenbar .t { font-family: var(--carve); font-weight: 900; letter-
 .tries li div { display: grid; gap: 2px; margin-top: 2px; font-size: 12px; }
 .bookpat.mini { float: right; width: 96px; padding: 4px; margin: 0 0 6px 8px; } .bookpat.mini .art { height: 40px; }
 .tryres::after { content: ''; display: block; clear: both; }
+/* the mine (milestone 45): a seam in a gallery not yet opened */
+.furn .fi.shut { opacity: .55; }

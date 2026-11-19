@@ -3,13 +3,13 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  APPRENTICE, HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, LINE_FOLK, LINE_STORIES, FOLK_OF, ORDER_TIME, ORDER_PAYS, SELLERS, COURT_FOUND, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE, REG_CLUE_ODDS } from './data.js?v=69';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=69';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=69';
-import { charmGap, placeGift } from './room.js?v=69';
-import * as Trail from './trail.js?v=69';
-import * as Rg from './region.js?v=69';
-import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=69';
+  APPRENTICE, HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, LINE_FOLK, LINE_STORIES, FOLK_OF, ORDER_TIME, ORDER_PAYS, SELLERS, COURT_FOUND, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE, REG_CLUE_ODDS } from './data.js?v=70';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=70';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=70';
+import { charmGap, placeGift } from './room.js?v=70';
+import * as Trail from './trail.js?v=70';
+import * as Rg from './region.js?v=70';
+import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=70';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -19,7 +19,7 @@ export const LEDGER_MAX = 30;
 // the herb and one more of its rare water
 export function recipe(patternId, picks, master = false) {
   const parts = chosenParts(patternId, picks), need = {};
-  need[parts[0].id] = PATTERNS[patternId].bars;
+  if (PATTERNS[patternId].bars) need[parts[0].id] = PATTERNS[patternId].bars;   // (a seam at the mine's face takes nothing: milestone 45)
   parts.slice(1).forEach(o => { if (o.mat) need[o.mat] = (need[o.mat] || 0) + 1; });
   if (PATTERNS[patternId].batch) need.bottle = (need.bottle || 0) + PATTERNS[patternId].batch;   // a batch takes a bottle each
   if (master && PATTERNS[patternId].batch) { need[parts[0].id] += PATTERNS[patternId].bars; const w = parts[1]; if (w && w.mat) need[w.mat] = (need[w.mat] || 0) + 1; }

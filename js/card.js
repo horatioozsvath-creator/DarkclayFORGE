@@ -1,10 +1,12 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE CARD: a piece of gear drawn as a collector's card framed by its tier (Darkclay Zero, docs/THE-CARD.md).
-import { TIERS } from './data.js?v=69';
+import { TIERS } from './data.js?v=70';
 
 const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
 // the picture of each kind of piece; m is the metal's tint
 export const ART = {
+  // the mine's (milestone 45): lumps of ore, the seam's colour in them
+  ore: m => '<svg viewBox="-420 -130 840 260"><path d="M-170,70 L-190,10 L-150,-50 L-80,-70 L-40,-20 L-60,60 Z" fill="#4a4038" stroke="#000" stroke-width="9" stroke-linejoin="round"/><path d="M-60,80 L-80,0 L-20,-80 L70,-96 L130,-30 L110,60 L30,96 Z" fill="#5a4e44" stroke="#000" stroke-width="9" stroke-linejoin="round"/><path d="M100,84 L120,20 L180,-10 L220,40 L200,90 Z" fill="#4a4038" stroke="#000" stroke-width="9" stroke-linejoin="round"/><path d="M-40,-20 L20,-50 L60,-10 L10,30 Z M-150,0 L-110,-20 L-100,20 Z M140,30 L180,20 L170,60 Z" fill="' + m + '" stroke="rgba(0,0,0,.5)" stroke-width="4"/><path d="M30,40 L70,20 L80,60 Z" fill="' + m + '" fill-opacity=".7"/></svg>',
   falchion: m => '<svg viewBox="-330 -70 650 140"><path d="M-230,-14 L-60,-20 L90,-30 L210,-44 L300,-8 L250,24 L130,30 L0,24 L-120,18 L-230,14 Z" fill="' + m + '" stroke="#000" stroke-width="7"/><path d="M-200,0 L270,-4" stroke="rgba(0,0,0,.3)" stroke-width="3"/><rect x="-320" y="-15" width="80" height="30" fill="#4a3020" stroke="#000" stroke-width="5"/><rect x="-246" y="-44" width="18" height="88" fill="#7a6a50" stroke="#000" stroke-width="5"/></svg>',
   dagger: m => '<svg viewBox="-330 -70 650 140"><path d="M-120,-16 L250,-6 L300,0 L250,6 L-120,16 Z" fill="' + m + '" stroke="#000" stroke-width="7"/><rect x="-250" y="-13" width="110" height="26" rx="6" fill="#6a4a2a" stroke="#000" stroke-width="5"/><path d="M-140,-46 L-112,-46 L-112,46 L-140,46 Z" fill="#9a96a0" stroke="#000" stroke-width="5"/></svg>',
   axe: m => '<svg viewBox="-330 -90 650 180"><rect x="-300" y="-10" width="470" height="20" fill="#6a4a2a" stroke="#000" stroke-width="6"/><path d="M120,-12 L150,-80 Q230,-60 250,0 Q230,60 150,80 L120,12 Z" fill="' + m + '" stroke="#000" stroke-width="7"/></svg>',

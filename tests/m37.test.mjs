@@ -55,7 +55,7 @@ test('the heir\'s shop: a fresh climb with what the line keeps', () => {
   // trades: their own, up to 5; 2 in the rest
   assert.equal(s.trades.axe.xp, TOP_XP); assert.equal(levelOf(s.trades.axe.xp).level, LEGACY.top);
   const other = Object.keys(PATTERNS).find(id => id !== 'axe' && id !== 'dagger'); assert.equal(levelOf(s.trades[other].xp).level, LEGACY.rest);
-  assert.equal(Object.keys(s.trades).length, Object.keys(PATTERNS).length);
+  assert.equal(Object.keys(s.trades).length, Object.keys(PATTERNS).filter(id => !PATTERNS[id].mine).length);   // (the mine's trades aren't handed on yet: milestone 45)
   assert.equal(G.makerLevel(s).level, 1, 'the head start isn\'t practice: skill points are earned again');
   // the heirloom: out of the cards, over the door, charm but no renown
   assert.equal(s.heirlooms[0].name, myth.name); assert.equal(s.heirlooms[0].from, 'Old Hand'); assert.ok(!s.cards.some(c => c.id === 'm1'));

@@ -20,6 +20,7 @@ import * as Liv from '../js/living.js';
 import * as Ap from '../js/apprentice.js';
 import * as Leg from '../js/legacy.js';
 import * as Rg from '../js/region.js';
+import * as Mine from '../js/mine.js';
 import fs from 'node:fs';
 import { BRANCH, RELICS, MYTHICS } from '../js/data.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD, RELIC_WORK } from '../js/data.js';
@@ -108,6 +109,39 @@ function makeOne(hour) {
   (save.trades[c.id] = save.trades[c.id] || { xp: 0 }).xp += Math.round(R.xpFor(res) * G.xpMult(save));
   const tag = 'fair';
   if (Sh.place(save, p.id, null, tag) < 0) { /* the shelf is full: it waits in the back */ }
+  return true;
+}
+// THE MINE (MINE=share, milestone 45): the bot opens the trapdoor at KNOWN and spends that share of its workings in the mine: smelting
+// when it has the ore, digging its best open seam when it hasn't; it opens the second gallery when it can (buying the oak). No MINE:
+// the mine is never opened, and the run is the same as before milestone 45.
+const MINING = +process.env.MINE || 0;
+let dug = 0, smelted = 0, mineBars = {}, mineSlot = 0;
+const barWorth = (seamOre, hour) => { const sm = R.partOptions('smelt')[0].opts.find(o => o.id === seamOre); return Sh.priceOf(sm ? sm.bar : seamOre, hour, save); };
+function work(patternId, picks) {   // a working at a steady player's odds, as makeOne's
+  if (!Sh.takeMats(save, Sh.recipe(patternId, picks))) return null;   // smelting takes its ore; the rock takes nothing
+  const S = R.newWorking({ patternId, picks, level: R.levelOf((save.trades[R.tradeId(patternId)] || {}).xp || 0).level, found: [], kit: G.kitOf(save) }, rng);
+  S.shape = 100; S.worked = 10 + rng() * 15; S.strikes = 24; S.cracks = rng() < 0.4 ? 1 : 0;
+  const res = R.finish(S, 'quench'), y = R.yieldOf(patternId, res.tier, picks);
+  save.mats[y.mat] = (save.mats[y.mat] || 0) + y.n; if (y.gem) save.mats.gem = (save.mats.gem || 0) + y.gem;
+  (save.trades[R.tradeId(patternId)] = save.trades[R.tradeId(patternId)] || { xp: 0 }).xp += Math.round(R.xpFor(res) * G.xpMult(save));
+  return y;
+}
+function mineOne(hour) {
+  if (!MINING) return false;
+  if (Mine.canOpen(save)) { Mine.open(save, t); note('opened the trapdoor: ' + Mine.nameOf(save)); }
+  if (!Mine.isOpen(save)) return false;
+  // a maker chasing a Relic spends the workings on it, not in the mine
+  if (CHASE && Object.keys(PATTERNS).some(chasing)) return false;
+  mineSlot += MINING; if (mineSlot < 1) return false; mineSlot -= 1;
+  const nx = Mine.nextGallery(save);
+  if (nx && Mine.level(save) >= nx.level && save.coins > nx.coins + 800) { for (const [m, n] of Object.entries(nx.mats)) { const k = n - (save.mats[m] || 0); if (k > 0) Sh.buy(save, m, k, hour); } if (Mine.openGallery(save).ok) note('opened gallery ' + Mine.galleries(save) + ' of the mine'); }
+  // ore enough to smelt: the dearest first
+  const ore = Mine.ores(save).filter(o => o.have >= Mine.smeltTakes()).sort((a, b) => Sh.priceOf(b.bar, hour, save) - Sh.priceOf(a.bar, hour, save))[0];
+  if (ore) { const y = work('smelt', [ore.i]); if (!y) return false; smelted++; mineBars[y.mat] = (mineBars[y.mat] || 0) + y.n; return true; }
+  const seam = Mine.seams(save).filter(x => Mine.canDig(save, x.i).ok).sort((a, b) => barWorth(b.ore, hour) - barWorth(a.ore, hour))[0];
+  if (!seam) return false;
+  const y = work(Mine.digOf(save), [seam.i]); dug++;
+  if (!R.partOptions('smelt')[0].opts.some(o => o.id === y.mat)) mineBars[y.mat] = (mineBars[y.mat] || 0) + y.n;
   return true;
 }
 // the big sales: a piece over 1,000 c, an Old-Blood piece, and who bought them
@@ -356,7 +390,7 @@ for (let d = 1; d <= days; d++) {
   save.lastSeen = t;
   for (let s = 0; s < SESSION_MIN * 60; s += 50) {
     const hour = Math.floor(t / H);
-    makeOne(hour);
+    if (!mineOne(hour)) makeOne(hour);
     const c = St.clerkOf(save), clerk = c && !save.unpaid ? St.clerkTerms(c) : null;
     tally(Sh.shopStep(save, 50, rng, t, false, clerk));
     St.payWages(save, 50); St.resolveTrips(save, t, rng); { const bm = Ap.step(save, 50, rng, t); benched += bm.length; bm.forEach(r => apIds.add(r.piece.id)); }
@@ -396,6 +430,7 @@ if (process.env.WHY) for (const id of Rg.nineOf(save)) console.log('  nine ' + i
   'parts', [0, 1, 2].filter(i => Trail.hasPart(save, id, i)).length, 'relic', MYTHICS[id].relic, (save.relicsMade || []).includes(MYTHICS[id].relic) ? 'made' : 'not', save.cards.some(c => c.relic === MYTHICS[id].relic && c.tier === 'relic') ? 'held' : 'gone', 'src', MYTHICS[id].shard);
 if (BANKING) console.log('bank: borrowed on day', loanDay, ' interest paid', interestPaid, ' owed now', Bank.bankOf(save).loan, ' second shop from day', branchDay);
 console.log('EARNED', save.earned, 'coins', save.coins);
+if (MINING) console.log('mine: dug', dug, ' smelted', smelted, ' galleries', Mine.galleries(save), ' mining trade', Mine.level(save), ' smelting trade', R.levelOf((save.trades.smelt || {}).xp || 0).level, ' brought up', JSON.stringify(mineBars), ' worth', Object.entries(mineBars).reduce((a, [m, n]) => a + Sh.priceOf(m, 0, save) * n, 0), 'c');
 { const a = Ap.apprenticeOf(save); if (APPR) console.log('apprentice: ' + (a ? a.name + ' (' + (a.trait) + ') from day ' + apprDay + ', made ' + (a.made || 0) + ' (open ' + benched + ') sold ' + apN + ' for ' + apSold + ' spent ' + (a.spent || 0) + '  trades ' + Ap.skills(a).slice(0, 5).map(x => x.id + ' ' + x.level).join(', ') : 'none')); }
 if (WEARING) console.log('wear: repairs', repairs, ' broke', broke, ' spent', wearSpent, ' (' + (100 * wearSpent / (save.earned || 1)).toFixed(1) + ' % of earnings)');
 if (THIEVING) console.log('thieves: robbed', robbed, ' caught', caught, ' turned away', turned, ' lost pieces worth', lostWorth, ' from the till', lostTill, ' (' + (100 * (lostWorth + lostTill) / (save.earned || 1)).toFixed(1) + ' % of earnings)');

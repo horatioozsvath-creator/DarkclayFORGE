@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS } from './data.js?v=69';
-import * as Rg from './region.js?v=69';
+import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, WORKS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS } from './data.js?v=70';
+import * as Rg from './region.js?v=70';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -41,13 +41,16 @@ export function partOptions(patternId, save) {
     ? { part: p.part, opts: p.metals.map(id => ({ id, ...METALS[id] })) }
     : { part: p.part, opts: p.opts });
   if (!save) return all;
-  const rg = Rg.regionId(save), away = o => { const m = o.mat || o.id; return MATS[m] && MATS[m].coast && !Rg.soldIn(rg, m) && !((save.mats || {})[m] > 0); };
+  // (milestone 45: a coastal ore is sold nowhere: it's the coast's, so it's offered there and left off in the Reach)
+  const rg = Rg.regionId(save), away = o => { const m = o.mat || o.id; return MATS[m] && MATS[m].coast && (MATS[m].ore ? rg === Rg.REACH : !Rg.soldIn(rg, m)) && !((save.mats || {})[m] > 0); };
   return all.map(g => { let n = g.opts.length; while (n > 1 && away(g.opts[n - 1])) n--; return n === g.opts.length ? g : { ...g, opts: g.opts.slice(0, n) }; });
 }
 export function chosenParts(patternId, picks) {
   return partOptions(patternId).map((p, i) => p.opts[(picks && picks[i]) || 0] || p.opts[0]);
 }
-export const stationOf = patternId => STATIONS[PATTERNS[patternId].station || 'forge'];
+export const stationOf = patternId => { const id = PATTERNS[patternId].station || 'forge'; return STATIONS[id] || WORKS[id]; };   // the mine's face (milestone 45) is a working, not a station
+// the trade a pattern's practice goes to: its own, or one it shares (the mine's digging, in either region: milestone 45)
+export const tradeId = patternId => (PATTERNS[patternId] || {}).tradeAs || patternId;
 export function bandFor(metal, station = FORGE) {
   let band = (metal.band || station.band).slice();
   if (metal.widen) { const mid = (band[0] + band[1]) / 2, half = (band[1] - band[0]) / 2 * metal.widen; band = [Math.max(0, Math.round(mid - half)), Math.min(100, Math.round(mid + half))]; }
@@ -148,8 +151,8 @@ export function strike(S) {
   }
   // the bench: a bend across the grain turns nothing over (the steam still drains)
   if (st.grain && acrossGrain(S)) { S.streak = 0; pop({ label: 'NOTHING', why: 'ACROSS THE GRAIN · WAIT FOR IT', size: 'bad', colour: KC.HOLD }); return { k: 'HOLD', dead: true, pops }; }
-  const tore = st.wetTear && m > hi && S.level >= 3;
-  if (tore) slipIn(S, 'CRACK', 'WET', 'Too wet: it tore (stitch ' + S.strikes + ')');
+  const tore = (st.wetTear || st.spall) && m > hi && S.level >= 3;
+  if (tore) slipIn(S, 'CRACK', st.spall ? 'SPALL' : 'WET', st.spall ? 'Too hot: the face spalled (swing ' + S.strikes + ')' : 'Too wet: it tore (stitch ' + S.strikes + ')');
   // the kettle: the first stir starts it settling; over the band it boils over (a CRACK from trade 3) and the boil drops
   S.stirred = true;
   const boiled = st.boilOver && m > hi;
@@ -166,7 +169,7 @@ export function strike(S) {
   const sagged = st.sag && m > hi && S.shape < 100;
   if (sagged) S.shape = Math.max(0, S.shape - st.sag);
   tk.up = true; tk.n = S.strikes; tk.peek = false;
-  let k = tk.k, why = m < lo ? (st.shatter ? 'TOO STIFF · IT SHATTERED' : st.id === 'bowbench' ? 'BENT COLD · IT SPLIT' : 'STRUCK COLD · A CRACK SLIPPED IN') : sagged ? 'TOO HOT · IT SAGS' : tore ? 'TOO WET · A TEAR SLIPPED IN' : boiled ? (S.level >= 3 ? 'IT BOILED OVER · A CRACK SLIPPED IN' : 'IT BOILED OVER') : '', gain = '', size = '', colour = null, drop = false;
+  let k = tk.k, why = m < lo ? (st.shatter ? 'TOO STIFF · IT SHATTERED' : st.id === 'bowbench' ? 'BENT COLD · IT SPLIT' : 'STRUCK COLD · A CRACK SLIPPED IN') : sagged ? 'TOO HOT · IT SAGS' : tore ? (st.spall ? 'TOO HOT · THE FACE SPALLED' : 'TOO WET · A TEAR SLIPPED IN') : boiled ? (S.level >= 3 ? 'IT BOILED OVER · A CRACK SLIPPED IN' : 'IT BOILED OVER') : '', gain = '', size = '', colour = null, drop = false;
   if (k === 'CRACK' && (S.white > 0 || S.warden)) { why = S.warden ? 'THE WARDEN\'S TILE HOLDS IT' : 'WHITE HEAT · NO CRACK'; S.warden = false; k = 'HOLD'; }
   const mult = S.twin && k !== 'CRACK' ? 2 : 1;
   if (S.twin && k !== 'CRACK') { S.twin = false; why = why || 'TWIN · IT COUNTS TWICE'; }
@@ -473,7 +476,14 @@ export function mythicPiece(piece, id) {
   return out;
 }
 // a working that yields materials, not a piece (the glass's bottles): how many, by the tier it came out
-export const yieldOf = (patternId, tier) => { const m = PATTERNS[patternId].makes; return m ? { mat: m.mat, n: m.n[Math.min(tier, m.n.length - 1)] } : null; };
+export const yieldOf = (patternId, tier, picks) => {
+  const m = PATTERNS[patternId].makes; if (!m) return null;
+  const n = m.n[Math.min(tier, m.n.length - 1)];
+  if (!m.from) return { mat: m.mat, n };
+  // the mine's (milestone 45): the seam's ore, or the ore's bar; a Rare haul from a vein with gems in it brings a rough gem
+  const p0 = chosenParts(patternId, picks || [])[0];
+  return { mat: p0[m.from], n, gem: m.from === 'ore' && p0.gem && tier >= 2 ? 1 : 0 };
+};
 // A piece out of the fire again: the same piece (its id, its maker, the affixes it carried), its tier and its making moved on.
 export function remakePiece({ card, res, picked, rng, now }) {
   const src = srcOf(card);

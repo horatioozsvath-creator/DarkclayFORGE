@@ -2,11 +2,11 @@
 // THE TRAIL OF THE NINE, with no page access: the shards of Veric, one for each Mythic. The trail opens OF THE REACH, and with it every
 // clue (release 37: before, each waited on its Relic), so shards and parts are gathered alongside the Relics. From its source: below the deep doors (staff.js), a Court order (shop.js), or the
 // fallen star (a rare town event, claimed from the notice board).
-import { LEGACY, MYTHICS, RELICS, TRAIL, PART_WORK, PART_PATTERN, OLD_BLOOD, PATTERNS } from './data.js?v=69';
-import { rung } from './growth.js?v=69';
-import { owns } from './room.js?v=69';
-import * as Rg from './region.js?v=69';
-import { levelOf, stationOf } from './rules.js?v=69';
+import { LEGACY, MYTHICS, RELICS, TRAIL, PART_WORK, PART_PATTERN, OLD_BLOOD, PATTERNS } from './data.js?v=70';
+import { rung } from './growth.js?v=70';
+import { owns } from './room.js?v=70';
+import * as Rg from './region.js?v=70';
+import { levelOf, stationOf } from './rules.js?v=70';
 
 export const open = save => rung(save) >= TRAIL.rung;
 export const hasShard = (save, id) => (save.shards || []).includes(id);
@@ -45,7 +45,7 @@ export const relicOf = id => RELICS[MYTHICS[id].relic];
 export const hasPart = (save, id, i) => !!((save.mythicParts || {})[id] || [])[i];
 export const partsDone = (save, id) => [0, 1, 2].every(i => hasPart(save, id, i));
 // the maker's best trade at a station (any of its patterns)
-export const stationLevel = (save, st) => Math.max(1, ...Object.keys(PATTERNS).filter(p => (PATTERNS[p].station || 'forge') === st).map(p => levelOf(((save.trades || {})[p] || {}).xp || 0).level));
+export const stationLevel = (save, st) => Math.max(1, ...Object.keys(PATTERNS).filter(p => (PATTERNS[p].station || 'forge') === st && !PATTERNS[p].mine).map(p => levelOf(((save.trades || {})[p] || {}).xp || 0).level));
 // what a part's working needs: { ok, station, pattern, why }
 export function partGate(save, id, i) {
   const m = MYTHICS[id]; if (!m || !m.parts[i]) return { ok: false, why: ['no such part'] };

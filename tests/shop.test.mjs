@@ -24,7 +24,7 @@ test('making takes the materials, and only when there are enough', () => {
 });
 
 test('every material is sold somewhere (but relic materials, found only below the deep doors), and prices drift within bounds', () => {
-  for (const id of Object.keys(MATS).filter(id => !MATS[id].relic)) {
+  for (const id of Object.keys(MATS).filter(id => !MATS[id].relic && !MATS[id].ore)) {   // (an ore is dug, never sold: milestone 45)
     const where = [];
     for (let h = 0; h < 48; h++) if (Sh.sells(id, h)) where.push(h);
     // the Greyshore's are sold on the coast (milestone 39)
