@@ -1,7 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // Growth, with no page access: tools, the maker's level and perks, renown, the display wall.
-import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS, HALL_RENOWN, HALL_CHARM, MYTHICS, NINE, LEGACY } from './data.js?v=66';
-import { levelOf, MAX_LEVEL } from './rules.js?v=66';
+import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS, HALL_RENOWN, HALL_CHARM, MYTHICS, NINE, LEGACY } from './data.js?v=67';
+import { levelOf, MAX_LEVEL } from './rules.js?v=67';
+import * as Rg from './region.js?v=67';
 
 // ---------- tools ----------
 export const has = (save, id) => (save.tools || []).includes(id);
@@ -56,7 +57,8 @@ export const onHall = (save, id) => !!save.hall && Object.values(save.hall.shown
 export const hallRenown = save => hallCards(save).reduce((a, c) => a + (HALL_RENOWN[c.tier] || 0), 0);
 export const hallCharm = save => hallCards(save).reduce((a, c) => a + (HALL_CHARM[c.tier] || 0), 0) * (isNine(save) ? NINE.hallCharm : 1);
 // the ending: every one of the Nine made (sold to the Court or kept, made counts)
-export const isNine = save => Object.keys(MYTHICS).every(id => (save.mythicsMade || []).includes(id));
+// all the region's Nine made (milestone 42: the coast's are the Nine of the Tide)
+export const isNine = save => Rg.nineOf(save).every(id => (save.mythicsMade || []).includes(id));
 export const renownOf = save => Math.floor(save.renown || 0) + wallRenown(save) + hallRenown(save);
 export function rung(save) { const r = renownOf(save); let i = 0; RENOWN.forEach((x, k) => { if (r >= x.at) i = k; }); return i; }
 export const nextRung = save => RENOWN[rung(save) + 1] || null;

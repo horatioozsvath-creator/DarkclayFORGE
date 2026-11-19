@@ -36,8 +36,8 @@ test('the coast\'s nine: one for each new pattern, the rest from the families\' 
   // one per pattern in each region; names all different
   for (const id of ['reach', COAST]) { const ps = Rg.relicsIn(id).map(k => RELICS[k].pattern); assert.equal(new Set(ps).size, ps.length, id); }
   const names = Object.values(RELICS).map(r => r.name); assert.equal(new Set(names).size, names.length);
-  // the Nine of the Reach still grow from the Reach's Relics (the Tide's come in milestone 42)
-  for (const m of Object.values(MYTHICS)) assert.ok(!RELICS[m.relic].region, m.name);
+  // each region's Nine grow from that region's Relics (the Tide's: milestone 42)
+  for (const m of Object.values(MYTHICS)) assert.equal(RELICS[m.relic].region, m.region, m.name + ': grows from its own region\'s Relic');
 });
 
 test('which Relic a piece can become: the region\'s own, or one whose blueprint came with the line', () => {

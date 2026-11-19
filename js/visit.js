@@ -2,13 +2,13 @@
 // A shop front as a link, with no page access: what a friend sees when they visit (the room as it's arranged, the cards on its
 // shelves with their prices, the wall's pieces in full, a sign). Packed small here; js/share.js compresses it into the address after
 // #shop=. A link comes from someone else's browser: unpack checks and rebuilds every part, and the room must pass the room rules.
-import { FURNITURE, TIERS, RENOWN, ROOM_SIZES, STATIONS, CHARM_MAX, SHELF_LEVELS, MAX_PLACES } from './data.js?v=66';
-import { ART } from './card.js?v=66';
-import { valid, shelfSpots, charm, levelOf, homeOf } from './room.js?v=66';
-import { priceAt } from './shop.js?v=66';
-import { makePiece } from './rules.js?v=66';
-import { rung, hallCards, isNine } from './growth.js?v=66';
-import { cardFields, checkCard } from './share.js?v=66';
+import { FURNITURE, TIERS, RENOWN, ROOM_SIZES, STATIONS, CHARM_MAX, SHELF_LEVELS, MAX_PLACES, REGIONS, REACH_RUNG } from './data.js?v=67';
+import { ART } from './card.js?v=67';
+import { valid, shelfSpots, charm, levelOf, homeOf } from './room.js?v=67';
+import { priceAt } from './shop.js?v=67';
+import { makePiece } from './rules.js?v=67';
+import { rung, hallCards, isNine } from './growth.js?v=67';
+import { cardFields, checkCard } from './share.js?v=67';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 const str = (v, n) => typeof v === 'string' && v.length <= n ? v : null;
@@ -33,6 +33,7 @@ export function packShop(save, now = Date.now()) {
     hl: hallCards(save).slice(0, MAX_WALL).map(cardFields),   // the Hall's pieces
     n9: isNine(save) ? 1 : 0,   // the Maker of the Nine
     g: save.gen || 1,   // the generation of the line (milestone 38)
+    ...(save.region && save.region !== 'reach' ? { rg: save.region } : {}),   // where the shop is (milestone 42); none is the Reach, as old links read
   };
 }
 // the piece on the flyer: the one chosen, else the shop's best on show (the wall and the shelves), else its best anywhere
@@ -85,7 +86,8 @@ export function unpackShop(o) {
   if (o.f != null) { featured = checkCard(o.f); if (!featured) return null; featured.id = 'flyer'; }
   if (o.n9 != null && o.n9 !== 0 && o.n9 !== 1) return null;
   const gen = Number.isInteger(o.g) && o.g >= 1 && o.g <= 99 ? o.g : 1;
-  return { uid, featured, nine: o.n9 === 1, gen, maker, at, renown: RENOWN[o.rw].word, rung: o.rw, size: ROOM_SIZES[o.sz], charm: Math.round(o.ch), made: o.md, sold: o.sd, stations: o.st, room, stands, wall, hall };
+  const region = typeof o.rg === 'string' && REGIONS[o.rg] ? o.rg : 'reach';   // an unknown region reads as the Reach (milestone 42)
+  return { uid, featured, nine: o.n9 === 1, gen, region, maker, at, renown: o.rw === REACH_RUNG ? REGIONS[region].top : RENOWN[o.rw].word, rung: o.rw, size: ROOM_SIZES[o.sz], charm: Math.round(o.ch), made: o.md, sold: o.sd, stations: o.st, room, stands, wall, hall };
 }
 
 // ---------- a copy from a flyer: a sample of the featured piece, kept by a visitor ----------

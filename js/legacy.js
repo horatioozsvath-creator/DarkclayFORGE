@@ -3,12 +3,13 @@
 // The heir's shop is built fresh, with only what the line keeps: the book (patterns found, tries, clues), the blueprints, the found
 // tiles, the heir's trades (their own, up to trade 5; trade 2 in the rest), their trait for good and one heirloom over the door. The
 // old shop goes into the line's record, with its save code (its own record left out, so nothing nests).
-import { LEGACY, PATTERNS, HALL, MYTHICS, TIERS, RENOWN } from './data.js?v=66';
-import { scatter } from './trail.js?v=66';
-import { isNine, renownOf } from './growth.js?v=66';
-import { levelOf, xpToNext } from './rules.js?v=66';
-import { apprenticeOf, TOP_XP } from './apprentice.js?v=66';
-import { fresh, toCode } from './save.js?v=66';
+import { LEGACY, PATTERNS, HALL, MYTHICS, TIERS, RENOWN } from './data.js?v=67';
+import { scatter } from './trail.js?v=67';
+import { isNine, renownOf } from './growth.js?v=67';
+import { levelOf, xpToNext } from './rules.js?v=67';
+import { apprenticeOf, TOP_XP } from './apprentice.js?v=67';
+import { fresh, toCode } from './save.js?v=67';
+import * as Rg from './region.js?v=67';
 
 const DAY = 86400000;
 export const gen = save => save.gen || 1;
@@ -47,13 +48,15 @@ export function heirTrades(p) {
 export function recordOf(save, now, looms) {
   const old = { ...save }; delete old.line;
   const hall = Object.values((save.hall || {}).shown || {}).map(id => (save.cards || []).find(c => c.id === id)).filter(Boolean).map(c => c.name);
-  return { gen: gen(save), maker: save.maker, lineOf: save.lineOf || null, trait: save.heirTrait || null, startedAt: save.startedAt || null, nineAt: save.nineAt || null, handedAt: now,
+  // region: where this generation worked (milestone 42; a record without one is the Reach's)
+  return { gen: gen(save), region: Rg.regionId(save), maker: save.maker, lineOf: save.lineOf || null, trait: save.heirTrait || null, startedAt: save.startedAt || null, nineAt: save.nineAt || null, handedAt: now,
     days: save.startedAt && save.nineAt ? Math.round((save.nineAt - save.startedAt) / DAY) : null, renown: renownOf(save), made: save.made || 0, sold: save.sold || 0,
-    earned: save.earned || 0, heirloom: looms[0] ? { name: looms[0].name, tier: looms[0].tier } : null, heirlooms: looms.map(x => ({ name: x.name, tier: x.tier })), hall, nine: Object.keys(MYTHICS).filter(id => (save.mythicsMade || []).includes(id)).length,
+    earned: save.earned || 0, heirloom: looms[0] ? { name: looms[0].name, tier: looms[0].tier } : null, heirlooms: looms.map(x => ({ name: x.name, tier: x.tier })), hall, nine: Rg.nineOf(save).filter(id => (save.mythicsMade || []).includes(id)).length,
     code: toCode(old) };
 }
 // the heir's shop, from the old one: a new object (the old save is left as it was). heirloomId: a card from heirlooms(), or null.
-export function handOn(save, picked, now) {
+// to: where the heir sets up the forge (milestone 42, the crossing): the Reach (the default) or over the pass, 'greyshore'
+export function handOn(save, picked, now, to) {
   const c = canHandOn(save, now); if (!c.ok) return c;
   const ids = [...new Set([].concat(picked || []))], n = heirloomsFor(gen(save) + 1), p = c.heir, list = heirlooms(save), looms = ids.map(id => list.find(x => x.id === id));
   if (looms.some(x => !x)) return { ok: false, why: 'that piece can\'t pass on' };
@@ -67,12 +70,14 @@ export function handOn(save, picked, now) {
     book, blueprints: (save.blueprints || []).slice(), found: (save.found || ['ember']).slice(), picks: JSON.parse(JSON.stringify(save.picks || {})),
     trades: heirTrades(p), maker: p.name, heirTrait: p.trait, lineOf: save.maker, gen: gen(save) + 1, startedAt: now, lastSeen: now,
     heirlooms: looms.map(x => ({ ...JSON.parse(JSON.stringify(x)), heirloom: true, from: save.maker })),
-    // the Nine scattered again: their shards lie in new places this generation (milestone 38)
-    shardWhere: scatter(seeded(hash((save.uid || '') + ':' + (gen(save) + 1)))),
-    // from the third generation, the town's welcome: the shop starts KNOWN
-    renown: gen(save) + 1 >= LEGACY.welcomeFrom ? RENOWN[LEGACY.welcome].at : 0,
+    // the Nine scattered again: their shards lie in new places this generation (milestone 38); the region's own Nine (milestone 42)
+    shardWhere: scatter(seeded(hash((save.uid || '') + ':' + (gen(save) + 1))), to),
     line: (save.line || []).concat(rec),
     coins: LEGACY.purse };
+  if (Rg.idOf(to) !== Rg.REACH) next.region = Rg.idOf(to);
+  // from the third generation in the region, the town's welcome: the shop starts KNOWN. The Reach counts every generation (milestone
+  // 38); over the pass, only the ones that worked there: nobody in Saltby has heard of the line (milestone 42)
+  next.renown = Rg.localGen(next) >= LEGACY.welcomeFrom ? RENOWN[LEGACY.welcome].at : 0;
   next.inheritedXp = Object.values(next.trades).reduce((a, t) => a + t.xp, 0);   // the head start: not counted to the maker's level
   if (next.book === undefined) delete next.book;
   return { ok: true, save: next, record: rec };

@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE REGIONS (milestone 39), with no page access: where a save works (save.region; none is the Reach) and the region's own tables.
 // The Reach's are data.js's own tables, so a Reach save plays exactly as before; another region names only what differs (REGIONS).
-import { REGIONS, SUPPLIERS, CUSTOMERS, SELLERS, ROUTES, THIEVES, MONSTERS, TOWN_HOT, TOWN_COLD, TOWN_EVENTS, SEASONS, RENOWN, REACH_RUNG, MATS, PATTERNS, RELICS } from './data.js?v=66';
+import { REGIONS, SUPPLIERS, CUSTOMERS, SELLERS, ROUTES, THIEVES, MONSTERS, TOWN_HOT, TOWN_COLD, TOWN_EVENTS, SEASONS, RENOWN, REACH_RUNG, MATS, PATTERNS, RELICS, MYTHICS } from './data.js?v=67';
 
 export const REACH = 'reach';
 export const idOf = r => (r && REGIONS[r] ? r : REACH);
@@ -62,6 +62,7 @@ export const rivals = (save, base) => own(regionId(save), 'rivals', base);
 export const news = (save, k, base) => ((regionOf(save).news || {})[k]) || base;
 
 // ---------- renown: the top rung is the region's own ----------
+export { REACH_RUNG };
 export const rungWord = (save, i) => i === REACH_RUNG ? regionOf(save).top : RENOWN[i].word;
 
 // ---------- the folk (milestone 40): the regulars, their stories, their grandchildren ----------
@@ -93,3 +94,12 @@ export function relicOf(save, pattern) {
   return open.find(here) || open[0] || all.find(here) || all[0];
 }
 export const bpWhere = (save, source, base) => ((regionOf(save).bpWhere || {})[source]) || base[source];
+
+// ---------- the Nine (milestone 42): each region's own legend, its Mythics and its words ----------
+export const mythicRegion = id => idOf(MYTHICS[id] && MYTHICS[id].region);
+export const mythicsIn = id => once('nine:' + idOf(id), () => Object.keys(MYTHICS).filter(k => mythicRegion(k) === idOf(id)));
+export const nineOf = save => mythicsIn(regionId(save));
+export const legendIn = id => once('legend:' + idOf(id), () => ({ ...REGIONS.reach.legend, ...(REGIONS[idOf(id)].legend || {}) }));
+export const legend = save => legendIn(regionId(save));
+// the day a shard of the region's Nine may lie out in the open (the Reach's fallen star, the coast's tide giving back)
+export const shardDay = (town) => { const e = town && eventsIn(town.region).find(x => x.id === town.event); return !!(e && e.shards); };

@@ -38,6 +38,27 @@ export const MYTHICS = {
     powers: [['Sees the lie', 'a lie written down shows through it'], ['Far off', 'it sees what is a day\'s ride away'], ['What was', 'it shows a place as it once stood']], lore: 'The abbey\'s scholars ground it for a hundred years.' },
   morning: { name: 'The Window of Morning', relic: 'corrowgoblet', shard: 'star', parts: [['forge', 'a leading'], ['stretcher', 'a hanging'], ['kettle', 'a staining']],
     powers: [['Poison shows', 'what would harm clouds in its light'], ['First light', 'the room it hangs in wakes rested'], ['The long view', 'through it, the town as it will be']], lore: 'The Corrows\' cup, melted and blown into the window of a hall.' },
+  // THE NINE OF THE TIDE (milestone 42): the Greyshore's legend. Isel the Tide-Queen held Saltby before the sea came; nine pieces were
+  // sworn to her, and they went down with the old town. Each grows from one of the coast's Relics (milestone 41). shard: below the
+  // drowned town ('deep'), an order from the Harbour Guild ('court'), or the strand when the tide gives back after a storm ('star')
+  seagatesword: { name: 'The Sea-Gate Sword', relic: 'tidewarden', shard: 'court', region: 'greyshore', parts: [['glass', 'a sea-glass pommel'], ['kettle', 'a salt quench'], ['stretcher', 'a sharkskin grip']],
+    powers: [['The harbour holds', 'no one boards a ship it guards'], ['Salt-bright', 'it never rusts, not even in the sea'], ['The gate stands', 'what it guards, the sea can\'t take']], lore: 'Isel\'s captain held the sea-gate with it the night the wave came. The gate is all that stood.' },
+  iselsring: { name: 'Isel\'s Ring', relic: 'drownedring', shard: 'star', region: 'greyshore', parts: [['glass', 'a sea-glass stone'], ['kettle', 'an ambergris oil'], ['bowbench', 'a whalebone ring-box']],
+    powers: [['Comes home', 'the wearer always finds the way back to shore'], ['Sworn on it', 'it finds the others of the Tide'], ['Given back', 'the sea returns what the wearer loses to it']], lore: 'The Tide-Queen\'s own ring. Every one of the Nine was sworn on it, and the sea took it last.' },
+  whalekingsbarb: { name: 'The Whale-King\'s Barb', relic: 'hobbsbarb', shard: 'deep', region: 'greyshore', parts: [['stretcher', 'a sealskin line'], ['kettle', 'a pitch binding'], ['bowbench', 'a whalebone shaft']],
+    powers: [['It holds', 'what it strikes can\'t slip the line'], ['Thrown true', 'it comes back on its line to the hand'], ['The deep answers', 'the great whales turn from the boat that carries it']], lore: 'Isel\'s harpooner took the king of the whales with it, and the sea never forgave the town.' },
+  cupofthetide: { name: 'The Cup of the Tide', relic: 'tidecup', shard: 'court', region: 'greyshore', parts: [['forge', 'a brass foot'], ['stretcher', 'a sealskin case'], ['kettle', 'a salt glaze']],
+    powers: [['Fair weather', 'drink from it before sailing, and the ship comes home'], ['The turning', 'poured out, it turns the tide'], ['A full table', 'no one at the table it stands on goes hungry']], lore: 'Isel drank to every ship that left the harbour from it. None was lost while she lived.' },
+  chapelbalm: { name: 'The Chapel Balm', relic: 'penhalebalm', shard: 'star', region: 'greyshore', parts: [['glass', 'a sea-glass jar'], ['forge', 'a silver lid'], ['bowbench', 'a driftwood box']],
+    powers: [['Salt and burn', 'it heals what the sea and the tar do'], ['The drowned breathe', 'a drowned sailor, pulled out in time, wakes'], ['Blessed', 'a boat anointed with it comes home']], lore: 'The old sea-chapel\'s balm, made by Isel\'s own priest. They say the drowned have woken under it.' },
+  queensmantle: { name: 'The Tide-Queen\'s Mantle', relic: 'drownedcoat', shard: 'deep', region: 'greyshore', parts: [['forge', 'brass clasps'], ['kettle', 'a proofing of pitch'], ['glass', 'sea-glass buttons']],
+    powers: [['Dry to the bone', 'no water passes'], ['The queen\'s walk', 'the tide draws back from the one who wears it'], ['Fog-wrapped', 'the fog closes round the one who wears it']], lore: 'Isel wore it on the sea-wall the night the wave came. Divers found it below, folded, as if she\'d laid it down.' },
+  iselstrident: { name: 'Isel\'s Trident', relic: 'breakwater', shard: 'court', region: 'greyshore', parts: [['forge', 'drowned-silver tines'], ['stretcher', 'a sharkskin binding'], ['glass', 'a coral crown']],
+    powers: [['The waves part', 'the sea gives way before it'], ['The queen\'s sign', 'every boat in the harbour knows it'], ['Calm water', 'a storm breaks on the wall where it\'s raised']], lore: 'The sign of the Tide-Queen\'s house, carried before her. The old town drowned on the one day it wasn\'t raised.' },
+  lighthouseglass: { name: 'The Lighthouse Glass', relic: 'farglass', shard: 'star', region: 'greyshore', parts: [['forge', 'a brass rim'], ['stretcher', 'a sealskin hood'], ['kettle', 'a clearing oil']],
+    powers: [['Past the weather', 'fog and storm don\'t hide what it\'s turned on'], ['An hour ahead', 'it shows the sea as it will be in an hour'], ['The lost ship', 'it finds what the sea has hidden']], lore: 'The lighthouse keeper\'s glass. He saw the wave an hour out, and Isel had the bell rung.' },
+  sealofthetide: { name: 'The Seal of the Tide', relic: 'blackcaulk', shard: 'deep', region: 'greyshore', parts: [['forge', 'an iron pot'], ['bowbench', 'a driftwood paddle'], ['glass', 'a black bottle']],
+    powers: [['Never leaks', 'what it seals, the sea can\'t open'], ['Kept', 'what\'s sealed in it never spoils'], ['The queen\'s barge', 'a boat proofed with it can\'t sink']], lore: 'The pitch that sealed Isel\'s barge. It\'s on the bottom still, whole and dry, and something inside is waiting.' },
 };
 export const TRAIL = { rung: 6, deep: 0.35, court: 0.4, courtLeast: 2, star: 2, starBelow: 0.08 };   // courtLeast: the Court's shard orders ask a Rare or better (milestone 34: was Old-Blood); star: the shards a fallen star brings (milestone 35: was 1); starBelow: the odds a trip below finds one of the star's instead (milestone 35)
 // milestone 18: the Court asks for each Mythic once (half the orders while one is waiting), paying twice its worth; all Nine made is
@@ -733,7 +754,7 @@ export const TOWN_EVENTS = [
   { id: 'feast', name: 'Saint Brannoc\'s feast', line: 'Bells, bread and an open hand: it\'s a day for spending.', effect: 'Every buyer a step keener, purses fuller.', purse: 1.2, keen: true },
   { id: 'caravan', name: 'A spice caravan', line: 'A caravan from the south camps by the river for the night.', effect: 'Factors and travellers with deep purses.', gap: 0.85, weights: { factor: 3, traveller: 2, steward: 2 }, purse: 1.1 },
   { id: 'siege', name: 'Raiders on the high road', line: 'The gates are shut at noon. Fewer come in, and those who do want steel.', effect: 'Half the customers, but they carry a third more.', gap: 1.8, weights: { guard: 3 }, purse: 1.35 },
-  { id: 'starfall', name: 'A star falls on the Reach', line: 'Something burned across the sky last night and came down past the high pasture.', effect: 'Fewer customers: half the town has gone to look. A shard of Veric may lie there.', gap: 1.3, weight: 4 },
+  { id: 'starfall', name: 'A star falls on the Reach', line: 'Something burned across the sky last night and came down past the high pasture.', effect: 'Fewer customers: half the town has gone to look. A shard of Veric may lie there.', gap: 1.3, weight: 4, shards: true },
   { id: 'storm', name: 'A three-day storm', line: 'Rain off the Reach. Only the desperate are out.', effect: 'Fewer customers.', gap: 1.4 },
 ];
 export const TOWN_COLD = [
@@ -1132,8 +1153,34 @@ export const FORGED_PARTS = {
 // what a runner brings back, the gangs, the monsters (the same three kinds in its own words), the notice board, the seasons, the news,
 // the guild fair's rivals and the top rung's word. Hidden in milestone 39: only an heir can go over the pass, from milestone 42.
 export const REGIONS = {
-  reach: { id: 'reach', name: 'the Reach', town: 'the town', top: 'OF THE REACH', line: 'A mining town under the high pasture, with the deep doors below it.' },
+  reach: { id: 'reach', name: 'the Reach', town: 'the town', top: 'OF THE REACH', line: 'A mining town under the high pasture, with the deep doors below it.',
+    // the region's legend (milestone 42): its Nine's words. The Reach's are the game's as they were
+    legend: { word: 'THE NINE OF VERIC', title: 'MAKER OF THE NINE', maker: 'Maker of the Nine', of: 'Veric', shard: 'shard of Veric', shards: 'shards of Veric', court: 'The Court',
+      starGo: 'GO OUT TO THE FALLEN STAR', starAt: 'In the crater, cold to the touch', starNone: 'no star fell today', shardWhy: 'its shard of Veric',
+      where: { deep: 'below the deep doors (a runner\'s trip)', court: 'an order from the Court', star: 'the day a star falls on the Reach (IN TOWN), or now and then below the deep doors' },
+      courtShard: 'The Court would see the best you make. It has something of Veric\'s to give in return.', courtPosted: 'The Court left an order, and a promise.',
+      courtBuy: 'The Court has heard what you made. It would buy {name}, once, for twice its worth. Keep it, and the Court won\'t ask again.', courtAsked: 'The Court asked for {name}, once.',
+      trail: 'The Nine of Veric: nine pieces of legend, each a Relic reforged.', ofLine: '', nine: 'the Nine of Veric', place: 'the Reach',
+      lost: 'The Nine were lost again after their day: a fire at the Court, a theft on the high road, one gone into the river. Their shards lie scattered, and not where the old stories put them.' } },
   greyshore: { id: 'greyshore', name: 'the Greyshore', town: 'Saltby', top: 'OF THE SHORE',
+    // the coast's legend (milestone 42): Isel the Tide-Queen and her Nine. Their shards: below the drowned town, an order from the Harbour
+    // Guild, or on the strand when the tide gives back after a storm (the 'washup' day, in place of the fallen star)
+    legend: { word: 'THE NINE OF THE TIDE', title: 'MAKER OF THE TIDE', maker: 'Maker of the Tide', of: 'Isel', shard: 'shard of the Tide', shards: 'shards of the Tide', court: 'The Harbour Guild',
+      starGo: 'GO DOWN TO THE STRAND', starAt: 'In the wrack on the strand, cold and wet', starNone: 'the tide gave nothing back today', shardWhy: 'its shard of the Tide',
+      where: { deep: 'below the drowned town (a runner\'s trip)', court: 'an order from the Harbour Guild', star: 'the strand, the day the tide gives back after a storm (IN TOWN), or now and then below the drowned town' },
+      courtShard: 'The Guild would see the best you make. It has something of the Tide-Queen\'s to give in return.', courtPosted: 'The Harbour Guild left an order, and a promise.',
+      courtBuy: 'The Harbour Guild has heard what you made. It would buy {name}, once, for twice its worth. Keep it, and the Guild won\'t ask again.', courtAsked: 'The Harbour Guild asked for {name}, once.',
+      trail: 'The Nine of the Tide: the Tide-Queen\'s nine pieces, each a Relic reforged.', ofLine: ' · OF THE GREYSHORE', nine: 'the Nine of the Tide', place: 'the Greyshore',
+      lost: 'The Nine of the Tide were lost again after their day: one to a wrecker\'s hold, one over the side of the packet, one back into the sea. Their shards lie scattered, and not where the old stories put them.',
+      ending: [
+        'The last of the Nine cools on the anvil. They were sworn to Isel, the Tide-Queen, and they went down with her town when the sea came in. Now they are whole again, and every one carries your mark.',
+        'By the next tide the word is in every cove. The Harbour Guild sends its master. The drowned town goes quiet. Sailors who have never held a hammer come up from the quay only to see the hands that did it.',
+        'Your mark is <b>Maker of the Tide</b>. The Hall shines twice as bright for it, and every link to your shop carries the Nine of the Tide.',
+        'The forge is still warm. There is always more to make.'],
+      arrive: [
+        'The road over the pass is three days of rock and wind, and then the grey sea, and Saltby under it: a harbour, a quay, a town of fishers and salvagers.',
+        'Nobody here has heard of {lineOf}, or of the Nine of Veric. The Reach is a long way off. The shop on Rope Lane is small, the shelves are bare, and the purse holds {purse} coins.',
+        'But the book is on its hook, the blueprints are in the drawer, and your hands remember what you learned at the bench. And they tell a story on the quay of a queen, a wave, and nine pieces that went down with her.'] },
     line: 'A grey harbour town over the pass: fishers, sailors and salvagers, and a drowned town out past the bar.',
     rescue: '<b>The chandler\'s scrap box.</b> Old Merrin leaves you a bar and a cord, enough for a dagger.',
     suppliers: [
@@ -1230,6 +1277,8 @@ export const REGIONS = {
       { id: 'wreckers', name: 'Wreckers\' lights on the point', line: 'A ship went on the rocks last night. The lanes are shut early, and those about want steel.', effect: 'Half the customers, but they carry a third more.', gap: 1.8, weights: { guard: 3 }, purse: 1.35 },
       { id: 'herring', name: 'The herring are in', line: 'The whole town is on the boats or at the gutting tables.', effect: 'Fewer customers, but the fishers come in flush.', gap: 1.3, weights: { hunter: 3 }, purse: 1.1 },
       { id: 'gale', name: 'A three-day gale', line: 'Spray over the harbour wall. Only the desperate are out.', effect: 'Fewer customers.', gap: 1.5, weight: 2 },
+      // the tide gives back (milestone 42): the coast's fallen star; shards: true marks the day a shard of its Nine may lie out there
+      { id: 'washup', name: 'The tide gives back', line: 'After last night\'s storm the strand is deep in wrack, and in it things from the drowned town.', effect: 'Fewer customers: half the town is down on the strand. A shard of the Tide may lie there.', gap: 1.3, weight: 4, shards: true },
     ],
     seasons: [
       { id: 'spring', name: 'Spring', line: 'The boats go back out, and every net and line wants mending.', patterns: ['spear', 'gloves', 'oil', 'satchel', 'dagger'], gap: 1 },

@@ -3,13 +3,13 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  APPRENTICE, HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, LINE_FOLK, LINE_STORIES, FOLK_OF, ORDER_TIME, ORDER_PAYS, SELLERS, COURT_FOUND, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE, REG_CLUE_ODDS } from './data.js?v=66';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=66';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=66';
-import { charmGap, placeGift } from './room.js?v=66';
-import * as Trail from './trail.js?v=66';
-import * as Rg from './region.js?v=66';
-import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=66';
+  APPRENTICE, HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, LINE_FOLK, LINE_STORIES, FOLK_OF, ORDER_TIME, ORDER_PAYS, SELLERS, COURT_FOUND, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE, REG_CLUE_ODDS } from './data.js?v=67';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=67';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=67';
+import { charmGap, placeGift } from './room.js?v=67';
+import * as Trail from './trail.js?v=67';
+import * as Rg from './region.js?v=67';
+import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=67';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -497,18 +497,20 @@ export function postOrder(save, rng, now) {
   if (nine.length && rng() < NINE.courtOdds) {
     const c = nine[0], m = MYTHICS[c.mythic];
     save.courtAsked = (save.courtAsked || []).concat(c.mythic);
-    save.order = { who: 'The Court', fig: '#e4505e', pattern: c.pattern, least: TIER_N.mythic, metal: null, mythic: c.mythic, posted: save.clock || 0,
-      line: 'The Court has heard what you made. It would buy ' + m.name + ', once, for twice its worth. Keep it, and the Court won\'t ask again.',
+    const L = Rg.legend(save);   // the Court, or the coast's Harbour Guild (milestone 42)
+    save.order = { who: L.court, fig: '#e4505e', pattern: c.pattern, least: TIER_N.mythic, metal: null, mythic: c.mythic, posted: save.clock || 0,
+      line: L.courtBuy.replace('{name}', m.name),
       due: (save.clock || 0) + ORDER_TIME[1] * 4, pays: c.worth * NINE.courtPays };
-    return log(save, { at: now, who: 'The Court', fig: '#e4505e', mood: 'EAGER', want: c.pattern, sold: null, order: 'posted', line: 'The Court asked for ' + m.name + ', once.' });
+    return log(save, { at: now, who: L.court, fig: '#e4505e', mood: 'EAGER', want: c.pattern, sold: null, order: 'posted', line: L.courtAsked.replace('{name}', m.name) });
   }
   // the Court, on the trail of the Nine: a Rare or better piece of a Relic's kind (TRAIL.courtLeast), and a shard of Veric with the pay
   const court = Trail.pending(save, 'court').filter(id => ownsPattern(save, RELICS[MYTHICS[id].relic].pattern));
   if (court.length && rng() < Trail.courtOddsOf(save)) {
     const id = court[Math.floor(rng() * court.length)], pattern = RELICS[MYTHICS[id].relic].pattern;
-    save.order = { who: 'The Court', fig: '#e4505e', pattern, least: TRAIL.courtLeast, metal: null, line: 'The Court would see the best you make. It has something of Veric\'s to give in return.', posted: save.clock || 0, shard: id,
+    const L = Rg.legend(save);
+    save.order = { who: L.court, fig: '#e4505e', pattern, least: TRAIL.courtLeast, metal: null, line: L.courtShard, posted: save.clock || 0, shard: id,
       due: (save.clock || 0) + ORDER_TIME[1] * 4, pays: orderPays(pattern, null, TRAIL.courtLeast) };
-    return log(save, { at: now, who: 'The Court', fig: '#e4505e', mood: 'EAGER', want: pattern, sold: null, order: 'posted', line: 'The Court left an order, and a promise.' });
+    return log(save, { at: now, who: L.court, fig: '#e4505e', mood: 'EAGER', want: pattern, sold: null, order: 'posted', line: L.courtPosted });
   }
   // the Court, from FAMED: a pattern you found yourself (milestone 34), never one still to find
   const foundHere = rung(save) >= COURT_FOUND.rung ? Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden && !PATTERNS[id].makes && ownsPattern(save, id)) : [];
@@ -629,14 +631,15 @@ export function relicFor(save, card) {
   return { ok: !why.length, relic: id, why };
 }
 // the one of the Nine that grows from this Relic and isn't made yet (milestone 34): sold, the Relic is gone, and that Mythic with it
-export const mythicAtStake = (save, c) => (c && c.tier === 'relic' && Object.keys(MYTHICS).find(k => MYTHICS[k].relic === c.relic && !(save.mythicsMade || []).includes(k))) || null;
+// (milestone 42: only this region's Nine; a Reach Relic made on the coast grows none of the Tide's, and the other way round)
+export const mythicAtStake = (save, c) => (c && c.tier === 'relic' && Rg.nineOf(save).find(k => MYTHICS[k].relic === c.relic && !(save.mythicsMade || []).includes(k))) || null;
 // the Mythic working for this Relic: the shard, the three parts, trade 7 at the station, in the back room; one in a save ({ ok, mythic, why })
 export function mythicFor(save, card) {
-  const id = card.relic && Object.keys(MYTHICS).find(k => MYTHICS[k].relic === card.relic);
+  const id = card.relic && Rg.nineOf(save).find(k => MYTHICS[k].relic === card.relic);   // this region's Nine (milestone 42)
   if (!id || card.tier !== 'relic') return { ok: false, mythic: null, why: [] };
   if ((save.mythicsMade || []).includes(id)) return { ok: false, mythic: id, made: true, why: ['made already'] };
   const why = [];
-  if (!Trail.hasShard(save, id)) why.push('its shard of Veric');
+  if (!Trail.hasShard(save, id)) why.push(Rg.legend(save).shardWhy);
   const parts = MYTHICS[id].parts.filter((p, i) => !Trail.hasPart(save, id, i)).map(p => p[1]);
   if (parts.length) why.push(parts.join(', '));
   why.push(...masteryWhy(save, card.pattern, MYTHIC_WORK));

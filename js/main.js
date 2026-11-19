@@ -1,38 +1,38 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, APPRENTICE, LEGACY, TRAITS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE } from './data.js?v=66';
-import * as R from './rules.js?v=66';
-import * as Sh from './shop.js?v=66';
-import * as St from './staff.js?v=66';
-import * as Rm from './room.js?v=66';
-import * as G from './growth.js?v=66';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=66';
-import * as Snd from './sound.js?v=66';
-import * as CV from './counter.js?v=66';
-import * as Town from './town.js?v=66';
-import * as V from './visit.js?v=66';
-import * as Br from './branch.js?v=66';
-import * as Bank from './bank.js?v=66';
-import * as Wear from './wear.js?v=66';
-import * as Th from './thieves.js?v=66';
-import * as Run from './runner.js?v=66';
-import * as Src from './sources.js?v=66';
-import * as Mon from './monsters.js?v=66';
-import * as Liv from './living.js?v=66';
-import * as Hl from './hall.js?v=66';
-import * as Trail from './trail.js?v=66';
-import * as Rg from './region.js?v=66';
-import * as Disc from './discover.js?v=66';
-import { ICONS, emblem, watch } from './icons.js?v=66';
-import { drawFlyer, flyerBlob } from './flyer.js?v=66';
-import * as Ap from './apprentice.js?v=66';
-import * as Leg from './legacy.js?v=66';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=66';
-import { card, ART } from './card.js?v=66';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=66';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=66';
+import { KINDS, KC, TIERS, APPRENTICE, LEGACY, TRAITS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE } from './data.js?v=67';
+import * as R from './rules.js?v=67';
+import * as Sh from './shop.js?v=67';
+import * as St from './staff.js?v=67';
+import * as Rm from './room.js?v=67';
+import * as G from './growth.js?v=67';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=67';
+import * as Snd from './sound.js?v=67';
+import * as CV from './counter.js?v=67';
+import * as Town from './town.js?v=67';
+import * as V from './visit.js?v=67';
+import * as Br from './branch.js?v=67';
+import * as Bank from './bank.js?v=67';
+import * as Wear from './wear.js?v=67';
+import * as Th from './thieves.js?v=67';
+import * as Run from './runner.js?v=67';
+import * as Src from './sources.js?v=67';
+import * as Mon from './monsters.js?v=67';
+import * as Liv from './living.js?v=67';
+import * as Hl from './hall.js?v=67';
+import * as Trail from './trail.js?v=67';
+import * as Rg from './region.js?v=67';
+import * as Disc from './discover.js?v=67';
+import { ICONS, emblem, watch } from './icons.js?v=67';
+import { drawFlyer, flyerBlob } from './flyer.js?v=67';
+import * as Ap from './apprentice.js?v=67';
+import * as Leg from './legacy.js?v=67';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=67';
+import { card, ART } from './card.js?v=67';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=67';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=67';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 66;
+const VERSION = 67;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayZERO_FORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -374,7 +374,7 @@ function renderStations() {
 }
 // the maker's title, once the Nine are made: on the forge's sign and the shop's
 function nineMarks() {
-  const n = G.isNine(save) ? ' · ' + NINE.title : '', of = save.lineOf ? ' · OF THE LINE OF ' + save.lineOf.toUpperCase() : '';
+  const n = G.isNine(save) ? ' · ' + Rg.legend(save).title : '', of = save.lineOf ? ' · OF THE LINE OF ' + save.lineOf.toUpperCase() : '';
   $('forgeKicker').textContent = 'DARKCLAY · THE MAKER\'S SHOP' + n + of; $('shopKicker').textContent = 'THE MAKER\'S SHOP · OPEN' + n + of;
 }
 // THE ENDING: the ninth Mythic made
@@ -385,8 +385,9 @@ const ENDING = [
   'The forge is still warm. There is always more to make.',
 ];
 function showEnding() {
-  openLook('<div class="ending"><div class="oldword" style="color:var(--t-mythic)">THE NINE OF VERIC</div><h2>Maker of the Nine</h2>' + ENDING.map(p => '<p>' + p + '</p>').join('')
-    + '<ol class="ninelist">' + Object.values(MYTHICS).map(m => '<li>' + esc(m.name) + '</li>').join('') + '</ol>' + handOnWord() + '</div>',
+  const L = Rg.legend(save);   // the region's Nine (milestone 42: the coast's, the Nine of the Tide)
+  openLook('<div class="ending"><div class="oldword" style="color:var(--t-mythic)">' + L.word + '</div><h2>' + L.maker + '</h2>' + (L.ending || ENDING).map(p => '<p>' + p + '</p>').join('')
+    + '<ol class="ninelist">' + Rg.nineOf(save).map(id => '<li>' + esc(MYTHICS[id].name) + '</li>').join('') + '</ol>' + handOnWord() + '</div>',
     '<button class="seg go" id="endClose">THE FORGE IS STILL WARM</button><button class="seg" id="endHand">HAND ON THE FORGE</button>', true);
   $('endClose').onclick = () => { $('look').hidden = true; }; $('endHand').onclick = showHandOn;
   Snd.play('level'); Snd.play('chime');
@@ -395,11 +396,11 @@ function showEnding() {
 // a word under the ending: who the forge would go to, or what it waits on
 function handOnWord() {
   const c = Leg.canHandOn(save, Date.now());
-  return '<p>' + (c.ok ? 'One day the forge will want younger hands. <b>' + esc(c.heir.name) + '</b>, your apprentice, could carry it on: a generation later, in a Reach where the Nine are lost again.'
+  return '<p>' + (c.ok ? 'One day the forge will want younger hands. <b>' + esc(c.heir.name) + '</b>, your apprentice, could carry it on: a generation later, in the Reach or over the pass, wherever the heir sets up the forge.'
     : c.heir ? 'One day the forge will want younger hands. ' + esc(c.heir.name) + ' could carry it on, once they\'ve been with you ' + LEGACY.days + ' days (' + c.left + ' more).'
     : 'One day the forge will want younger hands. Take on an apprentice (STAFF › LOOKING FOR WORK), and in time they could carry it on.') + '</p>';
 }
-let handPicks = [];
+let handPicks = [], handTo = null;   // handTo: where the heir sets up the forge (milestone 42, the crossing)
 const names = a => a.length > 1 ? a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1] : a.join('');
 function showHandOn() {
   const c = Leg.canHandOn(save, Date.now());
@@ -409,14 +410,21 @@ function showHandOn() {
   handPicks = handPicks.filter(id => list.some(x => x.id === id)).slice(0, n);
   if (!handPicks.length) handPicks = list.slice(0, n).map(x => x.id);   // the best, to begin with; then as chosen
   const pick = list.map(x => (handPicks.includes(x.id) ? '<button class="seg go" data-loom="' + x.id + '">✓ <b>' + esc(x.name) + '</b> · ' : '<button class="seg" data-loom="' + x.id + '"><b style="color:var(--t-' + x.tier + ')">' + esc(x.name) + '</b> · ') + Leg.tierName(x.tier).toUpperCase() + '</button>').join(' ');
-  const welcome = next >= LEGACY.welcomeFrom ? ' The town remembers the line: the new shop starts ' + RENOWN[LEGACY.welcome].word + '.' : '';
+  handTo = handTo || Rg.regionId(save);
+  const over = handTo !== Rg.REACH, there = { region: over ? handTo : undefined, gen: next, line: (save.line || []).concat({ region: Rg.regionId(save) }) };
+  const welcome = Rg.localGen(there) >= LEGACY.welcomeFrom ? ' The town remembers the line: the new shop starts ' + RENOWN[LEGACY.welcome].word + '.' : '';
+  const T = Rg.legendIn(handTo), cross = '<div class="oldword" style="margin-top:16px">WHERE</div><p>Where will ' + esc(p.name) + ' set up the forge?</p><div class="handpick">'
+    + [[Rg.REACH, 'THE REACH', 'the Nine of Veric'], ['greyshore', 'OVER THE PASS', 'the Nine of the Tide, in Saltby on the Greyshore']].map(([id, w, d]) => '<button class="seg' + (handTo === id ? ' go' : '') + '" data-to="' + id + '">' + (handTo === id ? '✓ ' : '') + '<b>' + w + '</b> · ' + d + '</button>').join(' ') + '</div>';
+  const goes = over ? '<p>The forge goes to <b>' + esc(p.name) + '</b>, a generation later, over the pass in Saltby' + (Rg.regionId(save) === handTo ? '' : ', where nobody has heard of the line') + '. ' + esc(T.nine.replace(/^./, c => c.toUpperCase())) + ' lie scattered under the sea, and the coast is yours to win: a fresh climb, with what the line has learned.</p>'
+    : '<p>The forge goes to <b>' + esc(p.name) + '</b>, a generation later. The Nine are lost again after your day, their shards scattered to new places, and the Reach is yours to win back: a fresh climb, with what the line has learned.</p>';
   openLook('<div class="ending"><div class="oldword" style="color:var(--t-mythic)">THE LEGACY</div><h2>Hand on the forge</h2>'
-    + '<p>The forge goes to <b>' + esc(p.name) + '</b>, a generation later. The Nine are lost again after your day, their shards scattered to new places, and the Reach is yours to win back: a fresh climb, with what the line has learned.</p>'
+    + goes + cross
     + '<p><b>The line keeps:</b> the book (every pattern found, every try and clue), the blueprints (known, not made), the found tiles, ' + esc(p.name) + '\'s trades (' + (own.length ? own.map(x => esc(PATTERNS[x.id].name) + ' ' + x.level).join(', ') + '; ' : '') + 'trade ' + LEGACY.rest + ' in the rest), their trait for good (' + esc(TRAITS.apprentice.find(t => t.id === p.trait)?.word || p.trait) + ': ' + esc(tr.line || '') + '), and ' + (n > 1 ? 'two heirlooms' : 'one heirloom') + '.' + welcome + '</p>'
     + '<p><b>Starts over:</b> coin (a purse of ' + LEGACY.purse + ' c), renown, the room, the stations (the forge only), the tools and skills, the staff, the shelves and the back room, the Bank, the Hall, the trail and its shards, the regulars, the second shop.</p>'
     + '<div class="oldword" style="margin-top:16px">' + (n > 1 ? 'THE HEIRLOOMS' : 'THE HEIRLOOM') + '</div>' + (list.length ? '<p>' + (n > 1 ? 'Two pieces' : 'One piece') + ' to hang over the new shop\'s door: never for sale, and ' + (n > 1 ? 'they draw' : 'it draws') + ' customers. The rest stays with your shop.</p><div class="handpick">' + pick + '</div>' : '<p>You have no Old-Blood piece, Relic or Mythic in the shop to pass on: the forge goes on without an heirloom.</p>')
     + '<div class="oldword" style="margin-top:16px">YOUR SHOP</div><p>Your shop is kept in the line\'s record, with its save code. Copy the code now too, if you want to keep it somewhere safe.</p><p class="note" id="handNote"></p></div>',
     '<button class="seg" id="handCode">COPY THIS SHOP\'S CODE</button><button class="seg go" id="handGo">HAND ON THE FORGE</button><button class="seg" id="handBack">NOT YET</button>', true);
+  $('lookCard').querySelectorAll('[data-to]').forEach(b => b.onclick = () => { handTo = b.dataset.to; showHandOn(); });
   $('lookCard').querySelectorAll('[data-loom]').forEach(b => b.onclick = () => { const id = b.dataset.loom;
     handPicks = handPicks.includes(id) ? handPicks.filter(x => x !== id) : n > 1 ? handPicks.concat(id).slice(-n) : [id]; showHandOn(); });
   $('handBack').onclick = () => { $('look').hidden = true; };
@@ -424,10 +432,10 @@ function showHandOn() {
   $('handGo').onclick = () => {
     const looms = handPicks.map(id => list.find(x => x.id === id)).filter(Boolean);
     if (looms.length < Math.min(n, list.length)) { $('handNote').textContent = 'Choose ' + (n > 1 ? 'two heirlooms' : 'the heirloom') + ' first.'; return; }
-    if (!confirm('Hand on the forge to ' + p.name + (looms.length ? ', with ' + names(looms.map(x => x.name)) + (looms.length > 1 ? ' as the heirlooms' : ' as the heirloom') : '') + '?\n\nYour shop goes into the line\'s record and ' + p.name + ' starts a new one in this slot.')) return;
+    if (!confirm('Hand on the forge to ' + p.name + (over ? ', over the pass in Saltby' : ', in the Reach') + (looms.length ? ', with ' + names(looms.map(x => x.name)) + (looms.length > 1 ? ' as the heirlooms' : ' as the heirloom') : '') + '?\n\nYour shop goes into the line\'s record and ' + p.name + ' starts a new one in this slot.')) return;
     if (!confirm('This can\'t be undone. Hand on the forge?')) return;
     save.lastSeen = Date.now();
-    const r = Leg.handOn(save, looms.map(x => x.id), Date.now());
+    const r = Leg.handOn(save, looms.map(x => x.id), Date.now(), handTo);
     if (!r.ok) { $('handNote').textContent = 'Not handed on: ' + r.why + '.'; return; }
     if (!storeRaw(r.save)) {
       if (!confirm('This browser won\'t hold the old shop\'s save code in the record (it\'s full). Hand on without it? Copy the code first if you want to keep it.') || !storeRaw(Leg.withoutCodes(r.save))) { $('handNote').textContent = 'Not handed on: this browser won\'t store it.'; return; }
@@ -443,20 +451,31 @@ function renderLine() {
   if ($('lineBox').hidden) return;
   $('line').innerHTML = (looms.length ? '<div class="fi have"><b>' + looms.map(h => '<span style="color:var(--t-' + h.tier + ')">' + esc(h.name) + '</span>').join(' · ') + '</b><span>' + (looms.length > 1 ? 'The heirlooms' : 'The heirloom') + ', from ' + esc(names([...new Set(looms.map(h => h.from))])) + ': over the shop door. Never for sale; ' + (looms.length > 1 ? 'they draw' : 'it draws') + ' customers (charm +' + G.heirloomCharm(save) + ').</span></div>' : '')
     + line.map(r => { const passed = r.heirlooms || (r.heirloom ? [r.heirloom] : []);
-      return '<div class="fi"><b>' + esc(genWord(r.gen)) + ' OF THE LINE · ' + esc(r.maker) + '</b><span>' + (r.nine >= 9 ? 'Maker of the Nine' + (r.days ? ', in ' + r.days + ' days' : '') : r.nine + ' of the Nine') + '. Renown ' + r.renown.toLocaleString() + '; ' + r.made.toLocaleString() + ' made, ' + r.sold.toLocaleString() + ' sold. '
+      const RL = Rg.legendIn(r.region);   // where that generation worked (milestone 42; an old record is the Reach's)
+      return '<div class="fi"><b>' + esc(genWord(r.gen)) + ' OF THE LINE · ' + esc(r.maker) + RL.ofLine + '</b><span>' + (r.nine >= 9 ? RL.maker + (r.days ? ', in ' + r.days + ' days' : '') : r.nine + ' of the Nine') + '. Renown ' + r.renown.toLocaleString() + '; ' + r.made.toLocaleString() + ' made, ' + r.sold.toLocaleString() + ' sold. '
       + (passed.length ? 'Passed on ' + esc(names(passed.map(x => x.name))) + '.' : 'Passed on no heirloom.') + (r.hall.length ? ' In the Hall: ' + r.hall.map(esc).join(', ') + '.' : '') + '</span>'
       + (r.code ? '<button class="seg" data-linecode="' + (r.gen) + '">COPY ' + esc(r.maker.toUpperCase()) + '\'S SAVE CODE</button><span>Load it into another slot (THE FORGE › SAVE) to play that shop again.</span>' : '') + '</div>'; }).join('')
-    + '<div class="fi"><b>' + esc(genWord(Leg.gen(save))) + ' OF THE LINE · ' + esc(save.maker) + '</b><span>Now at the forge' + (save.lineOf ? ', of the line of ' + esc(save.lineOf) : '') + '.</span></div>';
+    + '<div class="fi"><b>' + esc(genWord(Leg.gen(save))) + ' OF THE LINE · ' + esc(save.maker) + Rg.legend(save).ofLine + '</b><span>Now at the forge' + (save.lineOf ? ', of the line of ' + esc(save.lineOf) : '') + '.</span></div>';
   $('line').querySelectorAll('[data-linecode]').forEach(b => b.onclick = async () => { const r = line.find(x => x.gen === +b.dataset.linecode); try { await navigator.clipboard.writeText(r.code); b.textContent = 'COPIED'; } catch (e) { $('loadText').value = r.code; b.textContent = 'IN THE BOX UNDER THE FORGE › SAVE'; } });
 }
 const genWord = n => ['FIRST', 'SECOND', 'THIRD', 'FOURTH', 'FIFTH', 'SIXTH', 'SEVENTH', 'EIGHTH', 'NINTH'][n - 1] || n + 'TH';
 // the heir's first morning
 function showHeirWelcome() {
-  const looms = Leg.loomsOf(save), known = Leg.gen(save) >= LEGACY.welcomeFrom;
+  const looms = Leg.loomsOf(save), known = Rg.localGen(save) >= LEGACY.welcomeFrom;   // the town's welcome: generations in this region (milestone 42)
+  const prev = (save.line || []).slice(-1)[0], P = Rg.legendIn(prev && prev.region), L = Rg.legend(save), crossed = !!prev && Rg.idOf(prev.region) !== Rg.regionId(save);
+  const over = looms.length ? ' Over the door ' + (looms.length > 1 ? 'hang ' : 'hangs ') + looms.map(h => '<b>' + esc(h.name) + '</b>').join(' and ') + ', from the line\'s own hands (THE FORGE › WORKSHOP, under THE LINE).' : '';
+  // over the pass for the first time (milestone 42): Saltby's opening; nobody there knows the line
+  if (!Rg.isReach(save) && Rg.localGen(save) === 1) {
+    openLook('<div class="ending"><div class="oldword">' + esc(genWord(Leg.gen(save))) + ' OF THE LINE · OVER THE PASS</div><h2>' + esc(save.maker) + '</h2>'
+      + L.arrive.map((t, i) => '<p>' + esc(t).replace('{lineOf}', esc(save.lineOf)).replace('{purse}', LEGACY.purse) + (i === L.arrive.length - 1 ? over : '') + '</p>').join('')
+      + '<p>The forge is still warm.</p></div>', '<button class="seg go" id="heirGo">LIGHT THE FORGE</button>', true);
+    $('heirGo').onclick = () => { $('look').hidden = true; };
+    save.heirWelcomed = true; store(save); return;
+  }
   openLook('<div class="ending"><div class="oldword">' + esc(genWord(Leg.gen(save))) + ' OF THE LINE</div><h2>' + esc(save.maker) + '</h2>'
-    + '<p>' + esc(save.lineOf) + ' kept the forge for the rest of their days. They made the Nine of Veric, and the Reach still tells it.</p>'
-    + '<p>That was a generation ago. The Nine were lost again after their day: a fire at the Court, a theft on the high road, one gone into the river. Their shards lie scattered, and not where the old stories put them. No one now living has seen one whole. The shop is small again, the shelves are bare, and the purse holds ' + LEGACY.purse + ' coins.</p>'
-    + '<p>But the book is on its hook, the blueprints are in the drawer, and your hands remember what you learned at the bench.' + (looms.length ? ' Over the door ' + (looms.length > 1 ? 'hang ' : 'hangs ') + looms.map(h => '<b>' + esc(h.name) + '</b>').join(' and ') + ', from the line\'s own hands (THE FORGE › WORKSHOP, under THE LINE).' : '') + '</p>'
+    + '<p>' + esc(save.lineOf) + ' kept the forge for the rest of their days. They made ' + P.nine + ', and ' + P.place + ' still tells it.</p>'
+    + '<p>That was a generation ago' + (crossed ? ', over the pass. The line has come back to ' + L.place + ', where ' + L.nine + ' lie scattered, and not where the old stories put them.' : '. ' + L.lost) + ' No one now living has seen one whole. The shop is small again, the shelves are bare, and the purse holds ' + LEGACY.purse + ' coins.</p>'
+    + '<p>But the book is on its hook, the blueprints are in the drawer, and your hands remember what you learned at the bench.' + over + '</p>'
     + (known ? '<p>And the town remembers the line. The old families send their grandchildren to your door: the shop opens <b>' + RENOWN[LEGACY.welcome].word + '</b>.</p>' : '<p>The regulars\' grandchildren will come in, in time. Some of them remember your master.</p>')
     + '<p>The forge is still warm.</p></div>', '<button class="seg go" id="heirGo">LIGHT THE FORGE</button>', true);
   $('heirGo').onclick = () => { $('look').hidden = true; };
@@ -465,9 +484,10 @@ function showHeirWelcome() {
 function renderTrail() {
   const cl = Trail.clues(save), found = cl.filter(c => c.found).length;
   nineMarks(); renderLine();
-  if (G.isNine(save)) { $('trailWord').innerHTML = 'All Nine are made, and every one carries your mark. You are the Maker of the Nine. <button class="seg" id="endAgain">READ THE ENDING AGAIN</button> <button class="seg" id="trailHand">HAND ON THE FORGE</button>'; $('endAgain').onclick = showEnding; $('trailHand').onclick = showHandOn; }
-  else $('trailWord').textContent = !Trail.open(save) ? 'The Nine of Veric: nine pieces of legend, each a Relic reforged. The trail opens when the shop is ' + Rg.rungWord(save, TRAIL.rung) + '.'
-    : found + ' of 9 shards of Veric found. Every shard can be looked for now; a Mythic is worked on its Relic, once all three parts are made.';
+  const L = Rg.legend(save);
+  if (G.isNine(save)) { $('trailWord').innerHTML = 'All Nine are made, and every one carries your mark. You are the ' + L.maker + '. <button class="seg" id="endAgain">READ THE ENDING AGAIN</button> <button class="seg" id="trailHand">HAND ON THE FORGE</button>'; $('endAgain').onclick = showEnding; $('trailHand').onclick = showHandOn; }
+  else $('trailWord').textContent = !Trail.open(save) ? L.trail + ' The trail opens when the shop is ' + Rg.rungWord(save, TRAIL.rung) + '.'
+    : found + ' of 9 ' + L.shards + ' found. Every shard can be looked for now; a Mythic is worked on its Relic, once all three parts are made.';
   $('trail').innerHTML = cl.map(c => {
     const m = MYTHICS[c.id], r = RELICS[c.relic];
     if ((save.mythicsMade || []).includes(c.id)) return '<div class="fi have"><b style="color:var(--t-mythic)">' + esc(m.name) + '</b><span>Made: one of the Nine, and yours.</span></div>';
@@ -476,7 +496,7 @@ function renderTrail() {
         : '<button class="seg" data-part="' + c.id + ':' + i + '"' + (g.ok ? '' : ' disabled') + '>' + esc(p[1].toUpperCase()) + ' · AT THE ' + p[0].toUpperCase() + '</button>' + (g.ok ? '' : '<span>Needs ' + g.why.join(', ') + '.</span>'); }).join('')
       + (Trail.partsDone(save, c.id) ? '<span>All three made: the Mythic working waits on ' + esc(r.name) + ', from the back room.</span>' : '') + '</div>';
     if (!c.open) return '<div class="fi unknown"><b>' + esc(m.name) + '</b><span>Grows from ' + esc(r.name) + '.</span></div>';
-    return '<div class="fi"><b style="color:var(--t-mythic)">' + esc(m.name) + '</b><span>A clue: its shard lies with ' + SHARD_WHERE[c.source] + '. It grows from ' + esc(r.name) + ((save.relicsMade || []).includes(c.relic) ? ', which you\'ve made' : ', not made yet') + '.</span></div>';
+    return '<div class="fi"><b style="color:var(--t-mythic)">' + esc(m.name) + '</b><span>A clue: its shard lies with ' + (L.where || SHARD_WHERE)[c.source] + '. It grows from ' + esc(r.name) + ((save.relicsMade || []).includes(c.relic) ? ', which you\'ve made' : ', not made yet') + '.</span></div>';
   }).join('');
   $('trail').querySelectorAll('[data-part]').forEach(b => b.onclick = () => { const [id, i] = b.dataset.part.split(':'); partStart(id, +i); });
 }
@@ -522,7 +542,7 @@ let floorShown = null;
 let cvw = null, cvP = null, iso = false, cvSig = '', cvFront = null;
 function counterView() {
   $('cview').hidden = false; $('cvActs').hidden = false; $('floor').hidden = true; $('dioBar').hidden = true;
-  if (!cvP) cvP = import('./counter.js?v=66').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
+  if (!cvP) cvP = import('./counter.js?v=67').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
   else if (cvw) cvw.show(save, Sh.priceAt);
 }
 // a place on the painted wall: its piece (take it down), or empty (hang one from the back room)
@@ -537,7 +557,7 @@ function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   if (!iso) { counterView(); tip('shop', $('cview')); return; }
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=66').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=67').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -770,7 +790,7 @@ function filledToast(o, e) {
   toast('<b>Order filled · +' + o.pays + ' c</b><br>' + esc(o.who) + (st ? ': "' + esc(st.thanks) + '"' : '')
     + (st && st.gift ? '<br><b>A gift: ' + esc(FURNITURE[st.gift].name) + '</b> ' + (st.stored ? '(in the store room: put it out from FURNISH)' : 'in your shop front') : '')
     + (st && st.blueprint ? '<br><b>A blueprint: ' + esc(RELICS[st.blueprint].name) + '</b> (THE FORGE › WORKSHOP)' : '')
-    + (e.shard ? '<br><b>A shard of Veric: ' + esc(MYTHICS[e.shard].name) + '</b> (THE FORGE › WORKSHOP)' : ''));
+    + (e.shard ? '<br><b>A ' + Rg.legend(save).shard + ': ' + esc(MYTHICS[e.shard].name) + '</b> (THE FORGE › WORKSHOP)' : ''));
   if (e.shard) Snd.play('chime');
   if (st && st.blueprint) { Snd.play('chime'); store(save); }
   if (st && st.gift) { Snd.play('level'); if (dio) dio.setRoom(viewRoom(), save); }
@@ -949,11 +969,11 @@ function renderTown() {
   const names = list => list.map(id => '<span class="' + (can(id) ? 'can' : 'cant') + '">' + PATTERNS[id].name.toLowerCase() + '</span>').join(', ');
   setTimeout(() => { if ($('toFair')) $('toFair').onclick = fairOpenDlg; }, 0);
   setTimeout(() => { $('townBody').querySelectorAll('[data-watch]').forEach(b => b.onclick = () => watchOpen(+b.dataset.watch)); }, 0);
-  setTimeout(() => { if ($('toStar')) $('toStar').onclick = () => { const r = Trail.claimStar(save, Town.refreshTown(save, Date.now())); if (r.shard) { store(save); Snd.play('chime'); toast((r.shards.length > 1 ? '<b>Two shards of Veric</b><br>In the crater, cold to the touch: the shards of ' : '<b>A shard of Veric</b><br>In the crater, cold to the touch: the shard of ') + r.shards.map(id => esc(MYTHICS[id].name)).join(' and ') + '.'); } renderShop(); }; });
+  setTimeout(() => { if ($('toStar')) $('toStar').onclick = () => { const r = Trail.claimStar(save, Town.refreshTown(save, Date.now())); if (r.shard) { store(save); Snd.play('chime'); const L = Rg.legend(save); toast((r.shards.length > 1 ? '<b>Two ' + L.shards + '</b><br>' + L.starAt + ': the shards of ' : '<b>A ' + L.shard + '</b><br>' + L.starAt + ': the shard of ') + r.shards.map(id => esc(MYTHICS[id].name)).join(' and ') + '.'); } renderShop(); }; });
   $('townWord').textContent = new Date(t.day * 86400000).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).toUpperCase() + ' · ' + Town.seasonOf(t.day, t.region).name.toUpperCase();
   const ev = Town.eventOf(t);
-  const star = ev && ev.id === 'starfall' && Trail.pending(save, 'star').length && save.starDay !== t.day;
-  $('townBody').innerHTML = (ev ? '<div class="notice event"><b>TODAY IN TOWN</b><p>' + esc(ev.name) + '</p><span>' + esc(ev.line) + '</span><em>' + esc(ev.effect) + '</em>' + (star ? '<button class="seg go" id="toStar">GO OUT TO THE FALLEN STAR</button>' : '') + '</div>' : '') + n.hot.map(h => '<div class="notice hot"><b>IN DEMAND</b><p>' + esc(h.line) + '</p><span>' + names(h.patterns) + '</span></div>').join('')
+  const star = ev && ev.shards && Trail.pending(save, 'star').length && save.starDay !== t.day;   // the fallen star, or the tide giving back (milestone 42)
+  $('townBody').innerHTML = (ev ? '<div class="notice event"><b>TODAY IN TOWN</b><p>' + esc(ev.name) + '</p><span>' + esc(ev.line) + '</span><em>' + esc(ev.effect) + '</em>' + (star ? '<button class="seg go" id="toStar">' + Rg.legend(save).starGo + '</button>' : '') + '</div>' : '') + n.hot.map(h => '<div class="notice hot"><b>IN DEMAND</b><p>' + esc(h.line) + '</p><span>' + names(h.patterns) + '</span></div>').join('')
     + (n.cold ? '<div class="notice cold"><b>OUT OF FAVOUR</b><p>' + esc(n.cold.line) + '</p><span>' + names(n.cold.patterns) + '</span></div>' : '')
     + livingHtml(t)
     + monsterHtml()
@@ -1361,7 +1381,7 @@ function haulWords(t) {
   if (t.piece) parts.push('an old ' + t.piece.name);
   if (t.tile) parts.push('a found tile: ' + FOUND[t.tile].name);
   if (t.blueprint) parts.push('a blueprint: ' + RELICS[t.blueprint].name);
-  if (t.shard) parts.push('a shard of Veric, for ' + MYTHICS[t.shard].name);
+  if (t.shard) parts.push('a ' + Rg.legend(save).shard + ', for ' + MYTHICS[t.shard].name);
   return (t.empty ? 'little: the road below went badly. ' : '') + parts.join(', ') + roadWords(t);
 }
 // "a dagger, iron dagger × 4": names counted
@@ -2094,7 +2114,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=66').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=67').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -2156,7 +2176,7 @@ let visitDio = null, visitDioP = null, visiting = null, visitNext = 0;
 function toVisit(shop, away) {
   visiting = shop; show('visit');
   const d = new Date(shop.at);
-  $('visitKicker').textContent = 'A SHOP SHARED WITH YOU · ' + (isNaN(d) ? '' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()) + (shop.nine ? ' · ' + NINE.title : '') + (shop.gen > 1 ? ' · ' + genWord(shop.gen) + ' OF THE LINE' : '');
+  $('visitKicker').textContent = 'A SHOP SHARED WITH YOU · ' + (isNaN(d) ? '' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()) + (shop.nine ? ' · ' + Rg.legendIn(shop.region).title : '') + (shop.gen > 1 ? ' · ' + genWord(shop.gen) + ' OF THE LINE' : '') + Rg.legendIn(shop.region).ofLine;
   $('visitName').textContent = shop.maker + (/s$/i.test(shop.maker) ? '\' shop' : '\'s shop');
   $('visitTally').innerHTML = 'Renown <b>' + esc(shop.renown) + '</b> · ' + esc(shop.size.word.toLowerCase()) + '<br>Charm <b>' + shop.charm + '</b> · <b>' + shop.made + '</b> made · <b>' + shop.sold + '</b> sold';
   $('visitStations').innerHTML = '<span style="border:0;background:none;padding-left:0">IN THE WORKSHOP</span>' + shop.stations.map(id => '<span>' + esc(STATIONS[id].word.replace(/^THE /, '')) + '</span>').join('');
@@ -2173,7 +2193,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=66').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=67').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }
@@ -2217,7 +2237,7 @@ async function shareShop() {
   const url = location.origin + location.pathname + '#shop=' + await packLink(V.packShop(save));
   const choices = V.showable(save), shown = save.shelf.filter(Boolean).length;
   let cv = null;
-  const draw = async () => { cv = await drawFlyer({ maker: save.maker, gen: Leg.gen(save), renown: G.isNine(save) ? NINE.title : Rg.rungWord(save, G.rung(save)), shown, charm: Rm.charm(save.room, save) }, V.featuredOf(save)); $('flyerImg').src = cv.toDataURL('image/png'); };
+  const draw = async () => { cv = await drawFlyer({ maker: save.maker, gen: Leg.gen(save), place: Rg.isReach(save) ? '' : Rg.nameOf(save), renown: G.isNine(save) ? Rg.legend(save).title : Rg.rungWord(save, G.rung(save)), shown, charm: Rm.charm(save.room, save) }, V.featuredOf(save)); $('flyerImg').src = cv.toDataURL('image/png'); };
   openLook('<div class="sharedhead"><div class="k">YOUR FLYER</div><p>Send it with the link. Whoever opens it walks into your shop front as it stands now, and can keep a copy of the piece pinned to it.</p></div>'
     + '<img id="flyerImg" class="flyer" alt="Your shop\'s flyer">',
     '<button class="seg go" id="flyerShare">SHARE IT</button>' + (choices.length > 1 ? '<button class="seg" id="flyerNext">ANOTHER PIECE ON IT</button>' : '') + '<button class="seg" id="flyerSave">SAVE THE FLYER</button><p class="note" id="flyerNote"></p>');
@@ -2277,7 +2297,7 @@ function showTitle(away) {
       + '<div class="tacts"><button class="seg go" data-tplay="' + n + '">' + ICONS.flame + 'LIGHT THE FORGE</button></div></div>';
     const rung = RENOWN.reduce((a, r, k) => p.renown >= r.at ? k : a, 0);
     return '<div class="tslot' + (here ? ' on' : '') + '" style="--heat:' + HEAT[rung] + '"><div class="ttop">' + emblem(HEAT[rung]) + '<div class="tinfo"><div class="n">SLOT ' + n + (here ? ' · PLAYING' : '') + '</div><b>' + esc(p.maker) + '</b>'
-      + '<div class="tren">' + ICONS.renown + (p.nine ? NINE.title : RENOWN[rung].word) + '</div></div></div>'
+      + '<div class="tren">' + ICONS.renown + (p.nine ? Rg.legendIn(p.region).title : rung === Rg.REACH_RUNG ? Rg.regionOf({ region: p.region }).top : RENOWN[rung].word) + '</div></div></div>'
       + '<div class="tstats"><span title="Coins">' + ICONS.coin + p.coins.toLocaleString() + '</span><span title="Pieces made">' + ICONS.made + p.made + ' made</span><span title="Pieces sold">' + ICONS.sold + p.sold + ' sold</span>'
       + (p.lastSeen ? '<span title="Last played">' + ICONS.clock + ago(p.lastSeen) + '</span>' : '') + '</div>'
       + '<div class="tacts"><button class="seg go" data-tplay="' + n + '">' + ICONS.hammer + (here ? 'CONTINUE' : 'PLAY') + '</button><button class="seg del" data-tdel="' + n + '" aria-label="Delete slot ' + n + '">' + ICONS.sweep + 'DELETE</button></div></div>';

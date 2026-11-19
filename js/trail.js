@@ -2,10 +2,11 @@
 // THE TRAIL OF THE NINE, with no page access: the shards of Veric, one for each Mythic. The trail opens OF THE REACH, and with it every
 // clue (release 37: before, each waited on its Relic), so shards and parts are gathered alongside the Relics. From its source: below the deep doors (staff.js), a Court order (shop.js), or the
 // fallen star (a rare town event, claimed from the notice board).
-import { LEGACY, MYTHICS, RELICS, TRAIL, PART_WORK, PART_PATTERN, OLD_BLOOD, PATTERNS } from './data.js?v=66';
-import { rung } from './growth.js?v=66';
-import { owns } from './room.js?v=66';
-import { levelOf, stationOf } from './rules.js?v=66';
+import { LEGACY, MYTHICS, RELICS, TRAIL, PART_WORK, PART_PATTERN, OLD_BLOOD, PATTERNS } from './data.js?v=67';
+import { rung } from './growth.js?v=67';
+import { owns } from './room.js?v=67';
+import * as Rg from './region.js?v=67';
+import { levelOf, stationOf } from './rules.js?v=67';
 
 export const open = save => rung(save) >= TRAIL.rung;
 export const hasShard = (save, id) => (save.shards || []).includes(id);
@@ -13,12 +14,12 @@ export const hasShard = (save, id) => (save.shards || []).includes(id);
 // where a shard lies: as Veric's legend has it, or (a generation on, milestone 38) where it was scattered when the Nine were lost again
 export const sourceOf = (save, id) => ((save && save.shardWhere) || {})[id] || MYTHICS[id].shard;
 // the Nine scattered: the same count of each source (TRAIL sources), shuffled by rng
-export function scatter(rng) {
-  const ids = Object.keys(MYTHICS), src = ids.map(id => MYTHICS[id].shard);
+export function scatter(rng, region) {
+  const ids = Rg.mythicsIn(region), src = ids.map(id => MYTHICS[id].shard);
   for (let i = src.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [src[i], src[j]] = [src[j], src[i]]; }
   return Object.fromEntries(ids.map((id, i) => [id, src[i]]));
 }
-export const clues = save => Object.entries(MYTHICS).map(([id, m]) => ({ id, name: m.name, source: sourceOf(save, id), found: hasShard(save, id),
+export const clues = save => Rg.nineOf(save).map(id => [id, MYTHICS[id]]).map(([id, m]) => ({ id, name: m.name, source: sourceOf(save, id), found: hasShard(save, id),
   open: open(save), relic: m.relic }));
 export const pending = (save, source) => clues(save).filter(c => c.open && !c.found && c.source === source).map(c => c.id);
 export function give(save, id) {
@@ -28,7 +29,7 @@ export function give(save, id) {
 }
 // the fallen star: on its day, once, the shards waiting there, up to TRAIL.star of them (milestone 35: was one)
 export function claimStar(save, town) {
-  if (!town || town.event !== 'starfall') return { why: 'no star fell today' };
+  if (!Rg.shardDay(town)) return { why: Rg.legend(save).starNone };   // the fallen star, or the tide giving back (milestone 42)
   if (save.starDay === town.day) return { why: 'you\'ve been out to it today' };
   const p = pending(save, 'star'); if (!p.length) return { why: open(save) ? 'no shard of yours lies there' : 'the trail isn\'t open to you yet' };
   save.starDay = town.day; const shards = p.slice(0, TRAIL.star); shards.forEach(id => give(save, id));
@@ -50,7 +51,7 @@ export function partGate(save, id, i) {
   const m = MYTHICS[id]; if (!m || !m.parts[i]) return { ok: false, why: ['no such part'] };
   const st = m.parts[i][0], why = [];
   if (hasPart(save, id, i)) return { ok: false, station: st, done: true, why: ['made already'] };
-  if (!hasShard(save, id)) why.push('its shard of Veric');
+  if (!hasShard(save, id)) why.push(Rg.legend(save).shardWhy);
   if (!owns(save, st)) why.push('a ' + st + ' set up');
   else if (stationLevel(save, st) < PART_WORK.level) why.push('trade ' + PART_WORK.level + ' in something at the ' + st);
   return { ok: !why.length, station: st, pattern: PART_PATTERN[st], why };

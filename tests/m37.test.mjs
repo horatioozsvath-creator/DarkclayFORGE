@@ -8,7 +8,9 @@ import * as G from '../js/growth.js';
 import * as Rm from '../js/room.js';
 import * as St from '../js/staff.js';
 import { fromCode } from '../js/save.js';
-import { LEGACY, MYTHICS, PATTERNS, HALL_CHARM } from '../js/data.js';
+import { LEGACY, MYTHICS as ALL_MYTHICS, PATTERNS, HALL_CHARM } from '../js/data.js';
+// the Reach's Nine (milestone 42: the coast's Nine of the Tide are in the same table, marked with their region)
+const MYTHICS = Object.fromEntries(Object.entries(ALL_MYTHICS).filter(([, m]) => !m.region));
 import { levelOf } from '../js/rules.js';
 import { TOP_XP } from '../js/apprentice.js';
 

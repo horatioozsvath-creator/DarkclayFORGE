@@ -10,7 +10,9 @@ import * as G from '../js/growth.js';
 import * as Rm from '../js/room.js';
 import { packShop, unpackShop } from '../js/visit.js';
 import { REGULARS as LOOKS } from '../js/folk.js';
-import { LEGACY, MYTHICS, STORIES, REGULARS, LINE_STORIES, LINE_FOLK, RENOWN } from '../js/data.js';
+import { LEGACY, MYTHICS as ALL_MYTHICS, STORIES, REGULARS, LINE_STORIES, LINE_FOLK, RENOWN } from '../js/data.js';
+// the Reach's Nine (milestone 42: the coast's Nine of the Tide are in the same table, marked with their region)
+const MYTHICS = Object.fromEntries(Object.entries(ALL_MYTHICS).filter(([, m]) => !m.region));
 
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const DAY = 86400000, NOW = 2e12, NINE = Object.keys(MYTHICS);

@@ -1,16 +1,16 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=66';
-import { levelOf, makePiece, partOptions } from './rules.js?v=66';
-import { awayStep } from './shop.js?v=66';
-import { wageMult, capBonus, rung } from './growth.js?v=66';
-import * as Trail from './trail.js?v=66';
-import { TRAIL, MONSTERS } from './data.js?v=66';
-import * as Run from './runner.js?v=66';
-import * as Mon from './monsters.js?v=66';
-import * as Ap from './apprentice.js?v=66';
-import * as Rg from './region.js?v=66';
+import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=67';
+import { levelOf, makePiece, partOptions } from './rules.js?v=67';
+import { awayStep } from './shop.js?v=67';
+import { wageMult, capBonus, rung } from './growth.js?v=67';
+import * as Trail from './trail.js?v=67';
+import { TRAIL, MONSTERS } from './data.js?v=67';
+import * as Run from './runner.js?v=67';
+import * as Mon from './monsters.js?v=67';
+import * as Ap from './apprentice.js?v=67';
+import * as Rg from './region.js?v=67';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }

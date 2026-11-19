@@ -19,9 +19,10 @@ import * as Mon from '../js/monsters.js';
 import * as Liv from '../js/living.js';
 import * as Ap from '../js/apprentice.js';
 import * as Leg from '../js/legacy.js';
+import * as Rg from '../js/region.js';
 import fs from 'node:fs';
 import { BRANCH, RELICS, MYTHICS } from '../js/data.js';
-import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD } from '../js/data.js';
+import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD, RELIC_WORK } from '../js/data.js';
 
 const days = +process.argv[2] || 7, seed0 = +process.argv[3] || 1, SESSION_MIN = +process.argv[4] || 45;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -43,9 +44,10 @@ let t = Date.UTC(2026, 10, 1, 9) + (+process.env.START || 0) * 86400000, log = [
 // second generation (milestone 38's pace). The heirlooms: the best the old shop has.
 if (process.env.FROM) {
   const old = JSON.parse(fs.readFileSync(process.env.FROM, 'utf8')); t = old.lastSeen;
-  const n = Leg.heirloomsFor(Leg.gen(old) + 1), r = Leg.handOn(old, Leg.heirlooms(old).slice(0, n).map(c => c.id), t);
+  // REGION=greyshore with FROM: the heir crosses the pass at the handing on (milestone 42)
+  const n = Leg.heirloomsFor(Leg.gen(old) + 1), r = Leg.handOn(old, Leg.heirlooms(old).slice(0, n).map(c => c.id), t, process.env.REGION);
   if (!r.ok) { console.log('not handed on: ' + r.why); process.exit(1); }
-  Object.keys(save).forEach(k => delete save[k]); Object.assign(save, r.save, { queue: [], shopNext: 6 }); if (process.env.REGION && process.env.REGION !== 'reach') save.region = process.env.REGION; Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
+  Object.keys(save).forEach(k => delete save[k]); Object.assign(save, r.save, { queue: [], shopNext: 6 }); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
   console.log('handed on to ' + save.maker + ' (' + save.heirTrait + '), generation ' + save.gen + '; shards: ' + JSON.stringify(save.shardWhere));
 }
 const H = 3600000, lvl = id => R.levelOf((save.trades[id] || {}).xp || 0).level, note = m => log.push('  ' + m);
@@ -54,7 +56,8 @@ const H = 3600000, lvl = id => R.levelOf((save.trades[id] || {}).xp || 0).level,
 // still made often (for a Rare to work it from, milestone 35), and
 // its Old-Blood pieces are kept in the back for the Relic working
 const CHASE = process.env.CHASE !== '0';
-const chasing = id => G.rung(save) >= 5 && (save.blueprints || []).some(b => RELICS[b].pattern === id && !(save.relicsMade || []).includes(b));
+// (milestone 42: the region's own Relics; an heir over the pass chases the Tide's, not the Reach's carried blueprints)
+const chasing = id => G.rung(save) >= 5 && (save.blueprints || []).some(b => RELICS[b].pattern === id && Rg.relicRegion(b) === Rg.regionId(save) && !(save.relicsMade || []).includes(b));
 // off the shelf and out of the Hall, into the back room (for a working)
 // what the game's FILL THE SHELVES keeps back (Sh.keepBack: a Relic, a Mythic, a piece ready for its Relic) and a piece marked KEEP:
 // the bot puts out only what a player filling the shelves would (milestone 34: it used to shelve Relics, and sell them, by hand)
@@ -66,7 +69,9 @@ function choose(hour) {
   let best = null;
   for (const id of Object.keys(PATTERNS)) {
     if (!Rm.owns(save, PATTERNS[id].station || 'forge') || PATTERNS[id].makes || !Sh.knows(save, id)) continue;
-    if (Sh.inBack(save).filter(c => c.pattern === id).length >= GLUT) continue;   // six of it waiting unsold: make something else, as a player would
+    // six of it waiting unsold: make something else, as a player would; unless it's the piece a Relic waits on and the trade isn't there yet
+    // (milestone 42: a player chasing a Relic keeps making it; the coast's bench never got there)
+    if (Sh.inBack(save).filter(c => c.pattern === id).length >= GLUT && !(CHASE && chasing(id) && (Trail.stationLevel(save, PATTERNS[id].station || 'forge') < RELIC_WORK.level || lvl(id) < RELIC_WORK.pattern))) continue;
     const metals = R.partOptions(id)[0].opts;
     metals.forEach((m, mi) => {
       if ((m.level || 1) > lvl(id)) return;
@@ -210,7 +215,7 @@ let mythics = [], partsMade = 0, partsTried = 0, mythicTried = 0, courtAsked = 0
 function nineWork(day) {
   if (!Trail.open(save)) return;
   const hour = Math.floor(t / H), buyShort = cost => Sh.short(save.mats, cost).forEach(x => Sh.buy(save, x.mat, x.n - x.have, hour));
-  for (const id of Object.keys(MYTHICS)) {
+  for (const id of Rg.nineOf(save)) {
     if (!Trail.hasShard(save, id) || (save.mythicsMade || []).includes(id)) continue;
     for (let i = 0; i < 3; i++) {
       const g = Trail.partGate(save, id, i); if (!g.ok) continue;
@@ -250,7 +255,7 @@ function fillOrder() {
   // on the trail, a Relic whose Mythic isn't made yet is kept for it, not sold to a regular's order
   // from the back room, or off the shelf (milestone 35: a player takes the piece down for an order; the bot had looked only in the back)
   if (o.mythic) return;   // the Court's offer for one of the Nine: kept, as before
-  const c = save.cards.filter(x => !x.sample && !x.keep && Sh.fills(o, x) && !(CHASE && x.tier === 'relic' && !(save.mythicsMade || []).some(id => MYTHICS[id].relic === x.relic))).sort((a, b) => a.worth - b.worth)[0];
+  const c = save.cards.filter(x => !x.sample && !x.keep && Sh.fills(o, x) && !(CHASE && x.tier === 'relic' && Rg.relicRegion(x.relic) === Rg.regionId(save) && !(save.mythicsMade || []).some(id => MYTHICS[id].relic === x.relic))).sort((a, b) => a.worth - b.worth)[0];
   if (c) toBack(c);
   if (c && Sh.deliver(save, c.id, t)) { orders++; if (o.story) stories++; }
 }
@@ -339,8 +344,12 @@ function spend(hour) {
 }
 
 console.log('day  coins  earned  made sold  slots  staff  maker renown  room  (session ' + SESSION_MIN + ' min a day, then a night away)');
+// an heir over the pass (FROM with REGION): the bot can't try things at a station, so it finds the coast's own patterns as a player
+// trying with the clues might, one every FINDGAP days (3) from the first (milestone 42)
+const FINDGAP = +process.env.FINDGAP || 3, toFindHere = process.env.FROM && !Rg.isReach(save) ? Object.keys(PATTERNS).filter(id => PATTERNS[id].coast && !Sh.knows(save, id)) : [];
 for (let d = 1; d <= days; d++) {
   const start = save.earned || 0;
+  if (toFindHere.length && d % FINDGAP === 0) { const id = toFindHere.shift(); save.book = save.book || { found: [], tries: [], clues: [] }; save.book.found = (save.book.found || []).concat(id); note('FOUND: ' + id); }
   // a play session: a piece every ~50 s, the shop open all the while
   save.lastSeen = t;
   for (let s = 0; s < SESSION_MIN * 60; s += 50) {
@@ -381,7 +390,7 @@ if (process.env.WHY) for (const id of Object.keys(RELICS)) {
   console.log('  ' + id.padEnd(14), (save.relicsMade || []).includes(id) ? 'MADE' : (save.blueprints || []).includes(id) ? 'bp' : 'no bp',
     r.pattern, 'pat', lvl(r.pattern), st, Trail.stationLevel(save, st), 'owns', Rm.owns(save, st), 'oldblood', save.cards.filter(c => c.tier === 'oldblood' && c.pattern === r.pattern).length, 'rare', save.cards.filter(c => c.tier === 'rare' && c.pattern === r.pattern).length, 'mat', save.mats[r.mat] || 0);
 }
-if (process.env.WHY) for (const id of Object.keys(MYTHICS)) console.log('  nine ' + id.padEnd(13), (save.mythicsMade || []).includes(id) ? 'MADE' : '-', 'shard', Trail.hasShard(save, id) ? 'y' : 'n',
+if (process.env.WHY) for (const id of Rg.nineOf(save)) console.log('  nine ' + id.padEnd(13), (save.mythicsMade || []).includes(id) ? 'MADE' : '-', 'shard', Trail.hasShard(save, id) ? 'y' : 'n',
   'parts', [0, 1, 2].filter(i => Trail.hasPart(save, id, i)).length, 'relic', MYTHICS[id].relic, (save.relicsMade || []).includes(MYTHICS[id].relic) ? 'made' : 'not', save.cards.some(c => c.relic === MYTHICS[id].relic && c.tier === 'relic') ? 'held' : 'gone', 'src', MYTHICS[id].shard);
 if (BANKING) console.log('bank: borrowed on day', loanDay, ' interest paid', interestPaid, ' owed now', Bank.bankOf(save).loan, ' second shop from day', branchDay);
 console.log('EARNED', save.earned, 'coins', save.coins);
