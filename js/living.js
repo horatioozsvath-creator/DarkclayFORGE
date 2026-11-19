@@ -1,10 +1,10 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // A LIVING REACH, with no page access: the word in town each day (some true, some not: what's coming, who's about, what's selling,
 // how the regulars are doing after what happened), and the guild fair (one piece entered, judged, a prize for the first three).
-import { LIVING, PATTERNS } from './data.js?v=68';
-import * as Rg from './region.js?v=68';
-import { rung } from './growth.js?v=68';
-import { seasonOf, seasonDay, fairOn } from './town.js?v=68';
+import { LIVING, PATTERNS } from './data.js?v=69';
+import * as Rg from './region.js?v=69';
+import { rung } from './growth.js?v=69';
+import { seasonOf, seasonDay, fairOn } from './town.js?v=69';
 
 const D = 24 * 3600000;
 const dayOf = ms => Math.floor(ms / D);

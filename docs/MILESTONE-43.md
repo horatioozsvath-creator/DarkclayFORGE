@@ -17,8 +17,9 @@ six unsold until it has a Rare or Old-Blood one to work from, as a player chasin
 | a second generation over the pass, milestone 42 (12 runs) | 8 of 12, day 59–113; 4 one short at day 120 | about 86 days |
 | **a second generation over the pass, now (6 runs)** | **all 6, day 74, 77, 83, 87, 87, 88** | **about 85 days** |
 | a first generation in the Reach, now (6 runs) | all 6, day 64–102 | about 76 days |
+| a second generation staying in the Reach, now (6 runs; added after release 68) | all 6, day 58, 65, 69, 80, 83, 97 | about 74 days |
 
-- **No heir is left one short now.** The pace is about two weeks past the plan's two and a half months, the time the coast's five
+- **No heir is left one short now.** It's about 10 days slower than an heir who stays in the Reach, and about two weeks past the plan's two and a half months, the time the coast's five
   patterns take to find (the sim finds one every three days).
 - **The Reach's numbers move a little again**, because of the bot. A first generation's Nine come about 8 days sooner than in
   milestone 42's runs (about 76 against 84 in the middle), and it earns about the same (1.87–2.00 million in 120 days).

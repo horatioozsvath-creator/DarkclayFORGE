@@ -1,6 +1,6 @@
 # Over the pass: a plan for a new region (milestones 39–42)
 
-Status: planned and decided (2026-11-18). Milestone 39 (Saltby, hidden) built in release 64 (docs/MILESTONE-39.md: the coast earns about what the Reach does in the sim). Milestone 40 (the folk and finds, hidden) in release 65 (docs/MILESTONE-40.md). Milestone 41 (the coast's Relics, hidden) in release 66 (docs/MILESTONE-41.md). Milestone 42 (the Nine of the Tide and the crossing: **the pass is open**) in release 67 (docs/MILESTONE-42.md). Milestone 43 (the coast's pace, and Saltby's counter view) in release 68 (docs/MILESTONE-43.md). Builds on release 63 (the legacy).
+Status: planned and decided (2026-11-18). Milestone 39 (Saltby, hidden) built in release 64 (docs/MILESTONE-39.md: the coast earns about what the Reach does in the sim). Milestone 40 (the folk and finds, hidden) in release 65 (docs/MILESTONE-40.md). Milestone 41 (the coast's Relics, hidden) in release 66 (docs/MILESTONE-41.md). Milestone 42 (the Nine of the Tide and the crossing: **the pass is open**) in release 67 (docs/MILESTONE-42.md). Milestone 43 (the coast's pace, and Saltby's counter view) in release 68 (docs/MILESTONE-43.md). Milestone 44 (the coast on a phone) in release 69 (docs/MILESTONE-44.md). Builds on release 63 (the legacy).
 
 ## What it's for
 

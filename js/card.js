@@ -1,6 +1,6 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE CARD: a piece of gear drawn as a collector's card framed by its tier (Darkclay Zero, docs/THE-CARD.md).
-import { TIERS } from './data.js?v=68';
+import { TIERS } from './data.js?v=69';
 
 const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
 // the picture of each kind of piece; m is the metal's tint
