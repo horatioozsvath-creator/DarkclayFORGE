@@ -155,6 +155,26 @@ export const RELICS = {
     lore: 'Ground for the abbey\'s first scriptorium, where no false word was ever copied twice.' },
   corrowgoblet: { name: 'The Corrow Goblet', pattern: 'goblet', mat: 'moonsilver', power: ['Poison shows', 'what\'s poured in it clouds if it would harm'], source: 'corrow',
     lore: 'The Corrows have drunk from one like it for three hundred years, and buried no one before their time.' },
+  // the Greyshore's nine (milestone 41): region marks them the coast's. Five from Saltby's families' great stories, four from below the
+  // drowned town, one for each of the coast's patterns. Several share a pattern with a Reach Relic: Rg.relicOf picks which one a piece can become
+  tidewarden: { name: 'The Tidewarden', pattern: 'falchion', mat: 'heartstone', power: ['The harbour holds', 'no one boards a ship it guards'], source: 'crane', region: 'greyshore',
+    lore: 'The first harbour-captain\'s blade. It hung over the harbour gate the night the old town drowned, and the gate is all that stood.' },
+  drownedring: { name: 'The Drowned Ring', pattern: 'ring', mat: 'moonsilver', power: ['Comes home', 'the one who wears it always finds the way back to shore'], source: 'tregear', region: 'greyshore',
+    lore: 'A fisherman\'s ring, its pattern scratched in his sea-chest lid. Every Tregear who wore one came home, but the last.' },
+  hobbsbarb: { name: 'Hobb\'s Barb', pattern: 'harpoon', mat: 'heartstone', power: ['It holds', 'what it strikes can\'t slip the line'], source: 'hobb', region: 'greyshore',
+    lore: 'Gil Hobb\'s grandfather threw one at the old bull whale off the point. The bull\'s still out there, and it still carries the barb.' },
+  tidecup: { name: 'The Tide Cup', pattern: 'goblet', mat: 'moonsilver', power: ['Fair weather', 'drink from it before sailing, and the ship comes home'], source: 'penrose', region: 'greyshore',
+    lore: 'The Penroses\' house cup. In three hundred years of storms, no ship that was drunk to from it was ever lost.' },
+  penhalebalm: { name: 'Penhale\'s Balm', pattern: 'salve', mat: 'moonmead', power: ['Salt and burn', 'it heals what the sea and the tar do to a body'], source: 'penhale', region: 'greyshore',
+    lore: 'The sea-chapel\'s balm, from a recipe in the crypt. The boats are blessed with it every spring.' },
+  drownedcoat: { name: 'The Drowned Captain\'s Coat', pattern: 'oilskin', mat: 'wyrmhide', power: ['Dry to the bone', 'no water passes, not even the sea\'s'], source: 'deep', region: 'greyshore',
+    lore: 'Found folded in a sea-chest below the drowned town, and dry, after a hundred years under the water.' },
+  breakwater: { name: 'The Breakwater', pattern: 'trident', mat: 'ghostyew', power: ['The waves part', 'the sea gives way before the one who carries it'], source: 'deep', region: 'greyshore',
+    lore: 'Its pattern was carved over the drowned town\'s sea-gate, and the tide still won\'t cover that stone.' },
+  farglass: { name: 'The Far Glass', pattern: 'spyglass', mat: 'starcore', power: ['Past the weather', 'fog and storm don\'t hide what it\'s turned on'], source: 'deep', region: 'greyshore',
+    lore: 'From the drowned town\'s lighthouse. Its keeper saw the wave an hour before it came, and rang the bell.' },
+  blackcaulk: { name: 'The Black Caulk', pattern: 'pitch', mat: 'moonmead', power: ['Never leaks', 'what it seals, the sea can\'t open'], source: 'deep', region: 'greyshore',
+    lore: 'The pitch that sealed the old town\'s boats. Divers still find them on the bottom, whole and dry inside.' },
 };
 export const BLUEPRINT_DEEP = 0.22;   // the odds a trip below the deep doors brings back a blueprint (any still to be found, one for a trade you're good at first)
 // the last rework, Rare to Old-Blood: a master of the trade, a piece with a rare part or WHITE HEAT in its making, three times the
@@ -1300,6 +1320,10 @@ export const REGIONS = {
         { patterns: ['tonic'], least: 3, line: 'I\'m old, and the sea keeps me awake. Brew me something worth sleeping for.', thanks: 'I dreamed of my mother. First time in fifty years.' },
         { patterns: ['salve'], least: 3, line: 'The sea-chapel wants a balm for the blessing of the boats. Your very best.', thanks: 'The old chapel\'s balm, from the crypt. They said to give it to the one who can make it.' } ] },
     ],
+    // where the coast's Relics' blueprints are found (milestone 41), by RELICS[id].source
+    bpWhere: { crane: 'Captain Crane\'s great story (after her first, when the shop is RENOWNED)', tregear: 'Nan Tregear\'s great story (after her first, when the shop is RENOWNED)',
+      hobb: 'Gil Hobb\'s great story (after his first, when the shop is RENOWNED)', penrose: 'Dame Penrose\'s great story (after her first, when the shop is RENOWNED)',
+      penhale: 'Ama Penhale\'s great story (after her first, when the shop is RENOWNED; a kettle)', deep: 'below the drowned town, now and then (a runner\'s road from RENOWNED)' },
     // a coastal generation on (from the line's second on the coast): the families' grandchildren, their first names by coastal
     // generation; they ask what their grandparents asked, and remember the old maker
     lineFolk: {

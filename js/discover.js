@@ -2,10 +2,10 @@
 // FOUND BY TRYING (milestone 31, docs/DISCOVERY-PLAN.md), with no page access: TRY SOMETHING NEW at a station (a head, a haft and a
 // binding from the store room), the clue each choice earns, the trade a pattern needs first, studying an old piece to learn its pattern,
 // customers asking for what you don't make yet, and THE MAKER'S BOOK that keeps it all (save.book).
-import { PATTERNS, MATS, TRY_ROLES, TRY_FAMILY, STUDY_RENOWN, FIND_RENOWN } from './data.js?v=65';
-import { makePiece, partOptions, levelOf } from './rules.js?v=65';
-import { knows, salvage } from './shop.js?v=65';
-import * as Rg from './region.js?v=65';
+import { PATTERNS, MATS, TRY_ROLES, TRY_FAMILY, STUDY_RENOWN, FIND_RENOWN } from './data.js?v=66';
+import { makePiece, partOptions, levelOf } from './rules.js?v=66';
+import { knows, salvage } from './shop.js?v=66';
+import * as Rg from './region.js?v=66';
 
 export const bookOf = save => save.book || (save.book = { found: [], tries: [], clues: [], seen: 0 });
 export const hiddenAt = st => Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden && (PATTERNS[id].station || 'forge') === st);

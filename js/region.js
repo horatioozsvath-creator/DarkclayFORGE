@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE REGIONS (milestone 39), with no page access: where a save works (save.region; none is the Reach) and the region's own tables.
 // The Reach's are data.js's own tables, so a Reach save plays exactly as before; another region names only what differs (REGIONS).
-import { REGIONS, SUPPLIERS, CUSTOMERS, SELLERS, ROUTES, THIEVES, MONSTERS, TOWN_HOT, TOWN_COLD, TOWN_EVENTS, SEASONS, RENOWN, REACH_RUNG, MATS, PATTERNS } from './data.js?v=65';
+import { REGIONS, SUPPLIERS, CUSTOMERS, SELLERS, ROUTES, THIEVES, MONSTERS, TOWN_HOT, TOWN_COLD, TOWN_EVENTS, SEASONS, RENOWN, REACH_RUNG, MATS, PATTERNS, RELICS } from './data.js?v=66';
 
 export const REACH = 'reach';
 export const idOf = r => (r && REGIONS[r] ? r : REACH);
@@ -81,3 +81,15 @@ export const findsHere = (save, id) => { const p = PATTERNS[id]; return !!p && (
 export const boardOf = (save, id) => ((regionOf(save).boards || {})[id]) || PATTERNS[id].hidden.board;
 // the patterns an old piece (a runner's find, a seller's) can be of, here
 export const piecePatterns = save => once('pieces:' + regionId(save), () => Object.keys(PATTERNS).filter(k => !PATTERNS[k].makes && findsHere(save, k)));
+
+// ---------- the Relics (milestone 41): each region has its own; a blueprint travels, so a piece can become another region's ----------
+export const relicRegion = id => idOf(RELICS[id] && RELICS[id].region);
+export const relicsIn = id => once('relics:' + idOf(id), () => Object.keys(RELICS).filter(k => relicRegion(k) === idOf(id)));
+// the Relic a piece of this pattern can become: one whose blueprint is held and not made (this region's first), else this region's own
+export function relicOf(save, pattern) {
+  const all = Object.keys(RELICS).filter(k => RELICS[k].pattern === pattern); if (!all.length) return undefined;
+  const here = k => relicRegion(k) === regionId(save), bp = (save && save.blueprints) || [], made = (save && save.relicsMade) || [];
+  const open = all.filter(k => bp.includes(k) && !made.includes(k));
+  return open.find(here) || open[0] || all.find(here) || all[0];
+}
+export const bpWhere = (save, source, base) => ((regionOf(save).bpWhere || {})[source]) || base[source];

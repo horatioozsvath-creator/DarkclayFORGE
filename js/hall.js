@@ -2,10 +2,10 @@
 // THE HALL, with no page access: a gallery room for the best pieces (Old-Blood, Relics, Mythics). Bought once from RENOWNED; its
 // plinths and cases are its places (room.js hallSpots); a piece shown there is off the shelves and the wall, adds renown and charm
 // (growth.js hallRenown, hallCharm), and shows in shop links and flyers.
-import { HALL, RENOWN } from './data.js?v=65';
-import { defaultHall, hallSpots } from './room.js?v=65';
-import { rung, onHall, onWall } from './growth.js?v=65';
-import { onShelf, onOtherShelf } from './shop.js?v=65';
+import { HALL, RENOWN } from './data.js?v=66';
+import { defaultHall, hallSpots } from './room.js?v=66';
+import { rung, onHall, onWall } from './growth.js?v=66';
+import { onShelf, onOtherShelf } from './shop.js?v=66';
 
 export const canBuy = save => save.hall ? { why: 'yours already' } : rung(save) < HALL.rung ? { why: 'a shop ' + RENOWN[HALL.rung].word.toLowerCase() + ' first' } : save.coins < HALL.cost ? { why: 'not enough coin' } : { ok: true };
 export function buy(save) {

@@ -86,14 +86,16 @@ test('a RENOWNED shop with a blueprint is sometimes asked for that Relic; only t
 });
 
 test('every Relic: a real piece to work from, a relic material, and a blueprint that can be found', async () => {
-  const { MATS } = await import('../js/data.js');
+  const { MATS, REGIONS } = await import('../js/data.js');
   const byStation = {};
   for (const [id, r] of Object.entries(RELICS)) {
     const p = PATTERNS[r.pattern]; assert.ok(p && !p.makes, id);
     assert.ok(MATS[r.mat] && MATS[r.mat].relic, id + ' material');
     assert.ok(Array.isArray(r.power) && r.power.length === 2 && r.lore, id);
-    if (r.source !== 'deep') assert.ok(STORIES.some(s => s.after === r.source && s.blueprint === id), id + ': a great story ends in it');
-    const st = p.station || 'forge'; byStation[st] = (byStation[st] || 0) + 1;
+    // a region's Relic, from that region's great stories (milestone 41)
+    const stories = r.region ? REGIONS[r.region].stories : STORIES, after = s => r.region ? s.fam === r.source && s.after : s.after === r.source;
+    if (r.source !== 'deep') assert.ok(stories.some(s => after(s) && s.blueprint === id), id + ': a great story ends in it');
+    const st = p.station || 'forge'; if (!r.region) byStation[st] = (byStation[st] || 0) + 1;
   }
   assert.ok(byStation.stretcher >= 2 && byStation.bowbench >= 2 && byStation.forge >= 3);
 });

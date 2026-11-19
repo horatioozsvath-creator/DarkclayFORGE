@@ -95,9 +95,8 @@ test('ten stories: five first ones leave a gift (the Reach\'s gifts\' looks, in 
     const e = Sh.deliver(s, card.id, NOW); assert.ok(e, 'step ' + i); if (i === 2) assert.equal(e.story.gift, 'widowlights');
   });
   assert.ok(s.room.items.some(it => it.kind === 'widowlights')); assert.ok(dressingOf(s, NOW).over.includes('kettycandles'), 'drawn as Ketty\'s candles');
-  // the great stories: not offered while their blueprint isn't a Relic yet
-  const done = coast({ renown: 5000, trades: masterOf(['helm', 'falchion', 'jerkin', 'spear', 'ring', 'dagger', 'boots', 'gloves', 'harpoon', 'goblet', 'draught', 'salve', 'pitch']), stories: Object.fromEntries(first.map(x => [x.id, { step: 3, next: 0 }])) });
-  for (const st of great) if (!RELICS[st.blueprint]) assert.ok(!Sh.storiesReady(done, NOW).includes(st), st.id);
+  // the great stories end in the coast's Relics' blueprints (milestone 41: tests/m41.test.mjs)
+  for (const st of great) assert.ok(RELICS[st.blueprint], st.id);
   assert.deepEqual(Sh.storiesOf(shop()).map(x => x.id), STORIES.map(x => x.id), 'the Reach\'s stories as they were');
 });
 
