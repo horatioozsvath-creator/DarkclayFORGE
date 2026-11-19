@@ -763,3 +763,6 @@ h1, .tname, .screenbar .t { font-family: var(--carve); font-weight: 900; letter-
 .tryres::after { content: ''; display: block; clear: both; }
 /* the mine (milestone 45): a seam in a gallery not yet opened */
 .furn .fi.shut { opacity: .55; }
+/* milestone 46: a pocket broken into at the face */
+.yield .pocket { margin: 4px 0 0; padding: 8px 10px; border-left: 3px solid var(--gold); background: rgba(212, 176, 74, .08); font: 600 13px var(--sans); color: var(--bone); text-align: left; }
+.yield .pocket b { color: var(--gold); }

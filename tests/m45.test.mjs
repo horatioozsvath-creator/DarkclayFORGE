@@ -44,10 +44,10 @@ test('the face: not a station (no room, no customer wants it); fire-set rock, a 
 
 test('the seams: each region\'s own, the second gallery\'s shut till it\'s opened; the rock takes nothing; a haul by its tier', () => {
   const s = shop(); Mine.open(s, NOW);
-  assert.deepEqual(Mine.seams(s).map(x => x.ore), ['ironstone', 'clearsand', 'tinstone', 'silverore']);
-  assert.deepEqual(Mine.seams(s).map(x => x.open), [true, true, false, false]);
+  assert.deepEqual(Mine.seams(s).slice(0, 4).map(x => x.ore), ['ironstone', 'clearsand', 'tinstone', 'silverore']);   // (milestone 46 adds the deep galleries' after)
+  assert.deepEqual(Mine.seams(s).slice(0, 4).map(x => x.open), [true, true, false, false]);
   const c = shop({ region: 'greyshore' }); Mine.open(c, NOW);
-  assert.deepEqual(Mine.seams(c).map(x => x.ore), ['tinstone', 'blacksand', 'calamine', 'silverore']);
+  assert.deepEqual(Mine.seams(c).slice(0, 4).map(x => x.ore), ['tinstone', 'blacksand', 'calamine', 'silverore']);
   assert.ok(Mine.canDig(s, 0).ok); assert.match(Mine.canDig(s, 2).why, /gallery/); assert.match(Mine.canDig(shop(), 0).why, /isn't open/);
   assert.deepEqual(Sh.recipe('dig', [0]), [], 'the rock takes nothing from the store room');
   assert.deepEqual(R.yieldOf('dig', 0, [0]), { mat: 'ironstone', n: 4, gem: 0 });
@@ -63,8 +63,8 @@ test('further down: the second gallery for trade 3, coin and oak to shore it', (
   s.trades.dig = { xp: xpAt(3) };
   assert.ok(Mine.nextGallery(s).ok); assert.ok(Mine.openGallery(s).ok);
   assert.equal(Mine.galleries(s), 2); assert.equal(s.coins, 700); assert.equal(s.mats.oak, undefined);
-  assert.ok(Mine.seams(s).every(x => x.open)); assert.ok(Mine.canDig(s, 3).ok);
-  assert.equal(Mine.nextGallery(s), null, 'no further, for now');
+  assert.ok(Mine.seams(s).slice(0, 4).every(x => x.open)); assert.ok(Mine.canDig(s, 3).ok);
+  assert.equal(Mine.nextGallery(s).n, 3, 'the third gallery next (milestone 46)');
   const poor = shop({ coins: 10, mats: { oak: 1 }, trades: { dig: { xp: xpAt(3) } } }); Mine.open(poor, NOW);
   assert.deepEqual(Mine.nextGallery(poor).why, ['300 c', '4 oak staves']);
 });
@@ -78,11 +78,11 @@ test('one mining trade between the regions; smelting is the forge\'s own working
 
 test('smelting: three ore to four to six bars by its tier; the coast\'s calamine is offered on the coast, or to whoever carried some back', () => {
   assert.deepEqual(Sh.recipe('smelt', [0]), [{ mat: 'ironstone', n: 3 }]);
-  assert.deepEqual(['ironstone', 'tinstone', 'silverore', 'calamine'].map((o, i) => R.yieldOf('smelt', 1, [i]).mat), ['iron', 'bronze', 'silver', 'brass']);
+  assert.deepEqual(['ironstone', 'tinstone', 'silverore', 'darkclayore', 'calamine'].map((o, i) => R.yieldOf('smelt', 1, [i]).mat), ['iron', 'bronze', 'silver', 'darkclay', 'brass']);
   assert.equal(R.yieldOf('smelt', 0, [0]).n, 4); assert.equal(R.yieldOf('smelt', 2, [0]).n, 6);
-  assert.deepEqual(R.partOptions('smelt', shop())[0].opts.map(o => o.id), ['ironstone', 'tinstone', 'silverore']);
-  assert.equal(R.partOptions('smelt', shop({ region: 'greyshore' }))[0].opts.length, 4);
-  assert.equal(R.partOptions('smelt', shop({ mats: { calamine: 3 } }))[0].opts.length, 4);
+  assert.deepEqual(R.partOptions('smelt', shop())[0].opts.map(o => o.id), ['ironstone', 'tinstone', 'silverore', 'darkclayore']);   // (darkclay ore: milestone 46)
+  assert.equal(R.partOptions('smelt', shop({ region: 'greyshore' }))[0].opts.length, 5);
+  assert.equal(R.partOptions('smelt', shop({ mats: { calamine: 3 } }))[0].opts.length, 5);
   // ore is sold by no one, and no runner brings it
   for (const id of ['ironstone', 'tinstone', 'silverore', 'calamine']) { assert.ok(MATS[id].ore); for (let h = 0; h < 48; h++) assert.ok(!Sh.sells(id, h) && !Sh.sells(id, h, shop({ region: 'greyshore' }))); }
 });

@@ -112,11 +112,33 @@ function makeOne(hour) {
   return true;
 }
 // THE MINE (MINE=share, milestone 45): the bot opens the trapdoor at KNOWN and spends that share of its workings in the mine: smelting
-// when it has the ore, digging its best open seam when it hasn't; it opens the second gallery when it can (buying the oak). No MINE:
+// when it has the ore, digging its best open seam when it hasn't; it opens the next gallery when it can (buying the oak). Milestone
+// 46: it shores a worn or fallen gallery and pumps a flooded best seam, and a seam's worth counts the smelting it takes after. No MINE:
 // the mine is never opened, and the run is the same as before milestone 45.
 const MINING = +process.env.MINE || 0;
 let dug = 0, smelted = 0, mineBars = {}, mineSlot = 0;
-const barWorth = (seamOre, hour) => { const sm = R.partOptions('smelt')[0].opts.find(o => o.id === seamOre); return Sh.priceOf(sm ? sm.bar : seamOre, hour, save); };
+// for finding what a change does (milestone 46): DEEPEST=n, the bot opens no gallery past n; NOPOCKET, no pockets; NOSHORE, no shoring
+// (with DEEPEST=2 and NOSHORE, the run is release 70's to the byte, but for the shafts line)
+const DEEPEST = +process.env.DEEPEST || 9, NOPOCKET = !!process.env.NOPOCKET, NOSHORE = !!process.env.NOSHORE;
+const shafts = { shored: 0, oak: 0, coins: 0, falls: 0, pumped: 0, wet: 0, pockets: {} };   // milestone 46
+// what a seam's working is worth with the smelting it takes after: an ore's bars spread over the workings, else what comes up
+const seamWorth = (x, hour) => {
+  const n = R.yieldOf(Mine.digOf(save), 1, [x.i]).n, sm = R.partOptions('smelt')[0].opts.find(o => o.id === x.ore);
+  return sm ? n / Mine.smeltTakes() * R.yieldOf('smelt', 1, [0]).n * Sh.priceOf(sm.bar, hour, save) / (1 + n / Mine.smeltTakes()) : usable(x.ore) ? n * Sh.priceOf(x.ore, hour, save) : 0;
+};
+// what a seam brings up as it is, worth digging only if something the bot can make takes it (sand without a glass is no use)
+const usable = mat => Object.keys(PATTERNS).some(id => !PATTERNS[id].makes && Sh.knows(save, id) && Rm.owns(save, PATTERNS[id].station || 'forge')
+  && R.partOptions(id).some(g => g.opts.some(o => (o.mat || o.id) === mat)));
+// the shoring: a fall cleared and a worn gallery shored again, the oak bought; a flooded best seam pumped out (milestone 46)
+function tendMine(hour) {
+  for (let g = 1; g <= Mine.galleries(save); g++) {
+    if (!Mine.isFallen(save, g) && !Mine.isWorn(save, g)) continue;
+    const c = Mine.shoreCost(save, g), k = c.oak - (save.mats.oak || 0), before = save.coins;
+    if (save.coins < c.coins + 300) continue;
+    if (k > 0) Sh.buy(save, 'oak', k, hour);
+    const r = Mine.shore(save, g); if (r.ok) { shafts.shored++; shafts.oak += r.oak; shafts.coins += before - save.coins; }
+  }
+}
 function work(patternId, picks) {   // a working at a steady player's odds, as makeOne's
   if (!Sh.takeMats(save, Sh.recipe(patternId, picks))) return null;   // smelting takes its ore; the rock takes nothing
   const S = R.newWorking({ patternId, picks, level: R.levelOf((save.trades[R.tradeId(patternId)] || {}).xp || 0).level, found: [], kit: G.kitOf(save) }, rng);
@@ -124,7 +146,7 @@ function work(patternId, picks) {   // a working at a steady player's odds, as m
   const res = R.finish(S, 'quench'), y = R.yieldOf(patternId, res.tier, picks);
   save.mats[y.mat] = (save.mats[y.mat] || 0) + y.n; if (y.gem) save.mats.gem = (save.mats.gem || 0) + y.gem;
   (save.trades[R.tradeId(patternId)] = save.trades[R.tradeId(patternId)] || { xp: 0 }).xp += Math.round(R.xpFor(res) * G.xpMult(save));
-  return y;
+  y.res = res; return y;
 }
 function mineOne(hour) {
   if (!MINING) return false;
@@ -134,14 +156,20 @@ function mineOne(hour) {
   if (CHASE && Object.keys(PATTERNS).some(chasing)) return false;
   mineSlot += MINING; if (mineSlot < 1) return false; mineSlot -= 1;
   const nx = Mine.nextGallery(save);
-  if (nx && Mine.level(save) >= nx.level && save.coins > nx.coins + 800) { for (const [m, n] of Object.entries(nx.mats)) { const k = n - (save.mats[m] || 0); if (k > 0) Sh.buy(save, m, k, hour); } if (Mine.openGallery(save).ok) note('opened gallery ' + Mine.galleries(save) + ' of the mine'); }
+  if (nx && nx.n <= DEEPEST && Mine.level(save) >= nx.level && save.coins > nx.coins + 800) { for (const [m, n] of Object.entries(nx.mats)) { const k = n - (save.mats[m] || 0); if (k > 0) Sh.buy(save, m, k, hour); } if (Mine.openGallery(save).ok) note('opened gallery ' + Mine.galleries(save) + ' of the mine'); }
   // ore enough to smelt: the dearest first
   const ore = Mine.ores(save).filter(o => o.have >= Mine.smeltTakes()).sort((a, b) => Sh.priceOf(b.bar, hour, save) - Sh.priceOf(a.bar, hour, save))[0];
   if (ore) { const y = work('smelt', [ore.i]); if (!y) return false; smelted++; mineBars[y.mat] = (mineBars[y.mat] || 0) + y.n; return true; }
-  const seam = Mine.seams(save).filter(x => Mine.canDig(save, x.i).ok).sort((a, b) => barWorth(b.ore, hour) - barWorth(a.ore, hour))[0];
+  if (!NOSHORE) tendMine(hour);
+  const open = Mine.seams(save).filter(x => x.open && x.level <= Mine.level(save) && !Mine.isFallen(save, x.gallery)).sort((a, b) => seamWorth(b, hour) - seamWorth(a, hour));
+  if (open[0] && Mine.isFlooded(save, open[0].gallery, t)) { shafts.wet++; if (save.coins > 1000) { const r = Mine.pump(save, open[0].gallery, t); if (r.ok) { shafts.pumped++; shafts.coins += r.cost; } } }
+  const seam = open.find(x => Mine.canDig(save, x.i, t).ok);
   if (!seam) return false;
   const y = work(Mine.digOf(save), [seam.i]); dug++;
   if (!R.partOptions('smelt')[0].opts.some(o => o.id === y.mat)) mineBars[y.mat] = (mineBars[y.mat] || 0) + y.n;
+  const sh = NOSHORE ? null : Mine.afterDig(save, seam.gallery, rng() < 0.4 ? 1 : 0, rng, t);   // a steady player's: a rockfall now and then if (sh && sh.fell) { shafts.falls++; note('the roof came in: gallery ' + seam.gallery); }
+  const k = NOPOCKET ? null : Mine.pocket(save, seam.gallery, y.res.tier, rng, t);
+  if (k) { const w = Object.keys(k)[0]; shafts.pockets[w] = (shafts.pockets[w] || 0) + 1; if (k.piece) Sh.place(save, k.piece.id, null, 'fair'); if (k.blueprint) note('a blueprint in a pocket: ' + k.blueprint); }
   return true;
 }
 // the big sales: a piece over 1,000 c, an Old-Blood piece, and who bought them
@@ -431,6 +459,7 @@ if (process.env.WHY) for (const id of Rg.nineOf(save)) console.log('  nine ' + i
 if (BANKING) console.log('bank: borrowed on day', loanDay, ' interest paid', interestPaid, ' owed now', Bank.bankOf(save).loan, ' second shop from day', branchDay);
 console.log('EARNED', save.earned, 'coins', save.coins);
 if (MINING) console.log('mine: dug', dug, ' smelted', smelted, ' galleries', Mine.galleries(save), ' mining trade', Mine.level(save), ' smelting trade', R.levelOf((save.trades.smelt || {}).xp || 0).level, ' brought up', JSON.stringify(mineBars), ' worth', Object.entries(mineBars).reduce((a, [m, n]) => a + Sh.priceOf(m, 0, save) * n, 0), 'c');
+if (MINING) console.log('shafts:', JSON.stringify(shafts));
 { const a = Ap.apprenticeOf(save); if (APPR) console.log('apprentice: ' + (a ? a.name + ' (' + (a.trait) + ') from day ' + apprDay + ', made ' + (a.made || 0) + ' (open ' + benched + ') sold ' + apN + ' for ' + apSold + ' spent ' + (a.spent || 0) + '  trades ' + Ap.skills(a).slice(0, 5).map(x => x.id + ' ' + x.level).join(', ') : 'none')); }
 if (WEARING) console.log('wear: repairs', repairs, ' broke', broke, ' spent', wearSpent, ' (' + (100 * wearSpent / (save.earned || 1)).toFixed(1) + ' % of earnings)');
 if (THIEVING) console.log('thieves: robbed', robbed, ' caught', caught, ' turned away', turned, ' lost pieces worth', lostWorth, ' from the till', lostTill, ' (' + (100 * (lostWorth + lostTill) / (save.earned || 1)).toFixed(1) + ' % of earnings)');

@@ -1,39 +1,39 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, APPRENTICE, LEGACY, TRAITS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE } from './data.js?v=70';
-import * as R from './rules.js?v=70';
-import * as Sh from './shop.js?v=70';
-import * as St from './staff.js?v=70';
-import * as Rm from './room.js?v=70';
-import * as G from './growth.js?v=70';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=70';
-import * as Snd from './sound.js?v=70';
-import * as CV from './counter.js?v=70';
-import * as Town from './town.js?v=70';
-import * as V from './visit.js?v=70';
-import * as Br from './branch.js?v=70';
-import * as Bank from './bank.js?v=70';
-import * as Wear from './wear.js?v=70';
-import * as Th from './thieves.js?v=70';
-import * as Run from './runner.js?v=70';
-import * as Src from './sources.js?v=70';
-import * as Mon from './monsters.js?v=70';
-import * as Liv from './living.js?v=70';
-import * as Hl from './hall.js?v=70';
-import * as Trail from './trail.js?v=70';
-import * as Rg from './region.js?v=70';
-import * as Disc from './discover.js?v=70';
-import { ICONS, emblem, watch } from './icons.js?v=70';
-import { drawFlyer, flyerBlob } from './flyer.js?v=70';
-import * as Ap from './apprentice.js?v=70';
-import * as Leg from './legacy.js?v=70';
-import * as Mine from './mine.js?v=70';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=70';
-import { card, ART } from './card.js?v=70';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=70';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=70';
+import { KINDS, KC, TIERS, APPRENTICE, LEGACY, TRAITS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE, MINE } from './data.js?v=71';
+import * as R from './rules.js?v=71';
+import * as Sh from './shop.js?v=71';
+import * as St from './staff.js?v=71';
+import * as Rm from './room.js?v=71';
+import * as G from './growth.js?v=71';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=71';
+import * as Snd from './sound.js?v=71';
+import * as CV from './counter.js?v=71';
+import * as Town from './town.js?v=71';
+import * as V from './visit.js?v=71';
+import * as Br from './branch.js?v=71';
+import * as Bank from './bank.js?v=71';
+import * as Wear from './wear.js?v=71';
+import * as Th from './thieves.js?v=71';
+import * as Run from './runner.js?v=71';
+import * as Src from './sources.js?v=71';
+import * as Mon from './monsters.js?v=71';
+import * as Liv from './living.js?v=71';
+import * as Hl from './hall.js?v=71';
+import * as Trail from './trail.js?v=71';
+import * as Rg from './region.js?v=71';
+import * as Disc from './discover.js?v=71';
+import { ICONS, emblem, watch } from './icons.js?v=71';
+import { drawFlyer, flyerBlob } from './flyer.js?v=71';
+import * as Ap from './apprentice.js?v=71';
+import * as Leg from './legacy.js?v=71';
+import * as Mine from './mine.js?v=71';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=71';
+import { card, ART } from './card.js?v=71';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=71';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=71';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 70;
+const VERSION = 71;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayZERO_FORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -44,7 +44,7 @@ const $ = id => document.getElementById(id);
 const rng = Math.random;
 const save = load();
 Town.refreshTown(save, Date.now());
-R.convertSave(save); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save); G.fixWall(save);
+R.convertSave(save); Mine.fixSave(save); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save); G.fixWall(save);
 // a new game started from the title with the gentler Reach chosen (or not); a save from before the threats gets a week's grace
 try { const g = sessionStorage.getItem('darkclayforge.newGentle'); if (g != null) { sessionStorage.removeItem('darkclayforge.newGentle'); if (!save.made && save.threatsFrom == null) { save.gentle = g === '1'; save.threatsFrom = Date.now(); } } } catch (e) { /* none */ }
 Bank.fixThreats(save, Date.now());
@@ -181,7 +181,7 @@ const HINTS = {
   work: 'Put it <i>INTO THE FIRE</i> (R), wait for the <i>gold band</i>, then <i>STRIKE</i> (Space, or tap). Fill SHAPE, then <i>QUENCH</i> (Q).',
   'work-bowbench': 'Put the stave <i>INTO THE STEAM</i> (R) until it\'s <i>pliant</i>, then <i>BEND</i> (Space, or tap) <i>with the grain</i>: watch the arrows under the bench, and wait while it runs across. Fill SHAPE, then <i>STRING</i> it (Q).',
   'work-face': '<i>SET THE FIRE</i> (R) against the rock until it\'s <i>brittle</i>, then <i>SWING</i> (Space, or tap). Too cold, the pick glances off; too hot, the face spalls. Fill SHAPE, then <i>HAUL IT</i> (Q): every swing after that brings up more.',
-  mine: 'Pick a seam and <i>DIG</i>: a working at the face, like the forge. What comes up goes to the store room; smelt the ore to bars at the forge.',
+  mine: 'Pick a seam and <i>DIG</i>: a working at the face, like the forge. What comes up goes to the store room; smelt the ore to bars at the forge. Every working wears the gallery\'s shoring: keep it shored with oak under THE GALLERIES.',
   'work-glass': 'Take a gather from the <i>GLORY HOLE</i> (R) until it\'s <i>soft</i>, then <i>BLOW</i> (Space, or tap). Too stiff, it shatters; too soft, it sags. It cools fastest of all. Fill SHAPE, then <i>SET</i> (Q).',
   'work-kettle': 'Hold it at a <i>simmer</i>. A stir doesn\'t cool it: it settles by itself, and <i>STOKE</i> (R) raises it. <i>STIR</i> (Space, or tap) in the band; too hot, it boils over. Fill SHAPE, then <i>STOP</i> (Q). It makes a batch of three.',
   'work-stretcher': 'Put the hide <i>IN THE SOAK</i> (R) until it\'s <i>supple</i>, then <i>STITCH</i> (Space, or tap). Too dry does nothing, too wet tears; it dries as you work. Fill SHAPE, then <i>SET</i> (Q).',
@@ -550,7 +550,7 @@ let floorShown = null;
 let cvw = null, cvP = null, iso = false, cvSig = '', cvFront = null;
 function counterView() {
   $('cview').hidden = false; $('cvActs').hidden = false; $('floor').hidden = true; $('dioBar').hidden = true;
-  if (!cvP) cvP = import('./counter.js?v=70').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
+  if (!cvP) cvP = import('./counter.js?v=71').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
   else if (cvw) cvw.show(save, Sh.priceAt);
 }
 // a place on the painted wall: its piece (take it down), or empty (hang one from the back room)
@@ -565,7 +565,7 @@ function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   if (!iso) { counterView(); tip('shop', $('cview')); return; }
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=70').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=71').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -1231,9 +1231,16 @@ $('bankGentleBtn').onclick = () => {
 // a haul from the face, or bars from the smelt
 function mineYieldHtml(res, y) {
   const m = MATS[y.mat], dug = R.stationOf(pat).id === 'face', tint = (S && S.metal && S.metal.tint) || '#9a5a44';
-  const word = dug ? (y.mat === 'clearsand' || y.mat === 'blacksand' ? 'Into the store room for the glass.' : 'Into the store room: smelt it at the forge.') : 'Into the store room, as good as the yard\'s.';
+  const word = dug ? (MATS[y.mat].ore ? 'Into the store room: smelt it at the forge.' : ['clearsand', 'blacksand', 'seasand', 'cobalt'].includes(y.mat) ? 'Into the store room for the glass.' : 'Into the store room, ready to work.') : 'Into the store room, as good as the yard\'s.';
   return '<div class="yield"><div class="tier" style="color:' + TIERC[res.tier] + '">' + TIERS[res.tier].name.toUpperCase() + (dug ? ' HAUL' : ' SMELT') + '</div><div class="cd-art">' + ART.ore(tint) + '</div><h3>' + y.n + ' ' + esc(m.name.toLowerCase()) + (/bar$/.test(m.name) && y.n > 1 ? 's' : '') + (y.gem ? ', and a rough gem' : '') + '</h3><p>'
-    + word + ' You have ' + save.mats[y.mat] + '.' + (y.gem ? ' The gem was in the vein.' : '') + '</p></div>';
+    + word + ' You have ' + save.mats[y.mat] + '.' + (y.gem ? ' The gem was in the vein.' : '') + '</p>' + (y.pocket ? pocketHtml(y.pocket) : '') + '</div>';
+}
+// a pocket broken into (milestone 46)
+function pocketHtml(k) {
+  const what = k.blueprint ? 'a blueprint, scratched on a slate: <b>' + esc(RELICS[k.blueprint].name) + '</b>. It\'s in the drawer (THE FORGE › WORKSHOP).'
+    : k.piece ? 'an old piece left in the rock: <b>' + esc(k.piece.name) + '</b> (' + TIERS.find(t => t.id === k.piece.tier).name + '). It\'s in the back room.'
+    : '<b>' + k.coins + ' c</b> in old coin, in a rotted purse.';
+  return '<p class="pocket">The rock broke into a pocket: ' + what + '</p>';
 }
 let mineNote = '';
 function toMine() { clearTimers(); S = null; rescueCheck(); show('mine'); coins(); mineNote = ''; renderMine(); }
@@ -1251,15 +1258,18 @@ function renderMine() {
     $('mineOpen').disabled = !Mine.canOpen(save);
     return;
   }
-  const lv = R.levelOf((save.trades.dig || {}).xp || 0), g = Mine.galleries(save), dig = Mine.digOf(save);
+  const lv = R.levelOf((save.trades.dig || {}).xp || 0), g = Mine.galleries(save), dig = Mine.digOf(save), now = Date.now();
   $('mineTally').innerHTML = 'Galleries <b>' + g + '</b><br>Mining <b>trade ' + lv.level + '</b>';
   $('mineTrade').textContent = 'MINING · TRADE ' + lv.level + (lv.need ? ' · ' + lv.into + ' / ' + lv.need : ' · MASTERED');
   $('mineFaceWord').textContent = 'A working at the face, as at the forge: set the fire against the rock till it\'s brittle, then swing. What comes up goes to the store room; the rock takes nothing. A Fine haul brings more, a Rare one most.';
-  $('mineSeams').innerHTML = Mine.seams(save).map(x => {
-    const c = Mine.canDig(save, x.i), y = R.yieldOf(dig, 0, [x.i]), top = R.yieldOf(dig, 2, [x.i]), have = save.mats[x.ore] || 0;
-    return '<div class="fi seam' + (x.open ? '' : ' shut') + '"><b>' + esc(x.seam.name) + '</b><span>' + esc(x.seam.line) + '.</span><span>' + MATS[x.ore].name + ' · ' + y.n + '–' + top.n + ' a working · have ' + have + '</span>'
-      + (x.open ? '<button class="seg' + (c.ok ? ' go' : '') + '" data-seam="' + x.i + '"' + (c.ok ? '' : ' disabled') + '>DIG' + (c.ok ? '' : ' · TRADE ' + x.level) + '</button>' : '<span class="small">In gallery ' + x.gallery + '.</span>') + '</div>';
+  // the open galleries' seams, and the next one's (shut) to show what's below
+  $('mineSeams').innerHTML = Mine.seams(save).filter(x => x.gallery <= g + 1).map(x => {
+    const c = Mine.canDig(save, x.i, now), y = R.yieldOf(dig, 0, [x.i]), top = R.yieldOf(dig, 2, [x.i]), have = save.mats[x.ore] || 0, sh = x.open && Mine.shut(save, x.gallery, now);
+    const btn = sh ? '<span class="bad">' + esc(sh.replace(/^./, k => k.toUpperCase())) + '.</span>' : '<button class="seg' + (c.ok ? ' go' : '') + '" data-seam="' + x.i + '"' + (c.ok ? '' : ' disabled') + '>DIG' + (c.ok ? '' : ' · TRADE ' + x.level) + '</button>';
+    return '<div class="fi seam' + (x.open && !sh ? '' : ' shut') + '"><b>' + esc(x.seam.name) + '</b><span>' + esc(x.seam.line) + '.</span><span>' + MATS[x.ore].name + ' · ' + (y.n === top.n ? y.n : y.n + '–' + top.n) + ' a working · have ' + have + '</span>'
+      + (x.open ? btn : '<span class="small">In gallery ' + x.gallery + '.</span>') + '</div>';
   }).join('');
+  renderGalleries(g, now);
   $('mineSeams').querySelectorAll('[data-seam]').forEach(b => b.onclick = () => { rw = null; part = null; master = false; pat = dig; save.picks[pat] = [+b.dataset.seam]; store(save); toPrepare(); });
   const ores = Mine.ores(save), n = Mine.smeltTakes();
   $('mineOreWord').textContent = 'Ore goes to the forge to be smelted: ' + n + ' ore a working, out as ' + R.yieldOf('smelt', 0, [0]).n + '–' + R.yieldOf('smelt', 2, [0]).n + ' bars. SMELTING is a trade of its own.';
@@ -1267,14 +1277,34 @@ function renderMine() {
     + '<button class="seg" data-ore="' + o.i + '"' + (o.have >= n ? '' : ' disabled') + '>SMELT AT THE FORGE</button></div>').join('');
   $('mineOres').querySelectorAll('[data-ore]').forEach(b => b.onclick = () => { rw = null; part = null; master = false; pat = 'smelt'; save.picks.smelt = [+b.dataset.ore]; store(save); toPrepare(); });
   const nx = Mine.nextGallery(save);
-  $('mineDepth').textContent = 'GALLERY ' + g + (nx ? ' OF ' + (MINE_DEPTH) : '');
-  $('mineDownWord').textContent = nx ? 'Below: ' + nx.name.toLowerCase() + ', gallery ' + nx.n + '. Opening it takes ' + nx.coins + ' c and ' + Object.entries(nx.mats).map(([m, k]) => k + ' ' + MATS[m].name.toLowerCase() + 's').join(', ') + ' to shore it, and trade ' + nx.level + ' in mining.'
-    + (nx.ok ? '' : ' Still to find: ' + nx.why.join(', ') + '.') : 'As deep as the mine goes, for now. The old workings are below, past fallen rock.';
+  $('mineDepth').textContent = 'GALLERY ' + g + ' OF ' + Mine.deepest();
+  $('mineDownWord').textContent = nx ? 'Below: ' + nx.name.toLowerCase() + ', gallery ' + nx.n + '. Opening it takes ' + nx.coins.toLocaleString() + ' c and ' + Object.entries(nx.mats).map(([m, k]) => k + ' ' + MATS[m].name.toLowerCase() + 's').join(', ') + ' to shore it, trade ' + nx.level + ' in mining' + (nx.rung ? ' and a shop ' + RENOWN[nx.rung].word : '') + '.'
+    + (nx.deep ? ' The deep galleries take water.' : '') + (nx.ok ? '' : ' Still to find: ' + nx.why.join(', ') + '.')
+    : 'As deep as the mine goes, for now. Below the old workings the rock is warm, and it sounds hollow under the pick.';
   $('mineDown').hidden = !nx; if (nx) { $('mineDown').textContent = 'OPEN GALLERY ' + nx.n; $('mineDown').disabled = !nx.ok; }
 }
-const MINE_DEPTH = 2;
+// THE GALLERIES (milestone 46): each open gallery's shoring, a fall to clear, water to pump
+function renderGalleries(g, now) {
+  const spared = !Bank.threatsOn(save, now), rows = [];
+  for (let n = 1; n <= g; n++) {
+    const s = Mine.shoring(save, n), fell = Mine.isFallen(save, n), wet = Mine.isFlooded(save, n, now), c = Mine.shoreCost(save, n), oak = save.mats.oak || 0;
+    const cost = c.oak + ' oak stave' + (c.oak > 1 ? 's' : '') + (c.coins ? ' · ' + c.coins + ' c' : ''), can = oak >= c.oak && save.coins >= c.coins;
+    let body = '';
+    if (fell) body = '<span class="bad">The roof\'s fallen in. Nothing can be dug here till the fall\'s cleared and it\'s shored again.</span>';
+    else body = '<span class="wearbar' + (s <= MINE.shore.worn ? ' worn' : '') + '"><i style="width:' + s + '%"></i></span><span>Shoring ' + s + ' %' + (s <= MINE.shore.worn ? ': worn, the roof can come in' : s >= 100 ? ', fresh' : '') + '.</span>';
+    if (wet) body += '<span class="bad">Under water: it drains in ' + hm((Mine.drainsAt(save, now) - now) / 1000) + ', or pump it out.</span><button class="seg" data-pump="' + n + '"' + (save.coins >= Mine.pumpCost(n) ? '' : ' disabled') + '>PUMP IT OUT · ' + Mine.pumpCost(n) + ' c</button>';
+    if (c.oak) body += '<button class="seg' + (fell ? ' go' : '') + '" data-shore="' + n + '"' + (can ? '' : ' disabled') + '>' + (fell ? 'CLEAR AND SHORE IT' : 'SHORE IT') + ' · ' + cost + '</button>' + (can ? '' : '<span>You have ' + oak + ' oak; the timber merchant sells it.</span>');
+    rows.push('<div class="fi' + (fell ? ' broken' : '') + '"><b>' + n + '. ' + esc(Mine.galleryName(save, n)) + '</b>' + body + '</div>');
+  }
+  $('mineGalleries').innerHTML = rows.join('');
+  $('mineShoreWord').textContent = spared ? (save.gentle ? 'The gentler Reach: the shoring doesn\'t wear and the water stays out.' : 'The timbers hold for now: the shoring starts wearing after a week\'s grace.')
+    : 'Every working at the face wears its gallery\'s timbers, more for each rockfall. Worn past ' + MINE.shore.worn + ' %, the roof can come in (you get out with the haul). The deep galleries take water ' + (Rg.isReach(save) ? 'after a night\'s rain' : 'at the spring tides') + '.';
+  const done = () => { store(save); coins(); renderMine(); };
+  $('mineGalleries').querySelectorAll('[data-shore]').forEach(b => b.onclick = () => { const r = Mine.shore(save, +b.dataset.shore); mineNote = r.ok ? (r.clear ? 'The fall cleared and the gallery shored again.' : 'Shored with fresh oak.') : 'Not yet: ' + r.why + '.'; if (r.ok) Snd.play('level'); done(); });
+  $('mineGalleries').querySelectorAll('[data-pump]').forEach(b => b.onclick = () => { const r = Mine.pump(save, +b.dataset.pump, Date.now()); mineNote = r.ok ? 'Pumped dry, for ' + r.cost + ' c.' : 'Not yet: ' + r.why + '.'; if (r.ok) Snd.play('coin'); done(); });
+}
 $('mineOpen').onclick = () => { const r = Mine.open(save, Date.now()); if (r.ok) { store(save); Snd.play('level'); show('mine'); tip('mine', $('mineSeams').closest('section')); } else mineNote = 'Not yet: ' + r.why + '.'; renderMine(); };
-$('mineDown').onclick = () => { const r = Mine.openGallery(save); mineNote = r.ok ? 'Gallery ' + r.n + ' is open, the roof shored with oak.' : 'Not yet: ' + r.why + '.'; if (r.ok) { store(save); coins(); Snd.play('level'); } renderMine(); };
+$('mineDown').onclick = () => { const r = Mine.openGallery(save); mineNote = r.ok ? 'Gallery ' + r.n + ', ' + Mine.galleryName(save, r.n).toLowerCase() + ', is open, the roof shored with oak.' : 'Not yet: ' + r.why + '.'; if (r.ok) { store(save); coins(); Snd.play('level'); } renderMine(); };
 
 function toStaff() { clearTimers(); S = null; rescueCheck(); show('staff'); coins(); renderStaff(); tip('staff', $('staffList').closest('section')); }
 let staffTick = 0;
@@ -1473,7 +1503,7 @@ function showAway(a) {
 // seconds behind. Read the save afresh (another tab may have played meanwhile), clear the counter, catch up.
 function returning(nowMs) {
   const fresh = load();
-  if (fresh.lastSeen && fresh.lastSeen > (save.lastSeen || 0)) { Object.keys(save).forEach(k => delete save[k]); Object.assign(save, fresh); R.convertSave(save); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save); if (dio) dio.setRoom(viewRoom(), save); }
+  if (fresh.lastSeen && fresh.lastSeen > (save.lastSeen || 0)) { Object.keys(save).forEach(k => delete save[k]); Object.assign(save, fresh); R.convertSave(save); Mine.fixSave(save); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save); if (dio) dio.setRoom(viewRoom(), save); }
   save.queue = [];
   const a = catchUpAll(nowMs);
   store(save); coins();
@@ -1527,13 +1557,16 @@ function newWorking() {
   if (master && (rw || !R.masterBrewGate(pat, benchPicks(), lvl()).ok)) master = false;
   S = R.newWorking({ patternId: pat, picks: benchPicks().slice(), level: lvl(), found: save.chosen.slice(), kit: G.kitOf(save), bandX: Wear.bandMult(save, R.stationOf(pat).id), rework: rw ? { from: rw.from, relic: rw.relic, mythic: rw.mythic } : null, master, part }, rng);
 }
-// a seam in a gallery not yet opened (milestone 45)
-const shut = o => !!(o.gallery && o.gallery > Mine.galleries(save));
+// a seam in a gallery not yet opened (milestone 45), or fallen in or under water (milestone 46)
+const shut = o => !!(o.gallery && (o.gallery > Mine.galleries(save) || Mine.shut(save, o.gallery, Date.now())));
 function toPrepare() {
   clearTimers(); paused = false;
   if (rw && !rwCard()) rw = null;
   const p = PATTERNS[pat], l = levelFor(pat), opts = R.partOptions(pat, save);
   // a part that the trade hasn't opened yet falls back to the first
+  // at the face, a seam that can't be dug just now (its roof in, its gallery under water: milestone 46) sends you back to the mine,
+  // before the picks fall back (DIG AGAIN on a seam whose roof just came in mustn't set you digging another one)
+  if (R.stationOf(pat).id === 'face') { const c = Mine.canDig(save, picks()[0], Date.now()); if (!c.ok) { toMine(); const sm = Mine.seams(save)[picks()[0]]; mineNote = 'Not now: ' + (sm ? sm.seam.name : 'that seam') + ': ' + c.why + '.'; renderMine(); return; } }
   if (!rw) save.picks[pat] = picks().map((k, i) => (opts[i].opts[k] && (opts[i].opts[k].level || 1) <= l.level && !shut(opts[i].opts[k])) ? k : 0);
   newWorking(); show('prepare');
   $('prepK').textContent = stn().word + ' · ' + (rw ? stn().again : 'PREPARE');
@@ -1945,8 +1978,16 @@ function complete(res, picked) {
     part = null;
   } else if (yields) {   // the glass's bottles, and the mine's ore and bars (milestone 45): into the store room, no card
     save.mats[yields.mat] = (save.mats[yields.mat] || 0) + yields.n; if (yields.gem) save.mats.gem = (save.mats.gem || 0) + yields.gem;
+    if (R.stationOf(pat).id === 'face') {   // the gallery's shoring wears, and a Rare haul down deep breaks into a pocket (milestone 46)
+      const g = R.chosenParts(pat, picks())[0].gallery, now = Date.now(), sh = Mine.afterDig(save, g, (S && S.spalls) || 0, rng, now), nm = Mine.galleryName(save, g);
+      yields.pocket = Mine.pocket(save, g, res.tier, rng, now);
+      if (yields.pocket) Snd.play('chime');
+      if (yields.pocket && yields.pocket.blueprint) bookLine('A blueprint in a pocket in ' + nm.toLowerCase() + ': ' + RELICS[yields.pocket.blueprint].name + '.');
+      if (sh && sh.fell) { setTimeout(() => toast('<b>THE ROOF CAME IN</b><br>You got out with the haul, but ' + esc(nm.toLowerCase()) + ' is shut till the fall\'s cleared and it\'s shored again. THE MINE › THE GALLERIES.'), 900); Snd.play('bell'); }
+      else if (sh && sh.worn) setTimeout(() => toast('<b>The timbers are creaking</b><br>' + esc(nm) + '\'s shoring is worn: from here the roof can come in. Shore it again under THE MINE.'), 900);
+    }
     if (!PATTERNS[pat].mine) save.made++;
-    piece = { name: yields.n + ' ' + MATS[yields.mat].name.toLowerCase() + 's', tier: TIERS[res.tier].id, worth: 0, id: null };
+    piece = { name: yields.n + ' ' + MATS[yields.mat].name.toLowerCase() + (yields.n > 1 && (MATS[yields.mat].unit || MATS[yields.mat].blown) ? 's' : ''), tier: TIERS[res.tier].id, worth: 0, id: null };
   } else if (res.rework) {   // the same piece, out of the fire: in the back where it was
     const old = rwCard(), i = save.cards.indexOf(old);
     if (res.failed) piece = old;   // the last working didn't take: the piece exactly as it was (its cracks aren't its)
@@ -1987,6 +2028,7 @@ function complete(res, picked) {
     : res.oldBlood ? (res.failed ? (res.dropped ? 'Dropped. ' : 'A crack in the last working. ') + 'It wouldn\'t take Old-Blood: it stays Rare, and the materials are spent.' : 'It took. Rare to Old-Blood: a master\'s piece.')
     : res.rework ? (res.dropped ? 'A second crack after it took. It came out ' + TIERS[res.tier].name + (res.flawed ? ', flawed.' : '.') : 'It took. ' + TIERS[res.from].name + ' to ' + TIERS[res.tier].name + '.')
     : res.instant ? 'Made at once at the plain odds: Fine ' + res.odds.f + ' % · Rare ' + res.odds.r + ' %.'
+    : res.dropped && p.makes ? 'A second crack after it was made: it came out ' + TIERS[res.tier].name + '.'   // (a haul or a smelt has no flaw: milestone 46)
     : res.dropped ? (res.flawed ? 'A second crack after it was made. It holds together, flawed, and is worth less.' : 'A second crack after it was made dropped it a tier.')
     : 'WORKED +' + res.worked + ' % · it had Fine ' + Math.round(res.odds.f) + ' % · Rare ' + Math.round(res.odds.r) + ' %';
   $('rWhy').textContent = res.instant ? 'No working, no pick, no found tile, no practice.'
@@ -2184,7 +2226,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=70').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=71').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -2263,7 +2305,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=70').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=71').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }

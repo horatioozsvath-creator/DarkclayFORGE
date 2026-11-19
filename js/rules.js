@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, WORKS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS } from './data.js?v=70';
-import * as Rg from './region.js?v=70';
+import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, WORKS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS } from './data.js?v=71';
+import * as Rg from './region.js?v=71';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -151,6 +151,7 @@ export function strike(S) {
   }
   // the bench: a bend across the grain turns nothing over (the steam still drains)
   if (st.grain && acrossGrain(S)) { S.streak = 0; pop({ label: 'NOTHING', why: 'ACROSS THE GRAIN · WAIT FOR IT', size: 'bad', colour: KC.HOLD }); return { k: 'HOLD', dead: true, pops }; }
+  if (st.spall && m > hi) S.spalls = (S.spalls || 0) + 1;   // a rockfall at the face: it wears the gallery's shoring (milestone 46), at any trade
   const tore = (st.wetTear || st.spall) && m > hi && S.level >= 3;
   if (tore) slipIn(S, 'CRACK', st.spall ? 'SPALL' : 'WET', st.spall ? 'Too hot: the face spalled (swing ' + S.strikes + ')' : 'Too wet: it tore (stitch ' + S.strikes + ')');
   // the kettle: the first stir starts it settling; over the band it boils over (a CRACK from trade 3) and the boil drops
@@ -478,11 +479,11 @@ export function mythicPiece(piece, id) {
 // a working that yields materials, not a piece (the glass's bottles): how many, by the tier it came out
 export const yieldOf = (patternId, tier, picks) => {
   const m = PATTERNS[patternId].makes; if (!m) return null;
-  const n = m.n[Math.min(tier, m.n.length - 1)];
-  if (!m.from) return { mat: m.mat, n };
-  // the mine's (milestone 45): the seam's ore, or the ore's bar; a Rare haul from a vein with gems in it brings a rough gem
-  const p0 = chosenParts(patternId, picks || [])[0];
-  return { mat: p0[m.from], n, gem: m.from === 'ore' && p0.gem && tier >= 2 ? 1 : 0 };
+  if (!m.from) return { mat: m.mat, n: m.n[Math.min(tier, m.n.length - 1)] };
+  // the mine's (milestone 45): the seam's ore, or the ore's bar; a Rare haul from a vein with gems in it brings a rough gem. A seam
+  // with a haul of its own (the deep galleries', milestone 46) brings that many
+  const p0 = chosenParts(patternId, picks || [])[0], ns = (m.from === 'ore' && p0.n) || m.n;
+  return { mat: p0[m.from], n: ns[Math.min(tier, ns.length - 1)], gem: m.from === 'ore' && p0.gem && tier >= 2 ? 1 : 0 };
 };
 // A piece out of the fire again: the same piece (its id, its maker, the affixes it carried), its tier and its making moved on.
 export function remakePiece({ card, res, picked, rng, now }) {

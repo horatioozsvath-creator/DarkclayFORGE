@@ -280,8 +280,24 @@ export const FACE = {
 export const WORKS = { face: FACE };
 // the mine: the trapdoor from KNOWN; the second gallery from trade 3 at the face, for coin and oak to shore it. dig: each region's
 // working at the face (one trade between them: tradeAs)
-export const MINE = { rung: 2, dig: { reach: 'dig', greyshore: 'wheal' }, galleries: [null, { name: 'The old working' }, { name: 'The second level', level: 3, coins: 300, mats: { oak: 4 } }],
-  names: { reach: 'Veric\'s old workings', greyshore: 'Wheal Isel' } };
+// Milestone 46: the third and fourth galleries (each region names its own: names), the shoring and the water.
+//   shore: each gallery's timbers, out of 100. A working at the face wears them (per, and perFall for each rockfall: a swing too hot); from worn
+//     down, a working can bring the roof in (the odds grow to fall at none left), and a fallen gallery is shut till it's cleared.
+//     Shoring a gallery again takes oak (oak: a full shoring of each gallery, less for one part worn); clearing a fall takes coin
+//     (clear) and the full oak again. None of it on a gentler Reach, or in the week of grace (bank.js threatsOn).
+//   water: the deep galleries (from deep) flood: in the Reach after a night's rain (odds a day), on the coast at the spring tides
+//     (every tides days, for two). A flood drains in drainH hours, or it's pumped out for pump c a gallery.
+//   pocket: a Rare haul from the deep galleries breaks into a pocket: old coin, an old piece, and (from the old workings) now and then
+//     a blueprint still to be found
+export const MINE = { rung: 2, dig: { reach: 'dig', greyshore: 'wheal' },
+  galleries: [null, { name: 'The old working' }, { name: 'The second level', level: 3, coins: 300, mats: { oak: 4 } },
+    { name: 'The darkclay seam', level: 5, rung: 3, coins: 1200, mats: { oak: 8 }, deep: true },
+    { name: 'The old workings', level: 6, rung: 4, coins: 3000, mats: { oak: 12 }, deep: true }],
+  gname: { greyshore: [null, 'The old working', 'The second level', 'Under the harbour', 'The drowned level'] },
+  names: { reach: 'Veric\'s old workings', greyshore: 'Wheal Isel' },
+  shore: { per: 4, perFall: 3, worn: 30, fall: 0.5, oak: [0, 2, 3, 5, 6], clear: [0, 40, 80, 250, 500] },
+  water: { deep: 3, rain: 0.18, tides: 15, drainH: 36, pump: [0, 0, 0, 60, 120] },
+  pocket: { from: 3, odds: 0.5, coins: [30, 90], piece: 0.5, blueprint: 0.12 } };
 
 // strip: [GOOD, GREAT, CRACK, HOLD]. level: the trade level that opens the metal (a stand-in until suppliers sell it, milestone 2).
 export const METALS = {
@@ -318,16 +334,28 @@ export const METALS = {
   seam_sand: { name: 'Sand bed', adj: 'Sand', strip: [11, 2, 2, 5], widen: 1.15, line: 'soft: a wider band, little falls; clear sand for the glass', tint: '#d8d0b0', level: 1, ore: 'clearsand', gallery: 1 },
   seam_tin: { name: 'Tin lode', adj: 'Tin', strip: [9, 4, 5, 2], line: 'black tinstone with the copper in it: it smelts to bronze', tint: '#5a5a50', level: 3, ore: 'tinstone', gallery: 2 },
   seam_silver: { name: 'Silver vein', adj: 'Silver', strip: [7, 5, 6, 2], widen: .85, line: 'a narrow vein: more GREATs and more falls; a Rare haul brings a rough gem', tint: '#dfe4ea', level: 3, ore: 'silverore', gallery: 2, gem: true },
+  // the deep galleries (milestone 46): Veric's darkclay seam and a cobalt bed in the third; in the old workings, blackwater iron and
+  // starmetal come up as they are, a little at a time (n: the seam's own haul)
+  seam_darkclay: { name: 'Darkclay seam', adj: 'Darkclay', strip: [7, 6, 6, 1], widen: .7, line: 'Veric\'s seam: a narrow band, GREATs and falls both; it smelts to darkclay steel', tint: '#8a6a78', level: 5, ore: 'darkclayore', gallery: 3, n: [3, 4, 6] },
+  seam_cobalt: { name: 'Cobalt bed', adj: 'Cobalt', strip: [10, 3, 4, 3], line: 'blue earth for the glass', tint: '#3a5aa8', level: 5, ore: 'cobalt', gallery: 3 },
+  seam_blackwater: { name: 'Blackwater lode', adj: 'Blackwater', strip: [7, 5, 6, 2], widen: .8, line: 'iron that was never smelted: it comes up ready, a lump or two', tint: '#2a3038', level: 6, ore: 'blackwater', gallery: 4, n: [1, 2, 3] },
+  seam_starmetal: { name: 'Fallen star', adj: 'Starmetal', strip: [6, 6, 7, 1], widen: .7, line: 'a star that fell before the town: the narrowest band in the mine', tint: '#b8c8e8', level: 6, ore: 'starmetal', gallery: 4, n: [1, 1, 2] },
   // Wheal Isel, under Saltby: tin from the first gallery, the brass-ore below
   seam_wheal: { name: 'Wheal tin', adj: 'Tin', strip: [10, 3, 4, 3], line: 'the old wheal\'s tin, with the copper in it: it smelts to bronze', tint: '#5a5a50', level: 1, ore: 'tinstone', gallery: 1 },
   seam_blacksand: { name: 'Black sand bed', adj: 'Black sand', strip: [11, 2, 2, 5], widen: 1.15, line: 'soft, wet sand: a wider band; black sand for the glass', tint: '#4a4a52', level: 1, ore: 'blacksand', gallery: 1 },
   seam_calamine: { name: 'Calamine lode', adj: 'Calamine', strip: [9, 4, 5, 2], line: 'pale zinc ore, with copper beside it: it smelts to brass', tint: '#c8c0a0', level: 3, ore: 'calamine', gallery: 2 },
   seam_isel: { name: 'Silver vein', adj: 'Silver', strip: [7, 5, 6, 2], widen: .85, line: 'a narrow vein under the sea: more GREATs and more falls; a Rare haul brings a rough gem', tint: '#dfe4ea', level: 3, ore: 'silverore', gallery: 2, gem: true },
+  // Wheal Isel's deep (milestone 46): sea-glass sand and a thin darkclay vein under the harbour; drowned silver and a fallen star below
+  seam_seaglass: { name: 'Sea-glass sand bed', adj: 'Sea-glass', strip: [8, 5, 5, 2], widen: 1.1, line: 'drowned sand under the harbour, for the glass', tint: '#7ad0d8', level: 5, ore: 'seasand', gallery: 3, n: [3, 4, 6] },
+  seam_iseldark: { name: 'Darkclay vein', adj: 'Darkclay', strip: [7, 6, 6, 1], widen: .7, line: 'a thin vein of Veric\'s darkclay, run under the pass: it smelts to darkclay steel', tint: '#8a6a78', level: 5, ore: 'darkclayore', gallery: 3, n: [2, 3, 5] },
+  seam_drowned: { name: 'Drowned silver', adj: 'Drowned silver', strip: [7, 5, 6, 2], widen: .8, line: 'silver gone black under the sea: it comes up ready, a lump or two', tint: '#5a6a78', level: 6, ore: 'drownedsilver', gallery: 4, n: [1, 2, 3] },
+  seam_iselstar: { name: 'Fallen star', adj: 'Starmetal', strip: [6, 6, 7, 1], widen: .7, line: 'a star that fell into the sea before the town: the narrowest band in the mine', tint: '#b8c8e8', level: 6, ore: 'starmetal', gallery: 4, n: [1, 1, 2] },
   // the ores, smelted at the forge (bar: what they come out as)
   ironstone: { name: 'Ironstone', adj: 'Iron', strip: [10, 3, 4, 3], line: 'the baseline: it smelts to iron bars', tint: '#9a5a44', level: 1, bar: 'iron' },
   tinstone: { name: 'Tinstone', adj: 'Bronze', strip: [11, 2, 2, 5], widen: 1.15, line: 'forgiving: it smelts to bronze', tint: '#c99a5a', level: 1, bar: 'bronze' },
   silverore: { name: 'Silver ore', adj: 'Silver', strip: [7, 5, 6, 2], coolX: 1.7, line: 'it cools fast: smelt it quickly to silver', tint: '#eef0f4', level: 1, bar: 'silver' },
   calamine: { name: 'Calamine', adj: 'Brass', strip: [11, 2, 3, 4], widen: 1.2, line: 'bright and forgiving: it smelts to brass', tint: '#d4b04a', level: 1, bar: 'brass' },
+  darkclayore: { name: 'Darkclay ore', adj: 'Darkclay', strip: [7, 6, 6, 1], widen: .7, line: 'a narrow band: it smelts to darkclay steel', tint: '#8a6a78', level: 1, bar: 'darkclay' },
 };
 const BLADE_METALS = ['iron', 'bronze', 'steel', 'silver', 'darkclay'];
 const HIDES = ['deer', 'goat', 'sharkhide'];
@@ -607,11 +635,11 @@ Object.assign(PATTERNS, {
 // or the ore's bar). mine: shown only once the trapdoor is open. bars: 0, a seam takes nothing from the store room
 Object.assign(PATTERNS, {
   dig: { name: 'Digging', trade: 'Mining', kind: 'ORE · FROM THE FACE', art: 'ore', value: 0, bars: 0, station: 'face', mine: true, makes: { from: 'ore', n: [4, 6, 8] },
-    parts: [{ part: 'Seam', metals: ['seam_iron', 'seam_sand', 'seam_tin', 'seam_silver'] }], affixes: [], lore: ['', '', '', ''] },
+    parts: [{ part: 'Seam', metals: ['seam_iron', 'seam_sand', 'seam_tin', 'seam_silver', 'seam_darkclay', 'seam_cobalt', 'seam_blackwater', 'seam_starmetal'] }], affixes: [], lore: ['', '', '', ''] },
   wheal: { name: 'Digging', trade: 'Mining', kind: 'ORE · FROM THE FACE', art: 'ore', value: 0, bars: 0, station: 'face', mine: true, tradeAs: 'dig', makes: { from: 'ore', n: [4, 6, 8] },
-    parts: [{ part: 'Seam', metals: ['seam_wheal', 'seam_blacksand', 'seam_calamine', 'seam_isel'] }], affixes: [], lore: ['', '', '', ''] },
+    parts: [{ part: 'Seam', metals: ['seam_wheal', 'seam_blacksand', 'seam_calamine', 'seam_isel', 'seam_seaglass', 'seam_iseldark', 'seam_drowned', 'seam_iselstar'] }], affixes: [], lore: ['', '', '', ''] },
   smelt: { name: 'Smelting', trade: 'Smelting', kind: 'BARS · FROM THE ORE', art: 'ore', value: 0, bars: 3, mine: true, makes: { from: 'bar', n: [4, 5, 6] },
-    parts: [{ part: 'Ore', metals: ['ironstone', 'tinstone', 'silverore', 'calamine'] }], affixes: [], lore: ['', '', '', ''] },
+    parts: [{ part: 'Ore', metals: ['ironstone', 'tinstone', 'silverore', 'darkclayore', 'calamine'] }], affixes: [], lore: ['', '', '', ''] },
 });
 // TRY SOMETHING NEW at the forge: the three things you put together, and the families a near miss is told by
 // (only: the first role takes the station's own material, the one the working's strip comes from; pick: the empty choice's words;
@@ -713,7 +741,7 @@ export const MATS = {
   coral: { name: 'Red coral', price: 45, rare: true, coast: true }, drownedsilver: { name: 'Drowned silver', price: 55, rare: true, coast: true },
   // dug at the mine's face (milestone 45), sold by no one: smelted at the forge. ore: true keeps them out of every seller and haul
   ironstone: { name: 'Ironstone', price: 5, ore: true }, tinstone: { name: 'Tinstone', price: 5, ore: true }, silverore: { name: 'Silver ore', price: 18, ore: true },
-  calamine: { name: 'Calamine', price: 7, ore: true, coast: true },
+  calamine: { name: 'Calamine', price: 7, ore: true, coast: true }, darkclayore: { name: 'Darkclay ore', price: 24, ore: true },
 };
 // pick: how many of its rare lines a pack carries in an hour (0: all of them, always)
 export const SUPPLIERS = [
