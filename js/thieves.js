@@ -1,12 +1,12 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THIEVES, with no page access: a gang heard of first (the rumour), then their nights: on a night away they try the shop. A lock, a
 // strongbox and a night guard against them. What they take waits for the hunt (milestone 22). Spared on a gentler Reach (bank.js).
-import { THIEVES, RENOWN } from './data.js?v=73';
-import * as Rg from './region.js?v=73';
-import { rung } from './growth.js?v=73';
-import { threatsOn } from './bank.js?v=73';
-import { guardOf } from './staff.js?v=73';
-import { wardCut } from './monsters.js?v=73';
+import { THIEVES, RENOWN } from './data.js?v=74';
+import * as Rg from './region.js?v=74';
+import { rung } from './growth.js?v=74';
+import { threatsOn } from './bank.js?v=74';
+import { guardOf } from './staff.js?v=74';
+import { wardCut } from './monsters.js?v=74';
 
 const H = 3600000, D = 24 * H;
 const dayOf = ms => Math.floor(ms / D);

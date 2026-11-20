@@ -272,6 +272,8 @@ export const FACE = {
   id: 'face', name: 'FACE', word: 'THE FACE', tool: 'PICK', meter: 'THE ROCK', fire: 'SET THE FIRE', out: 'DRAW THE FIRE', close: 'HAUL IT', place: 'the fire',
   heatIt: 'FIRE THE ROCK', band_: 'brittle band', strike: 'SWING', again: 'BACK TO THE FACE', made: ['swing', 'firing'],
   band: [40, 80], drain: 6, cool: 4, rise: 30, over: 101, dryDead: true, spall: true,
+  // its true heat is a true rhythm: drawn at the top of the band, the rock stays brittle and the swings come easy
+  true_: 'true rhythm', trueName: 'A TRUE RHYTHM', trueGain: 'THE ROCK STAYS BRITTLE', trueWhy: 'IT STAYS BRITTLE TILL YOU SET THE FIRE AGAIN', trueKeeps: 'the rock stays brittle',
   colours: ['#3a3430', '#5a4a40', '#7a5a44', '#a86a3a', '#d8702a', '#f0a040'],
   labels: [[0, 'COLD'], [40, 'BRITTLE'], [80, 'SPALLING']],
   cold: 'TOO COLD · THE PICK GLANCES OFF',

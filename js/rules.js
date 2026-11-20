@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, WORKS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS } from './data.js?v=73';
-import * as Rg from './region.js?v=73';
+import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, WORKS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS } from './data.js?v=74';
+import * as Rg from './region.js?v=74';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -139,7 +139,7 @@ export function strike(S) {
   const m = S.meter, [lo, hi] = S.band, shaping = S.shape < 100;
   S.strikes++;
   // struck straight from the fire: taken out by the strike, and judged as it comes out
-  if (S.inFire) { S.inFire = false; if (judgeHeat(S)) pop({ label: 'A TRUE HEAT', gain: 'IT HOLDS ITS HEAT', size: 'bigpop', colour: '#ffd25a', trueHeat: true }); }
+  if (S.inFire) { S.inFire = false; if (judgeHeat(S)) pop({ label: (S.station || FORGE).trueName || 'A TRUE HEAT', gain: (S.station || FORGE).trueGain || 'IT HOLDS ITS HEAT', size: 'bigpop', colour: '#ffd25a', trueHeat: true }); }
   S.meter = Math.max(0, S.meter - S.drain * (S.trueHeat ? TRUE_HEAT.drain : 1));
 
   const st = S.station || FORGE;
