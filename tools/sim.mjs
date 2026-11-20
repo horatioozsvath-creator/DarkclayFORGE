@@ -46,7 +46,7 @@ Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
 // START=n: begin n calendar days later (the town's board, and so the fallen star, is the same in every shop on a day)
 const FOUND = process.env.FOUND !== '0';
 // (the coast's own patterns only on the coast, milestone 40)
-if (FOUND) save.book = { found: Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden && (!PATTERNS[id].coast || (process.env.REGION && process.env.REGION !== 'reach'))), tries: [], clues: [], seen: 0 };
+if (FOUND) save.book = { found: Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden && Rg.findsHere(save, id)), tries: [], clues: [], seen: 0 };
 const OLD = process.env.OLD !== '0', TOWN = process.env.TOWN !== '0', BRANCHES = process.env.BRANCH !== '0';   // TOWN=0: the bot ignores the notice board   // OLD=0: a run without Old-Blood, to compare
 let t = Date.UTC(2026, 10, 1, 9) + (+process.env.START || 0) * 86400000, log = [], made = 0, oldTried = 0, oldMade = 0, spent = { mats: 0, staff: 0, tools: 0, room: 0 };
 // FROM=file: a first generation's save at its end (SAVEOUT=file writes one); it's handed on to its apprentice, and the run plays the
@@ -68,7 +68,7 @@ const CHASE = process.env.CHASE !== '0';
 // a Rare or Old-Blood piece of it to work a Relic from (milestone 43: till there's one, the bot keeps making it, as a player would)
 const hasWorkable = id => save.cards.some(c => c.pattern === id && !c.sample && (c.tier === 'rare' || c.tier === 'oldblood'));
 // (milestone 42: the region's own Relics; an heir over the pass chases the Tide's, not the Reach's carried blueprints)
-const chasing = id => G.rung(save) >= 5 && (save.blueprints || []).some(b => RELICS[b].pattern === id && Rg.relicRegion(b) === Rg.regionId(save) && !(save.relicsMade || []).includes(b));
+const chasing = id => G.rung(save) >= 5 && (save.blueprints || []).some(b => RELICS[b].pattern === id && Rg.relicsIn(Rg.regionId(save)).includes(b) && !(save.relicsMade || []).includes(b));
 // off the shelf and out of the Hall, into the back room (for a working)
 // what the game's FILL THE SHELVES keeps back (Sh.keepBack: a Relic, a Mythic, a piece ready for its Relic) and a piece marked KEEP:
 // the bot puts out only what a player filling the shelves would (milestone 34: it used to shelve Relics, and sell them, by hand)
@@ -205,7 +205,10 @@ function mineOne(hour) {
   if (ore) { const y = work('smelt', [ore.i]); if (!y) return false; smelted++; mineBars[y.mat] = (mineBars[y.mat] || 0) + y.n; return true; }
   if (!NOSHORE) tendMine(hour);
   const open = Mine.seams(save).filter(x => x.open && x.level <= Mine.level(save) && !Mine.isFallen(save, x.gallery)).sort((a, b) => seamWorth(b, hour) - seamWorth(a, hour));
-  if (open[0] && Mine.isFlooded(save, open[0].gallery, t)) { shafts.wet++; if (save.coins > 1000) { const r = Mine.pump(save, open[0].gallery, t); if (r.ok) { shafts.pumped++; shafts.coins += r.cost; } } }
+  if (open[0] && Mine.isFlooded(save, open[0].gallery, t) && Mine.iced(save)) {   // up in the snow (milestone 54): coal bought for the fire
+    shafts.wet++; const k = Mine.fireCoal(open[0].gallery) - (save.mats.coal || 0); if (save.coins > 1000 && k > 0) Sh.buy(save, 'coal', k, hour);
+    const r = Mine.pump(save, open[0].gallery, t); if (r.ok) { shafts.pumped++; shafts.coal = (shafts.coal || 0) + r.coal; }
+  } else if (open[0] && Mine.isFlooded(save, open[0].gallery, t)) { shafts.wet++; if (save.coins > 1000) { const r = Mine.pump(save, open[0].gallery, t); if (r.ok) { shafts.pumped++; shafts.coins += r.cost; } } }
   const seam = open.find(x => Mine.canDig(save, x.i, t).ok);
   if (!seam) return false;
   const y = work(Mine.digOf(save), [seam.i]); dug++;
@@ -367,7 +370,7 @@ function fillOrder() {
   // on the trail, a Relic whose Mythic isn't made yet is kept for it, not sold to a regular's order
   // from the back room, or off the shelf (milestone 35: a player takes the piece down for an order; the bot had looked only in the back)
   if (o.mythic) return;   // the Court's offer for one of the Nine: kept, as before
-  const c = save.cards.filter(x => !x.sample && !x.keep && Sh.fills(o, x) && !(CHASE && x.tier === 'relic' && Rg.relicRegion(x.relic) === Rg.regionId(save) && !(save.mythicsMade || []).some(id => MYTHICS[id].relic === x.relic))).sort((a, b) => a.worth - b.worth)[0];
+  const c = save.cards.filter(x => !x.sample && !x.keep && Sh.fills(o, x) && !(CHASE && x.tier === 'relic' && Rg.relicsIn(Rg.regionId(save)).includes(x.relic) && !(save.mythicsMade || []).some(id => MYTHICS[id].relic === x.relic))).sort((a, b) => a.worth - b.worth)[0];
   if (c) toBack(c);
   if (c && Sh.deliver(save, c.id, t)) { orders++; if (o.story) stories++; }
 }
@@ -458,7 +461,7 @@ function spend(hour) {
 console.log('day  coins  earned  made sold  slots  staff  maker renown  room  (session ' + SESSION_MIN + ' min a day, then a night away)');
 // an heir over the pass (FROM with REGION): the bot can't try things at a station, so it finds the coast's own patterns as a player
 // trying with the clues might, one every FINDGAP days (3) from the first (milestone 42)
-const FINDGAP = +process.env.FINDGAP || 3, toFindHere = process.env.FROM && !Rg.isReach(save) ? Object.keys(PATTERNS).filter(id => PATTERNS[id].coast && !Sh.knows(save, id)) : [];
+const FINDGAP = +process.env.FINDGAP || 3, toFindHere = process.env.FROM && !Rg.isReach(save) ? Object.keys(PATTERNS).filter(id => Rg.homeOf(PATTERNS[id]) === Rg.regionId(save) && !Sh.knows(save, id)) : [];
 for (let d = 1; d <= days; d++) {
   const start = save.earned || 0;
   if (toFindHere.length && d % FINDGAP === 0) { const id = toFindHere.shift(); save.book = save.book || { found: [], tries: [], clues: [] }; save.book.found = (save.book.found || []).concat(id); note('FOUND: ' + id); }

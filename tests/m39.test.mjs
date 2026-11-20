@@ -37,7 +37,7 @@ test('a save with no region is in the Reach, reading the very same tables as bef
 });
 
 test('Saltby sells everything the Reach does, and the coast\'s own things; what comes over the pass is dearer', () => {
-  for (const id of Object.keys(MATS).filter(k => !MATS[k].relic && !MATS[k].ore && !MATS[k].below)) {   // (an ore is sold by no one: milestone 45; old bone, milestone 52)
+  for (const id of Object.keys(MATS).filter(k => !MATS[k].relic && !MATS[k].ore && !MATS[k].below && !MATS[k].north)) {   // (an ore is sold by no one: milestone 45; old bone, milestone 52; the High Snow's, milestone 54)
     if (MATS[id].coast) { assert.ok(sold(coast(), id) && !sold(shop(), id), id + ': the coast\'s, sold only there'); continue; }
     if (sold(shop(), id)) assert.ok(sold(coast(), id), id + ' is sold on the coast too');
   }
@@ -54,9 +54,9 @@ test('the coast\'s materials fit the patterns there, last in each part, so no pi
   for (const id of Object.keys(PATTERNS)) {
     const all = R.partOptions(id), here = R.partOptions(id, shop()), there = R.partOptions(id, coast());
     all.forEach((g, i) => {
-      g.opts.forEach((o, k) => { const m = o.mat || o.id; if (MATS[m] && MATS[m].coast) { placed.add(m); assert.ok(g.opts.slice(k).every(x => MATS[x.mat || x.id] && MATS[x.mat || x.id].coast), id + ': ' + m + ' comes last'); } });
+      g.opts.forEach((o, k) => { const m = o.mat || o.id; if (MATS[m] && MATS[m].coast) { placed.add(m); assert.ok(g.opts.slice(k).every(x => MATS[x.mat || x.id] && (MATS[x.mat || x.id].coast || MATS[x.mat || x.id].north)), id + ': ' + m + ' comes last (but the High Snow\'s, milestone 54)'); } });
       assert.deepEqual(here[i].opts, g.opts.slice(0, here[i].opts.length), id + ': the Reach\'s are the first');
-      assert.ok(!here[i].opts.some(o => (MATS[o.mat || o.id] || {}).coast), id); assert.equal(there[i].opts.length, g.opts.length, id + ': all of them on the coast');
+      assert.ok(!here[i].opts.some(o => (MATS[o.mat || o.id] || {}).coast), id); assert.equal(there[i].opts.length, g.opts.filter(o => !(MATS[o.mat || o.id] || {}).north).length, id + ': all of them on the coast (but the High Snow\'s)');
     });
   }
   for (const m of ['brass', 'sealskin', 'whalebone', 'sailcloth', 'kelpash', 'ambergris', 'pearl', 'coral', 'drownedsilver']) assert.ok(placed.has(m), m + ' fits a part');

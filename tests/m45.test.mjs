@@ -92,7 +92,7 @@ test('where things come from: ore is dug; a bar can be smelted, after the seller
   assert.match(Src.sourcesOf('calamine', shop({ region: 'greyshore' }))[0].word, /Wheal Isel/);
   const iron = Src.sourcesOf('iron').map(x => x.kind); assert.equal(iron[0], 'sold'); assert.ok(iron.includes('smelted'));
   assert.ok(Src.sourcesOf('clearsand').some(x => x.kind === 'dug')); assert.ok(Src.sourcesOf('gem').some(x => x.kind === 'dug'));
-  for (const m of Src.neededMats()) assert.ok(Src.sourcesOf(m).length, m);
+  for (const m of Src.neededMats()) assert.ok(Src.sourcesOf(m, MATS[m].north ? shop({ region: 'north' }) : undefined).length, m);   // (milestone 54: the High Snow's, up there)
 });
 
 test('the patterns: the mine\'s make no piece, are wanted by no one, and aren\'t handed on yet', () => {

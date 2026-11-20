@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, WORKS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS, LUCK, MARKS, WAKE, GROWN, GEAR } from './data.js?v=80';
-import * as Rg from './region.js?v=80';
+import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, WORKS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS, LUCK, MARKS, WAKE, GROWN, GEAR } from './data.js?v=81';
+import * as Rg from './region.js?v=81';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -42,8 +42,14 @@ export function partOptions(patternId, save) {
     : { part: p.part, opts: p.opts });
   if (!save) return all;
   // (milestone 45: a coastal ore is sold nowhere: it's the coast's, so it's offered there and left off in the Reach)
-  const rg = Rg.regionId(save), away = o => { const m = o.mat || o.id; return MATS[m] && MATS[m].coast && (MATS[m].ore ? rg === Rg.REACH : !Rg.soldIn(rg, m)) && !((save.mats || {})[m] > 0); };
-  return all.map(g => { let n = g.opts.length; while (n > 1 && away(g.opts[n - 1])) n--; return n === g.opts.length ? g : { ...g, opts: g.opts.slice(0, n) }; });
+  // (milestone 54: the High Snow's come after the coast's; up in the snow the coast's sit between, so they're kept, marked away, and
+  // the screen leaves them out: the picks after them don't move)
+  const rg = Rg.regionId(save), away = o => { const m = o.mat || o.id, h = Rg.matHome(m); return MATS[m] && h !== Rg.REACH && (MATS[m].ore ? rg !== h : !Rg.soldIn(rg, m)) && !((save.mats || {})[m] > 0); };
+  return all.map(g => {
+    let n = g.opts.length; while (n > 1 && away(g.opts[n - 1])) n--;
+    const mid = g.opts.slice(0, n).some(away);
+    return n === g.opts.length && !mid ? g : { ...g, opts: g.opts.slice(0, n).map(o => mid && away(o) ? { ...o, away: true } : o) };
+  });
 }
 export function chosenParts(patternId, picks) {
   return partOptions(patternId).map((p, i) => p.opts[(picks && picks[i]) || 0] || p.opts[0]);

@@ -291,16 +291,20 @@ export const WORKS = { face: FACE };
 //     (every tides days, for two). A flood drains in drainH hours, or it's pumped out for pump c a gallery.
 //   pocket: a Rare haul from the deep galleries breaks into a pocket: old coin, an old piece, and (from the old workings) now and then
 //     a blueprint still to be found
-export const MINE = { rung: 2, dig: { reach: 'dig', greyshore: 'wheal' },
+export const MINE = { rung: 2, dig: { reach: 'dig', greyshore: 'wheal', north: 'delving' },
   galleries: [null, { name: 'The old working' }, { name: 'The second level', level: 3, coins: 300, mats: { oak: 4 } },
     { name: 'The darkclay seam', level: 5, rung: 3, coins: 1200, mats: { oak: 8 }, deep: true },
     { name: 'The old workings', level: 6, rung: 4, coins: 3000, mats: { oak: 12 }, deep: true },
     // milestone 48: the bottom. It breaks through into the deep below the doors (on the coast, into the drowned town from below)
     { name: 'The bottom', level: 7, rung: 5, coins: 8000, mats: { oak: 16 }, deep: true, bottom: true }],
-  gname: { greyshore: [null, 'The old working', 'The second level', 'Under the harbour', 'The drowned level', 'Under the drowned town'] },
-  names: { reach: 'Veric\'s old workings', greyshore: 'Wheal Isel' },
+  gname: { greyshore: [null, 'The old working', 'The second level', 'Under the harbour', 'The drowned level', 'Under the drowned town'],
+    north: [null, 'The iron gallery', 'The soapstone level', 'The frozen level', 'The frost-iron vein', 'Into the lost halls'] },
+  names: { reach: 'Veric\'s old workings', greyshore: 'Wheal Isel', north: 'Aud\'s Delving' },
   shore: { per: 4, perFall: 3, worn: 30, fall: 0.5, oak: [0, 2, 3, 5, 6, 8], clear: [0, 40, 80, 250, 500, 1000] },
   water: { deep: 3, rain: 0.18, tides: 15, drainH: 36, pump: [0, 0, 0, 60, 120, 200] },
+  // the High Snow's (milestone 54): the deep galleries freeze over on a hard night (frost: a day's odds) instead of flooding; the ice
+  // goes of itself in thawH hours, or a fire set in the gallery clears it, for coal (coal: a gallery's), not for coin
+  ice: { frost: 0.18, thawH: 60, coal: [0, 0, 0, 6, 10, 16] },
   pocket: { from: 3, odds: 0.5, coins: [30, 90], piece: 0.5, blueprint: 0.12 },
   // milestone 48. bottom: a working of your own at the bottom's face turns up a relic material `relic` of the time (a miner's never
   // does: they don't know it for what it is), and never twice within gapD days. line: the heir keeps the galleries, their shoring gone old (s left of 100)
@@ -335,6 +339,8 @@ export const METALS = {
   // the Greyshore's (milestone 39): brass at the forge, sealskin at the stretcher
   brass: { name: 'Brass', strip: [11, 2, 3, 4], widen: 1.2, line: 'bright and forgiving: a wide band, and salt won\'t touch it', dmg: .95, val: 1.2, tint: '#d4b04a', level: 2 },
   sealskin: { name: 'Sealskin', adj: 'Sealskin', strip: [10, 3, 4, 3], widen: 1.1, line: 'oily and supple: a kinder band, and it sheds the wet', dmg: 1.05, val: 1.2, tint: '#5a5850', level: 2 },
+  // the High Snow's (milestone 54): elk hide at the stretcher
+  elkhide: { name: 'Elk hide', adj: 'Elkskin', strip: [10, 3, 4, 3], widen: 1.05, line: 'thick and warm: a little kinder, and it keeps the cold out', dmg: 1.05, val: 1.15, tint: '#8a6a4a', level: 2 },
   // THE MINE (milestone 45, docs/MINE-PLAN.md). The seams worked at the face: each sets the strip as a metal does. ore: what comes up;
   // gallery: the gallery it's in (1 with the trapdoor, 2 opened later); gem: a Rare haul brings a rough gem too
   seam_iron: { name: 'Ironstone seam', adj: 'Ironstone', strip: [10, 3, 4, 3], line: 'the baseline: red rock with the iron in it', tint: '#9a5a44', level: 1, ore: 'ironstone', gallery: 1 },
@@ -360,6 +366,17 @@ export const METALS = {
   seam_drowned: { name: 'Drowned silver', adj: 'Drowned silver', strip: [7, 5, 6, 2], widen: .8, line: 'silver gone black under the sea: it comes up ready, a lump or two', tint: '#5a6a78', level: 6, ore: 'drownedsilver', gallery: 4, n: [1, 2, 3] },
   seam_iselstar: { name: 'Fallen star', adj: 'Starmetal', strip: [6, 6, 7, 1], widen: .7, line: 'a star that fell into the sea before the town: the narrowest band in the mine', tint: '#b8c8e8', level: 6, ore: 'starmetal', gallery: 4, n: [1, 1, 2] },
   seam_drownedtown: { name: 'The drowned town\'s floor', adj: 'Drowned', strip: [7, 5, 6, 2], widen: .8, line: 'under the drowned town\'s streets, its silver: and now and then something older in it', tint: '#4a5a6a', level: 7, ore: 'drownedsilver', gallery: 5, n: [2, 3, 4] },
+  // the hold's mine under Hearthold (milestone 54): the old halls' upper workings. Iron and coal near the top, soapstone and silver
+  // below, frost iron deep, and at the bottom it breaks through into the lost halls
+  seam_holdiron: { name: 'Ironstone seam', adj: 'Ironstone', strip: [10, 3, 4, 3], line: 'the baseline: the hold was cut for its iron', tint: '#9a5a44', level: 1, ore: 'ironstone', gallery: 1 },
+  seam_coal: { name: 'Coal seam', adj: 'Coal', strip: [11, 2, 2, 5], widen: 1.15, line: 'soft black rock: a wider band; coal for the fires that clear the ice', tint: '#2a2a2e', level: 1, ore: 'coal', gallery: 1 },
+  seam_soapstone: { name: 'Soapstone bed', adj: 'Soapstone', strip: [11, 2, 3, 4], widen: 1.1, line: 'soft grey stone that cuts like cheese: a kinder band; soapstone for the glass', tint: '#9aa09a', level: 3, ore: 'soapstone', gallery: 2 },
+  seam_holdsilver: { name: 'Silver vein', adj: 'Silver', strip: [7, 5, 6, 2], widen: .85, line: 'a narrow vein in the cold rock: more GREATs and more falls; a Rare haul brings a rough gem', tint: '#dfe4ea', level: 3, ore: 'silverore', gallery: 2, gem: true },
+  seam_holddark: { name: 'Darkclay vein', adj: 'Darkclay', strip: [7, 6, 6, 1], widen: .7, line: 'Veric\'s darkclay, run north under the snow: it smelts to darkclay steel', tint: '#8a6a78', level: 5, ore: 'darkclayore', gallery: 3, n: [2, 3, 5] },
+  seam_holdcobalt: { name: 'Cobalt bed', adj: 'Cobalt', strip: [10, 3, 4, 3], line: 'blue earth under the ice, for the glass', tint: '#3a5aa8', level: 5, ore: 'cobalt', gallery: 3 },
+  seam_frost: { name: 'Frost iron', adj: 'Frost iron', strip: [7, 5, 6, 2], widen: .8, line: 'iron the ice has held a thousand years: it comes up ready, a lump or two', tint: '#a8c8d8', level: 6, ore: 'frostiron', gallery: 4, n: [1, 2, 3] },
+  seam_holdstar: { name: 'Fallen star', adj: 'Starmetal', strip: [6, 6, 7, 1], widen: .7, line: 'a star that fell on the mountain before the hold: the narrowest band in the mine', tint: '#b8c8e8', level: 6, ore: 'starmetal', gallery: 4, n: [1, 1, 2] },
+  seam_losthalls: { name: 'The lost halls\' floor', adj: 'Frost iron', strip: [7, 5, 6, 2], widen: .8, line: 'under the lost halls\' floor, their frost iron: and now and then something older in it', tint: '#7a98a8', level: 7, ore: 'frostiron', gallery: 5, n: [2, 3, 4] },
   // the ores, smelted at the forge (bar: what they come out as)
   ironstone: { name: 'Ironstone', adj: 'Iron', strip: [10, 3, 4, 3], line: 'the baseline: it smelts to iron bars', tint: '#9a5a44', level: 1, bar: 'iron' },
   tinstone: { name: 'Tinstone', adj: 'Bronze', strip: [11, 2, 2, 5], widen: 1.15, line: 'forgiving: it smelts to bronze', tint: '#c99a5a', level: 1, bar: 'bronze' },
@@ -370,18 +387,18 @@ export const METALS = {
 const BLADE_METALS = ['iron', 'bronze', 'steel', 'silver', 'darkclay'];
 const HIDES = ['deer', 'goat', 'sharkhide'];
 // what a part offers: the above, and the Greyshore's last (milestone 39); tries keep to the above
-const FORGE_METALS = BLADE_METALS.concat('brass'), HIDES_ALL = HIDES.concat('sealskin');
+const FORGE_METALS = BLADE_METALS.concat('brass'), HIDES_ALL = HIDES.concat('sealskin', 'elkhide');   // (and the High Snow's after, milestone 54)
 const WOODS = ['yew', 'birch', 'oak', 'oldyew'];
 const HERBS = ['mending', 'sleepmoss', 'emberroot', 'ghostcap'];
 const SANDS = ['clearsand', 'riversand', 'blacksand', 'seasand'];
-const FLUX = [{ name: 'Potash', mat: 'potash' }, { name: 'Lime', mat: 'lime' }, { name: 'Kelp ash', mat: 'kelpash' }];
-const COLOUR = [{ name: 'Clear' }, { name: 'Cobalt', mat: 'cobalt', val: 1.2 }, { name: 'Starglass', mat: 'starglass', rare: true }, { name: 'Red coral', mat: 'coral', rare: true }];
+const FLUX = [{ name: 'Potash', mat: 'potash' }, { name: 'Lime', mat: 'lime' }, { name: 'Kelp ash', mat: 'kelpash' }, { name: 'Soapstone', mat: 'soapstone' }];
+const COLOUR = [{ name: 'Clear' }, { name: 'Cobalt', mat: 'cobalt', val: 1.2 }, { name: 'Starglass', mat: 'starglass', rare: true }, { name: 'Red coral', mat: 'coral', rare: true }, { name: 'Glacier glass', mat: 'glacierglass', rare: true }];
 const glassAffixes = ['moonlit', 'spiritsighted', 'startouched', 'learned', 'coinsense', 'hallowed'];
 const WATER = [{ name: 'Well water' }, { name: 'Spring water', mat: 'springwater', val: 1.05 }, { name: 'Moonwell water', mat: 'moonwater', rare: true }];
-const BINDER = [{ name: 'Honey', mat: 'honey' }, { name: 'Beeswax', mat: 'wax' }, { name: 'Tallow', mat: 'tallow' }, { name: 'Ambergris', mat: 'ambergris', rare: true }];
+const BINDER = [{ name: 'Honey', mat: 'honey' }, { name: 'Beeswax', mat: 'wax' }, { name: 'Tallow', mat: 'tallow' }, { name: 'Ambergris', mat: 'ambergris', rare: true }, { name: 'Bear fat', mat: 'bearfat' }, { name: 'Ice-amber', mat: 'iceamber', rare: true }];
 const brewAffixes = ['learned', 'startouched', 'warmlined', 'weatherproof', 'graveward', 'steady', 'quiet'];
 const STRINGS = [{ name: 'Gut', mat: 'gut' }, { name: 'Silk', mat: 'silk', val: 1.1 }, { name: 'Wyvern sinew', mat: 'sinew', rare: true }];
-const NOCKS = [{ name: 'Horn', mat: 'horn' }, { name: 'Bone', mat: 'bone' }, { name: 'Starmetal', mat: 'starmetal', rare: true }, { name: 'Whalebone', mat: 'whalebone', val: 1.1 }];
+const NOCKS = [{ name: 'Horn', mat: 'horn' }, { name: 'Bone', mat: 'bone' }, { name: 'Starmetal', mat: 'starmetal', rare: true }, { name: 'Whalebone', mat: 'whalebone', val: 1.1 }, { name: 'Antler', mat: 'antler', val: 1.1 }];
 const bowAffixes = ['strongdrawn', 'quicknocked', 'farflying', 'balanced', 'keen', 'quiet', 'hallowed', 'deepborn'];
 const RARE_LEVEL = 5;   // the trade level that opens a pattern's rare part
 
@@ -389,19 +406,19 @@ const weaponAffixes = ['keen', 'biting', 'balanced', 'parrying', 'crushing', 'st
 const helmAffixes = ['warmlined', 'turning', 'quiet', 'lightstrapped', 'weatherproof', 'graveward', 'unyielding'];
 const ringAffixes = ['coinsense', 'learned', 'startouched', 'moonlit', 'spiritsighted'];
 const wearAffixes = ['warmlined', 'turning', 'quiet', 'lightstrapped', 'weatherproof', 'graveward', 'unyielding', 'steady'];
-const LINING = [{ name: 'Wool', mat: 'wool' }, { name: 'Linen', mat: 'linen', val: 1.05 }, { name: 'Winter fox', mat: 'winterfox', rare: true }, { name: 'Sailcloth', mat: 'sailcloth', val: 1.05 }];
+const LINING = [{ name: 'Wool', mat: 'wool' }, { name: 'Linen', mat: 'linen', val: 1.05 }, { name: 'Winter fox', mat: 'winterfox', rare: true }, { name: 'Sailcloth', mat: 'sailcloth', val: 1.05 }, { name: 'White bear fur', mat: 'whitebear', rare: true }];
 const THREAD = [{ name: 'Gut', mat: 'gut' }, { name: 'Waxed cord', mat: 'cord' }, { name: 'Silver thread', mat: 'silverthread', rare: true }];
 
 // parts[0] takes a metal and sets the strip; the others are named options, a rare one turning a GOOD into a TRUE
 export const PATTERNS = {
   falchion: { name: 'Falchion', trade: 'Falchions', kind: 'SWORD · ONE HAND', art: 'falchion', dice: [1, 8], dmg: [4, 9], speed: 1.4, reach: 1.6, skill: 'SWORDPLAY', value: 80, bars: 3, want: 'weapon',
     parts: [{ part: 'Blade', metals: FORGE_METALS },
-      { part: 'Guard', opts: [{ name: 'Iron', mat: 'iron' }, { name: 'Bronze', mat: 'bronze' }, { name: 'Blackwater iron', mat: 'blackwater', rare: true }, { name: 'Drowned silver', mat: 'drownedsilver', rare: true }] },
+      { part: 'Guard', opts: [{ name: 'Iron', mat: 'iron' }, { name: 'Bronze', mat: 'bronze' }, { name: 'Blackwater iron', mat: 'blackwater', rare: true }, { name: 'Drowned silver', mat: 'drownedsilver', rare: true }, { name: 'Frost iron', mat: 'frostiron', rare: true }] },
       { part: 'Grip', opts: [{ name: 'Leather wrap', mat: 'wrap' }, { name: 'Shark hide', mat: 'sharkhide', val: 1.1 }, { name: 'Cord', mat: 'cord' }] }],
     affixes: weaponAffixes, lore: ['Sound work. It does what a blade does.', 'Sound work, and a little more. It does what a blade does, and it does it first.', 'The curve runs true from guard to point. Folk will ask who made it.', 'Old blood in the steel: it remembers every hand that ever held a sword.'] },
   dagger: { name: 'Dagger', trade: 'Daggers', kind: 'DAGGER · ONE HAND', art: 'dagger', dice: [1, 4], dmg: [1, 4], speed: 2.0, reach: 1.0, skill: 'DAGGERS', value: 24, bars: 1, want: 'weapon',
     parts: [{ part: 'Blade', metals: FORGE_METALS },
-      { part: 'Guard', opts: [{ name: 'None' }, { name: 'Iron', mat: 'iron', val: 1.15 }, { name: 'Blackwater iron', mat: 'blackwater', rare: true }, { name: 'Drowned silver', mat: 'drownedsilver', rare: true }] },
+      { part: 'Guard', opts: [{ name: 'None' }, { name: 'Iron', mat: 'iron', val: 1.15 }, { name: 'Blackwater iron', mat: 'blackwater', rare: true }, { name: 'Drowned silver', mat: 'drownedsilver', rare: true }, { name: 'Frost iron', mat: 'frostiron', rare: true }] },
       { part: 'Grip', opts: [{ name: 'Cord', mat: 'cord' }, { name: 'Leather wrap', mat: 'wrap' }, { name: 'Horn', mat: 'horn', val: 1.1 }] }],
     affixes: weaponAffixes, lore: ['A plain knife for plain work.', 'It sits in the hand as if it grew there.', 'Thin as a reed and twice as patient.', 'It was a knife once. Now it is the knife, and it knows it.'] },
   axe: { name: 'Axe', trade: 'Axe heads', kind: 'AXE · ONE HAND', art: 'axe', dice: [1, 8], dmg: [3, 10], speed: 1.0, reach: 1.5, skill: 'AXEWORK', value: 44, bars: 2, want: 'weapon',
@@ -416,7 +433,7 @@ export const PATTERNS = {
     affixes: helmAffixes, lore: ['It keeps the rain off and most of the rest.', 'Raised true: no seam for a blade to find.', 'The dome rings like a bell when struck, and the wearer stands.', 'Struck once, it sings; struck twice, the striker thinks again.'] },
   ring: { name: 'Ring', trade: 'Rings', kind: 'RING', art: 'ring', value: 20, bars: 1, want: 'ring',
     parts: [{ part: 'Band', metals: ['bronze', 'iron', 'silver', 'darkclay'] },
-      { part: 'Stone', opts: [{ name: 'None' }, { name: 'Rough gem', mat: 'gem', val: 1.6 }, { name: 'Starglass', mat: 'starglass', rare: true }, { name: 'Pearl', mat: 'pearl', rare: true }] },
+      { part: 'Stone', opts: [{ name: 'None' }, { name: 'Rough gem', mat: 'gem', val: 1.6 }, { name: 'Starglass', mat: 'starglass', rare: true }, { name: 'Pearl', mat: 'pearl', rare: true }, { name: 'Ice-amber', mat: 'iceamber', rare: true }] },
       { part: 'Setting', opts: [{ name: 'Plain' }, { name: 'Claw' }] }],
     affixes: ringAffixes, lore: ['A plain band, honestly round.', 'It catches the light and a little luck.', 'Small work is the hardest work. This is small work done right.', 'It fits whoever it chooses, and it does not choose often.'] },
   // the stretcher's
@@ -611,7 +628,7 @@ Object.assign(PATTERNS, {
       asks: ['"A harpoon, if you make them. A barbed head on a whalebone shaft."', '"The whale boats want irons. Whalebone and a good barb, on a line."', '"You don\'t make harpoons? On the coast? A whalebone shaft, a cord line."'],
       board: 'POSTED: The whale boats want harpoons: a barbed iron head on a whalebone shaft, and a line.' } },
   oilskin: { name: 'Oilskin', trade: 'Oilskins', kind: 'OILSKIN · BODY', art: 'oilskin', armour: 2, weight: 2, value: 40, bars: 2, want: 'armour', station: 'stretcher', coast: true,
-    parts: [{ part: 'Hide', metals: HIDES_ALL }, { part: 'Proofing', opts: [{ name: 'Beeswax', mat: 'wax' }, { name: 'Pine tar', mat: 'tar', val: 1.15 }] },
+    parts: [{ part: 'Hide', metals: HIDES_ALL }, { part: 'Proofing', opts: [{ name: 'Beeswax', mat: 'wax' }, { name: 'Pine tar', mat: 'tar', val: 1.15 }, { name: 'Pine pitch', mat: 'pinepitch', val: 1.15 }] },
       { part: 'Thread', opts: [{ name: 'Waxed cord', mat: 'cord' }, { name: 'Gut', mat: 'gut' }, { name: 'Silver thread', mat: 'silverthread', rare: true }] }],
     affixes: wearAffixes, lore: ['The sea runs off it and the wind can\'t find a way in.', 'Proofed true: not a drop through, seam or shoulder.', 'A deck coat: slept in, hauled in, never wet through.', 'They say a skipper wore one like it through the great gale, and came home dry.'],
     hidden: { look: 'SOMETHING TO WEAR · AGAINST THE SEA', gate: { trades: ['cloak', 'jerkin'], level: 3 }, try: { head: ['deer', 'goat'], haft: ['tar'], binding: ['cord'] },
@@ -627,7 +644,7 @@ Object.assign(PATTERNS, {
       board: 'POSTED: The creek fishers want tridents: three forged heads lashed to a yew shaft.' } },
   pitch: { name: 'Pitch-proofing', trade: 'Pitch', kind: 'PITCH · A BATCH', art: 'pitch', potency: 8, value: 20, bars: 2, batch: 3, want: 'brew', station: 'kettle', coast: true,
     parts: [{ part: 'Root', metals: HERBS }, { part: 'Water', opts: [{ name: 'Spring water', mat: 'springwater' }, { name: 'Moonwell water', mat: 'moonwater', rare: true }] },
-      { part: 'Base', opts: [{ name: 'Beeswax', mat: 'wax' }, { name: 'Pine tar', mat: 'tar', val: 1.2 }] }],
+      { part: 'Base', opts: [{ name: 'Beeswax', mat: 'wax' }, { name: 'Pine tar', mat: 'tar', val: 1.2 }, { name: 'Pine pitch', mat: 'pinepitch', val: 1.2 }] }],
     affixes: brewAffixes, lore: ['Brushed on hot, it keeps the wet out of wood and rope and leather.', 'It goes on thin and dries hard.', 'Every boat in the harbour smells of it in spring.', 'A hull pitched with this sailed round the world, and her seams never wept.'],
     hidden: { look: 'FROM THE KETTLE · AGAINST THE WET', gate: { trades: ['oil'], level: 3 }, try: { head: ['emberroot'], haft: ['springwater'], binding: ['tar'] },
       hints: { head: 'a fierce root: emberroot', haft: 'clean spring water', binding: 'pine tar, boiled in' },
@@ -648,6 +665,9 @@ Object.assign(PATTERNS, {
     parts: [{ part: 'Seam', metals: ['seam_iron', 'seam_sand', 'seam_tin', 'seam_silver', 'seam_darkclay', 'seam_cobalt', 'seam_blackwater', 'seam_starmetal', 'seam_bottom'] }], affixes: [], lore: ['', '', '', ''] },
   wheal: { name: 'Digging', trade: 'Mining', kind: 'ORE · FROM THE FACE', art: 'ore', value: 0, bars: 0, station: 'face', mine: true, tradeAs: 'dig', makes: { from: 'ore', n: [4, 6, 8] },
     parts: [{ part: 'Seam', metals: ['seam_wheal', 'seam_blacksand', 'seam_calamine', 'seam_isel', 'seam_seaglass', 'seam_iseldark', 'seam_drowned', 'seam_iselstar', 'seam_drownedtown'] }], affixes: [], lore: ['', '', '', ''] },
+  // the hold's mine (milestone 54)
+  delving: { name: 'Digging', trade: 'Mining', kind: 'ORE · FROM THE FACE', art: 'ore', value: 0, bars: 0, station: 'face', mine: true, tradeAs: 'dig', makes: { from: 'ore', n: [4, 6, 8] },
+    parts: [{ part: 'Seam', metals: ['seam_holdiron', 'seam_coal', 'seam_soapstone', 'seam_holdsilver', 'seam_holddark', 'seam_holdcobalt', 'seam_frost', 'seam_holdstar', 'seam_losthalls'] }], affixes: [], lore: ['', '', '', ''] },
   smelt: { name: 'Smelting', trade: 'Smelting', kind: 'BARS · FROM THE ORE', art: 'ore', value: 0, bars: 3, mine: true, makes: { from: 'bar', n: [4, 5, 6] },
     parts: [{ part: 'Ore', metals: ['ironstone', 'tinstone', 'silverore', 'darkclayore', 'calamine'] }], affixes: [], lore: ['', '', '', ''] },
 });
@@ -855,6 +875,14 @@ export const MATS = {
   // dug at the mine's face (milestone 45), sold by no one: smelted at the forge. ore: true keeps them out of every seller and haul
   ironstone: { name: 'Ironstone', price: 5, ore: true }, tinstone: { name: 'Tinstone', price: 5, ore: true }, silverore: { name: 'Silver ore', price: 18, ore: true },
   calamine: { name: 'Calamine', price: 7, ore: true, coast: true }, darkclayore: { name: 'Darkclay ore', price: 24, ore: true },
+  // the High Snow's (milestone 54, docs/NORTH-PLAN.md): sold up in Hearthold, not in the Reach or on the coast. north: true keeps them
+  // out of the other regions' runner hauls and pedlars; their options come after the coast's in each part, so no old pick moves.
+  // Coal fits no part: it's the fire that clears a frozen gallery in the hold's mine
+  elkhide: { name: 'Elk hide', price: 6, north: true }, bearfat: { name: 'Bear fat', price: 2, north: true },
+  antler: { name: 'Antler', price: 3, north: true }, soapstone: { name: 'Soapstone', price: 2, north: true },
+  pinepitch: { name: 'Pine pitch', price: 2, north: true }, coal: { name: 'Coal', price: 1, north: true },
+  whitebear: { name: 'White bear fur', price: 60, rare: true, north: true }, iceamber: { name: 'Ice-amber', price: 50, rare: true, north: true },
+  frostiron: { name: 'Frost iron', price: 55, rare: true, north: true }, glacierglass: { name: 'Glacier glass', price: 45, rare: true, north: true },
 };
 // pick: how many of its rare lines a pack carries in an hour (0: all of them, always)
 export const SUPPLIERS = [
@@ -1620,5 +1648,126 @@ export const REGIONS = {
       beads: 'POSTED: The fishwives want blue beads against the evil eye: river sand, lime and cobalt.',
       lantern: 'POSTED: The fleet wants ship\'s lanterns: clear glass in a forged frame, a bronze or iron cap.',
     },
+  },
+  // THE HIGH SNOW (milestone 54, docs/NORTH-PLAN.md): Hearthold, a hold cut into the mountain round a hearth that has never gone out.
+  // Hidden: nothing sends a save up here until the climb (milestone 57). Iron is cheap and wood is dear; winter shuts the high road.
+  // Its folk, stories, patterns, Relics and Nine come in milestones 55–57: until then the Reach's stand in, as the coast's did
+  // hidden: left out of what the other regions are told (where a thing is sold or dug) until the climb opens (milestone 57)
+  north: { id: 'north', name: 'the High Snow', town: 'Hearthold', top: 'OF THE SNOW', where: ', up in the snow', hidden: true, kicker: 'THE HOLD AND THE MULE TRACK',
+    line: 'A hold cut into the mountain above the snowline, round a hearth that has never gone out, and the lost halls under the ice.',
+    rescue: '<b>The Hold Stores\' scrap bin.</b> Old Thora leaves you a bar and a cord, enough for a dagger.',
+    suppliers: [
+      { id: 'stores', tab: 'HOLD STORES', name: 'The Hold Stores', kind: 'METAL AND STONE', line: 'It\'s mining country: iron and steel cheap, coal and soapstone; bosses, frames and forged heads, dear.',
+        lines: ['iron', 'bronze', 'steel', 'silver', 'darkclay', 'coal', 'soapstone', 'boss', 'lampframe', 'arrowheads', 'ferrule', 'lath'] },
+      { id: 'furrier', tab: 'FURRIER', name: 'Sigrun\'s Furs', kind: 'HIDES, FUR AND HORN', line: 'Elk hide and bear fat cheap off the hunters; deer and goat, antler, horn and bone, wraps, straps, wool and gut; feathers.',
+        lines: ['elkhide', 'bearfat', 'antler', 'deer', 'goat', 'wrap', 'strap', 'cord', 'gut', 'horn', 'bone', 'wool', 'silk', 'goose', 'raven'] },
+      { id: 'woodcutters', tab: 'WOODCUTTERS', name: 'The Woodcutters\' Hut', kind: 'TIMBER, DEAR', line: 'Few trees grow above the line: ash, rowan, birch and oak carried up from the forest edge, and pine pitch. All of it dear.',
+        lines: ['ash', 'rowan', 'birch', 'oak', 'pinepitch'] },
+      { id: 'meltwater', tab: 'MELTPIT', name: 'The Meltwater Pit', kind: 'SAND AND FLUX', line: 'Sand washed down off the glacier, potash and lime, cobalt for blue.',
+        lines: ['clearsand', 'riversand', 'potash', 'lime', 'cobalt'] },
+      { id: 'herbs', tab: 'HERBS', name: 'Old Gudrun\'s Shelves', kind: 'THE HERBALIST', line: 'Herbs dried under the hold\'s roof, honey, wax, tallow, spring water and bottles.',
+        lines: ['mending', 'sleepmoss', 'emberroot', 'ghostcap', 'springwater', 'honey', 'wax', 'tallow', 'bottle'] },
+      { id: 'carrier', tab: 'THE CARRIER', name: 'The Snow Carrier', kind: 'UP FROM THE REACH', line: 'What the hold doesn\'t have, carried up from the Reach on the mule track: yew, linen, black sand and the rest. Half as dear again.',
+        lines: ['yew', 'oldyew', 'linen', 'blacksand', 'seasand', 'sharkhide', 'heartwood'] },
+      { id: 'factor', tab: 'THE FACTOR', name: 'The Crown\'s Factor', kind: 'RELIC MATERIALS', line: 'For makers the Crown has heard of: two of the relic materials, changing on the hour, very dear.', lines: [],
+        rare: ['heartstone', 'moonsilver', 'wyrmhide', 'ghostyew', 'starcore', 'moonmead'], pick: 2, rung: 5 },
+      { id: 'pack', tab: 'CARAVAN', name: 'The Herders\' Caravan', kind: 'A PEDLAR', line: 'Gems always; rare things from the snow and from further off, two at a time, changing on the hour.', lines: ['gem'],
+        rare: ['whitebear', 'iceamber', 'frostiron', 'glacierglass', 'blackwater', 'bogoak', 'winterfox', 'starglass', 'silverthread', 'sinew', 'starmetal', 'moonwater', 'ambergris', 'pearl'], pick: 2 },
+    ],
+    // iron is cheap in mining country; wood is dear above the line; what comes up from the Reach costs half as much again
+    dear: { iron: 0.8, steel: 0.85, ash: 1.3, rowan: 1.3, birch: 1.3, oak: 1.3, yew: 1.5, oldyew: 1.5, linen: 1.5, blacksand: 1.5, seasand: 1.5, sharkhide: 1.5, heartwood: 1.5 },
+    customers: {
+      folk: { weight: 30, wants: ['dagger', 'ring', 'any', 'dagger', 'boots', 'cloak', 'gloves', 'salve', 'brew', 'armour', 'hood', 'beads', 'sling'],
+        names: ['a herder', 'a goatwife from the high pasture', 'a charcoal burner', 'a boy with his savings', 'a widow from the lower hold', 'a snow-shoveller'] },
+      guard: { weight: 25, wants: ['falchion', 'axe', 'helm', 'weapon', 'spear', 'shield', 'mace', 'dagger', 'jerkin', 'armour', 'cloak', 'lantern', 'oil', 'brew', 'arrows', 'crossbow'],
+        names: ['a man of the hold\'s guard', 'a gate-warden', 'a thane\'s housecarl', 'a pass-watcher'] },
+      traveller: { weight: 20, wants: ['any', 'ring', 'weapon', 'dagger', 'boots', 'cloak', 'armour', 'brew', 'tonic', 'satchel', 'lantern', 'goblet', 'poultice', 'hood'],
+        names: ['a caravan master', 'a messenger up from the Reach', 'a herder down from the summer pasture', 'a drover on the mule track'] },
+      delver: { weight: 15, wants: ['weapon', 'helm', 'lantern', 'warhammer', 'axe', 'any', 'armour', 'boots', 'draught', 'brew', 'satchel', 'poultice', 'shortsword', 'shield', 'lens', 'crossbow', 'gloves', 'lantern'],
+        names: ['a miner off the iron gallery', 'a thaw-picker from the old halls', 'one of the Deep Shift', 'a lamp-carrier back from the ice'] },
+      hunter: { weight: 12, wants: ['spear', 'spear', 'shortbow', 'arrows', 'arrows', 'boots', 'gloves', 'cloak', 'salve', 'satchel', 'sling', 'any', 'crossbow'],
+        names: ['an elk-hunter', 'a trapper off the fell', 'a bear-hunter', 'a snow-fowler'] },
+      factor: { weight: 7, wants: ['ring', 'glass', 'goblet', 'lens', 'mirror', 'lantern', 'ink', 'beads', 'brew', 'any', 'wand'], names: ['a pilgrim to the Hearth', 'a keeper of the Hearth', 'a pilgrim from over the sea'] },
+      collector: { names: ['a collector of maker\'s marks', 'a thane who collects blades'] },
+      steward: { wants: ['any', 'falchion', 'helm', 'ring', 'cloak', 'goblet', 'lens', 'staff', 'jerkin'], names: ['a thane', 'a thane\'s lady', 'the Moot\'s speaker', 'a jarl from the far passes'] },
+    },
+    sellers: [
+      { who: 'Brann of the herders\' caravan', fig: '#8a7a5a', kind: 'mats' },
+      { who: 'a hunter down off the fell', fig: '#6a7a4a', kind: 'mats' },
+      { who: 'a thaw-picker from the old halls', fig: '#9a6a5a', kind: 'piece' },
+      { who: 'a widow from the lower hold', fig: '#a08a6a', kind: 'piece' },
+    ],
+    sellMats: ['iron', 'iron', 'steel', 'bronze', 'wrap', 'elkhide', 'antler', 'bearfat', 'deer', 'silk', 'gem'],
+    sellRare: ['whitebear', 'iceamber', 'frostiron', 'glacierglass'],
+    routes: {
+      yard: { name: 'Up to the high pasture', from: 'the high pasture' },
+      ford: { name: 'The herders\' camps', from: 'the herders\' camps' },
+      reach: { name: 'Up to the glacier', from: 'the glacier' },
+      deep: { name: 'The old halls at the thaw', from: 'the old halls' },
+      below: { name: 'Below the old halls', from: 'below the old halls' },
+      shaft: { name: 'Down through Aud\'s Delving', from: 'under the old halls, by way of Aud\'s Delving' },
+    },
+    commons: ['iron', 'iron', 'iron', 'steel', 'bronze', 'wrap', 'cord', 'elkhide', 'elkhide', 'antler', 'bearfat', 'coal', 'deer', 'goat', 'gut', 'wool', 'strap',
+      'horn', 'bone', 'pinepitch', 'soapstone', 'ash', 'birch', 'goose'],
+    gangs: [['the Pass Wolves', 'up into the high passes'], ['Hrolf Ice-Beard\'s band', 'out along the herders\' road'], ['the Grey Riders', 'over the snowfields'],
+      ['the Thaw-Thieves', 'down into the old halls'], ['the Cairn Crew', 'out past the cairns']],
+    // the frozen dead keep off fire: the hold's guard asks for lanterns, and a runner with a lantern hunts them better (bane: 'light',
+    // as silver does against the grave-wight and the drowned)
+    monsters: {
+      wolves: { name: 'A white bear on the high pasture', lines: ['A herder says a white bear has come down off the glacier.', 'Bear tracks the size of a shield at the edge of the hold: a goat was taken.', 'The bear came down to the hold in the night.'] },
+      wight: { name: 'The frozen dead on the snowfields', lines: ['Lights out on the snowfields where nobody lives, the gate-warden says.', 'A herder came in white-faced: something walked out of the ice at night.', 'The frozen dead came up to the gate in the night.'],
+        order: [{ any: ['lantern'], n: 2, least: 0, word: 'lanterns, for fires on the wall' }, { any: WEAPONS, n: 2, least: 0, word: 'weapons' }] },
+      deep: { name: 'Something out of the old halls', lines: ['The thaw-pickers say the ice in the old halls was groaning.', 'Something big has been heard moving under the hold.', 'It came up out of the old halls in the night.'] },
+    },
+    hunts: {
+      wolves: { mat: 'whitebear', n: 1, trophy: 'The White Bear\'s Pelt', lore: 'White as the glacier and twice the size of the elk it killed. The herders still talk about the winter it came down.' },
+      wight: { bane: 'light', trophy: 'The Frost-King\'s Circlet', lore: 'Black iron, rimed still, off a brow that walked out of the ice. It stopped walking when this came off.' },
+      deep: { trophy: 'A Tusk of the Thing in the Halls', lore: 'Cold still, years after. No blade in the hold would cut it but the one that did.' },
+    },
+    hot: [
+      { id: 'guard', line: 'The thane is arming the hold\'s guard.', patterns: ['helm', 'axe'] },
+      { id: 'raiders', line: 'Raiders in the passes: every herder wants a blade.', patterns: ['falchion', 'dagger', 'spear'] },
+      { id: 'cold', line: 'The cold\'s come early.', patterns: ['cloak', 'hood', 'boots', 'gloves'] },
+      { id: 'elk', line: 'The elk are moving: the hunters are going out.', patterns: ['spear', 'arrows', 'shortbow', 'satchel'] },
+      { id: 'cough', line: 'A winter cough in the lower hold.', patterns: ['draught', 'salve', 'tonic'] },
+      { id: 'deep', line: 'The Deep Shift opens a new gallery.', patterns: ['lantern', 'helm', 'warhammer'] },
+      { id: 'pilgrims', line: 'Pilgrims have come up to the Hearth.', patterns: ['ring', 'goblet', 'beads'] },
+      { id: 'thaw', line: 'The thaw-pickers are going into the old halls.', patterns: ['lantern', 'satchel', 'boots', 'draught'] },
+    ],
+    cold: [
+      { id: 'windows', line: 'Nobody up here wants big windows: the cold comes through.', patterns: ['pane'] },
+      { id: 'strings', line: 'A longbow\'s string snaps in this cold.', patterns: ['longbow'] },
+      { id: 'antler', line: 'Antler-handled knives by the dozen from the herders.', patterns: ['dagger'] },
+      { id: 'armoury', line: 'The thane sold off the old helms from the armoury.', patterns: ['helm'] },
+      { id: 'keepers', line: 'The Hearth\'s keepers are handing out draughts.', patterns: ['draught'] },
+    ],
+    events: [
+      { id: 'return', name: 'The herders come down', line: 'The flocks are in off the high pasture, and the herders have a summer\'s pay.', effect: 'More customers, more folk and hunters.', gap: 0.7, weights: { folk: 2, hunter: 2 } },
+      { id: 'raiders', name: 'Raiders in the passes', line: 'The gate is barred at noon. Fewer come in, and those who do want steel.', effect: 'Half the customers, but they carry a third more.', gap: 1.8, weights: { guard: 3 }, purse: 1.35 },
+      { id: 'hearthfeast', name: 'The Hearth-feast', line: 'The hold eats together round the great hearth, and every hand is open.', effect: 'Every buyer a step keener, purses fuller.', purse: 1.2, keen: true },
+      { id: 'moot', name: 'The Thanes\' Moot', line: 'The thanes ride in from the far holds for the Moot, with their households.', effect: 'Thanes and pilgrims with deep purses.', gap: 0.85, weights: { factor: 3, traveller: 2, steward: 2 }, purse: 1.1 },
+      { id: 'shift', name: 'The Deep Shift comes up', line: 'The miners are up from the deep galleries after a month below, and paid.', effect: 'Guards and miners crowd in, carrying more.', gap: 0.9, weights: { guard: 2, delver: 3 }, purse: 1.15 },
+      // deep winter: snow to the eaves and the high road shut (the coast's gale, the Reach's storm)
+      { id: 'deepwinter', name: 'Deep winter', line: 'Snow to the eaves, and the high road shut. Only the hold\'s own are about.', effect: 'Fewer customers: the high road is shut.', gap: 1.6, weight: 3 },
+    ],
+    seasons: [
+      { id: 'spring', name: 'The thaw', line: 'The ice lets go of the old halls, and the passes open.', patterns: ['boots', 'lantern', 'satchel', 'spear', 'axe'], gap: 1 },
+      { id: 'summer', name: 'Summer', line: 'The herders are up on the high pasture and the caravans come through.', patterns: ['ring', 'goblet', 'dagger', 'draught', 'beads'], gap: 0.9 },
+      { id: 'autumn', name: 'The herders\' return', line: 'The flocks come down, the elk move, and the hold lays in for winter.', patterns: ['spear', 'cloak', 'falchion', 'salve', 'arrows'], gap: 1 },
+      { id: 'winter', name: 'The long dark', line: 'The sun barely clears the peaks. Everyone wants to keep warm.', patterns: ['hood', 'cloak', 'boots', 'gloves', 'tonic', 'salve'], gap: 1.2 },
+    ],
+    gossip: [
+      'A herder swears he saw a light under the glacier, moving.',
+      'The thane\'s hound ate the Moot\'s roast. The Moot is still arguing about it.',
+      'Two miners came to blows over a seat by the hearth. The hearth won: they both got singed.',
+      'They say the old halls\' bells ring when the ice shifts.',
+      'A thaw-picker found a cup with a woman\'s face on it no one can name.',
+      'The goats got into the Hold Stores again. Nobody will say who left the door open.',
+      'Old Gudrun says the winter will be long. Old Gudrun says that every year.',
+      'A pilgrim walked up from the sea to see the Hearth, and turned straight round again.',
+    ],
+    news: { kept: 'The gate-warden\'s been made captain of the guard, they say, for holding the pass.', robbed: 'The Hold Stores were broken into by the same lot that robbed you.',
+      branch: 'They talk of your shop down in the Reach, at the Landing, too.', street: 'the Smiths\' Stair', inn: 'the Hearthside' },
+    rivals: ['Ulla Ironhand of the lower hold', 'the Brekke brothers', 'Old Kettil the armourer', 'a smith from the thane\'s hall', 'a journeyman up from the Reach'],
   },
 };

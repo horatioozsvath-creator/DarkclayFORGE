@@ -1,9 +1,12 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE REGIONS (milestone 39), with no page access: where a save works (save.region; none is the Reach) and the region's own tables.
 // The Reach's are data.js's own tables, so a Reach save plays exactly as before; another region names only what differs (REGIONS).
-import { REGIONS, SUPPLIERS, CUSTOMERS, SELLERS, ROUTES, THIEVES, MONSTERS, TOWN_HOT, TOWN_COLD, TOWN_EVENTS, SEASONS, RENOWN, REACH_RUNG, MATS, PATTERNS, RELICS, MYTHICS } from './data.js?v=80';
+import { REGIONS, SUPPLIERS, CUSTOMERS, SELLERS, ROUTES, THIEVES, MONSTERS, TOWN_HOT, TOWN_COLD, TOWN_EVENTS, SEASONS, RENOWN, REACH_RUNG, MATS, PATTERNS, RELICS, MYTHICS } from './data.js?v=81';
 
-export const REACH = 'reach';
+export const REACH = 'reach', COAST = 'greyshore', NORTH = 'north';
+// where a material or a pattern belongs (milestone 54: a third region): the coast's (coast: true), the High Snow's (north: true), or the Reach's
+export const homeOf = t => (t && t.coast) ? COAST : (t && t.north) ? NORTH : REACH;
+export const matHome = m => homeOf(MATS[m]);
 export const idOf = r => (r && REGIONS[r] ? r : REACH);
 export const regionId = save => idOf(save && save.region);
 export const regionOf = save => REGIONS[regionId(save)];
@@ -38,7 +41,8 @@ export const routesIn = id => idOf(id) === REACH ? ROUTES
 export const routes = save => routesIn(regionId(save));
 export const commons = (save, base) => own(regionId(save), 'commons', base);
 // the rare things a runner can find: the region's own, and not another region's
-export const raresIn = id => once('rares:' + idOf(id), () => Object.keys(MATS).filter(k => MATS[k].rare && (idOf(id) === REACH ? !MATS[k].coast : soldIn(id, k) || !MATS[k].coast)));
+// (milestone 54: another region's rare things only where its pedlar sells them)
+export const raresIn = id => once('rares:' + idOf(id), () => Object.keys(MATS).filter(k => MATS[k].rare && (idOf(id) === REACH ? matHome(k) === REACH : soldIn(id, k) || matHome(k) === REACH)));
 
 // ---------- threats ----------
 export const gangs = save => own(regionId(save), 'gangs', THIEVES.gangs);
@@ -78,14 +82,16 @@ export const lineStories = (save, base) => isReach(save) ? base : once('lines:' 
 export const localGen = save => isReach(save) ? ((save && save.gen) || 1) : 1 + ((save && save.line) || []).filter(r => idOf(r.region) === regionId(save)).length;
 
 // ---------- the patterns (milestone 40): a region's own are found only there (tries, clues, asks, the board); made anywhere ----------
-export const findsHere = (save, id) => { const p = PATTERNS[id]; return !!p && (!p.coast || !isReach(save)); };
+export const findsHere = (save, id) => { const p = PATTERNS[id]; return !!p && (homeOf(p) === REACH || homeOf(p) === regionId(save)); };
 export const boardOf = (save, id) => ((regionOf(save).boards || {})[id]) || PATTERNS[id].hidden.board;
 // the patterns an old piece (a runner's find, a seller's) can be of, here
 export const piecePatterns = save => once('pieces:' + regionId(save), () => Object.keys(PATTERNS).filter(k => !PATTERNS[k].makes && findsHere(save, k)));
 
 // ---------- the Relics (milestone 41): each region has its own; a blueprint travels, so a piece can become another region's ----------
 export const relicRegion = id => idOf(RELICS[id] && RELICS[id].region);
-export const relicsIn = id => once('relics:' + idOf(id), () => Object.keys(RELICS).filter(k => relicRegion(k) === idOf(id)));
+// (milestone 54: a region whose own aren't made yet, the High Snow until milestones 56–57, has the Reach's standing in, as the coast had)
+const orReach = (id, f) => { const l = f(idOf(id)); return l.length ? l : f(REACH); };
+export const relicsIn = id => once('relics:' + idOf(id), () => orReach(id, r => Object.keys(RELICS).filter(k => relicRegion(k) === r)));
 // the Relic a piece of this pattern can become: one whose blueprint is held and not made (this region's first), else this region's own
 export function relicOf(save, pattern) {
   const all = Object.keys(RELICS).filter(k => RELICS[k].pattern === pattern); if (!all.length) return undefined;
@@ -97,7 +103,7 @@ export const bpWhere = (save, source, base) => ((regionOf(save).bpWhere || {})[s
 
 // ---------- the Nine (milestone 42): each region's own legend, its Mythics and its words ----------
 export const mythicRegion = id => idOf(MYTHICS[id] && MYTHICS[id].region);
-export const mythicsIn = id => once('nine:' + idOf(id), () => Object.keys(MYTHICS).filter(k => mythicRegion(k) === idOf(id)));
+export const mythicsIn = id => once('nine:' + idOf(id), () => orReach(id, r => Object.keys(MYTHICS).filter(k => mythicRegion(k) === r)));
 export const nineOf = save => mythicsIn(regionId(save));
 export const legendIn = id => once('legend:' + idOf(id), () => ({ ...REGIONS.reach.legend, ...(REGIONS[idOf(id)].legend || {}) }));
 export const legend = save => legendIn(regionId(save));

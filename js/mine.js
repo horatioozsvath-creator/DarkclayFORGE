@@ -4,12 +4,12 @@
 // Each region has its own mine (the Reach's under the shop, Wheal Isel under Saltby): save.mine.galleries keeps how far down each is.
 // Milestone 46: the deep galleries, the shoring (save.mine.state[region][gallery]: s, the timbers left; fell, the roof's in; pumped,
 // when its water was last pumped out), the water and the pockets.
-import { MINE, PATTERNS, METALS, MATS, RENOWN, RELICS } from './data.js?v=80';
-import { levelOf, partOptions, makePiece } from './rules.js?v=80';
-import { rung } from './growth.js?v=80';
-import { threatsOn } from './bank.js?v=80';
-import * as Rg from './region.js?v=80';
-import * as Who from './who.js?v=80';
+import { MINE, PATTERNS, METALS, MATS, RENOWN, RELICS } from './data.js?v=81';
+import { levelOf, partOptions, makePiece } from './rules.js?v=81';
+import { rung } from './growth.js?v=81';
+import { threatsOn } from './bank.js?v=81';
+import * as Rg from './region.js?v=81';
+import * as Who from './who.js?v=81';
 
 const H = 3600000, D = 24 * H;
 
@@ -106,7 +106,7 @@ export const isWorn = (save, g) => shoring(save, g) <= MINE.shore.worn;
 export function shut(save, g, now) {
   if (!save.mine || g > galleries(save)) return 'its gallery isn\'t open';
   if (isFallen(save, g)) return 'the roof\'s fallen in';
-  if (isFlooded(save, g, now)) return 'it\'s under water';
+  if (isFlooded(save, g, now)) return iced(save) ? 'it\'s iced over' : 'it\'s under water';
   return '';
 }
 // a working at the face done in gallery g: the timbers wear, more for each rockfall (a swing too hot); worn, the roof can come in.
@@ -142,11 +142,16 @@ export function shore(save, g) {
 // ---------- the water (milestone 46): the deep galleries flood after rain in the Reach, at the spring tides on the coast ----------
 // the same days in every shop, as the star falls (a night's rain: the day's odds; the tides: two days in every few)
 const dayRoll = d => { let t = (d * 2654435761) >>> 0; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-export const floodsOn = (region, d) => region === Rg.REACH ? dayRoll(d) < MINE.water.rain : ((d % MINE.water.tides) + MINE.water.tides) % MINE.water.tides < 2;
+// (milestone 54: up in the snow they freeze over on a hard night instead: the hold's own nights, not the Reach's rain)
+export const floodsOn = (region, d) => region === Rg.REACH ? dayRoll(d) < MINE.water.rain : region === Rg.NORTH ? dayRoll(d + 7919) < MINE.ice.frost
+  : ((d % MINE.water.tides) + MINE.water.tides) % MINE.water.tides < 2;
+// the High Snow's mine freezes, and a fire clears it, for coal (milestone 54); the others flood, and a pump clears them, for coin
+export const iced = save => Rg.regionId(save) === Rg.NORTH;
+const lastsH = save => iced(save) ? MINE.ice.thawH : MINE.water.drainH;
 // when the water last came in and is still in (0: it isn't)
 export function floodFrom(save, now) {
-  const w = MINE.water, r = Rg.regionId(save);
-  for (let d = Math.floor(now / D); d * D + w.drainH * H > now; d--) if (floodsOn(r, d)) return d * D;
+  const r = Rg.regionId(save), h = lastsH(save);
+  for (let d = Math.floor(now / D); d * D + h * H > now; d--) if (floodsOn(r, d)) return d * D;
   return 0;
 }
 export function isFlooded(save, g, now) {
@@ -154,10 +159,18 @@ export function isFlooded(save, g, now) {
   const f = floodFrom(save, now); return !!f && stateOf(save, g).pumped < f;
 }
 // when a flooded gallery drains of itself
-export const drainsAt = (save, now) => floodFrom(save, now) + MINE.water.drainH * H;
+export const drainsAt = (save, now) => floodFrom(save, now) + lastsH(save) * H;
 export const pumpCost = g => MINE.water.pump[g] || 0;
+// the coal a fire in a frozen gallery takes (milestone 54)
+export const fireCoal = g => MINE.ice.coal[g] || 0;
+// pump a flooded gallery out (coin), or, up in the snow, set a fire in a frozen one (coal). { ok, cost (coin), coal }
 export function pump(save, g, now) {
-  if (!isFlooded(save, g, now)) return { why: 'it\'s dry' };
+  if (!isFlooded(save, g, now)) return { why: iced(save) ? 'it\'s clear of ice' : 'it\'s dry' };
+  if (iced(save)) {
+    const k = fireCoal(g), have = (save.mats || {}).coal || 0; if (have < k) return { why: k + ' coal' };
+    save.mats.coal = have - k; if (!save.mats.coal) delete save.mats.coal;
+    stateOf(save, g).pumped = now; return { ok: true, cost: 0, coal: k };
+  }
   const c = pumpCost(g); if ((save.coins || 0) < c) return { why: c + ' c' };
   save.coins -= c; stateOf(save, g).pumped = now; return { ok: true, cost: c };
 }

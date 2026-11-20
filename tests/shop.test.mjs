@@ -29,6 +29,8 @@ test('every material is sold somewhere (but relic materials, found only below th
     for (let h = 0; h < 48; h++) if (Sh.sells(id, h)) where.push(h);
     // the Greyshore's are sold on the coast (milestone 39)
     if (MATS[id].coast) { assert.ok(!where.length && Rg.soldIn('greyshore', id), id + ' is sold on the coast, not in the Reach'); continue; }
+    // the High Snow's up in Hearthold (milestone 54)
+    if (MATS[id].north) { assert.ok(!where.length && Rg.soldIn('north', id), id + ' is sold up in the snow, not in the Reach'); continue; }
     assert.ok(where.length > 0, id + ' is sold within two days');
     for (let h = 0; h < 48; h++) { const p = Sh.priceOf(id, h); assert.ok(p >= Math.floor(MATS[id].price * 0.85) && p <= Math.ceil(MATS[id].price * 1.2) + 1, id); }
   }

@@ -1,13 +1,13 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE RUNNER'S GEAR AND THE ROAD'S DANGER, with no page access: pieces you made, carried by the runner (off the shelves while they're
 // carried), potions used up on the road, the chance of harm on the hard roads, and the hunt for a gang. Spared on a gentler Reach.
-import { GEAR, ROUTES, TIERS, MONSTERS } from './data.js?v=80';
-import { rung } from './growth.js?v=80';
-import { threatsOn } from './bank.js?v=80';
-import { levelOf, growBy } from './rules.js?v=80';
-import { roadX, huntKind } from './monsters.js?v=80';
-import * as Rg from './region.js?v=80';
-import * as Who from './who.js?v=80';
+import { GEAR, ROUTES, TIERS, MONSTERS } from './data.js?v=81';
+import { rung } from './growth.js?v=81';
+import { threatsOn } from './bank.js?v=81';
+import { levelOf, growBy } from './rules.js?v=81';
+import { roadX, huntKind } from './monsters.js?v=81';
+import * as Rg from './region.js?v=81';
+import * as Who from './who.js?v=81';
 
 const D = 24 * 3600000;
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
@@ -124,7 +124,9 @@ export function hunt(save, p, rng, now, odds) {
 // the odds of bringing the beast down (milestone 34): the kind's, the weapon, their level, a tonic; silver against the wight
 export function beastOdds(save, p) {
   const h = MONSTERS.hunt, k = huntKind(save); if (!k) return 0;
-  const tonic = potionsOf(p).some(x => x.pattern === 'tonic'), w = gearOf(p).weapon, silver = save.monster.id === 'wight' && w && w.metal === 'silver';
+  // the bane: silver against the grave-wight (and the drowned); against the High Snow's frozen dead, a lantern (bane: 'light', milestone 54)
+  const tonic = potionsOf(p).some(x => x.pattern === 'tonic'), w = gearOf(p).weapon, bane = k.bane || (save.monster.id === 'wight' ? 'silver' : null);
+  const silver = bane === 'silver' ? !!(w && w.metal === 'silver') : bane === 'light' ? !!gearOf(p).light : false;
   return Math.min(h.max, k.odds + h.fight * strength(p).fight + h.level * (levelOf(p.xp || 0).level - 1) + (tonic ? h.tonic : 0) + (silver ? h.silver : 0));
 }
 // what they carry grows (milestone 51): `amount` (a Reach trip's worth) on each grown piece. Returns what grew: [{ who, piece, stage, ... }]

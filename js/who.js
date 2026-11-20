@@ -2,8 +2,8 @@
 // WHO OPENS THE SHOP (milestone 53, docs/CREATOR-PLAN.md), with no page access: the maker's people and look, what they were before,
 // and the kind of shop they open. save.who = { people, look, background }; save.shop = a station's id. A save without them is a
 // forge shop with no gift and no head start, as every save before: every gift below is 1 (or nothing) for it.
-import { PEOPLES, BACKGROUNDS, SHOPS, SIGN, STATIONS, PATTERNS } from './data.js?v=80';
-import { xpToNext } from './rules.js?v=80';
+import { PEOPLES, BACKGROUNDS, SHOPS, SIGN, STATIONS, PATTERNS } from './data.js?v=81';
+import { xpToNext } from './rules.js?v=81';
 
 const levelXp = lvl => { let x = 0; for (let l = 1; l < lvl; l++) x += xpToNext(l); return x; };   // as legacy.js xpFor
 export const shopOf = save => (save && SHOPS[save.shop]) ? save.shop : 'forge';
@@ -21,7 +21,7 @@ export const hurtGift = save => gift(save).hurt || 1;
 export const guardWage = save => (backgroundOf(save) || {}).guard || 1;
 export const mineStart = save => (backgroundOf(save) || {}).mine || 0;
 // a station's first patterns: the ones it has from the start (not found, not the coast's, not the mine's), as the patterns list has them
-export const firstPatterns = st => Object.keys(PATTERNS).filter(id => (PATTERNS[id].station || 'forge') === st && !PATTERNS[id].hidden && !PATTERNS[id].coast && !PATTERNS[id].mine);
+export const firstPatterns = st => Object.keys(PATTERNS).filter(id => (PATTERNS[id].station || 'forge') === st && !PATTERNS[id].hidden && !PATTERNS[id].coast && !PATTERNS[id].north && !PATTERNS[id].mine);
 // what a new shop's customers come in for, while it's new: the sign's (null for a forge shop, which the town knows already)
 export const signWant = (save, rung) => save && SHOPS[save.shop] && save.shop !== 'forge' && rung < SIGN.rung ? SHOPS[save.shop].want : null;
 // is this choice whole: { people, look, background, shop }

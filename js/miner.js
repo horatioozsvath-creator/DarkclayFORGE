@@ -4,14 +4,14 @@
 // open one), Common or Fine, never Rare: slower than your own hand, and no pockets. Their workings wear the gallery's shoring as
 // yours do; a roof that comes in on them, or something out of the old workings (gallery 4), can hurt them, as the road hurts a
 // runner. Armour, a weapon, a lantern and a night guard keep them safer. None of the danger on a gentler Reach or in the week of grace.
-import { MINERS, MATS, GEAR, GROWN } from './data.js?v=80';
-import { levelOf, yieldOf } from './rules.js?v=80';
-import * as Mine from './mine.js?v=80';
-import * as Run from './runner.js?v=80';
-import { rung } from './growth.js?v=80';
-import { threatsOn } from './bank.js?v=80';
-import * as Rg from './region.js?v=80';
-import * as Who from './who.js?v=80';
+import { MINERS, MATS, GEAR, GROWN } from './data.js?v=81';
+import { levelOf, yieldOf } from './rules.js?v=81';
+import * as Mine from './mine.js?v=81';
+import * as Run from './runner.js?v=81';
+import { rung } from './growth.js?v=81';
+import { threatsOn } from './bank.js?v=81';
+import * as Rg from './region.js?v=81';
+import * as Who from './who.js?v=81';
 
 const M = MINERS, D = 24 * 3600000;
 export const minersOf = save => (save.staff || []).filter(p => p.role === 'miner');

@@ -5,13 +5,16 @@ import * as Src from '../js/sources.js';
 import * as R from '../js/rules.js';
 import * as Sh from '../js/shop.js';
 import { MATS, PATTERNS } from '../js/data.js';
+import { matHome } from '../js/region.js';
+// (milestone 54: a material of the High Snow, hidden from the others, is told of up there)
+const at = m => matHome(m) === 'north' ? { region: 'north', mats: {} } : undefined;
 
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
 test('every material any pattern needs has a way to get it', () => {
   const need = Src.neededMats();
   assert.ok(need.includes('arrowheads') && need.includes('ferrule') && need.includes('bottle') && need.includes('moonwater'));
-  for (const m of need) assert.ok(Src.sourcesOf(m).length, m + ' has no source');
+  for (const m of need) assert.ok(Src.sourcesOf(m, at(m)).length, m + ' has no source');
 });
 
 test('arrowheads and a ferrule: forged at once from iron, or bought; bottles: made at the glass, or bought', () => {
