@@ -11,14 +11,22 @@ const xpFor = lvl => { let x = 0; for (let l = 1; l < lvl; l++) x += R.xpToNext(
 const saveWith = (card, level) => ({ cards: [card], shelf: [null, null], slots: 2, wall: [], mats: {}, trades: { [card.pattern]: { xp: xpFor(level) } } });
 const RARE_GUARD = [0, 2, 0];   // a falchion with a blackwater iron guard (✶)
 
-test('Old-Blood is the fourth tier: violet, three affixes, never rolled by a working', () => {
+test('Old-Blood is the fourth tier: violet, three affixes, never rolled by a working (but the blood waking, milestone 50)', () => {
   const t = TIERS[OLD_BLOOD.tier];
   assert.equal(t.id, 'oldblood'); assert.equal(t.affixes, 3); assert.ok(t.mult > TIERS[2].mult && t.worth > TIERS[2].worth);
   const rng = seeded(4);
-  for (let i = 0; i < 3000; i++) {
+  R.setLuck(false);
+  try {
+    for (let i = 0; i < 3000; i++) {
+      const S = R.newWorking({ patternId: 'falchion', picks: RARE_GUARD, level: 10, found: [], kit: { fine: 30 } }, rng);
+      S.shape = 100; S.worked = 200; S.earned = S.whiteHeat = true;
+      assert.ok(R.finish(S, 'quench').tier <= 2);
+    }
+  } finally { R.setLuck(true); }
+  for (let i = 0; i < 3000; i++) {   // with the luck: an Old-Blood piece only as one that woke
     const S = R.newWorking({ patternId: 'falchion', picks: RARE_GUARD, level: 10, found: [], kit: { fine: 30 } }, rng);
     S.shape = 100; S.worked = 200; S.earned = S.whiteHeat = true;
-    assert.ok(R.finish(S, 'quench').tier <= 2);
+    const r = R.finish(S, 'quench'); assert.ok(r.tier <= 2 || (r.tier === OLD_BLOOD.tier && r.woke));
   }
   for (const id of Object.keys(PATTERNS)) assert.equal(PATTERNS[id].lore.length, 4, id + ' has an Old-Blood line');
 });

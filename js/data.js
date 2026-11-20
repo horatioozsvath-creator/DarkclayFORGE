@@ -706,6 +706,9 @@ export const LUCK = { on: true };
 // MARKS: now and then a working's piece comes out with something in the metal no one put there. odds: a working's chance, more for a
 // clean one, less for a cracked one, a little more for each trade over 3. Each kind: its weight among the four, its worth, its gift;
 // words: each station's names for the four (a hide isn't "starfall", it's star-flecked)
+// THE BLOOD WAKES (milestone 50): a Rare roll from a working with WHITE HEAT and no crack, at this trade or more in the pattern,
+// comes out Old-Blood this often, no master's rework needed
+export const WAKE = { odds: 0.05, level: 4 };
 export const MARKS = {
   odds: 1 / 60, clean: 1.5, cracked: 0.5, perTrade: 0.05, least: 0.5,
   order: ['veined', 'starfall', 'ghost', 'ember'],

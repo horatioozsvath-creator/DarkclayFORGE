@@ -1,40 +1,40 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, APPRENTICE, LEGACY, TRAITS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE, MINE , MARKS } from './data.js?v=75';
-import * as R from './rules.js?v=75';
-import * as Sh from './shop.js?v=75';
-import * as St from './staff.js?v=75';
-import * as Rm from './room.js?v=75';
-import * as G from './growth.js?v=75';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=75';
-import * as Snd from './sound.js?v=75';
-import * as CV from './counter.js?v=75';
-import * as Town from './town.js?v=75';
-import * as V from './visit.js?v=75';
-import * as Br from './branch.js?v=75';
-import * as Bank from './bank.js?v=75';
-import * as Wear from './wear.js?v=75';
-import * as Th from './thieves.js?v=75';
-import * as Run from './runner.js?v=75';
-import * as Src from './sources.js?v=75';
-import * as Mon from './monsters.js?v=75';
-import * as Liv from './living.js?v=75';
-import * as Hl from './hall.js?v=75';
-import * as Trail from './trail.js?v=75';
-import * as Rg from './region.js?v=75';
-import * as Disc from './discover.js?v=75';
-import { ICONS, emblem, watch } from './icons.js?v=75';
-import { drawFlyer, flyerBlob } from './flyer.js?v=75';
-import * as Ap from './apprentice.js?v=75';
-import * as Mi from './miner.js?v=75';
-import * as Leg from './legacy.js?v=75';
-import * as Mine from './mine.js?v=75';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=75';
-import { card, ART, markWord } from './card.js?v=75';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=75';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=75';
+import { KINDS, KC, TIERS, APPRENTICE, LEGACY, TRAITS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE, MINE , MARKS } from './data.js?v=76';
+import * as R from './rules.js?v=76';
+import * as Sh from './shop.js?v=76';
+import * as St from './staff.js?v=76';
+import * as Rm from './room.js?v=76';
+import * as G from './growth.js?v=76';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=76';
+import * as Snd from './sound.js?v=76';
+import * as CV from './counter.js?v=76';
+import * as Town from './town.js?v=76';
+import * as V from './visit.js?v=76';
+import * as Br from './branch.js?v=76';
+import * as Bank from './bank.js?v=76';
+import * as Wear from './wear.js?v=76';
+import * as Th from './thieves.js?v=76';
+import * as Run from './runner.js?v=76';
+import * as Src from './sources.js?v=76';
+import * as Mon from './monsters.js?v=76';
+import * as Liv from './living.js?v=76';
+import * as Hl from './hall.js?v=76';
+import * as Trail from './trail.js?v=76';
+import * as Rg from './region.js?v=76';
+import * as Disc from './discover.js?v=76';
+import { ICONS, emblem, watch } from './icons.js?v=76';
+import { drawFlyer, flyerBlob } from './flyer.js?v=76';
+import * as Ap from './apprentice.js?v=76';
+import * as Mi from './miner.js?v=76';
+import * as Leg from './legacy.js?v=76';
+import * as Mine from './mine.js?v=76';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=76';
+import { card, ART, markWord } from './card.js?v=76';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=76';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=76';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 75;
+const VERSION = 76;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayZERO_FORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -563,7 +563,7 @@ let floorShown = null;
 let cvw = null, cvP = null, iso = false, cvSig = '', cvFront = null;
 function counterView() {
   $('cview').hidden = false; $('cvActs').hidden = false; $('floor').hidden = true; $('dioBar').hidden = true;
-  if (!cvP) cvP = import('./counter.js?v=75').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
+  if (!cvP) cvP = import('./counter.js?v=76').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
   else if (cvw) cvw.show(save, Sh.priceAt);
 }
 // a place on the painted wall: its piece (take it down), or empty (hang one from the back room)
@@ -578,7 +578,7 @@ function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   if (!iso) { counterView(); tip('shop', $('cview')); return; }
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=75').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=76').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -2009,7 +2009,7 @@ function finish(how) {
   if (res.earned && !PATTERNS[pat].makes) {
     const two = R.rollAffixes(pat, 2, rng, rw ? R.affixIds(rwCard().affixes) : []);
     $('rDone').hidden = true; $('rPick').hidden = false;
-    $('rPickWhy').textContent = (res.whiteHeat ? 'WHITE HEAT' : 'A TRUE') + ' earned it. It ' + (res.rework ? 'took: now ' : 'came out ') + TIERS[res.tier].name + '.';
+    $('rPickWhy').textContent = (res.whiteHeat ? 'WHITE HEAT' : 'A TRUE') + ' earned it. ' + (res.woke ? 'It came out Rare, and something stirred in the metal.' : 'It ' + (res.rework ? 'took: now ' : 'came out ') + TIERS[res.tier].name + '.');
     $('rPicks').innerHTML = two.map((a, i) => '<button data-i="' + i + '"><b>' + a[0] + '</b>' + a[1] + '</button>').join('');
     $('rPicks').querySelectorAll('button').forEach(b => b.onclick = () => complete(res, two[+b.dataset.i]));
     $('rPicks').querySelector('button').focus({ preventScroll: true }); $('result').scrollTop = 0;
@@ -2027,12 +2027,19 @@ function revealOn(res, piece) {
   $('rCard').classList.add('revealing');
   clearTimeout(revealT);
   if (t >= 2) revealT = setTimeout(() => { if (!revealSkipped) { Snd.play('chime'); $('rCard').classList.add('rv-ring'); } }, 1250);
-  const skip = () => { revealSkipped = true; clearTimeout(revealT); $('rCard').classList.remove('revealing'); $('result').removeEventListener('pointerdown', skip); };
+  // the blood wakes (milestone 50): it lands Rare, holds, and then the frame turns violet
+  let wakeT = 0;
+  const cdEl = $('rCard').querySelector('.cd'), woke = () => { const now = $('rCard').querySelector('.cd'); if (now) now.outerHTML = card(piece); $('rCard').classList.add('rv-woke'); };
+  if (res.woke && cdEl) {
+    cdEl.outerHTML = card({ ...piece, tier: 'rare' });
+    wakeT = setTimeout(() => { if (!revealSkipped) { woke(); Snd.play('level'); } }, 2300);
+  }
+  const skip = () => { revealSkipped = true; clearTimeout(revealT); clearTimeout(wakeT); if (res.woke) woke(); $('rCard').classList.remove('revealing'); $('result').removeEventListener('pointerdown', skip); };
   $('result').addEventListener('pointerdown', skip);
-  setTimeout(() => $('result').removeEventListener('pointerdown', skip), 2200);
+  setTimeout(() => $('result').removeEventListener('pointerdown', skip), res.woke ? 2400 : 2200);
 }
 function complete(res, picked) {
-  $('rCard').classList.remove('revealing', 'rv-ring');
+  $('rCard').classList.remove('revealing', 'rv-ring', 'rv-woke');
   const before = levelFor(pat);
   let piece;
   const yields = res.part ? null : R.yieldOf(pat, res.tier, picks());
@@ -2094,6 +2101,7 @@ function complete(res, picked) {
     delete piece.firstMark;
   }
   if (res.oldBlood && !res.failed) { $('rCard').insertAdjacentHTML('afterbegin', '<div class="oldword">OLD-BLOOD · ' + esc(piece.name.toUpperCase()) + '</div>'); Snd.play('level'); }
+  if (res.woke) { $('rCard').insertAdjacentHTML('afterbegin', '<div class="oldword rv-wake-word">THE BLOOD WOKE · OLD-BLOOD</div>'); bookLine('The blood woke in the fire: ' + piece.name + ', Old-Blood.'); if (!reveal) Snd.play('level'); }
   if (res.mythic && !res.failed) { $('rCard').insertAdjacentHTML('afterbegin', '<div class="oldword" style="color:var(--t-mythic)">ONE OF THE NINE · ' + esc(piece.name.toUpperCase()) + '</div>'); Snd.play('level'); Snd.play('chime'); }
   if (res.relic && !res.failed) { $('rCard').insertAdjacentHTML('afterbegin', '<div class="oldword">A RELIC · ' + esc(piece.name.toUpperCase()) + '</div>'); Snd.play('level'); Snd.play('chime'); }
   const short = { boiled: 'it boiled over', nowhite: 'no WHITE HEAT', dropped: 'it spilled' }[res.masterShort];
@@ -2104,6 +2112,7 @@ function complete(res, picked) {
     : short ? 'Short of a master\'s brew (' + short + '): an ordinary batch. WORKED +' + res.worked + ' % · it had Fine ' + Math.round(res.odds.f) + ' % · Rare ' + Math.round(res.odds.r) + ' %'
     : res.oldBlood ? (res.failed ? (res.dropped ? 'Dropped. ' : 'A crack in the last working. ') + 'It wouldn\'t take Old-Blood: it stays Rare, and the materials are spent.' : 'It took. Rare to Old-Blood: a master\'s piece.')
     : res.rework ? (res.dropped ? 'A second crack after it took. It came out ' + TIERS[res.tier].name + (res.flawed ? ', flawed.' : '.') : 'It took. ' + TIERS[res.from].name + ' to ' + TIERS[res.tier].name + '.')
+    : res.woke ? 'WHITE HEAT, not one crack, and Rare: then the blood woke. Old-Blood, with no master\'s rework. WORKED +' + res.worked + ' % · it had Rare ' + Math.round(res.odds.r) + ' %'
     : res.instant ? 'Made at once at the plain odds: Fine ' + res.odds.f + ' % · Rare ' + res.odds.r + ' %.'
     : res.dropped && p.makes ? 'A second crack after it was made: it came out ' + TIERS[res.tier].name + '.'   // (a haul or a smelt has no flaw: milestone 46)
     : res.dropped ? (res.flawed ? 'A second crack after it was made. It holds together, flawed, and is worth less.' : 'A second crack after it was made dropped it a tier.')
@@ -2307,7 +2316,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=75').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=76').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -2386,7 +2395,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=75').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=76').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }

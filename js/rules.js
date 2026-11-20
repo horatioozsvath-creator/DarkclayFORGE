@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, WORKS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS, LUCK, MARKS } from './data.js?v=75';
-import * as Rg from './region.js?v=75';
+import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, WORKS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS, LUCK, MARKS, WAKE } from './data.js?v=76';
+import * as Rg from './region.js?v=76';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -349,12 +349,15 @@ export function finish(S, how) {
   let tier = roll < o.r ? 2 : roll < o.r + o.f ? 1 : 0, flawed = false;
   if (dropped) { if (tier === 0) flawed = true; else tier--; }
   S.dropped = dropped;
+  // the blood wakes (milestone 50): a Rare with WHITE HEAT and not one crack, now and then, comes out Old-Blood
+  const woke = !instant && canWake(S, tier) && S.rng() < WAKE.odds;
+  if (woke) tier = OLD_BLOOD.tier;
   const earned = !instant && S.earned && tier >= 1;
   // a successful working turns up a found tile: Fine or better and no crack, or WHITE HEAT reached
   const clean = !instant && !dropped && tier >= 1 && (S.cracks === 0 || S.earned);
   const mark = instant || flawed ? null : rollMark(S);   // a mark in the metal (milestone 49)
   return { tier, flawed, dropped, instant, odds: o, worked: instant ? 0 : Math.round(S.worked), strikes: S.strikes, heats: S.heats, cracks: S.cracks,
-    whiteHeat: !instant && S.whiteHeat, earned, clean, frost: !instant && S.frost, mark,
+    whiteHeat: !instant && S.whiteHeat, earned, clean, frost: !instant && S.frost, mark, ...(woke ? { woke: true } : {}),
     masterShort: S.master && !instant ? (dropped ? 'dropped' : S.boils ? 'boiled' : 'nowhite') : undefined };
 }
 
@@ -367,6 +370,10 @@ export function markOdds(S) {
   const M = MARKS, clean = S.cracks === 0 || S.earned;
   return M.odds * (clean ? M.clean : M.cracked) * Math.max(M.least, 1 + M.perTrade * ((S.level || 1) - 3));
 }
+// THE BLOOD WAKES (milestone 50): a working that may wake: a Rare roll, WHITE HEAT and no crack, at trade WAKE.level or more, making a
+// piece (not a bottle-maker's, not the face's, not a brew), with the luck on. Only then are the dice thrown for it.
+export const canWake = (S, tier) => LUCK.on && tier === 2 && !S.dropped && S.cracks === 0 && !!S.whiteHeat && (S.level || 1) >= WAKE.level && !PATTERNS[S.cfg.patternId].makes
+  && stationOf(S.cfg.patternId).id !== 'kettle';   // a brew's Old-Blood is the master's brew's alone (release 15)
 // a working that makes a piece (not a bottle-maker's, not the face's): a mark now and then, or null. Luck off (the sim's LUCK=0): never,
 // and no dice thrown for it
 function rollMark(S) {
@@ -490,6 +497,7 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now, k
     made.push('WORKED +' + worked + ' %', result.strikes + (leather ? ' stitches · ' : wood ? ' bends · ' : brew ? ' stirs · ' : glass ? ' blows · ' : ' strikes · ') + result.heats + (leather ? ' soak' : wood ? ' steaming' : brew ? ' stoking' : glass ? ' gather' : ' heat') + (result.heats > 1 ? 's' : ''),
       result.cracks ? result.cracks + ' crack' + (result.cracks > 1 ? 's' : '') : 'no crack');
     if (result.whiteHeat) made.push('WHITE HEAT');
+    if (result.woke) made.push('woke in the fire');
   }
   if (reworked) made.push('back in the fire' + (reworked > 1 ? ' ×' + reworked : ''));
   made.push(parts.map(o => o.name.toLowerCase()).filter(n => n !== 'none' && n !== 'plain').join(' · '));
@@ -498,7 +506,7 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now, k
     made, lore: p.lore[result.tier], worth, flawed: result.flawed, maker, count: p.batch || undefined,
     src: { picks: (picks || []).slice(), worked, strikes: result.strikes || 0, heats: result.heats || 0, cracks: result.cracks || 0,
       whiteHeat: !!result.whiteHeat, frost: !!result.frost, instant: !!result.instant, reworked },
-    ...(mark ? { mark } : {}), ...(given ? { giftGiven: true } : {}), ...(gilded.length ? { gilded } : {}), ...(flawless ? { flawless: true } : {}) };
+    ...(mark ? { mark } : {}), ...(result.woke ? { woke: true } : {}), ...(given ? { giftGiven: true } : {}), ...(gilded.length ? { gilded } : {}), ...(flawless ? { flawless: true } : {}) };
 }
 
 // How an older piece was made, for one from before cards kept it (milestone 1 and 2): its metal, plain parts, WORKED from its making line.
@@ -538,7 +546,7 @@ export function remakePiece({ card, res, picked, rng, now }) {
   const src = srcOf(card);
   const result = { tier: res.tier, flawed: res.flawed, worked: src.worked + res.worked, strikes: src.strikes + res.strikes, heats: src.heats + res.heats,
     cracks: src.cracks + res.cracks, whiteHeat: src.whiteHeat || res.whiteHeat, frost: src.frost || res.frost, instant: false,
-    mark: card.mark || null, gifted: !!card.giftGiven };   // a mark stays with the piece through every rework; its gift is given once
+    mark: card.mark || null, gifted: !!card.giftGiven, woke: !!card.woke };   // a mark stays with the piece through every rework; its gift is given once
   const piece = makePiece({ patternId: card.pattern, picks: src.picks, result, picked, maker: makerOf(card), rng, now, keep: card.affixes, keepGilded: card.gilded || [], reworked: (src.reworked || 0) + 1 });
   piece.id = card.id; piece.at = card.at;
   return piece;
