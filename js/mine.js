@@ -4,11 +4,11 @@
 // Each region has its own mine (the Reach's under the shop, Wheal Isel under Saltby): save.mine.galleries keeps how far down each is.
 // Milestone 46: the deep galleries, the shoring (save.mine.state[region][gallery]: s, the timbers left; fell, the roof's in; pumped,
 // when its water was last pumped out), the water and the pockets.
-import { MINE, PATTERNS, METALS, MATS, RENOWN, RELICS } from './data.js?v=78';
-import { levelOf, partOptions, makePiece } from './rules.js?v=78';
-import { rung } from './growth.js?v=78';
-import { threatsOn } from './bank.js?v=78';
-import * as Rg from './region.js?v=78';
+import { MINE, PATTERNS, METALS, MATS, RENOWN, RELICS } from './data.js?v=79';
+import { levelOf, partOptions, makePiece } from './rules.js?v=79';
+import { rung } from './growth.js?v=79';
+import { threatsOn } from './bank.js?v=79';
+import * as Rg from './region.js?v=79';
 
 const H = 3600000, D = 24 * H;
 
