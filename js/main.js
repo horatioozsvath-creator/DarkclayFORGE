@@ -1,40 +1,41 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, APPRENTICE, LEGACY, TRAITS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE, MINE , MARKS, GROWN } from './data.js?v=77';
-import * as R from './rules.js?v=77';
-import * as Sh from './shop.js?v=77';
-import * as St from './staff.js?v=77';
-import * as Rm from './room.js?v=77';
-import * as G from './growth.js?v=77';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=77';
-import * as Snd from './sound.js?v=77';
-import * as CV from './counter.js?v=77';
-import * as Town from './town.js?v=77';
-import * as V from './visit.js?v=77';
-import * as Br from './branch.js?v=77';
-import * as Bank from './bank.js?v=77';
-import * as Wear from './wear.js?v=77';
-import * as Th from './thieves.js?v=77';
-import * as Run from './runner.js?v=77';
-import * as Src from './sources.js?v=77';
-import * as Mon from './monsters.js?v=77';
-import * as Liv from './living.js?v=77';
-import * as Hl from './hall.js?v=77';
-import * as Trail from './trail.js?v=77';
-import * as Rg from './region.js?v=77';
-import * as Disc from './discover.js?v=77';
-import { ICONS, emblem, watch } from './icons.js?v=77';
-import { drawFlyer, flyerBlob } from './flyer.js?v=77';
-import * as Ap from './apprentice.js?v=77';
-import * as Mi from './miner.js?v=77';
-import * as Leg from './legacy.js?v=77';
-import * as Mine from './mine.js?v=77';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=77';
-import { card, ART, markWord } from './card.js?v=77';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=77';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=77';
+import { KINDS, KC, TIERS, APPRENTICE, LEGACY, TRAITS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE, MINE , MARKS, GROWN, GROWBED } from './data.js?v=78';
+import * as R from './rules.js?v=78';
+import * as Sh from './shop.js?v=78';
+import * as St from './staff.js?v=78';
+import * as Rm from './room.js?v=78';
+import * as G from './growth.js?v=78';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=78';
+import * as Snd from './sound.js?v=78';
+import * as CV from './counter.js?v=78';
+import * as Town from './town.js?v=78';
+import * as V from './visit.js?v=78';
+import * as Br from './branch.js?v=78';
+import * as Bank from './bank.js?v=78';
+import * as Wear from './wear.js?v=78';
+import * as Th from './thieves.js?v=78';
+import * as Run from './runner.js?v=78';
+import * as Src from './sources.js?v=78';
+import * as Mon from './monsters.js?v=78';
+import * as Liv from './living.js?v=78';
+import * as Hl from './hall.js?v=78';
+import * as Trail from './trail.js?v=78';
+import * as Rg from './region.js?v=78';
+import * as Disc from './discover.js?v=78';
+import { ICONS, emblem, watch } from './icons.js?v=78';
+import { drawFlyer, flyerBlob } from './flyer.js?v=78';
+import * as Ap from './apprentice.js?v=78';
+import * as Mi from './miner.js?v=78';
+import * as Leg from './legacy.js?v=78';
+import * as Mine from './mine.js?v=78';
+import * as Bed from './bed.js?v=78';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=78';
+import { card, ART, markWord } from './card.js?v=78';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=78';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=78';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 77;
+const VERSION = 78;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayZERO_FORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -55,6 +56,7 @@ function catchUpAll(nowMs) {
   const from = save.lastSeen; let a = St.catchUp(save, nowMs, rng);
   if (a) grewOf(a).forEach(e => bookLine(grewWords(e).replace(/<[^>]+>/g, '')));   // grown pieces that reached a stage while you were away (milestone 51)
   if (a && save.branch) a.branch = Br.away(save, from, nowMs, rng, St.awayCap(save));
+  if (a) { a.bedUp = Bed.newlyUp(save, nowMs); a.bedUp.forEach(b => bookLine(bedUpWords(b))); }   // the grow-bed came up while you were away (milestone 52)
   // the night: a gang about may have tried the shop
   const th = Th.night(save, from, nowMs, rng, a ? a.coins : 0);
   Mon.plan(save, from, rng); const mn = Mon.strike(save, nowMs, rng); Mon.tidy(save, nowMs);
@@ -366,6 +368,61 @@ function renderBlueprints() {
 }
 // the trail of the Nine: each Mythic, its shard, where to look
 const SHARD_WHERE = { deep: 'below the deep doors (a runner\'s trip)', court: 'an order from the Court', star: 'the day a star falls on the Reach (IN TOWN), or now and then below the deep doors' };
+// THE GROW-BED (milestone 52): set it up, plant a cutting toward a pattern, tend it each day, lift out what comes up
+let bedNote = '', bedShown = '';
+// what the panel shows, but the time: it's drawn again only when this changes (a pick half made isn't swept away)
+const bedSig = () => JSON.stringify([Bed.bedsOf(save).map(b => b && Bed.stateOf(b, Date.now())).map(s => s && [s.day, s.ready, s.due, s.tended]), Bed.cuttings().map(m => save.mats[m] || 0), Bed.canBuild(save).ok, G.rung(save)]);
+function bedUpWords(b) { const n = PATTERNS[b.pattern].name; return 'The ' + MATS[b.mat].name.toLowerCase() + ' in the bed has come up as ' + (/^[aeiou]/i.test(n) ? 'an ' : 'a ') + n.toLowerCase() + '.'; }   // (a function: the catch-up at load calls it)
+function renderBeds() {
+  const box = $('beds'); if (!box) return;
+  const now = Date.now(), c = Bed.canBuild(save), sec = $('bedSec'); bedShown = bedSig();
+  sec.hidden = !save.growbed && G.rung(save) < GROWBED.rung - 1;   // shown from SOUGHT, a rung before it can be set up
+  if (sec.hidden) return;
+  const buildBtn = more => '<button class="seg' + (c.ok ? ' go' : '') + '" data-bedbuild="1"' + (c.ok ? '' : ' disabled') + '>' + (more ? 'A SECOND BED' : 'SET UP THE GROW-BED') + ' · ' + (more ? GROWBED.more : GROWBED).cost.toLocaleString() + ' c</button>'
+    + (c.why && c.why !== 'not enough coin' ? '<span>Needs ' + esc(c.why) + '.</span>' : '');
+  if (!save.growbed) {
+    box.innerHTML = '<div class="fi"><b>The grow-bed</b><span>A raised bed of black earth by the workshop\'s window. Plant a living cutting toward a pattern, and it grows: ' + GROWBED.days + ' days on the shop\'s clock, open or away. Tend it once a day and it comes up better. What comes up is never quite known: Rare often, a mark far likelier than at the anvil, and every piece from the bed is grown. From FAMED.</span>' + buildBtn(false) + '</div>';
+  } else {
+    const have = Bed.cuttings().filter(m => (save.mats[m] || 0) > 0);
+    box.innerHTML = Bed.bedsOf(save).map((b, i) => {
+      const nm = Bed.cap(save) > 1 ? 'Bed ' + (i + 1) : 'The grow-bed';
+      if (!b) {
+        const opts = have.flatMap(m => Bed.patternsFor(save, m).map(id => '<option value="' + m + ':' + id + '">' + esc(MATS[m].name) + ' (' + save.mats[m] + ') → ' + esc(PATTERNS[id].name.toLowerCase()) + '</option>'));
+        return '<div class="fi bed"><b>' + nm + ' · EMPTY</b>' + (opts.length ? '<span>Choose a cutting, and the pattern to grow it toward.</span><select class="bedpick" data-bedpick="' + i + '">' + opts.join('') + '</select><button class="seg go" data-bedplant="' + i + '">PLANT IT</button>'
+          : '<span>No cutting to plant. Heartwood is sold at Hollin\'s Timber (over the pass on the coast) and turns up on the woods\' roads; old bone, only below the deep doors; red coral, on the coast.</span>') + '</div>';
+      }
+      const st = Bed.stateOf(b, now), what = esc(MATS[b.mat].name) + ', growing toward ' + aOf(PATTERNS[b.pattern].name) + esc(PATTERNS[b.pattern].name.toLowerCase());
+      const leaves = '<span class="bedleaves">' + Array.from({ length: GROWBED.days }, (_, d) => '<i class="' + ((b.tended || []).includes(d) ? 'on' : d < st.day || st.ready ? 'miss' : '') + '"></i>').join('') + '</span>';
+      if (st.ready) return '<div class="fi bed up"><b>' + nm + ' · IT HAS COME UP</b><span>' + what + '. Tended ' + st.tended + ' day' + (st.tended === 1 ? '' : 's') + ' of ' + GROWBED.days + '.</span>' + leaves + '<button class="seg go" data-bedlift="' + i + '">LIFT IT OUT</button></div>';
+      return '<div class="fi bed"><b>' + nm + ' · DAY ' + (st.day + 1) + ' OF ' + GROWBED.days + '</b><span>' + what + '. Comes up in <span data-bedleft="' + (b.at + GROWBED.days * 864e5) + '">' + hm(st.left / 1000) + '</span>. Tended ' + st.tended + ' of ' + GROWBED.days + ' days' + (st.due ? ': it wants tending today.' : ': tended today.') + '</span>' + leaves
+        + (st.due ? '<button class="seg go" data-bedtend="' + i + '">TEND IT · WATER, LIGHT, TURN IT</button>' : '') + '</div>';
+    }).join('') + (Bed.cap(save) < 2 ? (G.rung(save) >= GROWBED.more.rung ? '<div class="fi"><b>A second bed</b><span>Two cuttings growing at once.</span>' + buildBtn(true) + '</div>' : '<div class="fi"><b>A second bed</b><span>From RENOWNED.</span></div>') : '');
+  }
+  $('bedNote').textContent = bedNote;
+  const done = () => { store(save); coins(); renderBeds(); };
+  box.querySelectorAll('[data-bedbuild]').forEach(btn => btn.onclick = () => {
+    const r = Bed.build(save); bedNote = r.ok ? (r.more ? 'A second bed, dug beside the first.' : 'The bed is dug and filled with black earth. Plant a cutting in it.') : 'Not set up: ' + r.why + '.';
+    if (r.ok) { Snd.play('level'); if (dio) dio.setRoom(viewRoom(), save); } done();
+  });
+  box.querySelectorAll('[data-bedplant]').forEach(btn => btn.onclick = () => {
+    const i = +btn.dataset.bedplant, [m, id] = (box.querySelector('[data-bedpick="' + i + '"]').value || '').split(':');
+    const r = Bed.plant(save, i, m, id, Date.now()); bedNote = r.ok ? 'Planted. It comes up in ' + GROWBED.days + ' days; tend it once a day.' : 'Not planted: ' + r.why + '.'; if (r.ok) Snd.play('chime'); done();
+  });
+  box.querySelectorAll('[data-bedtend]').forEach(btn => btn.onclick = () => { const r = Bed.tend(save, +btn.dataset.bedtend, Date.now()); bedNote = r.ok ? 'Watered, the shutter opened to the light, turned on its stake.' : 'Not tended: ' + r.why + '.'; if (r.ok) Snd.play('coin'); done(); });
+  box.querySelectorAll('[data-bedlift]').forEach(btn => btn.onclick = () => { const r = Bed.harvest(save, +btn.dataset.bedlift, rng, Date.now()); if (!r.ok) { bedNote = 'Not yet: ' + r.why + '.'; done(); return; } bedNote = ''; liftReveal(r); done(); });
+}
+// the bed's reveal, the biggest of the four: the earth parts and the piece is lifted out
+function liftReveal(r) {
+  const p = r.card, t = TIERS.find(x => x.id === p.tier), words = [];
+  if (r.woke) words.push('<div class="oldword rv-wake-word">THE BLOOD WOKE IN THE EARTH · OLD-BLOOD</div>');
+  if (r.mark) words.push('<div class="oldword markword" style="color:' + MARKS.kinds[r.mark].c + '">A MARK IN IT · ' + esc(markWord(p).toUpperCase()) + '</div>');
+  words.push('<div class="oldword grownword">GROWN, NOT FORGED · IT GROWS</div>');
+  bookLine('Lifted out of the grow-bed: ' + aOf(p.name) + p.name + ', ' + t.name + (r.mark ? ', ' + markWord(p) : '') + (r.woke ? ', the blood woke' : '') + '; tended ' + r.tended + ' of ' + GROWBED.days + ' days.');
+  openLook('<div class="bedlift"><div class="bedsoil"><i></i><i></i></div><div class="bedrise">' + card(p) + '</div><div class="bedwords">' + words.join('')
+    + '<p>' + esc(t.name) + (r.woke ? ': the blood woke in it' : '') + '. Tended ' + r.tended + ' day' + (r.tended === 1 ? '' : 's') + ' of ' + GROWBED.days + '. It\'s in the back room, and it grows as your staff carry it.</p></div></div>', '', false, p);
+  Snd.play('chime'); if (p.tier !== 'common') setTimeout(() => Snd.play('level'), 900);
+  store(save);
+}
 // THE STATIONS: each one's wear, REPAIR, REBUILD; the dwarven forge
 let stationNote = '';
 function renderStations() {
@@ -532,7 +589,7 @@ function renderTools() {
     return '<div class="fi' + (have ? ' have' : '') + '"><b>' + t.name + '</b><span>' + t.line + '.</span>' + (have ? '' : '<button class="seg" data-tool="' + id + '"' + (c.ok ? '' : ' disabled') + '>BUY · ' + t.cost + ' c</button>' + (c.why && c.why !== 'not enough coin' ? '<span>' + c.why + '</span>' : '')) + '</div>';
   }).join('');
   $('toolNote').textContent = toolNote || 'Tools work on every piece, new or back in the fire.';
-  renderStations(); renderBlueprints(); renderTrail();
+  renderStations(); renderBeds(); renderBlueprints(); renderTrail();
   $('tools').querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { const r = G.buyTool(save, b.dataset.tool); toolNote = r.ok ? 'Bought: ' + TOOLS[b.dataset.tool].name + '.' : 'Not bought: ' + r.why + '.'; if (r.ok) { store(save); coins(); } renderTools(); });
 }
 // a piece to share: the link carries the card itself
@@ -564,7 +621,7 @@ let floorShown = null;
 let cvw = null, cvP = null, iso = false, cvSig = '', cvFront = null;
 function counterView() {
   $('cview').hidden = false; $('cvActs').hidden = false; $('floor').hidden = true; $('dioBar').hidden = true;
-  if (!cvP) cvP = import('./counter.js?v=77').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
+  if (!cvP) cvP = import('./counter.js?v=78').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
   else if (cvw) cvw.show(save, Sh.priceAt);
 }
 // a place on the painted wall: its piece (take it down), or empty (hang one from the back room)
@@ -579,7 +636,7 @@ function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   if (!iso) { counterView(); tip('shop', $('cview')); return; }
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=77').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=78').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -1544,6 +1601,7 @@ function awayHtml(a) {
   if ((a.made || []).length) h += '<p>' + esc(a.apprentice) + ' made <b>' + a.made.length + '</b> piece' + (a.made.length > 1 ? 's' : '') + ' at the bench: ' + esc(listWords(a.made.map(c => c.name))) + '. They\'re in the back.</p>';
   if ((a.dug || []).length) h += dugHtml(a.dug);
   grewOf(a).forEach(e => { h += '<p class="grew">' + grewWords(e) + '</p>'; });
+  (a.bedUp || []).forEach(b => { h += '<p class="grew"><b>The grow-bed has come up.</b> ' + esc(bedUpWords(b)) + ' Lift it out: WORKSHOP › THE GROW-BED.</p>'; });
   if (a.wages) h += '<p>Wages paid: <b>' + a.wages + ' c</b>.</p>';
   if (a.unpaid) h += '<p class="bad">The wages are behind. The clerk works on for the takings; the runner won\'t set out until they\'re paid.</p>';
   if (a.branch && (a.branch.sold.length || a.branch.wages)) h += '<p>At ' + esc(BRANCH.town) + ', ' + esc(BRANCH.keeper) + ' sold <b>' + a.branch.sold.length + '</b> for <b>' + a.branch.coins + ' c</b>' + (a.branch.wages ? ' (wages ' + a.branch.wages + ' c)' : '') + '.</p>';
@@ -2195,7 +2253,7 @@ function fitStage() {
   if (cv.width !== layout.W || cv.height !== layout.H) { cv.width = layout.W; cv.height = layout.H; }
 }
 window.addEventListener('resize', fitStage); new ResizeObserver(fitStage).observe(cv.parentElement); fitStage();
-let lastT = performance.now(), lastStore = 0, dioSig = '', lastQ = 0;
+let lastT = performance.now(), lastStore = 0, dioSig = '', lastQ = 0, bedTick = 0;
 function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
   // the shop's clock: only while this page is in front (a hidden tab gets no frames, so no time passes)
@@ -2218,6 +2276,12 @@ function frame(now) {
   back.forEach(t => { toast('<b>' + esc(t.who) + (t.road && t.road.died ? ' was killed on the road' : ' is back') + '</b><br>' + esc(haulWords(t))); if (t.road && (t.road.died || t.road.hurt)) Snd.play('bell'); if ((t.hunt && t.hunt.won) || (t.beast && t.beast.won)) Snd.play('chime'); });
   grewOf({ trips: back }).forEach(grewToast);
   if (back.length) { store(save); if (screen === 'staff') renderStaff(); }
+  if (save.growbed && nowMs - bedTick > 5000) {   // the grow-bed (milestone 52): what's come up, and the day's tending
+    bedTick = nowMs; const up = Bed.newlyUp(save, nowMs);
+    up.forEach(b => { toast('<b>THE GROW-BED HAS COME UP</b><br>' + esc(bedUpWords(b)) + ' Lift it out in the workshop.'); Snd.play('chime'); bookLine(bedUpWords(b)); });
+    if (up.length) store(save);
+    if (screen === 'home' && tabNow('forge') === 'workshop') { if (bedSig() !== bedShown) renderBeds(); else document.querySelectorAll('#beds [data-bedleft]').forEach(e => { e.textContent = hm(Math.max(0, +e.dataset.bedleft - nowMs) / 1000); }); }
+  }
   save.lastSeen = nowMs;
   if (nowMs - lastStore > 5000) { lastStore = nowMs; store(save); }
   if (nowMs - bankTick > 2000) { bankTick = nowMs; bankWeek(nowMs); Mon.tidy(save, nowMs); const mon = Mon.plan(save, nowMs, rng); if (mon) { store(save); toast('<b>' + esc(Mon.kindOf(mon).name) + '</b><br>' + esc(Mon.kindOf(mon).lines[0]) + ' The Watch has posted an order on the board (THE SHOP › IN TOWN).'); Snd.play('bell'); } monsterNight(Mon.strike(save, nowMs, rng)); const gang = Th.plan(save, nowMs, rng); if (gang) { store(save); toast('<b>A rumour in the lanes</b><br>' + esc(gang.name.replace(/^./, c => c.toUpperCase())) + ' are working the town. Lock up at night (STAFF › THE NIGHT).'); $('tabNight').hidden = false; } }
@@ -2337,7 +2401,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=77').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=78').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -2416,7 +2480,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=77').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=78').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }

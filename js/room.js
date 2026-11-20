@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The shop's two rooms, with no page access: the shop front (counter, shelves, decor; where customers come) and the workshop
 // behind it (the forge, the anvil and every station). A grid each, what stands on it, buying, moving, selling back, growing.
-import { FURNITURE, ROOM_SIZES, WORK_SIZES, HALL_SIZES, HALL, DOOR_Z, WORK_DOOR_X, SHELF_COSTS, SHELF_LEVELS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=77';
-import { wallCharm, hallCharm, heirloomCharm } from './growth.js?v=77';
+import { FURNITURE, ROOM_SIZES, WORK_SIZES, HALL_SIZES, HALL, DOOR_Z, WORK_DOOR_X, SHELF_COSTS, SHELF_LEVELS, MAX_SHELVES, CHARM_MAX, CHARM_STEP, START_SLOTS, STATIONS } from './data.js?v=78';
+import { wallCharm, hallCharm, heirloomCharm } from './growth.js?v=78';
 
 export const SIZES = { shop: ROOM_SIZES, work: WORK_SIZES, hall: HALL_SIZES };
 export const sizeOf = room => SIZES[room.kind || 'shop'][room.size || 0];
@@ -94,7 +94,7 @@ export function valid(room) {
   if (!room.items.every(i => FURNITURE[i.kind] && belongs(room, i.kind))) return false;
   const must = { shop: ['counter'], work: ['forge', 'anvil'], hall: [] }[room.kind || 'shop'];
   for (const k of must) if (room.items.filter(i => i.kind === k).length !== 1) return false;
-  for (const id of Object.keys(STATIONS)) if (room.items.filter(i => i.kind === id).length > 1) return false;
+  for (const id of Object.keys(STATIONS).concat('growbed')) if (room.items.filter(i => i.kind === id).length > 1) return false;
   return room.items.every(i => fits(room, i, i.id));
 }
 // older saves had one room with everything in it: the forge, the anvil and the stations go through to a workshop of their own
@@ -114,7 +114,7 @@ export function fixRoom(save) {
   // once: the starting side shelf stood with its back to the view, hiding its cards; turned round where it was never moved
   if (!save.faced) { const s1 = save.room.items.find(i => i.id === 'shelf-1' && i.x === 5 && i.z === 1 && i.rot === 1); if (s1 && fits(save.room, { ...s1, rot: 3 }, s1.id)) s1.rot = 3; save.faced = 1; }
   save.slots = Math.max(START_SLOTS, placesIn(save.room));
-  const stations = (save.stations || []).filter(id => STATIONS[id]);
+  const stations = (save.stations || []).filter(id => STATIONS[id]).concat(save.growbed ? ['growbed'] : []);   // the grow-bed stands in the workshop too (milestone 52)
   if (!valid(save.workshop) || stations.some(id => !save.workshop.items.some(i => i.kind === id))) {
     // keep what stands where it stands; put back what's missing; if it won't do, lay the workshop out afresh, bigger if need be
     let size = save.workshop && SIZES.work[save.workshop.size] ? save.workshop.size : 0;

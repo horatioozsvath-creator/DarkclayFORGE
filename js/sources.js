@@ -1,12 +1,12 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // WHERE THINGS COME FROM (milestone 30), with no page access: for any material, every way to get it (a seller, a station that makes
 // it, a part forged at once, a runner's roads, the Deep), and when a seller who doesn't have it this hour next will.
-import { MATS, FORGED_PARTS, PATTERNS, STATIONS, REGIONS, MINE } from './data.js?v=77';
-import * as Rg from './region.js?v=77';
-import { linesOf, sells } from './shop.js?v=77';
-import { COMMONS } from './staff.js?v=77';
-import { partOptions } from './rules.js?v=77';
-import { atBottom } from './mine.js?v=77';
+import { MATS, FORGED_PARTS, PATTERNS, STATIONS, REGIONS, MINE, GROWBED } from './data.js?v=78';
+import * as Rg from './region.js?v=78';
+import { linesOf, sells } from './shop.js?v=78';
+import { COMMONS } from './staff.js?v=78';
+import { partOptions } from './rules.js?v=78';
+import { atBottom } from './mine.js?v=78';
 
 // the first gallery a material is dug in, in either mine (milestone 46)
 const gallery = mat => Math.min(...['dig', 'wheal'].flatMap(id => partOptions(id)[0].opts.filter(o => o.ore === mat).map(o => o.gallery)));
@@ -38,6 +38,9 @@ export function sourcesOf(mat, save) {
   else if (m.rare && Rg.raresIn(Rg.regionId(save)).includes(mat)) out.push({ kind: 'runner', roads: roadNames(r => r.rare > 0), word: 'A runner finds it on the longer roads: ' + roadNames(r => r.rare > 0).join(', ') + '.' });
   else if (!m.rare && Rg.commons(save, COMMONS).includes(mat)) out.push({ kind: 'runner', roads: roadNames(r => r.commons[1] > 0), word: 'A runner brings it back from any road.' });
   if (mat === 'gem') out.push({ kind: 'runner', roads: roadNames(r => r.gem), word: 'A runner finds one now and then at ' + roadNames(r => r.gem).join(', ').toLowerCase() + '.' });
+  // a living cutting for the grow-bed (milestone 52): a runner turns them up on these roads, once there's a bed
+  const fd = (GROWBED.finds || {})[mat];
+  if (fd) { const rs = roadNames(r => Object.keys(fd).some(k => Rg.routes(save)[k] === r)); out.push({ kind: 'runner', roads: rs, word: (m.below ? 'Only from below the deep doors: a' : 'A') + ' runner turns one up now and then, once there\'s a grow-bed: ' + rs.join(', ').toLowerCase() + '.' }); }
   return out;
 }
 // hours until someone sells it (0: now), looking two days ahead; null if no seller ever has it

@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, WORKS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS, LUCK, MARKS, WAKE, GROWN, GEAR } from './data.js?v=77';
-import * as Rg from './region.js?v=77';
+import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, WORKS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS, LUCK, MARKS, WAKE, GROWN, GEAR } from './data.js?v=78';
+import * as Rg from './region.js?v=78';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -379,8 +379,12 @@ export const canWake = (S, tier) => LUCK.on && tier === 2 && !S.dropped && S.cra
 // and no dice thrown for it
 function rollMark(S) {
   if (!LUCK.on || PATTERNS[S.cfg.patternId].makes || S.rng() >= markOdds(S)) return null;
+  return markKind(S.rng);
+}
+// which of the four marks, by their weights (one die)
+export function markKind(rng) {
   const k = MARKS.order, tot = k.reduce((a, id) => a + MARKS.kinds[id].weight, 0);
-  let r = S.rng() * tot;
+  let r = rng() * tot;
   for (const id of k) { r -= MARKS.kinds[id].weight; if (r < 0) return id; }
   return k[k.length - 1];
 }

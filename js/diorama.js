@@ -3,10 +3,10 @@
 // in to the counter. Loaded only when the shop is opened. Three.js comes through the page's import map as 'three'.
 import * as THREE from 'three';
 import { GLTFLoader } from '../vendor/three/loaders/GLTFLoader.js';
-import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=77';
-import { ART } from './card.js?v=77';
-import { faceCanvas, CW, CH } from './cardface.js?v=77';
-import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=77';
+import { FURNITURE, DOOR_Z, WORK_DOOR_X, TIERS, SHELF_LEVELS } from './data.js?v=78';
+import { ART } from './card.js?v=78';
+import { faceCanvas, CW, CH } from './cardface.js?v=78';
+import { sizeOf, tilesOf, fpOf, kept, fits } from './room.js?v=78';
 
 const MODELS = 'assets/models/', M = '?m=10';   // bump m when tools/models.sh rebuilds them
 const FIGURES = { folk: 'folk', guard: 'dwarf', traveller: 'carter', delver: 'bard', factor: 'chandler', collector: 'herbalist', marks: 'herbalist', steward: 'chandler', master: 'herbalist', seller: 'carter', maker: 'smith', clerk: 'chandler' };
@@ -28,7 +28,24 @@ function toonBox(w, h, d, hex) { return new THREE.Mesh(new THREE.BoxGeometry(w, 
 
 // ---------- models: loaded once, each placed copy a clone, sat on the floor and centred on its tiles ----------
 const loader = new GLTFLoader(), cache = {};
+// the grow-bed (milestone 52): drawn here from boxes, not a model file: a raised bed of planks on short legs, black earth, three
+// cuttings on their stakes with their leaves
+function growbed() {
+  const g = new THREE.Group(), add = (m, x, y, z) => { m.position.set(x, y, z); g.add(m); return m; };
+  const plank = '#6b4a2c', dark = '#4a3220';
+  for (const [x, z] of [[-0.82, -0.32], [0.82, -0.32], [-0.82, 0.32], [0.82, 0.32]]) add(toonBox(0.1, 0.22, 0.1, dark), x, 0.11, z);
+  add(toonBox(1.8, 0.3, 0.08, plank), 0, 0.37, 0.36); add(toonBox(1.8, 0.3, 0.08, plank), 0, 0.37, -0.36);
+  add(toonBox(0.08, 0.3, 0.8, plank), -0.86, 0.37, 0); add(toonBox(0.08, 0.3, 0.8, plank), 0.86, 0.37, 0);
+  add(toonBox(1.64, 0.06, 0.64, '#2a1c14'), 0, 0.47, 0);
+  for (const x of [-0.5, 0, 0.5]) {
+    add(toonBox(0.03, 0.5, 0.03, '#8a6a44'), x + 0.08, 0.72, -0.05);
+    add(toonBox(0.035, 0.32, 0.035, '#5a7a34'), x, 0.64, 0);
+    for (const [dx, dy, rz] of [[-0.08, 0.72, 0.6], [0.08, 0.66, -0.6], [-0.06, 0.8, 0.4], [0.07, 0.86, -0.5]]) { const l = add(toonBox(0.14, 0.03, 0.08, '#7fbf4a'), x + dx, dy, 0); l.rotation.z = rz; }
+  }
+  return g;
+}
 function model(name) {
+  if (name === 'growbed') return cache[name] || (cache[name] = Promise.resolve(growbed()));
   return cache[name] || (cache[name] = new Promise((ok, no) => loader.load(MODELS + name + '.glb' + M, g => {
     // a painted model keeps its texture, drawn in the same toon bands; the rest take their palette colours
     const re = m => m.map ? new THREE.MeshToonMaterial({ map: m.map, gradientMap: ramp, side: THREE.FrontSide }) : matFor(m.name);

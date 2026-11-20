@@ -1,18 +1,19 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=77';
-import { levelOf, makePiece, partOptions } from './rules.js?v=77';
-import { awayStep } from './shop.js?v=77';
-import { wageMult, capBonus, rung } from './growth.js?v=77';
-import * as Trail from './trail.js?v=77';
-import { TRAIL, MONSTERS, GROWN } from './data.js?v=77';
-import * as Run from './runner.js?v=77';
-import * as Mon from './monsters.js?v=77';
-import * as Ap from './apprentice.js?v=77';
-import * as Rg from './region.js?v=77';
-import * as Mine from './mine.js?v=77';
-import * as Mi from './miner.js?v=77';
+import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=78';
+import { levelOf, makePiece, partOptions } from './rules.js?v=78';
+import { awayStep } from './shop.js?v=78';
+import { wageMult, capBonus, rung } from './growth.js?v=78';
+import * as Trail from './trail.js?v=78';
+import { TRAIL, MONSTERS, GROWN } from './data.js?v=78';
+import * as Run from './runner.js?v=78';
+import * as Mon from './monsters.js?v=78';
+import * as Ap from './apprentice.js?v=78';
+import * as Rg from './region.js?v=78';
+import * as Mine from './mine.js?v=78';
+import * as Bed from './bed.js?v=78';
+import * as Mi from './miner.js?v=78';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -142,6 +143,8 @@ export function haul(save, p, route, rng, now) {
   // weeks without falling (milestone 35)
   const fell = !shard && r.relic && !r.noShard ? Trail.pending(save, 'star') : [];
   if (fell.length && rng() < Trail.starBelowOf(save)) shard = pick(fell, rng);
+  // a living cutting for the grow-bed (milestone 52), once there's a bed: after every other die, so nothing else moves
+  const cut = Bed.roadFind(save, route, rng); if (cut) mats[cut] = (mats[cut] || 0) + 1;
   return { mats, piece, tile, blueprint, shard };
 }
 // trips that have come home by `now`: their hauls put away. Returns what each brought.

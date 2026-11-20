@@ -720,6 +720,23 @@ export const GROWN = { odds: 1 / 150, marked: 2, at: [0, 10, 25, 50], perHour: 1
   names: { weapon: ['Ironbite', 'Thornbite', 'Wolfsong', 'Greywake', 'Rootfang', 'Longtooth'], offhand: ['Oakheart', 'Stillwall', 'Greyward'],
     head: ['Crown of Moss', 'Barkbrow', 'Stillhead'], body: ['Second Skin', 'Barkcoat', 'Mosshide'], hands: ['Rootgrip', 'Greenhand'], feet: ['Longroad', 'Rootstep', 'Mossfoot'],
     ring: ['Little Root', 'Greenband', 'Seedring'], pack: ['Bottomless', 'Hoardbelly'], light: ['Glowroot', 'Stilllight', 'Old Ember'] } };
+// THE GROW-BED (milestone 52): a piece grown, not forged. Set up in the workshop from FAMED (`cost`), a second bed from RENOWNED
+// (`more`). A living cutting is planted toward a pattern it can be the main part of, and comes up `days` days later on the shop's
+// clock, open or away. Tended once each day it comes up better (`tier`: Common, Fine, Rare in a hundred, by the days it was tended);
+// missed, it still comes up. A Rare that was tended every day can wake to Old-Blood (`wake`); a mark is far likelier than at the anvil
+// (`mark`, by the days tended); and every piece from the bed comes up grown (milestone 51). `picks`: the part the cutting stands for
+// on the card (the first of these the pattern takes). `finds`: a runner turns cuttings up on these roads (the luck on, a bed set up).
+export const GROWBED = { cost: 3000, rung: 4, more: { rung: 5, cost: 4000 }, days: 3,
+  tier: [[40, 45, 15], [30, 48, 22], [20, 50, 30], [10, 50, 40]], wake: 0.1, mark: [0.05, 0.065, 0.08, 0.1],
+  cuttings: {
+    heartwood: { patterns: ['staff', 'shortbow', 'longbow', 'crossbow', 'club', 'wand', 'axe', 'spear', 'mace', 'warhammer'], picks: ['oldyew', 'bogoak', 'oak'],
+      line: 'a heartwood cutting grows a stave, a staff or a haft: the bench\'s bows and staves, an axe, a spear, a mace, a war hammer' },
+    oldbone: { patterns: ['dagger', 'shortsword', 'falchion', 'shortbow', 'longbow', 'club'], picks: ['bone', 'horn'],
+      line: 'old bone grows a grip or a bow\'s nocks: a dagger, a shortsword, a falchion, a bow, a studded club' },
+    coral: { patterns: ['trident', 'ring', 'beads'], picks: ['coral'],
+      line: 'red coral grows a trident\'s crown or a ring: a trident, a ring, glass beads' },
+  },
+  finds: { heartwood: { ford: 0.05, reach: 0.12, deep: 0.2 }, oldbone: { below: 0.3, shaft: 0.3 } } };
 export const MARKS = {
   odds: 1 / 60, clean: 1.5, cracked: 0.5, perTrade: 0.05, least: 0.5,
   order: ['veined', 'starfall', 'ghost', 'ember'],
@@ -767,7 +784,7 @@ export const MATS = {
   springwater: { name: 'Spring water', price: 1 }, honey: { name: 'Honey', price: 2 }, wax: { name: 'Beeswax', price: 2 }, tallow: { name: 'Tallow', price: 1 },
   bottle: { name: 'Bottle', price: 4, blown: true }, moonwater: { name: 'Moonwell water', price: 40, rare: true },
   birch: { name: 'Birch stave', price: 7 }, yew: { name: 'Yew stave', price: 8 }, oak: { name: 'Oak stave', price: 12 }, oldyew: { name: 'Old yew stave', price: 35 },
-  bone: { name: 'Bone', price: 2 }, goose: { name: 'Goose feathers', price: 1 }, raven: { name: 'Raven feathers', price: 3 },
+  bone: { name: 'Bone', price: 2 }, heartwood: { name: 'Heartwood cutting', price: 90, cutting: true }, goose: { name: 'Goose feathers', price: 1 }, raven: { name: 'Raven feathers', price: 3 },
   arrowheads: { name: 'Arrowheads', price: 8, forged: true }, ferrule: { name: 'Ferrule', price: 14, forged: true },
   boss: { name: 'Shield boss', price: 12, forged: true }, lath: { name: 'Crossbow lath', price: 14, forged: true }, lampframe: { name: 'Lantern frame', price: 12, forged: true },
   sinew: { name: 'Wyvern sinew', price: 50, rare: true }, starmetal: { name: 'Starmetal', price: 60, rare: true },
@@ -782,6 +799,8 @@ export const MATS = {
   heartstone: { name: 'Heartstone', price: 3000, relic: true }, moonsilver: { name: 'Moonsilver', price: 3500, relic: true },
   wyrmhide: { name: 'Wyrm-hide', price: 3000, relic: true }, ghostyew: { name: 'Ghost-yew', price: 2800, relic: true },
   starcore: { name: 'Starglass core', price: 4000, relic: true }, moonmead: { name: 'Moon-mead', price: 2500, relic: true },
+  // a living cutting for the grow-bed (milestone 52): old bone is found only below the deep doors, never sold
+  oldbone: { name: 'Old bone', price: 80, cutting: true, below: true },
   // the Greyshore's (milestone 39, docs/REGION-PLAN.md): sold on the coast over the pass, not in the Reach. coast: true keeps them out
   // of the Reach's runner hauls and pedlar; their options come last in each part, so no old save's picks move
   sealskin: { name: 'Sealskin', price: 8, coast: true }, brass: { name: 'Brass bar', price: 12, unit: 'bar', coast: true },
@@ -797,7 +816,7 @@ export const MATS = {
 export const SUPPLIERS = [
   { id: 'yard', name: 'Dougal\'s Yard', kind: 'THE SMELTER', line: 'Bars from the smelter, iron to darkclay steel; shield bosses and lantern frames, dear.', lines: ['iron', 'bronze', 'steel', 'silver', 'darkclay', 'boss', 'lampframe'] },
   { id: 'tannery', name: 'The Tannery on the Ford', kind: 'HIDES, HAFTS AND CLOTH', line: 'Wraps, cord, hafts, linings and straps.', lines: ['deer', 'goat', 'sharkhide', 'wrap', 'cord', 'gut', 'horn', 'ash', 'rowan', 'wool', 'linen', 'silk', 'strap'] },
-  { id: 'timber', name: 'Hollin\'s Timber', kind: 'STAVES AND FEATHERS', line: 'Staves seasoned for the bench, feathers, bone; forged heads, ferrules and laths, dear.', lines: ['birch', 'yew', 'oak', 'oldyew', 'bone', 'goose', 'raven', 'arrowheads', 'ferrule', 'lath'] },
+  { id: 'timber', name: 'Hollin\'s Timber', kind: 'STAVES AND FEATHERS', line: 'Staves seasoned for the bench, feathers, bone; forged heads, ferrules and laths, dear; heartwood cuttings for a grow-bed, dearer.', lines: ['birch', 'yew', 'oak', 'oldyew', 'bone', 'goose', 'raven', 'arrowheads', 'ferrule', 'lath', 'heartwood'] },
   { id: 'sandpit', name: 'The Sandpit', kind: 'SAND AND FLUX', line: 'Sands for the glass, potash and lime, cobalt for blue.', lines: ['clearsand', 'riversand', 'blacksand', 'seasand', 'potash', 'lime', 'cobalt'] },
   { id: 'herbs', name: 'Marrow\'s Herbs', kind: 'THE HERBALIST', line: 'Herbs, honey, wax, spring water; bottles too, though the glassworks\' are dearer here.', lines: ['mending', 'sleepmoss', 'emberroot', 'ghostcap', 'springwater', 'honey', 'wax', 'tallow', 'bottle'] },
   // the Crown's factor (milestone 34), from RENOWNED: two of the six relic materials each hour, very dear (the late game's coin sink)
@@ -1182,6 +1201,7 @@ export const FURNITURE = {
   bowbench: { name: 'Bending bench', fp: [2, 1], fixed: true, model: 'bowbench', station: 'bowbench', room: 'work' },
   kettle: { name: 'Kettle', fp: [2, 1], fixed: true, model: 'kettle', station: 'kettle', room: 'work' },
   glass: { name: 'Glass furnace', fp: [2, 2], fixed: true, model: 'glass', station: 'glass', room: 'work' },
+  growbed: { name: 'Grow-bed', fp: [2, 1], fixed: true, model: 'growbed', room: 'work' },   // milestone 52: drawn in diorama.js, not a model file
   shelf: { name: 'Shelf', fp: [2, 1], slots: 2, model: 'cardshelf', room: 'shop', line: 'Two places for pieces to sell.' },
   rug: { name: 'Rug', fp: [2, 2], charm: 2, cost: 180, model: 'rug', line: 'Warm underfoot.' },
   barrels: { name: 'Barrels', fp: [1, 1], charm: 1, cost: 90, model: 'barrels' },
@@ -1342,14 +1362,14 @@ export const REGIONS = {
       { id: 'boatyard', tab: 'BOATYARD', name: 'Kell\'s Boatyard', kind: 'TIMBER', line: 'Staves from the shipwright\'s offcuts: yew, birch and oak, seasoned for a hull.',
         lines: ['yew', 'birch', 'oak'] },
       { id: 'carrier', tab: 'THE CARRIER', name: 'The Pass Carrier', kind: 'OVER THE PASS', line: 'What the coast doesn\'t have, carted over the pass from the Reach: old yew, black sand, darkclay steel, winter fox. Half as dear again.',
-        lines: ['oldyew', 'blacksand', 'darkclay', 'winterfox'] },
+        lines: ['oldyew', 'blacksand', 'darkclay', 'winterfox', 'heartwood'] },
       { id: 'factor', tab: 'THE FACTOR', name: 'The Crown\'s Factor', kind: 'RELIC MATERIALS', line: 'For makers the Crown has heard of: two of the relic materials, changing on the hour, very dear.', lines: [],
         rare: ['heartstone', 'moonsilver', 'wyrmhide', 'ghostyew', 'starcore', 'moonmead'], pick: 2, rung: 5 },
       { id: 'pack', tab: 'SMUGGLER', name: 'Jory Cask\'s Boat', kind: 'A SMUGGLER', line: 'Gems always; rare things, two at a time, changing on the hour, and no questions.', lines: ['gem'],
         rare: ['ambergris', 'pearl', 'coral', 'drownedsilver', 'blackwater', 'bogoak', 'starglass', 'silverthread', 'sinew', 'starmetal', 'moonwater'], pick: 2 },
     ],
     // what comes over the pass costs half as much again
-    dear: { oldyew: 1.5, blacksand: 1.5, darkclay: 1.15, winterfox: 1.5 },
+    dear: { oldyew: 1.5, blacksand: 1.5, darkclay: 1.15, winterfox: 1.5, heartwood: 1.5 },
     customers: {
       folk: { weight: 30, wants: ['dagger', 'ring', 'any', 'dagger', 'armour', 'gloves', 'boots', 'salve', 'brew', 'oil', 'beads', 'cloak', 'sling', 'oilskin', 'pitch'],
         names: ['a net-mender', 'a fishwife', 'a cooper off the quay', 'a boy with his savings', 'a widow from the harbour lane', 'a salt-raker'] },

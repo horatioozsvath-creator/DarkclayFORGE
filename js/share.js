@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // A card as a link: the piece's own data packed into the address after #card=. Nothing is sent anywhere.
 // A link comes from someone else's browser: everything in it is checked and rebuilt before it's shown.
-import { TIERS, PATTERNS, MARKS } from './data.js?v=77';
-import { ART } from './card.js?v=77';
+import { TIERS, PATTERNS, MARKS } from './data.js?v=78';
+import { ART } from './card.js?v=78';
 
 const FIELDS = ['tier', 'name', 'kind', 'art', 'tint', 'dice', 'stats', 'affixes', 'made', 'lore', 'worth', 'pattern', 'maker', 'power', 'powers', 'mark', 'gilded', 'flawless', 'grown'];
 function toB64url(bytes) { let s = ''; bytes.forEach(b => { s += String.fromCharCode(b); }); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
@@ -56,10 +56,11 @@ export function checkCard(o) {
   const luck = {};
   if (MARKS.kinds[o.mark] && Object.prototype.hasOwnProperty.call(MARKS.kinds, o.mark)) luck.mark = o.mark;
   if (Array.isArray(o.gilded) && o.gilded.length <= 8 && o.gilded.every(w => affixes.some(a => a[0] === w))) { if (o.gilded.length) luck.gilded = o.gilded.slice(); if (o.flawless === true && o.gilded.length >= 3) luck.flawless = true; }
-  // grown (milestone 51): its stage, how far it's been carried, and by whom
+  // grown (milestone 51): its stage, how far it's been carried, and by whom; from the grow-bed (milestone 52), whose bed and the days tended
   const g = o.grown;
-  if (g && typeof g === 'object' && Number.isInteger(g.stage) && g.stage >= 1 && g.stage <= 4 && Number.isFinite(g.uses) && g.uses >= 0 && g.uses < 1e5 && (g.by == null || str(g.by, 40) != null))
-    luck.grown = { stage: g.stage, uses: Math.floor(g.uses), ...(g.by != null ? { by: g.by } : {}) };
+  if (g && typeof g === 'object' && Number.isInteger(g.stage) && g.stage >= 1 && g.stage <= 4 && Number.isFinite(g.uses) && g.uses >= 0 && g.uses < 1e5 && (g.by == null || str(g.by, 40) != null)
+    && (g.bed == null || (str(g.bed, 40) != null && Number.isInteger(g.tended) && g.tended >= 0 && g.tended <= 3)))
+    luck.grown = { stage: g.stage, uses: Math.floor(g.uses), ...(g.by != null ? { by: g.by } : {}), ...(g.bed != null ? { bed: g.bed, tended: g.tended } : {}) };
   return { ...luck, id: 'shared', tier: o.tier, name, kind, art: o.art, tint, dice, stats, affixes, made, lore, worth, pattern: o.pattern, maker: str(o.maker, 40) || '', shared: true, ...(power ? { power } : {}), ...(powers ? { powers } : {}) };
 }
 export const linkFor = (card, base) => base.split('#')[0] + '#card=' + encodeCard(card);

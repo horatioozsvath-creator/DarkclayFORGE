@@ -22,6 +22,7 @@ import * as Ap from '../js/apprentice.js';
 import * as Leg from '../js/legacy.js';
 import * as Rg from '../js/region.js';
 import * as Mine from '../js/mine.js';
+import * as Bed from '../js/bed.js';
 import fs from 'node:fs';
 import { BRANCH, RELICS, MYTHICS, MATS } from '../js/data.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD, RELIC_WORK } from '../js/data.js';
@@ -132,6 +133,22 @@ const shafts = { shored: 0, oak: 0, coins: 0, falls: 0, pumped: 0, wet: 0, pocke
 R.setLuck(process.env.LUCK !== '0');
 const luckBy = { marks: {}, gilded: 0, flawless: 0, collector: 0, collectorC: 0, woke: 0, grown: 0, stages: [0, 0, 0, 0, 0], rose: 0 };
 // grown pieces that reached a stage (milestone 51), from trips home and hauls dug
+// the grow-bed (milestone 52): set up once there's coin to spare, a cutting planted when it has one (heartwood bought when Hollin's
+// has it), tended when it looks in, lifted out when it's come up
+const bedBy = { day: null, day2: null, grown: 0, tiers: [0, 0, 0, 0], marks: 0, woke: 0, tended: 0, bought: 0, found: 0 };
+function bedWork(d, hour) {
+  if (!R.luckOn()) return;
+  const c = Bed.canBuild(save);
+  if (c.ok && save.coins > c.cost + (c.more ? 8000 : 4000)) { Bed.build(save); if (c.more) bedBy.day2 = d; else bedBy.day = d; note(c.more ? 'dug a second grow-bed' : 'set up the grow-bed'); }
+  if (!save.growbed) return;
+  Bed.bedsOf(save).forEach((b, i) => {
+    if (b) { const st = Bed.stateOf(b, t); if (st.ready) { const r = Bed.harvest(save, i, rng, t); if (r.ok) { bedBy.grown++; bedBy.tiers[TIERS.findIndex(x => x.id === r.card.tier)]++; if (r.mark) { bedBy.marks++; luckBy.marks[r.mark] = (luckBy.marks[r.mark] || 0) + 1; } if (r.woke) bedBy.woke++; bedBy.tended += r.tended; } } else if (st.due) Bed.tend(save, i, t); return; }
+    const best = m => Bed.patternsFor(save, m).sort((a, b) => PATTERNS[b].value - PATTERNS[a].value)[0];
+    let m = Bed.cuttings().find(k => (save.mats[k] || 0) > 0 && best(k));
+    if (!m && best('heartwood') && Sh.sells('heartwood', hour, save) && save.coins > 1500) { const b0 = save.coins; if (Sh.buy(save, 'heartwood', 1, hour)) { bedBy.bought++; spent.mats += b0 - save.coins; m = 'heartwood'; } }
+    if (m) Bed.plant(save, i, m, best(m), t);
+  });
+}
 const tallyGrew = list => (list || []).forEach(x => (x.grew || []).forEach(e => { luckBy.stages[e.stage]++; if (e.rose) luckBy.rose++; }));
 const MINERS_N = +process.env.MINERS || 0, dugBy = { hauls: 0, mats: {}, hurt: 0, beasts: 0, falls: 0, lost: 0, idle: 0 };
 function hireMiner() {
@@ -447,7 +464,7 @@ for (let d = 1; d <= days; d++) {
     tally(Sh.shopStep(save, 50, rng, t, false, clerk));
     St.payWages(save, 50); tallyGrew(St.resolveTrips(save, t, rng)); { const bm = Ap.step(save, 50, rng, t); benched += bm.length; bm.forEach(r => apIds.add(r.piece.id)); } tallyDug(Mi.step(save, 50, rng, t));
     t += 50000; save.lastSeen = t;
-    if (s % 600 === 0) { fair(); watchDuty(); security(); upkeep(); runBank(d); runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); courtRework(hour); hireApprentice(d); hireMiner(); if (Mi.minersOf(save).length && !NOSHORE) tendMine(hour); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
+    if (s % 600 === 0) { fair(); watchDuty(); security(); upkeep(); runBank(d); runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); bedWork(d, hour); courtRework(hour); hireApprentice(d); hireMiner(); if (Mi.minersOf(save).length && !NOSHORE) tendMine(hour); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
     if (save.branch) tally(Br.step(save, 50, rng, t));
     if (Sh.rescue(save, hour)) note('scrap bin');
   }
@@ -483,6 +500,7 @@ if (process.env.WHY) for (const id of Rg.nineOf(save)) console.log('  nine ' + i
 if (BANKING) console.log('bank: borrowed on day', loanDay, ' interest paid', interestPaid, ' owed now', Bank.bankOf(save).loan, ' second shop from day', branchDay);
 console.log('EARNED', save.earned, 'coins', save.coins);
 if (R.luckOn()) console.log('luck: woke', luckBy.woke, ' grown', luckBy.grown, 'stages', luckBy.stages.slice(2).join('/'), 'rose', luckBy.rose, ' marks', JSON.stringify(luckBy.marks), ' gilded affixes', luckBy.gilded, ' flawless', luckBy.flawless, ' sold to the Collector', luckBy.collector, 'for', luckBy.collectorC, 'c');
+if (R.luckOn()) console.log('bed: set up day', bedBy.day, ' second', bedBy.day2, ' grown', bedBy.grown, '(C/F/R/OB ' + bedBy.tiers.join('/') + ')', ' marks', bedBy.marks, ' woke', bedBy.woke, ' tended', bedBy.grown ? (bedBy.tended / bedBy.grown).toFixed(1) : '-', 'days of 3 ·  heartwood bought', bedBy.bought);
 if (MINERS_N) console.log('miners: hauls', dugBy.hauls, ' brought', JSON.stringify(dugBy.mats), ' hurt', dugBy.hurt, ' beasts', dugBy.beasts, ' falls on them', dugBy.falls, ' hauls dropped', dugBy.lost);
 if (MINING) console.log('mine: dug', dug, ' smelted', smelted, ' galleries', Mine.galleries(save), ' mining trade', Mine.level(save), ' smelting trade', R.levelOf((save.trades.smelt || {}).xp || 0).level, ' brought up', JSON.stringify(mineBars), ' worth', Object.entries(mineBars).reduce((a, [m, n]) => a + Sh.priceOf(m, 0, save) * n, 0), 'c');
 if (MINING) console.log('shafts:', JSON.stringify(shafts), ' bottom: relic finds', deepFinds.length, JSON.stringify(deepFinds), ' runners down the mine', shaftTrips, ' relic materials bought', relicBought);

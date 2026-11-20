@@ -1,6 +1,6 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE CARD: a piece of gear drawn as a collector's card framed by its tier (Darkclay Zero, docs/THE-CARD.md).
-import { TIERS, MARKS, PATTERNS, GROWN } from './data.js?v=77';
+import { TIERS, MARKS, PATTERNS, GROWN, GROWBED } from './data.js?v=78';
 
 const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
 // the picture of each kind of piece; m is the metal's tint
@@ -71,7 +71,9 @@ export function grownLine(p) {
   const g = p && p.grown; if (!g || !GROWN.stages[g.stage - 1]) return '';
   const next = GROWN.at[g.stage], by = typeof g.by === 'string' && g.by ? 'carried by ' + g.by.split(' ')[0] + ', ' : g.stage > 1 ? '' : 'not carried yet';
   const far = by === 'not carried yet' ? '' : Math.floor(g.uses || 0) + (next != null ? ' of ' + next : '') + ' trips';
-  return '<div class="cd-grown"><b>❦ IT GROWS · ' + GROWN.stages[g.stage - 1] + '</b> ' + esc(by + far) + '</div>';
+  // grown in the bed, not forged (milestone 52): whose bed, and the days it was tended
+  const bed = typeof g.bed === 'string' && g.bed ? '<i>Grown in the bed at ' + esc(g.bed) + ', tended ' + (g.tended | 0) + ' day' + ((g.tended | 0) === 1 ? '' : 's') + ' of ' + GROWBED.days + '</i>' : '';
+  return '<div class="cd-grown"><b>❦ IT GROWS · ' + GROWN.stages[g.stage - 1] + '</b> ' + esc(by + far) + bed + '</div>';
 }
 // card(piece, { short: the top only, price: show the worth on a corner })
 export function card(p, o = {}) {
