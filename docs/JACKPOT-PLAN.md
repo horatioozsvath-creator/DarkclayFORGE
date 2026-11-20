@@ -1,7 +1,7 @@
 # Struck lucky: a plan for the jackpot in the working (milestones 49–51)
 
-Status: draft (2026-11-19), nothing decided and nothing built. Builds on release 74. If it's taken, the third region
-(docs/NORTH-PLAN.md) moves to milestones 52–56.
+Status: draft (2026-11-19), nothing built. Decided: this plan comes before the third region, which moves to milestones 52–56
+(docs/NORTH-PLAN.md). Builds on release 74.
 The choices are at the end; the plan below is written with the first option of each.
 
 ## What it's for
@@ -101,4 +101,4 @@ Smaller than the region plans: one milestone is mostly rules, and the art is ove
 4. **What a mark does:** (1) worth and a small gift (as the table). (2) Looks and worth only.
 5. **The Collector and the book's marks:** (1) yes. (2) No.
 6. **The reveal:** (1) the card turns over and the odds bar sweeps, a tap skips it. (2) No change: the tier appears as now.
-7. **Order:** (1) this plan first, then the third region. (2) The region first.
+7. **Order:** decided (2026-11-19): this plan first, then the third region.
