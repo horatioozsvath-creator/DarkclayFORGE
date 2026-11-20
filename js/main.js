@@ -1,40 +1,40 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, APPRENTICE, LEGACY, TRAITS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE, MINE } from './data.js?v=74';
-import * as R from './rules.js?v=74';
-import * as Sh from './shop.js?v=74';
-import * as St from './staff.js?v=74';
-import * as Rm from './room.js?v=74';
-import * as G from './growth.js?v=74';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=74';
-import * as Snd from './sound.js?v=74';
-import * as CV from './counter.js?v=74';
-import * as Town from './town.js?v=74';
-import * as V from './visit.js?v=74';
-import * as Br from './branch.js?v=74';
-import * as Bank from './bank.js?v=74';
-import * as Wear from './wear.js?v=74';
-import * as Th from './thieves.js?v=74';
-import * as Run from './runner.js?v=74';
-import * as Src from './sources.js?v=74';
-import * as Mon from './monsters.js?v=74';
-import * as Liv from './living.js?v=74';
-import * as Hl from './hall.js?v=74';
-import * as Trail from './trail.js?v=74';
-import * as Rg from './region.js?v=74';
-import * as Disc from './discover.js?v=74';
-import { ICONS, emblem, watch } from './icons.js?v=74';
-import { drawFlyer, flyerBlob } from './flyer.js?v=74';
-import * as Ap from './apprentice.js?v=74';
-import * as Mi from './miner.js?v=74';
-import * as Leg from './legacy.js?v=74';
-import * as Mine from './mine.js?v=74';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=74';
-import { card, ART } from './card.js?v=74';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=74';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=74';
+import { KINDS, KC, TIERS, APPRENTICE, LEGACY, TRAITS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE, MINE , MARKS } from './data.js?v=75';
+import * as R from './rules.js?v=75';
+import * as Sh from './shop.js?v=75';
+import * as St from './staff.js?v=75';
+import * as Rm from './room.js?v=75';
+import * as G from './growth.js?v=75';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=75';
+import * as Snd from './sound.js?v=75';
+import * as CV from './counter.js?v=75';
+import * as Town from './town.js?v=75';
+import * as V from './visit.js?v=75';
+import * as Br from './branch.js?v=75';
+import * as Bank from './bank.js?v=75';
+import * as Wear from './wear.js?v=75';
+import * as Th from './thieves.js?v=75';
+import * as Run from './runner.js?v=75';
+import * as Src from './sources.js?v=75';
+import * as Mon from './monsters.js?v=75';
+import * as Liv from './living.js?v=75';
+import * as Hl from './hall.js?v=75';
+import * as Trail from './trail.js?v=75';
+import * as Rg from './region.js?v=75';
+import * as Disc from './discover.js?v=75';
+import { ICONS, emblem, watch } from './icons.js?v=75';
+import { drawFlyer, flyerBlob } from './flyer.js?v=75';
+import * as Ap from './apprentice.js?v=75';
+import * as Mi from './miner.js?v=75';
+import * as Leg from './legacy.js?v=75';
+import * as Mine from './mine.js?v=75';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=75';
+import { card, ART, markWord } from './card.js?v=75';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=75';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=75';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 74;
+const VERSION = 75;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayZERO_FORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -313,7 +313,19 @@ function renderBook() {
     + (t.result === 'found' ? '<em class="right">found the ' + PATTERNS[t.pattern].name.toLowerCase() + '</em>' : t.result === 'studied' ? '<em class="right">learned the ' + PATTERNS[t.pattern].name.toLowerCase() + '</em>' : t.result === 'close' ? '<em class="near">close</em>' : '<em>nothing</em>')
     + (t.clues && t.clues.length && !Sh.knows(save, t.pattern) ? '<div>' + t.clues.map(c => '<span class="' + c.g + '">' + esc(c.line) + '</span>').join('') + '</div>' : '') + '</li>').join('') + '</ul>' : '';
   $('book').innerHTML = '<p class="note">Some patterns no one teaches you. Find them by trying things at a station (TRY SOMETHING NEW under PATTERNS), by what customers ask for, or by studying an old piece of one: a runner or a seller brings them now and then.</p>'
-    + sts.map(page).join('') + clues + tries;
+    + sts.map(page).join('') + clues + tries + marksHtml();
+}
+// THE BOOK › MARKS (milestone 49): which marks this shop has made at each station; the odds once one has come
+function marksHtml() {
+  const made = Sh.marksMade(save), any = Sh.anyMarks(save), sts = ['forge'].concat(save.stations || []).filter(st => MARKS.words[st]);
+  const n = Object.values(made).reduce((a, l) => a + l.length, 0), of = sts.length * MARKS.order.length;
+  return '<h4>MARKS IN THE METAL · ' + n + ' OF ' + of + '</h4>'
+    + '<p class="note">' + (any ? 'Now and then a piece comes out of a working with something in it no one put there: about one working in ' + Math.round(1 / MARKS.odds) + ', more for a clean one, fewer for a cracked one, a little more with each trade. The Collector buys only marked pieces, and pays half as much again.'
+      : 'Old makers tell of pieces that came out of the fire marked: something in them no one put there. None of yours has, yet.') + '</p>'
+    + '<div class="markgrid">' + sts.map(st => '<div class="markrow"><b>' + STATIONS[st].word + '</b>' + MARKS.order.map((m, i) => {
+      const have = (made[st] || []).includes(m);
+      return '<span class="mk' + (have ? ' have' : '') + '" style="--mc:' + MARKS.kinds[m].c + '">' + (have || any ? esc(MARKS.words[st][i]) : '?') + (have ? '' : any ? ' <i>not yet</i>' : '') + '</span>';
+    }).join('') + '</div>').join('') + '</div>';
 }
 // ---------- THE MAKER: level, renown, skills; THE WORKSHOP: tools ----------
 let perkNote = '', toolNote = '';
@@ -551,7 +563,7 @@ let floorShown = null;
 let cvw = null, cvP = null, iso = false, cvSig = '', cvFront = null;
 function counterView() {
   $('cview').hidden = false; $('cvActs').hidden = false; $('floor').hidden = true; $('dioBar').hidden = true;
-  if (!cvP) cvP = import('./counter.js?v=74').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
+  if (!cvP) cvP = import('./counter.js?v=75').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
   else if (cvw) cvw.show(save, Sh.priceAt);
 }
 // a place on the painted wall: its piece (take it down), or empty (hang one from the back room)
@@ -566,7 +578,7 @@ function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   if (!iso) { counterView(); tip('shop', $('cview')); return; }
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=74').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=75').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -720,7 +732,7 @@ function renderCounter() {
   $('queueWord').textContent = save.queue.length > 1 ? (save.queue.length - 1) + ' WAITING BEHIND' : 'NO ONE BEHIND';
   const head = '<div class="cust' + (inView ? ' inview' : '') + '">' + (inView ? '' : figure(c.fig).replace('class="fig in"', 'class="fig"')) + '<div class="nm">' + esc(c.who) + '</div>'
     + (c.tell ? '<div class="tell">' + esc(c.tell) + '</div>' : '')
-    + '<div class="meta">' + (c.kind === 'buyer' ? 'Wants <b>' + Sh.wantWord(c.want) + (c.least ? ', ' + TIERS[c.least].name + ' or better' : '') + '</b>' : 'Has something to sell')
+    + '<div class="meta">' + (c.kind === 'buyer' && c.marks ? 'Wants <b>a marked piece</b>, ' + esc(MARKS.words.forge[MARKS.order.indexOf(c.askMark)] || '') + ' above all' : c.kind === 'buyer' ? 'Wants <b>' + Sh.wantWord(c.want) + (c.least ? ', ' + TIERS[c.least].name + ' or better' : '') + '</b>' : 'Has something to sell')
     + (c.type === 'steward' || c.type === 'master' ? '<span class="wealthy">WEALTHY</span>' : '')
     + (c.kind === 'buyer' && hl >= rd.mood ? '<span class="mood ' + c.mood + '">' + c.mood + '</span>' : '')
     + (c.kind === 'buyer' && hl >= rd.purse ? '<span>Purse <b>' + c.purse + ' c</b></span>' : '') + '</div></div>';
@@ -2003,7 +2015,24 @@ function finish(how) {
     $('rPicks').querySelector('button').focus({ preventScroll: true }); $('result').scrollTop = 0;
   } else complete(res, null);
 }
+// THE REVEAL (milestone 49): the odds bar the working earned, swept once to where it landed, then the card turns over
+let revealSkipped = false, revealT = 0;
+function revealOn(res, piece) {
+  revealSkipped = false;
+  const o = res.odds, c = Math.max(0, o.c != null ? o.c : 100 - o.f - o.r), f = o.f, r = o.r, t = Math.min(2, TIERS.findIndex(x => x.id === piece.tier));
+  // where the needle lands: inside the tier's own stretch of the bar (a woken or master's piece at the top)
+  const from = [0, c, c + f][Math.max(0, t)] || 0, span = [c, f, r][Math.max(0, t)] || 0, to = Math.min(99, from + span * (0.25 + 0.5 * Math.random()));
+  $('rCard').insertAdjacentHTML('afterbegin', '<div class="reveal" aria-hidden="true"><div class="rv-bar"><i style="width:' + c + '%;background:var(--t-common)"></i><i style="width:' + f + '%;background:var(--t-fine)"></i><i style="width:' + r + '%;background:var(--t-rare)"></i><b class="rv-needle" style="--to:' + to.toFixed(1) + '%"></b></div>'
+    + '<div class="rv-words"><span>COMMON ' + Math.round(c) + ' %</span><span>FINE ' + Math.round(f) + ' %</span><span>RARE ' + Math.round(r) + ' %</span></div></div>');
+  $('rCard').classList.add('revealing');
+  clearTimeout(revealT);
+  if (t >= 2) revealT = setTimeout(() => { if (!revealSkipped) { Snd.play('chime'); $('rCard').classList.add('rv-ring'); } }, 1250);
+  const skip = () => { revealSkipped = true; clearTimeout(revealT); $('rCard').classList.remove('revealing'); $('result').removeEventListener('pointerdown', skip); };
+  $('result').addEventListener('pointerdown', skip);
+  setTimeout(() => $('result').removeEventListener('pointerdown', skip), 2200);
+}
 function complete(res, picked) {
+  $('rCard').classList.remove('revealing', 'rv-ring');
   const before = levelFor(pat);
   let piece;
   const yields = res.part ? null : R.yieldOf(pat, res.tier, picks());
@@ -2039,6 +2068,7 @@ function complete(res, picked) {
   } else {
     piece = R.makePiece({ patternId: pat, picks: picks(), result: res, picked, maker: save.maker, rng, now: Date.now() });
     save.cards.unshift(piece); save.made++;
+    if (piece.mark) { piece.firstMark = Sh.noteMark(save, piece); bookLine('A mark in the metal: ' + markWord(piece) + ', on ' + (/^[aeiou]/i.test(piece.name) ? 'an ' : 'a ') + piece.name + '.'); }
   }
   const xp = R.xpFor(res);
   save.benchAt = Date.now();   // working beside the apprentice: they learn faster for a while (milestone 36)
@@ -2054,6 +2084,15 @@ function complete(res, picked) {
     : yields && PATTERNS[pat].mine ? mineYieldHtml(res, yields)
     : yields ? '<div class="yield"><div class="tier" style="color:' + TIERC[res.tier] + '">' + TIERS[res.tier].name.toUpperCase() + ' BLOWING</div><div class="cd-art">' + ART.draught('#cfe8e8') + '</div><h3>' + yields.n + ' bottles</h3><p>Into the store room for the kettle. You have ' + save.mats[yields.mat] + '.</p></div>' : card(piece);
   $('rHome').textContent = R.stationOf(pat).id === 'face' ? 'TO THE MINE' : 'TO THE FORGE';
+  // THE REVEAL (milestone 49): a fresh working's card turns over as the odds bar lands on its tier; a tap skips it
+  const reveal = !res.rework && !yields && !res.part && !res.instant && !!piece.id && res.odds;
+  if (reveal) revealOn(res, piece);
+  if (piece.mark && !res.rework && !yields) {
+    const fresh1 = piece.firstMark ? ' · NEW TO THE BOOK' : '';
+    $('rCard').insertAdjacentHTML('afterbegin', '<div class="oldword markword rv-late" style="color:' + MARKS.kinds[piece.mark].c + '">A MARK IN THE METAL · ' + esc(markWord(piece).toUpperCase()) + fresh1 + '</div>');
+    setTimeout(() => Snd.play('chime'), reveal && !revealSkipped ? 1500 : 0); setTimeout(() => Snd.play('level'), reveal && !revealSkipped ? 1700 : 200);
+    delete piece.firstMark;
+  }
   if (res.oldBlood && !res.failed) { $('rCard').insertAdjacentHTML('afterbegin', '<div class="oldword">OLD-BLOOD · ' + esc(piece.name.toUpperCase()) + '</div>'); Snd.play('level'); }
   if (res.mythic && !res.failed) { $('rCard').insertAdjacentHTML('afterbegin', '<div class="oldword" style="color:var(--t-mythic)">ONE OF THE NINE · ' + esc(piece.name.toUpperCase()) + '</div>'); Snd.play('level'); Snd.play('chime'); }
   if (res.relic && !res.failed) { $('rCard').insertAdjacentHTML('afterbegin', '<div class="oldword">A RELIC · ' + esc(piece.name.toUpperCase()) + '</div>'); Snd.play('level'); Snd.play('chime'); }
@@ -2069,6 +2108,8 @@ function complete(res, picked) {
     : res.dropped && p.makes ? 'A second crack after it was made: it came out ' + TIERS[res.tier].name + '.'   // (a haul or a smelt has no flaw: milestone 46)
     : res.dropped ? (res.flawed ? 'A second crack after it was made. It holds together, flawed, and is worth less.' : 'A second crack after it was made dropped it a tier.')
     : 'WORKED +' + res.worked + ' % · it had Fine ' + Math.round(res.odds.f) + ' % · Rare ' + Math.round(res.odds.r) + ' %';
+  if (piece.mark && !res.rework && !yields) $('rLine').innerHTML += '<br><b>' + esc(markWord(piece)) + ':</b> ' + esc(MARKS.kinds[piece.mark].line) + '. Worth ×' + MARKS.kinds[piece.mark].worth + '.';
+  if (piece.flawless && !res.rework && !yields) $('rLine').innerHTML += '<br><b>FLAWLESS:</b> three affixes gilded, at their very best. Worth ×' + MARKS.flawless + '.';
   $('rWhy').textContent = res.instant ? 'No working, no pick, no found tile, no practice.'
     : (res.cracks ? res.cracks + ' crack' + (res.cracks > 1 ? 's' : '') : 'No cracks') + ' · ' + res.strikes + ' ' + R.stationOf(pat).made[0] + (res.strikes === 1 ? '' : (R.stationOf(pat).made[0] === 'stitch' ? 'es' : 's')) + ' · ' + res.heats + ' ' + R.stationOf(pat).made[1] + (res.heats > 1 ? 's' : '');
   // practice
@@ -2257,7 +2298,7 @@ function backupReminder() {
   if (Date.now() - save.backupAt > 7 * 86400000) { backupHinted = true; toast('<b>Keep a save code somewhere safe</b><br>THE FORGE › SAVE copies your whole game.'); }
 }
 
-if (new URLSearchParams(location.search).has('debug')) window.forge = { save, Sh, R, St, renderShop, toShop, toStaff, showAway, dio: () => dio, store: () => store(save), wipe: () => { save.v = 0; store(save); location.reload(); } };
+if (new URLSearchParams(location.search).has('debug')) window.forge = { save, Sh, R, St, renderShop, toShop, toStaff, showAway, dio: () => dio, store: () => store(save), result: (id, res) => { pat = id; $('result').hidden = false; complete(res, null); }, wipe: () => { save.v = 0; store(save); location.reload(); } };
 
 // ---------- THE SECOND SHOP: Osk's Landing, kept by a keeper ----------
 let branchDio = null, branchDioP = null, branchNote = '';
@@ -2266,7 +2307,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=74').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=75').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -2345,7 +2386,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=74').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=75').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }

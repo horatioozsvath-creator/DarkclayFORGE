@@ -701,6 +701,32 @@ export const AFFIXES = {
   learned: { word: 'Learned', min: 5, max: 12, line: '+{0}% trade XP' },
 };
 
+// LUCK (milestone 49, docs/JACKPOT-PLAN.md): the sim turns it off (LUCK=0) to measure the luck against the game without it
+export const LUCK = { on: true };
+// MARKS: now and then a working's piece comes out with something in the metal no one put there. odds: a working's chance, more for a
+// clean one, less for a cracked one, a little more for each trade over 3. Each kind: its weight among the four, its worth, its gift;
+// words: each station's names for the four (a hide isn't "starfall", it's star-flecked)
+export const MARKS = {
+  odds: 1 / 60, clean: 1.5, cracked: 0.5, perTrade: 0.05, least: 0.5,
+  order: ['veined', 'starfall', 'ghost', 'ember'],
+  kinds: {
+    veined: { weight: 40, worth: 2, c: '#9a7ad8', line: 'dark veins through it, as darkclay has' },
+    starfall: { weight: 30, worth: 2, gift: 'best', c: '#fff2c4', line: 'bright points in it, as if a star fell into the work; one affix at its best' },
+    ghost: { weight: 20, worth: 2, gift: 'hallowed', c: '#dfe8f0', line: 'pale, almost white, and the dead mislike it' },
+    ember: { weight: 10, worth: 3, c: '#ff8a3a', line: 'a low glow in it that never cools' },
+  },
+  words: {
+    forge: ['Veined', 'Starfall', 'Ghost-tempered', 'Ember-hearted'],
+    stretcher: ['Dark-veined', 'Star-flecked', 'Ghost-pale', 'Ember-warm'],
+    bowbench: ['Dark-grained', 'Star-flecked', 'Ghost-pale', 'Ember-hearted'],
+    kettle: ['Clouded', 'Starlit', 'Ghost-clear', 'Ember-bright'],
+    glass: ['Veined', 'Starred', 'Ghost-pale', 'Ember-hearted'],
+  },
+  gild: 0.08,      // an affix rolled in the top twelfth of its range comes out at its very best: GILDED
+  flawless: 2,     // three gilded on one piece: FLAWLESS, worth twice
+  collector: { pays: 1.5 },   // THE COLLECTOR (from FAMED, once a mark has been made): buys only marked pieces, half again for them
+};
+
 // found tiles: old makers' tiles, kept for good; each counts as a GOOD and does its trick
 export const FOUND = {
   ember: { name: 'Ember Tile', short: 'EMBER', glaze: '#ff7a2a', line: 'the heat jumps back up a band' },
@@ -796,7 +822,9 @@ export const CUSTOMERS = [
     names: ['a master collector', 'a duke\'s cabinet-keeper', 'a collector from over the sea'] },
   // the Crown's agent, from RENOWNED: buys only Old-Blood and better (Relics, from milestone 12), with a purse to match
   { id: 'crown', weight: 0, rich: { from: 5, step: 2 }, purse: [8000, 25000], wants: ['any'], least: 3, moods: [40, 55, 5], fig: '#e8913a',
-    names: ['the Crown\'s agent', 'a royal purveyor', 'the Queen\'s own buyer'] },
+    names: ['the Crown\'s agent', 'a royal purveyor', 'the Queen\'s own buyer'] },  // THE COLLECTOR (milestone 49): from FAMED, once the shop has made a marked piece; buys only marked pieces, and asks for a mark by name
+  { id: 'marks', weight: 0, rich: { from: 4, step: 2, cap: 4 }, marks: true, purse: [600, 2400], wants: ['any'], least: 0, moods: [50, 45, 5], fig: '#d8b46a',
+    names: ['the Collector', 'a keeper of marked pieces', 'Lady Corrow\'s cabinet-man'] },
 ];
 export const MOODS = ['EAGER', 'WARY', 'PINCHED'];
 export const MOOD_ODDS = { EAGER: 0.9, WARY: 0.6, PINCHED: 0.45 };

@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, WORKS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS } from './data.js?v=74';
-import * as Rg from './region.js?v=74';
+import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, WORKS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS, LUCK, MARKS } from './data.js?v=75';
+import * as Rg from './region.js?v=75';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -342,7 +342,7 @@ export function finish(S, how) {
   if (S.master && !instant && !dropped && S.boils === 0 && S.whiteHeat) {
     S.dropped = false;
     return { tier: OLD_BLOOD.tier, master: true, oldBlood: true, flawed: false, dropped: false, instant: false, odds: odds(S), worked: Math.round(S.worked), strikes: S.strikes,
-      heats: S.heats, cracks: S.cracks, whiteHeat: true, earned: S.earned, clean: S.cracks === 0 || S.earned, frost: S.frost };
+      heats: S.heats, cracks: S.cracks, whiteHeat: true, earned: S.earned, clean: S.cracks === 0 || S.earned, frost: S.frost, mark: rollMark(S) };
   }
   const o = instant ? { f: PLAIN_ODDS.f, r: PLAIN_ODDS.r } : odds(S);
   const roll = S.rng() * 100;
@@ -352,16 +352,44 @@ export function finish(S, how) {
   const earned = !instant && S.earned && tier >= 1;
   // a successful working turns up a found tile: Fine or better and no crack, or WHITE HEAT reached
   const clean = !instant && !dropped && tier >= 1 && (S.cracks === 0 || S.earned);
+  const mark = instant || flawed ? null : rollMark(S);   // a mark in the metal (milestone 49)
   return { tier, flawed, dropped, instant, odds: o, worked: instant ? 0 : Math.round(S.worked), strikes: S.strikes, heats: S.heats, cracks: S.cracks,
-    whiteHeat: !instant && S.whiteHeat, earned, clean, frost: !instant && S.frost,
+    whiteHeat: !instant && S.whiteHeat, earned, clean, frost: !instant && S.frost, mark,
     masterShort: S.master && !instant ? (dropped ? 'dropped' : S.boils ? 'boiled' : 'nowhite') : undefined };
 }
 
+// ---------- marks (milestone 49, docs/JACKPOT-PLAN.md) ----------
+// the luck on or off (the sim's LUCK=0, and tests): set here, so it's the same switch the game's own modules read
+export const setLuck = on => { LUCK.on = !!on; };
+export const luckOn = () => LUCK.on;
+// a working's chance of a mark: more for a clean one (no crack, or WHITE HEAT earned), less for a cracked one, more with the trade
+export function markOdds(S) {
+  const M = MARKS, clean = S.cracks === 0 || S.earned;
+  return M.odds * (clean ? M.clean : M.cracked) * Math.max(M.least, 1 + M.perTrade * ((S.level || 1) - 3));
+}
+// a working that makes a piece (not a bottle-maker's, not the face's): a mark now and then, or null. Luck off (the sim's LUCK=0): never,
+// and no dice thrown for it
+function rollMark(S) {
+  if (!LUCK.on || PATTERNS[S.cfg.patternId].makes || S.rng() >= markOdds(S)) return null;
+  const k = MARKS.order, tot = k.reduce((a, id) => a + MARKS.kinds[id].weight, 0);
+  let r = S.rng() * tot;
+  for (const id of k) { r -= MARKS.kinds[id].weight; if (r < 0) return id; }
+  return k[k.length - 1];
+}
+// a mark's name at the piece's station ("Ember-hearted" at the forge, "Ember-warm" on a hide)
+export function markName(mark, patternId) {
+  const i = MARKS.order.indexOf(mark); if (i < 0) return '';
+  const w = MARKS.words[(PATTERNS[patternId] && stationOf(patternId).id) || 'forge'] || MARKS.words.forge;
+  return w[i];
+}
+
 // ---------- affixes ----------
-function rollAffix(id, rng) {
-  const a = AFFIXES[id]; let v = Math.round(a.min + rng() * (a.max - a.min));
+// [word, line, id, gilded]: gilded when it came out at its very best (milestone 49; never with the luck off)
+function rollAffix(id, rng, best = false) {
+  const a = AFFIXES[id], r = best ? 1 : rng(), gilded = best || (LUCK.on && r >= 1 - MARKS.gild);
+  let v = gilded ? a.max : Math.round(a.min + r * (a.max - a.min));
   if (a.scale) v = (v / a.scale).toFixed(1).replace(/\.0$/, '');
-  return [a.word, a.line.replaceAll('{0}', v), id];
+  return [a.word, a.line.replaceAll('{0}', v), id, gilded];
 }
 // n different affixes from the pattern's pool, none of them in `not`
 export function rollAffixes(patternId, n, rng, not = []) {
@@ -372,10 +400,12 @@ export function rollAffixes(patternId, n, rng, not = []) {
 // ---------- the card: a finished piece, kept as plain data ----------
 export const WORKED_CAP = 50;
 // What a piece is worth, from how it was made: one sum for the finished card and for the figure rising at the forge (milestone 29)
-export function worthOf({ patternId, picks, tier, worked = 0, cracks = 0, flawed = false }) {
+// mark: its mark (milestone 49) multiplies it; flawless (three gilded affixes) doubles it
+export function worthOf({ patternId, picks, tier, worked = 0, cracks = 0, flawed = false, mark = null, flawless = false }) {
   const p = PATTERNS[patternId], parts = chosenParts(patternId, picks), metal = parts[0], t = TIERS[tier];
   const w = Math.min(WORKED_CAP, worked), rareN = parts.filter(o => o.rare).length, partsVal = parts.slice(1).reduce((v, o) => v * (o.val || 1), 1);
-  return Math.max(1, Math.round(p.value * metal.val * t.worth * (1 + w / 200) * (1 + 0.25 * rareN) * partsVal * Math.pow(0.9, cracks) * (flawed ? 0.5 : 1)));
+  const luck = (mark && MARKS.kinds[mark] ? MARKS.kinds[mark].worth : 1) * (flawless ? MARKS.flawless : 1);
+  return Math.max(1, Math.round(p.value * metal.val * t.worth * (1 + w / 200) * (1 + 0.25 * rareN) * partsVal * Math.pow(0.9, cracks) * (flawed ? 0.5 : 1) * luck));
 }
 // The worth as it stands mid-working: { lo, hi, loWord, hiWord } (lo: what it's worth at the least it can come out as; hi: at the
 // best it can still come out as), or null for a working that makes no card (a part of the Nine, a Relic or Mythic, a bottle-maker).
@@ -397,12 +427,28 @@ export function worthNow(S) {
 // keep: affixes the piece already carries ([word, line]), kept as far as the tier has room; reworked: how many times back in the fire
 const AFFIX_BY_WORD = Object.fromEntries(Object.entries(AFFIXES).map(([id, a]) => [a.word, id]));
 export const affixIds = list => list.map(a => AFFIX_BY_WORD[a[0]]).filter(Boolean);
-export function makePiece({ patternId, picks, result, picked, maker, rng, now, keep = [], reworked = 0 }) {
+// keepGilded: the kept affixes that were gilded (by their word)
+export function makePiece({ patternId, picks, result, picked, maker, rng, now, keep = [], keepGilded = [], reworked = 0 }) {
   const p = PATTERNS[patternId], parts = chosenParts(patternId, picks), metal = parts[0], tier = TIERS[result.tier];
-  let affixes = keep.filter(a => AFFIX_BY_WORD[a[0]]).map(a => [a[0], a[1], AFFIX_BY_WORD[a[0]]]);
+  const mark = result.mark && MARKS.kinds[result.mark] ? result.mark : null, gift = mark && MARKS.kinds[mark].gift;
+  let affixes = keep.filter(a => AFFIX_BY_WORD[a[0]]).map(a => [a[0], a[1], AFFIX_BY_WORD[a[0]], keepGilded.includes(a[0])]);
+  // Ghost-tempered's gift rides over the tier's count: kept apart through a rework, so the tier's own affixes aren't crowded out
+  const ghostI = gift === 'hallowed' && result.gifted ? affixes.findIndex(a => a[2] === 'hallowed' || a[2] === 'graveward') : -1;
+  const ghostKept = ghostI >= 0 ? affixes.splice(ghostI, 1)[0] : null;
   if (picked && affixes.length < tier.affixes && !affixes.some(a => a[2] === picked[2])) affixes.push(picked);
   affixes = affixes.slice(0, tier.affixes);
   affixes = affixes.concat(rollAffixes(patternId, Math.max(0, tier.affixes - affixes.length), rng, affixes.map(a => a[2])));
+  // a mark's gift (milestone 49): Starfall brings one affix to its best; Ghost-tempered adds Hallowed (or Graveward) if the pattern takes it
+  // given once: a Common piece (no affix yet) has it the first time it's reworked into one
+  let given = !!result.gifted;
+  if (gift === 'best' && !given) { const i = affixes.findIndex(a => a[2] && !a[3]); if (i >= 0) { affixes[i] = rollAffix(affixes[i][2], rng, true); given = true; } }
+  if (gift === 'hallowed' && !given) {
+    const id = ['hallowed', 'graveward'].find(x => p.affixes.includes(x) && !affixes.some(a => a[2] === x));
+    const had = affixes.findIndex(a => (a[2] === 'hallowed' || a[2] === 'graveward') && !a[3]);
+    if (id) { affixes.push(rollAffix(id, rng)); given = true; }
+    else if (had >= 0) { affixes[had] = rollAffix(affixes[had][2], rng, true); given = true; }   // it had it already: at its best instead
+  }
+  if (ghostKept) affixes.push(ghostKept);
   if (metal.affix) affixes.push(metal.affix);
   if (result.frost) affixes.push(['Frost-kissed', 'a small frost side on the piece']);
   // WORKED adds up to an eighth over the tier's plain numbers, counted to 50 % (the card still shows the true figure)
@@ -435,7 +481,8 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now, k
   else stats.push(['Wear', result.flawed ? 'FLAWED' : result.cracks ? 'NOTCHED' : 'KEEN', result.flawed ? .2 : result.cracks ? .6 : 1]);
   const bonus = Math.round((tier.mult * wk - 1) * 100 / 12);
   const dice = p.dice ? p.dice[0] + 'd' + p.dice[1] + (bonus > 0 ? '+' + bonus : '') : '';
-  const worth = worthOf({ patternId, picks, tier: result.tier, worked, cracks: result.cracks, flawed: result.flawed });
+  const gilded = affixes.filter(a => a[3]).map(a => a[0]), flawless = gilded.length >= 3;
+  const worth = worthOf({ patternId, picks, tier: result.tier, worked, cracks: result.cracks, flawed: result.flawed, mark, flawless });
   const sid = stationOf(patternId).id, leather = sid === 'stretcher', wood = sid === 'bowbench', brew = sid === 'kettle', glass = sid === 'glass';
   const made = [(leather ? 'Stitched by ' : wood ? 'Bent by ' : brew ? 'Brewed by ' : glass ? 'Blown by ' : 'Forged by ') + maker];
   if (result.instant) made.push('made at once, at the plain odds');
@@ -450,7 +497,8 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now, k
     name: (metal.adj || metal.name) + ' ' + p.name, kind: p.kind, art: p.art, tint: metal.tint, dice, stats, affixes: affixes.map(a => [a[0], a[1]]),
     made, lore: p.lore[result.tier], worth, flawed: result.flawed, maker, count: p.batch || undefined,
     src: { picks: (picks || []).slice(), worked, strikes: result.strikes || 0, heats: result.heats || 0, cracks: result.cracks || 0,
-      whiteHeat: !!result.whiteHeat, frost: !!result.frost, instant: !!result.instant, reworked } };
+      whiteHeat: !!result.whiteHeat, frost: !!result.frost, instant: !!result.instant, reworked },
+    ...(mark ? { mark } : {}), ...(given ? { giftGiven: true } : {}), ...(gilded.length ? { gilded } : {}), ...(flawless ? { flawless: true } : {}) };
 }
 
 // How an older piece was made, for one from before cards kept it (milestone 1 and 2): its metal, plain parts, WORKED from its making line.
@@ -489,8 +537,9 @@ export const yieldOf = (patternId, tier, picks) => {
 export function remakePiece({ card, res, picked, rng, now }) {
   const src = srcOf(card);
   const result = { tier: res.tier, flawed: res.flawed, worked: src.worked + res.worked, strikes: src.strikes + res.strikes, heats: src.heats + res.heats,
-    cracks: src.cracks + res.cracks, whiteHeat: src.whiteHeat || res.whiteHeat, frost: src.frost || res.frost, instant: false };
-  const piece = makePiece({ patternId: card.pattern, picks: src.picks, result, picked, maker: makerOf(card), rng, now, keep: card.affixes, reworked: (src.reworked || 0) + 1 });
+    cracks: src.cracks + res.cracks, whiteHeat: src.whiteHeat || res.whiteHeat, frost: src.frost || res.frost, instant: false,
+    mark: card.mark || null, gifted: !!card.giftGiven };   // a mark stays with the piece through every rework; its gift is given once
+  const piece = makePiece({ patternId: card.pattern, picks: src.picks, result, picked, maker: makerOf(card), rng, now, keep: card.affixes, keepGilded: card.gilded || [], reworked: (src.reworked || 0) + 1 });
   piece.id = card.id; piece.at = card.at;
   return piece;
 }

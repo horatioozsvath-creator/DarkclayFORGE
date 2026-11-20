@@ -2,7 +2,7 @@
 
 Status: planned and decided (2026-11-19), nothing built. Every choice was taken as recommended, but for "grown", which is both:
 a piece that grows with use, and a grow-bed. This plan comes before the third region, which moves to milestones 53–57
-(docs/NORTH-PLAN.md). Builds on release 74.
+(docs/NORTH-PLAN.md). Builds on release 74. Milestone 49 (the reveal and marks) built in release 75 (docs/MILESTONE-49.md).
 
 ## What it's for
 

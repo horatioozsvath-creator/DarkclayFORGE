@@ -1,10 +1,10 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // A card as a link: the piece's own data packed into the address after #card=. Nothing is sent anywhere.
 // A link comes from someone else's browser: everything in it is checked and rebuilt before it's shown.
-import { TIERS, PATTERNS } from './data.js?v=74';
-import { ART } from './card.js?v=74';
+import { TIERS, PATTERNS, MARKS } from './data.js?v=75';
+import { ART } from './card.js?v=75';
 
-const FIELDS = ['tier', 'name', 'kind', 'art', 'tint', 'dice', 'stats', 'affixes', 'made', 'lore', 'worth', 'pattern', 'maker', 'power', 'powers'];
+const FIELDS = ['tier', 'name', 'kind', 'art', 'tint', 'dice', 'stats', 'affixes', 'made', 'lore', 'worth', 'pattern', 'maker', 'power', 'powers', 'mark', 'gilded', 'flawless'];
 function toB64url(bytes) { let s = ''; bytes.forEach(b => { s += String.fromCharCode(b); }); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
 function fromB64url(t) { const s = atob(t.replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(s, c => c.charCodeAt(0)); }
 // the fields a card carries off this browser (no ids, no making record)
@@ -52,6 +52,10 @@ export function checkCard(o) {
   if (power === null) return null;
   const powers = o.powers == null ? undefined : Array.isArray(o.powers) && o.powers.length <= 3 && o.powers.every(pair) ? o.powers.map(w => [w[0], w[1]]) : null;
   if (powers === null) return null;
-  return { id: 'shared', tier: o.tier, name, kind, art: o.art, tint, dice, stats, affixes, made, lore, worth, pattern: o.pattern, maker: str(o.maker, 40) || '', shared: true, ...(power ? { power } : {}), ...(powers ? { powers } : {}) };
+  // its mark, gilded affixes and FLAWLESS (milestone 49): only names the game knows, only affixes it carries
+  const luck = {};
+  if (MARKS.kinds[o.mark] && Object.prototype.hasOwnProperty.call(MARKS.kinds, o.mark)) luck.mark = o.mark;
+  if (Array.isArray(o.gilded) && o.gilded.length <= 6 && o.gilded.every(w => affixes.some(a => a[0] === w))) { if (o.gilded.length) luck.gilded = o.gilded.slice(); if (o.flawless === true && o.gilded.length >= 3) luck.flawless = true; }
+  return { ...luck, id: 'shared', tier: o.tier, name, kind, art: o.art, tint, dice, stats, affixes, made, lore, worth, pattern: o.pattern, maker: str(o.maker, 40) || '', shared: true, ...(power ? { power } : {}), ...(powers ? { powers } : {}) };
 }
 export const linkFor = (card, base) => base.split('#')[0] + '#card=' + encodeCard(card);

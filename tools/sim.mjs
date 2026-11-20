@@ -106,6 +106,8 @@ function makeOne(hour) {
   const res = R.finish(S, 'quench');
   const p = R.makePiece({ patternId: c.id, picks: c.picks, result: res, picked: null, maker: 'Bot', rng, now: t });
   save.cards.unshift(p); made++; save.benchAt = t;
+  if (p.mark) { luckBy.marks[p.mark] = (luckBy.marks[p.mark] || 0) + 1; Sh.noteMark(save, p); }
+  if (p.gilded) luckBy.gilded += p.gilded.length; if (p.flawless) luckBy.flawless++;
   if (WEARING) { const st = R.stationOf(c.id).id; Wear.addWear(save, st, 'work', t); if (Wear.isBroken(save, st, t)) { broke++; const r = Wear.rebuild(save, st, t); if (r.ok) wearSpent += r.cost; } }
   (save.trades[c.id] = save.trades[c.id] || { xp: 0 }).xp += Math.round(R.xpFor(res) * G.xpMult(save));
   const tag = 'fair';
@@ -126,6 +128,9 @@ const NOSHAFT = !!process.env.NOSHAFT; let shaftTrips = 0, deepFinds = [], relic
 const shafts = { shored: 0, oak: 0, coins: 0, falls: 0, pumped: 0, wet: 0, pockets: {} };   // milestone 46
 // THE MINERS (milestone 47; MINERS=n, with MINE): the bot hires up to n miners once the trapdoor's open, set to the dearest open seam,
 // bare (no gear), and keeps the galleries shored for them
+// LUCK=0: no marks, no gilded affixes, no Collector (milestone 49): the game as release 74 was
+R.setLuck(process.env.LUCK !== '0');
+const luckBy = { marks: {}, gilded: 0, flawless: 0, collector: 0, collectorC: 0 };
 const MINERS_N = +process.env.MINERS || 0, dugBy = { hauls: 0, mats: {}, hurt: 0, beasts: 0, falls: 0, lost: 0, idle: 0 };
 function hireMiner() {
   if (!MINING || !MINERS_N || !Mine.isOpen(save) || Mi.minersOf(save).length >= MINERS_N || !St.canHireRole(save, 'miner')) return;
@@ -189,7 +194,7 @@ function mineOne(hour) {
 }
 // the big sales: a piece over 1,000 c, an Old-Blood piece, and who bought them
 const big = { over1000: 0, oldBlood: 0, by: {} };
-function tally(entries) { (entries || []).forEach(e => { if (!e.sold) return; if (apIds.has(e.sold.id)) { apSold += e.sold.price; apN++; } if (e.sold.price >= 1000) big.over1000++; if (e.sold.tier === 'oldblood') big.oldBlood++; if (e.sold.price >= 1000 || e.sold.tier === 'oldblood') big.by[e.type] = (big.by[e.type] || 0) + 1; }); }
+function tally(entries) { (entries || []).forEach(e => { if (!e.sold) return; if (e.type === 'marks') { luckBy.collector++; luckBy.collectorC += e.sold.price; } if (apIds.has(e.sold.id)) { apSold += e.sold.price; apN++; } if (e.sold.price >= 1000) big.over1000++; if (e.sold.tier === 'oldblood') big.oldBlood++; if (e.sold.price >= 1000 || e.sold.tier === 'oldblood') big.by[e.type] = (big.by[e.type] || 0) + 1; }); }
 // a master's last working: a Rare that qualifies (on the shelf or in the back), its materials bought if they're for sale this hour.
 // A steady player finishes it with no crack about half the time at trade 6, better with each level after.
 function tryOldBlood(hour) {
@@ -475,6 +480,7 @@ if (process.env.WHY) for (const id of Rg.nineOf(save)) console.log('  nine ' + i
   'parts', [0, 1, 2].filter(i => Trail.hasPart(save, id, i)).length, 'relic', MYTHICS[id].relic, (save.relicsMade || []).includes(MYTHICS[id].relic) ? 'made' : 'not', save.cards.some(c => c.relic === MYTHICS[id].relic && c.tier === 'relic') ? 'held' : 'gone', 'src', MYTHICS[id].shard);
 if (BANKING) console.log('bank: borrowed on day', loanDay, ' interest paid', interestPaid, ' owed now', Bank.bankOf(save).loan, ' second shop from day', branchDay);
 console.log('EARNED', save.earned, 'coins', save.coins);
+if (R.luckOn()) console.log('luck: marks', JSON.stringify(luckBy.marks), ' gilded affixes', luckBy.gilded, ' flawless', luckBy.flawless, ' sold to the Collector', luckBy.collector, 'for', luckBy.collectorC, 'c');
 if (MINERS_N) console.log('miners: hauls', dugBy.hauls, ' brought', JSON.stringify(dugBy.mats), ' hurt', dugBy.hurt, ' beasts', dugBy.beasts, ' falls on them', dugBy.falls, ' hauls dropped', dugBy.lost);
 if (MINING) console.log('mine: dug', dug, ' smelted', smelted, ' galleries', Mine.galleries(save), ' mining trade', Mine.level(save), ' smelting trade', R.levelOf((save.trades.smelt || {}).xp || 0).level, ' brought up', JSON.stringify(mineBars), ' worth', Object.entries(mineBars).reduce((a, [m, n]) => a + Sh.priceOf(m, 0, save) * n, 0), 'c');
 if (MINING) console.log('shafts:', JSON.stringify(shafts), ' bottom: relic finds', deepFinds.length, JSON.stringify(deepFinds), ' runners down the mine', shaftTrips, ' relic materials bought', relicBought);

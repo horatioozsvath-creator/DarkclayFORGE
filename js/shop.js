@@ -3,13 +3,13 @@
 // Every function that needs chance takes rng: () => [0,1). Time comes in as plain numbers so the same calls can run
 // a second, a minute or (milestone 4) a night away.
 import { FORGED_PARTS, PATTERNS, MATS, SUPPLIERS, TAGS, SLOT_COSTS, START_SLOTS, MAX_PLACES, CUSTOMERS, MOODS, MOOD_ODDS, TIERS,
-  APPRENTICE, HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, LINE_FOLK, LINE_STORIES, FOLK_OF, ORDER_TIME, ORDER_PAYS, SELLERS, COURT_FOUND, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE, REG_CLUE_ODDS } from './data.js?v=74';
-import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=74';
-import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=74';
-import { charmGap, placeGift } from './room.js?v=74';
-import * as Trail from './trail.js?v=74';
-import * as Rg from './region.js?v=74';
-import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=74';
+  APPRENTICE, HAGGLE, HAGGLE_TABLE, TELLS, PATIENCE, QUEUE_MAX, SELLER_ODDS, REGULARS, LINE_FOLK, LINE_STORIES, FOLK_OF, ORDER_TIME, ORDER_PAYS, SELLERS, COURT_FOUND, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, TRAIL, MYTHIC_WORK, RENOWN, OPENING, DEMAND, STORIES, STORY_GAP, STORY_PAYS, STORY_ODDS, NINE, REG_CLUE_ODDS , LUCK, MARKS } from './data.js?v=75';
+import { refreshTown, hotPatterns, demandOf, purseMultFor, eventOf, livingGap } from './town.js?v=75';
+import { chosenParts, partOptions, makePiece, srcOf, levelOf, oldBloodGate, stationOf } from './rules.js?v=75';
+import { charmGap, placeGift } from './room.js?v=75';
+import * as Trail from './trail.js?v=75';
+import * as Rg from './region.js?v=75';
+import { fame, purseMult, patienceOf, haggleMult, onWall, onHall, rung } from './growth.js?v=75';
 
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
 export const LEDGER_MAX = 30;
@@ -133,7 +133,7 @@ const aName = n => (/^[aeiou]/i.test(n) ? 'an ' : 'a ') + n;
 // the shelf's pieces this buyer wants, at a tier they'll look at; one who came in for what the town wants settles for what they
 // meant to buy when there's none of it
 function onOffer(save, c) {
-  const all = save.shelf.map((e, slot) => e && { slot, tag: e.tag, card: save.cards.find(x => x.id === e.id) }).filter(e => e && e.card && TIER_N[e.card.tier] >= c.least);
+  const all = save.shelf.map((e, slot) => e && { slot, tag: e.tag, card: save.cards.find(x => x.id === e.id) }).filter(e => e && e.card && TIER_N[e.card.tier] >= c.least && (!c.marks || e.card.mark));
   const hit = all.filter(e => wants(c.want, e.card));
   return hit.length || !c.was ? hit : all.filter(e => wants(c.was, e.card));
 }
@@ -168,12 +168,30 @@ export function richer(save, c, rng) {
   return { ...c, want, was, purse: Math.round(c.purse * purseMult(save) * ((ev && ev.purse) || 1)), mood: ev && ev.keen ? LIFT[c.mood] : c.mood };
 }
 // what they'll part with for this piece: their purse, more for what the town wants, less for what it doesn't
-export const purseFor = (save, c, card) => Math.round(c.purse * purseMultFor(save.town, card.pattern));
+// (the Collector, milestone 49: half as much again for a marked piece)
+export const purseFor = (save, c, card) => Math.round(c.purse * purseMultFor(save.town, card.pattern) * (c.marks && card.mark ? MARKS.collector.pays : 1));
+// ---------- marks (milestone 49) ----------
+// what marks this shop has made, by station: { forge: ['veined', ...] }
+export const marksMade = save => save.marksMade || {};
+export const anyMarks = save => Object.values(marksMade(save)).some(l => l.length);
+// a marked piece made: into THE MAKER'S BOOK's marks; true the first time this mark is made at this station
+export function noteMark(save, card) {
+  if (!card || !card.mark) return false;
+  const st = stationOf(card.pattern).id, m = save.marksMade || (save.marksMade = {}), l = m[st] || (m[st] = []);
+  if (l.includes(card.mark)) return false;
+  l.push(card.mark); return true;
+}
+// the Collector's words as they come in: the mark they're after, and the last piece you sold them
+export function collectorTell(save, c) {
+  const want = MARKS.words.forge[MARKS.order.indexOf(c.askMark)] || 'marked', last = (save.collector || [])[0];
+  return 'Anything ' + want + '? ' + (last ? 'I still have the ' + last.name + ' you sold me.' : 'I go where the marked pieces are.');
+}
 // who comes in: with a save, the wealthy too, by renown (and a master collector for Old-Blood on show)
 export function customerWeights(save) {
   const r = save ? rung(save) : 0, ob = save ? Math.min(2, save.cards.filter(c => c.tier === 'oldblood' && (onShelf(save, c.id) >= 0 || onWall(save, c.id))).length) : 0;
   const ev = save ? eventOf(save.town) : null, tw = (save && save.townWeights) || {}, em = id => ((ev && ev.weights && ev.weights[id]) || 1) * (tw[id] || 1);
   return Rg.customers(save).map(c => {
+    if (c.marks && !(LUCK.on && save && anyMarks(save))) return 0;   // the Collector: only once the shop has made a marked piece
     if (!c.rich) return c.weight * em(c.id);
     const rr = c.rich.cap ? Math.min(r, c.rich.cap) : r;
     let w = rr >= c.rich.from ? c.rich.step * (rr - c.rich.from + 1) : 0;
@@ -183,8 +201,10 @@ export function customerWeights(save) {
 }
 export function newCustomer(rng, save) {
   const t = weighted(Rg.customers(save), customerWeights(save), rng);
-  return { type: t.id, who: pick(t.names, rng), want: pick(t.wants, rng), purse: Math.round(t.purse[0] + rng() * (t.purse[1] - t.purse[0])),
+  const c = { type: t.id, who: pick(t.names, rng), want: pick(t.wants, rng), purse: Math.round(t.purse[0] + rng() * (t.purse[1] - t.purse[0])),
     mood: weighted(MOODS, t.moods, rng), least: t.least || 0, fig: t.fig };
+  if (t.marks) { c.marks = true; c.askMark = pick(MARKS.order, rng); }
+  return c;
 }
 const PAIRS = ['gloves', 'boots'];
 const SHEAVES = ['arrows'];
@@ -207,15 +227,15 @@ export function visit(save, rng, now, c = richer(save, newCustomer(rng, save), r
   const afford = shown.filter(e => priceAt(e.card, e.tag) <= purseFor(save, c, e.card))
     .sort((a, b) => TIER_N[b.card.tier] - TIER_N[a.card.tier] || priceAt(b.card, b.tag) - priceAt(a.card, a.tag));
   const entry = { at: now, who: c.who, type: c.type, fig: c.fig, mood: c.mood, want: c.want, purse: c.purse, sold: null, line: '' };
-  if (!shown.length) entry.line = 'Nothing on the shelf for them' + (c.least ? ' (' + TIERS[c.least].name + ' or better only).' : '.');
+  if (!shown.length) entry.line = c.marks ? 'Nothing marked on the shelf for them.' : 'Nothing on the shelf for them' + (c.least ? ' (' + TIERS[c.least].name + ' or better only).' : '.');
   else if (!afford.length) { const e = shown.sort((a, b) => priceAt(a.card, a.tag) - priceAt(b.card, b.tag))[0]; entry.line = 'Looked at the ' + e.card.name + ' at ' + priceAt(e.card, e.tag) + ' c, but carried ' + c.purse + '.'; entry.near = e.card.id; }
   else {
     const e = afford[0], price = Math.max(1, Math.round(priceAt(e.card, e.tag) * (o.rate || 1)));
     // what the town wants: a step keener, and DEAR doesn't put them off (they take it as readily as at FAIR)
-    const hot = demandOf(save.town, e.card.pattern) > 0, mood = hot ? LIFT[c.mood] : c.mood;
+    const hot = demandOf(save.town, e.card.pattern) > 0, mood = hot || (c.marks && e.card.mark === c.askMark) ? LIFT[c.mood] : c.mood;
     if (rng() < Math.min(0.95, takeOdds(mood, hot && e.tag === 'dear' ? 'fair' : e.tag) * (o.boost || 1))) {
       save.coins += price; save.sold = (save.sold || 0) + 1; save.earned = (save.earned || 0) + price;
-      takeOne(save, e.card);
+      takeOne(save, e.card); collected(save, c, e.card);
       entry.sold = { name: e.card.name, tier: e.card.tier, price, full: priceAt(e.card, e.tag), tag: e.tag, id: e.card.id };
       if (e.tag !== 'cheap') fame(save, fameOf(e.card));
       entry.line = '"' + LINES.sold[c.mood] + '"' + (o.by ? ' Sold by ' + o.by + (o.rate && o.rate < 1 ? ', who kept ' + (priceAt(e.card, e.tag) - price) + ' c.' : '.') : '');
@@ -291,6 +311,7 @@ export function arrive(save, rng, now, present, clerk = null) {
   if (present && save.queue.length < QUEUE_MAX) {
     const c = rng() < SELLER_ODDS ? newSeller(rng, Math.floor(now / 3600000), now, save) : { ...richer(save, newCustomer(rng, save), rng), kind: 'buyer' };
     c.tell = c.kind === 'buyer' ? TELLS[c.mood][Math.floor(rng() * TELLS[c.mood].length)] : '';
+    if (c.marks) c.tell = collectorTell(save, c);
     c.wait = patienceOf(save, PATIENCE); c.shows = 0; c.id = 'v' + Math.floor(rng() * 1e9).toString(36);
     if (c.kind === 'buyer') asking(save, c, rng, now);
     save.queue.push(c);
@@ -322,10 +343,13 @@ export function showable(save, c = save.queue[0]) {
 }
 export const hagglePrice = (card, tag, choice, mult = 1) => Math.max(1, Math.round(priceAt(card, tag) * HAGGLE[choice].mult * mult));
 // a want met exactly (they asked for a falchion, it's a falchion), or a piece the town wants today, lifts their mood a step
-export const moodFor = (c, card, save) => c.want === card.pattern || (save && demandOf(save.town, card.pattern) > 0) ? LIFT[c.mood] : c.mood;
+// (and the Collector shown the very mark they asked for)
+export const moodFor = (c, card, save) => c.want === card.pattern || (save && demandOf(save.town, card.pattern) > 0) || (c.marks && card.mark === c.askMark) ? LIFT[c.mood] : c.mood;
+// the Collector remembers what you sold them (the newest first)
+function collected(save, c, card) { if (c.marks && card.mark) save.collector = [{ name: card.name, mark: card.mark }].concat(save.collector || []).slice(0, 12); }
 function sellAt(save, c, card, price, how, now) {
   save.coins += price; save.sold = (save.sold || 0) + 1; save.earned = (save.earned || 0) + price;
-  takeOne(save, card);
+  takeOne(save, card); collected(save, c, card);
   return log(save, { at: now, who: c.who, type: c.type, fig: c.fig, mood: c.mood, want: c.want, purse: c.purse, served: true,
     sold: { name: card.name, tier: card.tier, price, tag: how, id: card.id }, line: '"' + { EAGER: 'Done. Wrap it up.', WARY: 'Fair enough. Done.', PINCHED: 'It\'s all I have. Done.' }[c.mood] + '"' });
 }
