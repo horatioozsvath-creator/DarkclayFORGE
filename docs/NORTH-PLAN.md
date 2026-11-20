@@ -1,6 +1,6 @@
-# Up into the snow: a plan for a third region (milestones 52–56)
+# Up into the snow: a plan for a third region (milestones 53–57)
 
-Status: draft (2026-11-19), nothing decided and nothing built. Comes after the jackpot plan (docs/JACKPOT-PLAN.md, milestones 49–51), as decided. Builds on release 74 (the mine, with its own galleries in each region).
+Status: draft (2026-11-19), nothing decided and nothing built. Comes after the jackpot plan (docs/JACKPOT-PLAN.md, milestones 49–52), as decided. Builds on release 74 (the mine, with its own galleries in each region).
 The choices are at the end; the plan below is written with the first option of each.
 
 ## What it's for
@@ -36,7 +36,7 @@ And one more, for the third region:
 Hearthold is a hold of herders, hunters, miners and the thanes who rule them, built round a hearth in the rock that has never gone
 out. Below the hold are the old halls, lost in the Long Winter when the ice came in. The thaw gives things back each spring.
 
-### Milestone 52: Hearthold, the town (hidden)
+### Milestone 53: Hearthold, the town (hidden)
 
 - **The region frame takes a third region.** `REGIONS.north` beside `reach` and `greyshore`, read through `regionOf(save)` as now.
   A Reach run and a coastal run with the same seed must give exactly the same results as release 74.
@@ -71,7 +71,7 @@ out. Below the hold are the old halls, lost in the Long Winter when the ice came
   pump. The shoring, the falls and the miners work as everywhere.
 - **The second shop** for a maker up here is in the Reach, as for the coast.
 
-### Milestone 53: the hold's folk and finds (hidden)
+### Milestone 54: the hold's folk and finds (hidden)
 
 - **Six regular families**, with first names for later generations, their own stories in the hold's words, and blueprints for the
   region's Relics.
@@ -86,16 +86,16 @@ out. Below the hold are the old halls, lost in the Long Winter when the ice came
 - **The shop's look:** stone walls, a fur over the door, the hearth's glow, and snow through the window.
 - **Town life:** the hold's seasons (the thaw, the long dark, the herders' return), its events and its news.
 
-### Milestone 54: the hold's Relics (hidden)
+### Milestone 55: the hold's Relics (hidden)
 
 - **Nine new Relics**, one for each of the Hearth's Nine, across the stations and the five new patterns. Each with a power, a lore
   line and a relic material.
 - **Their blueprints** from the six families' stories and from below the old halls.
 
-### Milestone 55: the Nine of the Hearth, and the climb (players see it)
+### Milestone 56: the Nine of the Hearth, and the climb (players see it)
 
 - **The legend.** Aud the Hearthkeeper kept the fire alight through the Long Winter, when the ice took the lower halls. Nine pieces
-  were sworn to her hearth, and they went down into the ice with the halls. Each is one of milestone 54's Relics reforged with its
+  were sworn to her hearth, and they went down into the ice with the halls. Each is one of milestone 55's Relics reforged with its
   shard and three parts, as the other Nines are. The shards come from three places, three each, shuffled each generation:
   - below the old halls (as below the deep doors);
   - orders from the Thanes' Moot (as the Court's);
@@ -106,7 +106,7 @@ out. Below the hold are the old halls, lost in the Long Winter when the ice came
 - **Hearthold's opening,** the welcome counting only generations that worked in the snow, the line's record, the visit link and the
   flyer carrying the region ("THIRD OF THE LINE · OF THE HIGH SNOW"). Old links read as before.
 
-### Milestone 56: the hold's pace, the counter view and the phone
+### Milestone 57: the hold's pace, the counter view and the phone
 
 - **The sim** gets `REGION=north` and runs all three regions. Pace target: a second-generation heir makes all Nine of the Hearth in
   about two and a half months, as the coast's target was.
@@ -118,21 +118,21 @@ out. Below the hold are the old halls, lost in the Long Winter when the ice came
 - `region` takes a third value, `'north'`. A missing value still reads as `'reach'`; old saves need nothing.
 - The mine's galleries are already kept per region, so a line that dug in all three keeps all three.
 - The three Nines are counted apart, as the two are now.
-- Nothing about the Reach's or the coast's numbers changes. Milestone 52 is checked by running the old seeds in both regions and
+- Nothing about the Reach's or the coast's numbers changes. Milestone 53 is checked by running the old seeds in both regions and
   getting the same results.
 
 ## Order and size
 
 | Milestone | What | Seen by players |
 |---|---|---|
-| **52** | the third region in the frame; Hearthold's suppliers, materials, customers, roads, dangers, branch and mine | no |
-| **53** | six families and their stories; five new patterns with art; the shop's look; seasons and events | no |
-| **54** | nine Relics, their blueprints and lore | no |
-| **55** | the Nine of the Hearth, the shards, the ending; the climb at the handing on; record, link and flyer | **yes** |
-| **56** | the pace in the sim; the counter view; the phone | yes |
+| **53** | the third region in the frame; Hearthold's suppliers, materials, customers, roads, dangers, branch and mine | no |
+| **54** | six families and their stories; five new patterns with art; the shop's look; seasons and events | no |
+| **55** | nine Relics, their blueprints and lore | no |
+| **56** | the Nine of the Hearth, the shards, the ending; the climb at the handing on; record, link and flyer | **yes** |
+| **57** | the pace in the sim; the counter view; the phone | yes |
 
 About the size of the Greyshore plan, plus the mine's frozen galleries. Most of it is writing and data (people, stories, eighteen
-legendary pieces). The art for five patterns and the counter view's backdrops is the slowest part. 52 to 54 ship hidden, so the
+legendary pieces). The art for five patterns and the counter view's backdrops is the slowest part. 53 to 55 ship hidden, so the
 live game never shows a half-built hold.
 
 ## The choices
