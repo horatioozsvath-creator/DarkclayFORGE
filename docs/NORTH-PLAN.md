@@ -1,8 +1,9 @@
 # Up into the snow: a plan for a third region (milestones 54–58)
 
-Status: draft (2026-11-19), nothing decided and nothing built. Renumbered 54–58 on 2026-11-20: the character creator
-(docs/CREATOR-PLAN.md) is milestone 53. Comes after the jackpot plan (docs/JACKPOT-PLAN.md, milestones 49–52), as decided. Builds on release 74 (the mine, with its own galleries in each region).
-The choices are at the end; the plan below is written with the first option of each.
+Status: decided (2026-11-20), nothing built. Every choice was taken as written (the first option of each), and the art is
+rendered from Darkclay Zero's private models and published with the release, with the user's yes (choice 6, option 1). Renumbered
+54–58 on 2026-11-20: the character creator (docs/CREATOR-PLAN.md) is milestone 53, built in release 80. Builds on release 80 now: the
+heir chooses Hearthold at the handing on, as the coast, and goes through the creator there.
 
 ## What it's for
 
@@ -135,6 +136,11 @@ out. Below the hold are the old halls, lost in the Long Winter when the ice came
 About the size of the Greyshore plan, plus the mine's frozen galleries. Most of it is writing and data (people, stories, eighteen
 legendary pieces). The art for five patterns and the counter view's backdrops is the slowest part. 54 to 56 ship hidden, so the
 live game never shows a half-built hold.
+
+## Decided (2026-11-20)
+
+The High Snow; any heir; a full new Nine; five new patterns; the hold's own mine, with ice; the counter view rendered from
+Zero's private models and published (the user's yes); the names kept. The choices as they were put:
 
 ## The choices
 
