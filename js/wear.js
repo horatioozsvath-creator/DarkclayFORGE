@@ -1,9 +1,10 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // WEAR, with no page access: every working wears its station; a worn one narrows the band; at full wear it breaks (after a working,
 // never during one) until rebuilt, which takes coin and hours. The dwarven forge: a better forge. Spared on a gentler Reach (bank.js).
-import { WEAR, STATIONS, RENOWN } from './data.js?v=79';
-import { rung } from './growth.js?v=79';
-import { threatsOn } from './bank.js?v=79';
+import { WEAR, STATIONS, RENOWN } from './data.js?v=80';
+import { rung } from './growth.js?v=80';
+import { threatsOn } from './bank.js?v=80';
+import * as Who from './who.js?v=80';
 
 const H = 3600000;
 export const stateOf = (save, st) => { save.wear = save.wear || {}; return save.wear[st] || (save.wear[st] = { w: 0 }); };
@@ -16,7 +17,7 @@ export const isBroken = (save, st, now) => { tidy(save, now); return !!stateOf(s
 export const rebuilding = (save, st) => { const s = stateOf(save, st); return s.broken && s.ready ? s.ready : 0; };
 const dwarf = (save, st) => st === 'forge' && !!save.dwarven;
 // the band, as the station stands: worn narrower, the dwarven forge wider
-export const bandMult = (save, st) => (dwarf(save, st) ? WEAR.dwarven.band : 1) * (wearOf(save, st) >= WEAR.worn ? WEAR.wornBand : 1);
+export const bandMult = (save, st) => (dwarf(save, st) ? WEAR.dwarven.band : 1) * (wearOf(save, st) >= WEAR.worn ? WEAR.wornBand : 1) * Who.bandGift(save, st);   // a people's gift (milestone 53)
 // what a working was, for its wear
 export const kindOf = res => res.mythic ? 'mythic' : res.relic ? 'relic' : res.part ? 'part' : res.instant ? 'quick' : res.rework || res.oldBlood || res.master ? 'rework' : 'work';
 // a working done: its wear; { w, broke } (null on a gentler Reach or in the week of grace)

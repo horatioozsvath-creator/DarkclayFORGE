@@ -23,8 +23,9 @@ import * as Leg from '../js/legacy.js';
 import * as Rg from '../js/region.js';
 import * as Mine from '../js/mine.js';
 import * as Bed from '../js/bed.js';
+import * as Who from '../js/who.js';
 import fs from 'node:fs';
-import { BRANCH, RELICS, MYTHICS, MATS } from '../js/data.js';
+import { BRANCH, RELICS, MYTHICS, MATS, PEOPLES } from '../js/data.js';
 import { PATTERNS, TOOLS, TIERS, SHELF_LEVELS, OLD_BLOOD, RELIC_WORK } from '../js/data.js';
 
 const days = +process.argv[2] || 7, seed0 = +process.argv[3] || 1, SESSION_MIN = +process.argv[4] || 45;
@@ -35,6 +36,11 @@ const save = { v: 1, maker: 'Bot', trades: {}, found: ['ember'], chosen: [], pic
 save.uid = 'sim' + seed0;
 // REGION=greyshore: a shop on the coast over the pass (milestone 39); none, the Reach
 if (process.env.REGION && process.env.REGION !== 'reach') save.region = process.env.REGION;
+// SHOP=kettle, BACKGROUND=miner, PEOPLE=orc (milestone 53): who opens the shop, and what kind; none of them, today's game to the byte
+if (process.env.SHOP || process.env.BACKGROUND || process.env.PEOPLE) {
+  const people = process.env.PEOPLE || 'human', r = Who.start(save, { people, look: PEOPLES[people].looks[0], background: process.env.BACKGROUND || 'pedlar', shop: process.env.SHOP || 'forge' });
+  if (!r.ok) throw new Error(r.why);
+}
 Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save);
 // FOUND=0: only the patterns known from the start; otherwise (milestone 33's balance run) every hidden pattern found from day one
 // START=n: begin n calendar days later (the town's board, and so the fallen star, is the same in every shop on a day)
@@ -74,6 +80,7 @@ function choose(hour) {
   let best = null;
   for (const id of Object.keys(PATTERNS)) {
     if (!Rm.owns(save, PATTERNS[id].station || 'forge') || PATTERNS[id].makes || !Sh.knows(save, id)) continue;
+    if (save.shop && save.shop !== 'forge' && G.rung(save) < 2 && (PATTERNS[id].station || 'forge') !== save.shop) continue;   // a new shop of another kind: its own station first, till KNOWN (milestone 53)
     // six of it waiting unsold: make something else, as a player would; unless it's the piece a Relic waits on and the trade isn't there yet
     // (milestone 42: a player chasing a Relic keeps making it; the coast's bench never got there)
     if (Sh.inBack(save).filter(c => c.pattern === id).length >= GLUT && !(CHASE && chasing(id) && (Trail.stationLevel(save, PATTERNS[id].station || 'forge') < RELIC_WORK.level || lvl(id) < RELIC_WORK.pattern || !hasWorkable(id)))) continue;

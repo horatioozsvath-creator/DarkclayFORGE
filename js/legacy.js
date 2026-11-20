@@ -3,14 +3,15 @@
 // The heir's shop is built fresh, with only what the line keeps: the book (patterns found, tries, clues), the blueprints, the found
 // tiles, the heir's trades (their own, up to trade 5; trade 2 in the rest), their trait for good and one heirloom over the door. The
 // old shop goes into the line's record, with its save code (its own record left out, so nothing nests).
-import { LEGACY, PATTERNS, HALL, MYTHICS, TIERS, RENOWN } from './data.js?v=79';
-import { scatter } from './trail.js?v=79';
-import { isNine, renownOf } from './growth.js?v=79';
-import { levelOf, xpToNext } from './rules.js?v=79';
-import { apprenticeOf, TOP_XP } from './apprentice.js?v=79';
-import { fresh, toCode } from './save.js?v=79';
-import * as Rg from './region.js?v=79';
-import { inherit as inheritMine, depthOf } from './mine.js?v=79';
+import { LEGACY, PATTERNS, HALL, MYTHICS, TIERS, RENOWN } from './data.js?v=80';
+import { scatter } from './trail.js?v=80';
+import { isNine, renownOf } from './growth.js?v=80';
+import { levelOf, xpToNext } from './rules.js?v=80';
+import { apprenticeOf, TOP_XP } from './apprentice.js?v=80';
+import { fresh, toCode } from './save.js?v=80';
+import * as Rg from './region.js?v=80';
+import { inherit as inheritMine, depthOf } from './mine.js?v=80';
+import * as Who from './who.js?v=80';
 
 const DAY = 86400000;
 export const gen = save => save.gen || 1;
@@ -59,7 +60,7 @@ export function recordOf(save, now, looms) {
 }
 // the heir's shop, from the old one: a new object (the old save is left as it was). heirloomId: a card from heirlooms(), or null.
 // to: where the heir sets up the forge (milestone 42, the crossing): the Reach (the default) or over the pass, 'greyshore'
-export function handOn(save, picked, now, to) {
+export function handOn(save, picked, now, to, who) {   // who (milestone 53): the heir's people, look, background and shop
   const c = canHandOn(save, now); if (!c.ok) return c;
   const ids = [...new Set([].concat(picked || []))], n = heirloomsFor(gen(save) + 1), p = c.heir, list = heirlooms(save), looms = ids.map(id => list.find(x => x.id === id));
   if (looms.some(x => !x)) return { ok: false, why: 'that piece can\'t pass on' };
@@ -82,10 +83,12 @@ export function handOn(save, picked, now, to) {
   // the line's mine (milestone 48): the galleries kept, their shoring gone old, and the face and the smelting at trade LEGACY.rest
   const mine = inheritMine(save, now);
   if (mine) { next.mine = mine; for (const id of ['dig', 'smelt']) next.trades[id] = { xp: xpFor(LEGACY.rest) }; }
+  // the heir is a new person (milestone 53): their people and background, and the kind of shop they open, any kind
+  if (who) { const w = Who.start(next, who); if (!w.ok) return { ok: false, why: w.why }; }
   // from the third generation in the region, the town's welcome: the shop starts KNOWN. The Reach counts every generation (milestone
   // 38); over the pass, only the ones that worked there: nobody in Saltby has heard of the line (milestone 42)
   next.renown = Rg.localGen(next) >= LEGACY.welcomeFrom ? RENOWN[LEGACY.welcome].at : 0;
-  next.inheritedXp = Object.values(next.trades).reduce((a, t) => a + t.xp, 0);   // the head start: not counted to the maker's level
+  next.inheritedXp = Object.values(next.trades).reduce((a, t) => a + t.xp, 0) + ((next.haggle || {}).xp || 0);   // the head start (and a pedlar's haggling): not counted to the maker's level
   if (next.book === undefined) delete next.book;
   return { ok: true, save: next, record: rec };
 }

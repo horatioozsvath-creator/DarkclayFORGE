@@ -14,21 +14,22 @@ const body = name => {
   return src.slice(i);
 };
 
-test('what the catch-up at load calls is hoisted', () => {
-  const at = src.indexOf('let awaySum = catchUpAll(');
-  assert.ok(at > 0);
-  const seen = new Set(), todo = ['catchUpAll'];
+// each root, and where the page calls it as it loads: what it reaches must be defined before that point
+for (const [root, call] of [['catchUpAll', 'let awaySum = catchUpAll('], ['toHome', '\ntoHome();']]) test('what ' + root + ' reaches at load is defined by then', () => {
+  const at = src.indexOf(call);
+  assert.ok(at > 0, call);
+  const seen = new Set(), todo = [root];
   while (todo.length) {
     const name = todo.pop(); if (seen.has(name)) continue; seen.add(name);
     const b = body(name);
     for (const [, id] of b.matchAll(/(?<![.\w])([a-zA-Z_$][\w$]*)\(/g)) {
       const decl = src.match(new RegExp('^(const|let) ' + id.replace('$', '\\$') + ' =', 'm'));
-      if (decl) assert.ok(decl.index < at, id + ' (called at load by ' + name + ') is a ' + decl[1] + ' defined after the catch-up: make it a function');
+      if (decl) assert.ok(decl.index < at, id + ' (called at load by ' + name + ') is a ' + decl[1] + ' defined after ' + root + ' runs: make it a function');
       if (new RegExp('^function ' + id + '\\(', 'm').test(src)) todo.push(id);
     }
     for (const [, id] of b.matchAll(/(?<![.\w])([a-zA-Z_$][\w$]*)\b/g)) {
       const decl = src.match(new RegExp('^(const|let) ' + id.replace('$', '\\$') + ' =', 'm'));
-      if (decl && !/^(const|let) (save|rng|\$)\b/.test(decl[0])) assert.ok(decl.index < at, id + ' (used at load by ' + name + ') is defined after the catch-up');
+      if (decl && !/^(const|let) (save|rng|\$)\b/.test(decl[0])) assert.ok(decl.index < at, id + ' (used at load by ' + name + ') is defined after ' + root + ' runs');
     }
   }
 });

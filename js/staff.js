@@ -1,19 +1,20 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=79';
-import { levelOf, makePiece, partOptions } from './rules.js?v=79';
-import { awayStep } from './shop.js?v=79';
-import { wageMult, capBonus, rung } from './growth.js?v=79';
-import * as Trail from './trail.js?v=79';
-import { TRAIL, MONSTERS, GROWN } from './data.js?v=79';
-import * as Run from './runner.js?v=79';
-import * as Mon from './monsters.js?v=79';
-import * as Ap from './apprentice.js?v=79';
-import * as Rg from './region.js?v=79';
-import * as Mine from './mine.js?v=79';
-import * as Bed from './bed.js?v=79';
-import * as Mi from './miner.js?v=79';
+import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=80';
+import { levelOf, makePiece, partOptions } from './rules.js?v=80';
+import { awayStep } from './shop.js?v=80';
+import { wageMult, capBonus, rung } from './growth.js?v=80';
+import * as Trail from './trail.js?v=80';
+import { TRAIL, MONSTERS, GROWN } from './data.js?v=80';
+import * as Run from './runner.js?v=80';
+import * as Mon from './monsters.js?v=80';
+import * as Ap from './apprentice.js?v=80';
+import * as Rg from './region.js?v=80';
+import * as Mine from './mine.js?v=80';
+import * as Bed from './bed.js?v=80';
+import * as Mi from './miner.js?v=80';
+import * as Who from './who.js?v=80';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -22,7 +23,7 @@ const pick = (list, rng) => list[Math.floor(rng() * list.length)];
 // ---------- the people ----------
 export const levelOfP = p => levelOf(p.xp || 0).level;
 export const wageOf = p => ROLES[p.role].wage + levelOfP(p) - 1;
-export const wages = save => (save.staff || []).reduce((w, p) => w + wageOf(p), 0) * wageMult(save);
+export const wages = save => (save.staff || []).reduce((w, p) => w + wageOf(p) * (p.role === 'guard' ? Who.guardWage(save) : 1), 0) * wageMult(save);   // a soldier's night guard (milestone 53)
 export const clerkOf = save => (save.staff || []).find(p => p.role === 'clerk');
 export const runnerOf = save => (save.staff || []).find(p => p.role === 'runner');
 export const runners = save => (save.staff || []).filter(p => p.role === 'runner');
@@ -70,6 +71,12 @@ export function hire(save, c) {
   save.coins -= hireFee(c);
   save.staff.push({ id: c.id, role: c.role, name: c.name, trait: c.trait, xp: c.xp, trip: null, hiredAt: Date.now() });
   save.hiredIds = (save.hiredIds || []).concat(c.id).slice(-30);
+  // a soldier's old sword (milestone 53): the first runner hired goes out with it
+  if (c.role === 'runner' && (Who.backgroundOf(save) || {}).sword && !save.swordGiven) {
+    const sw = makePiece({ patternId: 'falchion', picks: [0, 0, 0], result: { tier: 0, worked: 10, strikes: 20, heats: 2, cracks: 1 }, picked: null, maker: save.maker, rng: () => 0.5, now: Date.now() });
+    sw.made = ['Your own sword, from the wars', sw.made[sw.made.length - 1]]; sw.lore = 'It came home with you. Now it goes out on the roads.';
+    save.cards.unshift(sw); save.swordGiven = true; Run.equip(save, save.staff[save.staff.length - 1], sw.id);
+  }
   return true;
 }
 export function letGo(save, id) {

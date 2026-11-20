@@ -22,9 +22,9 @@
 <meta property="og:image:height" content="630">
 <meta property="og:url" content="https://horatioozsvath-creator.github.io/DarkclayZERO_FORGE/">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="css/fonts.css?v=79">
-<link rel="stylesheet" href="css/working.css?v=79">
-<link rel="stylesheet" href="css/game.css?v=79">
+<link rel="stylesheet" href="css/fonts.css?v=80">
+<link rel="stylesheet" href="css/working.css?v=80">
+<link rel="stylesheet" href="css/game.css?v=80">
 </head>
 <body>
 <!-- an unofficial copy: says where the real game is (js/main.js OFFICIAL) -->
@@ -33,19 +33,23 @@
 <div class="titlescreen" id="title" hidden role="dialog" aria-modal="true" aria-label="Darkclay Forge">
   <div class="tin">
     <div class="tk">A GAME OF THE FORGE AND THE SHOP</div>
-    <h1 class="tname">Darkclay Forge</h1>
+    <h1 class="tname" id="tName">Darkclay <span class="tword">Forge</span></h1><div class="tfx" id="tFx" aria-hidden="true"></div>
     <p class="tline">Work the metal tile by tile. Keep every piece as a card. Run the shop that sells them.</p>
     <div class="tslots" id="tSlots"></div>
     <div class="tfoot"><span id="tVersion"></span><span id="tUpdate"></span><button class="seg" id="tLicense">LICENCE</button></div>
     <p class="tcopy">© 2026 the author of Darkclay Forge · all rights reserved</p>
   </div>
 </div>
+<!-- WHO OPENS THE SHOP (milestone 53): a new game's maker, what they were, and the kind of shop; an heir's too -->
+<div class="titlescreen creator" id="creator" hidden role="dialog" aria-modal="true" aria-label="Who opens the shop">
+  <div class="tin cin" id="creatorIn"></div>
+</div>
 <div class="wrap">
 
   <!-- the way between the forge, the shop and the suppliers; the purse -->
   <nav class="nav" id="nav" aria-label="The shop's rooms">
     <div class="tabs">
-      <button class="seg" data-go="home">THE FORGE</button>
+      <button class="seg" data-go="home" id="navHome">THE FORGE</button>
       <button class="seg" data-go="shop">THE SHOP <span class="dot" id="navSold" hidden></span></button>
       <button class="seg" data-go="supp">SUPPLIERS</button>
       <button class="seg" data-go="staff">STAFF</button>
@@ -61,7 +65,7 @@
     <header class="top">
       <div>
         <div class="kicker" id="forgeKicker">DARKCLAY · THE MAKER'S SHOP</div>
-        <h1>Darkclay Forge</h1>
+        <h1 id="homeTitle">Darkclay Forge</h1>
       </div>
       <label class="maker">MAKER'S MARK<input id="maker" maxlength="24" autocomplete="off" spellcheck="false"></label>
     </header>
@@ -94,6 +98,7 @@
         <div><div class="mk-l" id="mkLevel"></div><div class="xp"><i id="mkXp"></i></div><div class="mk-s" id="mkPoints"></div></div>
         <div><div class="mk-l" id="mkRenown"></div><div class="xp"><i id="mkRen"></i></div><div class="mk-s" id="mkRenNext"></div></div>
       </div>
+      <div class="whobox" id="whoBox"></div>
       <div class="branches" id="branches"></div>
       <p class="note" id="perkNote"></p>
     </section>
@@ -482,6 +487,6 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js" } }</script>
-<script type="module" src="js/main.js?v=79"></script>
+<script type="module" src="js/main.js?v=80"></script>
 </body>
 </html>

@@ -1,8 +1,9 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // Growth, with no page access: tools, the maker's level and perks, renown, the display wall.
-import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS, HALL_RENOWN, HALL_CHARM, MYTHICS, NINE, LEGACY, GROWN } from './data.js?v=79';
-import { levelOf, MAX_LEVEL } from './rules.js?v=79';
-import * as Rg from './region.js?v=79';
+import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS, HALL_RENOWN, HALL_CHARM, MYTHICS, NINE, LEGACY, GROWN } from './data.js?v=80';
+import { levelOf, MAX_LEVEL } from './rules.js?v=80';
+import * as Rg from './region.js?v=80';
+import * as Who from './who.js?v=80';
 
 // ---------- tools ----------
 export const has = (save, id) => (save.tools || []).includes(id);
@@ -90,7 +91,7 @@ export const haggleMult = save => perked(save, 'tongue') ? 1.05 : 1;
 export const wageMult = save => (perked(save, 'wages') ? 0.8 : 1) * (heirTrait(save).wage || 1);
 // the heir's trait (milestone 37): {} for a first maker
 export const heirTrait = save => (save && save.heirTrait && LEGACY.trait[save.heirTrait]) || {};
-export const xpMult = save => heirTrait(save).xp || 1;
+export const xpMult = save => (heirTrait(save).xp || 1) * Who.xpGift(save);   // and a Human's gift (milestone 53)
 // the heirloom (milestone 37): over the shop door, never for sale; charm as it would bring in the Hall, no renown (the heir earns that)
 export const heirloomCharm = save => !save ? 0 : (save.heirlooms || (save.heirloom ? [save.heirloom] : [])).reduce((a, c) => a + (HALL_CHARM[c.tier] || 0) + grownCharm(c), 0);
 // a grown piece on the wall or over the door draws a little more for each stage past the first (milestone 51)

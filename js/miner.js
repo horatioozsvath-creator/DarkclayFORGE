@@ -4,13 +4,14 @@
 // open one), Common or Fine, never Rare: slower than your own hand, and no pockets. Their workings wear the gallery's shoring as
 // yours do; a roof that comes in on them, or something out of the old workings (gallery 4), can hurt them, as the road hurts a
 // runner. Armour, a weapon, a lantern and a night guard keep them safer. None of the danger on a gentler Reach or in the week of grace.
-import { MINERS, MATS, GEAR, GROWN } from './data.js?v=79';
-import { levelOf, yieldOf } from './rules.js?v=79';
-import * as Mine from './mine.js?v=79';
-import * as Run from './runner.js?v=79';
-import { rung } from './growth.js?v=79';
-import { threatsOn } from './bank.js?v=79';
-import * as Rg from './region.js?v=79';
+import { MINERS, MATS, GEAR, GROWN } from './data.js?v=80';
+import { levelOf, yieldOf } from './rules.js?v=80';
+import * as Mine from './mine.js?v=80';
+import * as Run from './runner.js?v=80';
+import { rung } from './growth.js?v=80';
+import { threatsOn } from './bank.js?v=80';
+import * as Rg from './region.js?v=80';
+import * as Who from './who.js?v=80';
 
 const M = MINERS, D = 24 * 3600000;
 export const minersOf = save => (save.staff || []).filter(p => p.role === 'miner');
@@ -43,7 +44,8 @@ const guarded = save => (save.staff || []).some(x => x.role === 'guard');
 export function risk(save, p, g, now) {
   if (!threatsOn(save, now)) return { fall: 0, beast: 0, hurt: 0 };
   const f = shield(p);
-  return { fall: Math.min(0.95, M.hurtFall * f), beast: g >= M.beast.from ? M.beast.odds * (guarded(save) ? M.beast.guard : 1) : 0, hurt: Math.min(0.95, M.beast.hurt * f) };
+  const o = Who.hurtGift(save);   // an Orc's gift (milestone 53)
+  return { fall: Math.min(0.95, M.hurtFall * f * o), beast: g >= M.beast.from ? M.beast.odds * (guarded(save) ? M.beast.guard : 1) : 0, hurt: Math.min(0.95, M.beast.hurt * f * o) };
 }
 // hurt: off their feet some days, the healer paid; a salve heals it, a poultice halves it
 function harm(save, p, rng, now, out) {

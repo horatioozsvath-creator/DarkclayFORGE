@@ -1,41 +1,42 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // DarkclayFORGE. The screens: THE FORGE (home), PREPARE, THE WORKING, THE RESULT; THE SHOP and SUPPLIERS.
-import { KINDS, KC, TIERS, APPRENTICE, LEGACY, TRAITS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE, MINE , MARKS, GROWN, GROWBED } from './data.js?v=79';
-import * as R from './rules.js?v=79';
-import * as Sh from './shop.js?v=79';
-import * as St from './staff.js?v=79';
-import * as Rm from './room.js?v=79';
-import * as G from './growth.js?v=79';
-import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=79';
-import * as Snd from './sound.js?v=79';
-import * as CV from './counter.js?v=79';
-import * as Town from './town.js?v=79';
-import * as V from './visit.js?v=79';
-import * as Br from './branch.js?v=79';
-import * as Bank from './bank.js?v=79';
-import * as Wear from './wear.js?v=79';
-import * as Th from './thieves.js?v=79';
-import * as Run from './runner.js?v=79';
-import * as Src from './sources.js?v=79';
-import * as Mon from './monsters.js?v=79';
-import * as Liv from './living.js?v=79';
-import * as Hl from './hall.js?v=79';
-import * as Trail from './trail.js?v=79';
-import * as Rg from './region.js?v=79';
-import * as Disc from './discover.js?v=79';
-import { ICONS, emblem, watch } from './icons.js?v=79';
-import { drawFlyer, flyerBlob } from './flyer.js?v=79';
-import * as Ap from './apprentice.js?v=79';
-import * as Mi from './miner.js?v=79';
-import * as Leg from './legacy.js?v=79';
-import * as Mine from './mine.js?v=79';
-import * as Bed from './bed.js?v=79';
-import { lookOf, bagLook, unknownLook } from './tiles.js?v=79';
-import { card, ART, markWord } from './card.js?v=79';
-import { paint, sparksFor, LAYOUTS } from './stage.js?v=79';
-import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=79';
+import { KINDS, KC, TIERS, APPRENTICE, LEGACY, TRAITS, FORGE, STATIONS, FORGED_PARTS, PATTERNS, FOUND, MATS, SUPPLIERS, TAGS, HAGGLE, PATIENCE, ROLES, ROUTES, FURNITURE, SHELF_LEVELS, OLD_BLOOD, STORIES, BRANCH, RELICS, RELIC_WORK, HALL, MYTHICS, TRAIL, MYTHIC_WORK, PART_WORK, ROOM_SIZES, TOOLS, PERKS, RENOWN, NINE, WEAR, THIEVES, GEAR, MONSTERS, LIVING, TRY_ROLES, TRY_LINE, MINE , MARKS, GROWN, GROWBED, PEOPLES, BACKGROUNDS, SHOPS } from './data.js?v=80';
+import * as R from './rules.js?v=80';
+import * as Sh from './shop.js?v=80';
+import * as St from './staff.js?v=80';
+import * as Rm from './room.js?v=80';
+import * as G from './growth.js?v=80';
+import { decodeCard, linkFor, packLink, unpackLink } from './share.js?v=80';
+import * as Snd from './sound.js?v=80';
+import * as CV from './counter.js?v=80';
+import * as Town from './town.js?v=80';
+import * as V from './visit.js?v=80';
+import * as Br from './branch.js?v=80';
+import * as Bank from './bank.js?v=80';
+import * as Wear from './wear.js?v=80';
+import * as Th from './thieves.js?v=80';
+import * as Run from './runner.js?v=80';
+import * as Src from './sources.js?v=80';
+import * as Mon from './monsters.js?v=80';
+import * as Liv from './living.js?v=80';
+import * as Hl from './hall.js?v=80';
+import * as Trail from './trail.js?v=80';
+import * as Rg from './region.js?v=80';
+import * as Disc from './discover.js?v=80';
+import { ICONS, emblem, watch } from './icons.js?v=80';
+import { drawFlyer, flyerBlob } from './flyer.js?v=80';
+import * as Ap from './apprentice.js?v=80';
+import * as Mi from './miner.js?v=80';
+import * as Leg from './legacy.js?v=80';
+import * as Mine from './mine.js?v=80';
+import * as Bed from './bed.js?v=80';
+import * as Who from './who.js?v=80';
+import { lookOf, bagLook, unknownLook } from './tiles.js?v=80';
+import { card, ART, markWord } from './card.js?v=80';
+import { paint, sparksFor, LAYOUTS } from './stage.js?v=80';
+import { load, store as storeRaw, toCode, fromCode, SLOTS, activeSlot, setActiveSlot, peekSlots, clearSlot } from './save.js?v=80';
 // the release: shown on the title; version.json on the site says the newest, so an old page knows to refresh
-const VERSION = 79;
+const VERSION = 80;
 // where the game is meant to be played: anywhere else, a banner says it's a copy and where the real one is
 const OFFICIAL = { hosts: ['horatioozsvath-creator.github.io', 'localhost', '127.0.0.1', '[::1]', ''], url: 'https://horatioozsvath-creator.github.io/DarkclayZERO_FORGE/' };
 // once a loaded save is in storage, nothing writes this game back over it before the page reloads
@@ -49,6 +50,8 @@ Town.refreshTown(save, Date.now());
 R.convertSave(save); Mine.fixSave(save); Sh.fixShelf(save); Rm.fixRoom(save); Sh.fixShelf(save); G.fixWall(save);
 // a new game started from the title with the gentler Reach chosen (or not); a save from before the threats gets a week's grace
 try { const g = sessionStorage.getItem('darkclayforge.newGentle'); if (g != null) { sessionStorage.removeItem('darkclayforge.newGentle'); if (!save.made && save.threatsFrom == null) { save.gentle = g === '1'; save.threatsFrom = Date.now(); } } } catch (e) { /* none */ }
+// a new game's maker and shop, chosen in the creator before the page opened on this slot (milestone 53)
+try { const w = sessionStorage.getItem('darkclayforge.newWho'); if (w) { sessionStorage.removeItem('darkclayforge.newWho'); if (isFreshSave(save)) applyWho(save, JSON.parse(w)); } } catch (e) { /* none */ }
 Bank.fixThreats(save, Date.now());
 save.queue = [];   // whoever was at the counter when the page closed has gone
 // the first shop's catch-up (staff.js), then the second shop's keeper over the same time
@@ -69,6 +72,7 @@ store(save);
 const phoneQ = window.matchMedia('(max-width: 600px)');
 const TIERC = ['var(--t-common)', 'var(--t-fine)', 'var(--t-rare)', 'var(--t-oldblood)', 'var(--t-relic)', 'var(--t-mythic)'];
 
+let cr = null;             // the creator, while it's open (milestone 53)
 let screen = 'home';       // home | shop | supp | prepare | work
 let pat = 'falchion';      // the pattern on the bench
 let S = null;              // the working
@@ -207,7 +211,7 @@ function tip(key, before, parent) {
 
 // ---------- THE FORGE (home) ----------
 function toHome() {
-  clearTimers(); S = null; rescueCheck(); show('home'); coins(); backupReminder();
+  clearTimers(); S = null; rescueCheck(); show('home'); coins(); backupReminder(); shopLook();
   $('maker').value = save.maker;
   const patBtn = ([id, p]) => {
     const l = levelFor(id), n = save.cards.filter(c => c.pattern === id).length;
@@ -218,7 +222,8 @@ function toHome() {
       + '<div class="xp"><i style="width:' + (l.need ? Math.round(l.into / l.need * 100) : 100) + '%"></i></div>'
       + '<div class="lv"><span>' + n + ' MADE</span></div></button>';
   };
-  $('patterns').innerHTML = Object.values(STATIONS).map(st => {
+  const mine1 = Who.shopOf(save);   // the shop's own station first (milestone 53)
+  $('patterns').innerHTML = Object.values(STATIONS).slice().sort((a, b) => (b.id === mine1) - (a.id === mine1)).map(st => {
     const pats = Object.entries(PATTERNS).filter(([id, p]) => (p.station || 'forge') === st.id && Sh.knows(save, id) && (!p.mine || Mine.isOpen(save)));
     const head = '<h3 class="stationhead">' + st.word + '</h3>';
     // parts forged for the other stations (milestones 30, 33): under the forge for each station you have, and under the station that uses them
@@ -335,6 +340,7 @@ let perkNote = '', toolNote = '';
 function renderMaker() {
   const lv = G.makerLevel(save), pts = G.pointsLeft(save), ren = G.renownOf(save), rg = G.rung(save), nx = G.nextRung(save);
   $('makerWord').textContent = save.maker.toUpperCase();
+  renderWho();
   $('mkLevel').innerHTML = 'Maker level <b>' + lv.level + '</b>';
   $('mkXp').style.width = (lv.need ? Math.round(lv.into / lv.need * 100) : 100) + '%';
   $('mkPoints').textContent = (pts ? pts + ' SKILL POINT' + (pts > 1 ? 'S' : '') + ' TO SPEND · ' : '') + 'ALL PRACTICE COUNTS: EVERY TRADE AND HAGGLING';
@@ -499,7 +505,7 @@ function showHandOn() {
   openLook('<div class="ending"><div class="oldword" style="color:var(--t-mythic)">THE LEGACY</div><h2>Hand on the forge</h2>'
     + goes + cross
     + '<p><b>The line keeps:</b> the book (every pattern found, every try and clue), the blueprints (known, not made), the found tiles, ' + esc(p.name) + '\'s trades (' + (own.length ? own.map(x => esc(PATTERNS[x.id].name) + ' ' + x.level).join(', ') + '; ' : '') + 'trade ' + LEGACY.rest + ' in the rest), their trait for good (' + esc(TRAITS.apprentice.find(t => t.id === p.trait)?.word || p.trait) + ': ' + esc(tr.line || '') + ')' + (save.mine ? ', the mine (down to gallery ' + Mine.depthOf(save) + ', its shoring gone old: shore it again before you dig, and the face and smelting at trade ' + LEGACY.rest + ')' : '') + ', and ' + (n > 1 ? 'two heirlooms' : 'one heirloom') + '.' + welcome + '</p>'
-    + '<p><b>Starts over:</b> coin (a purse of ' + LEGACY.purse + ' c), renown, the room, the stations (the forge only), the tools and skills, the staff, the shelves and the back room, the Bank, the Hall, the trail and its shards, the regulars, the second shop.</p>'
+    + '<p><b>Starts over:</b> coin (a purse of ' + LEGACY.purse + ' c), renown, the room, the stations (the forge, and the station of the heir\'s own shop), the tools and skills, the staff, the shelves and the back room, the Bank, the Hall, the trail and its shards, the regulars, the second shop.</p>'
     + '<div class="oldword" style="margin-top:16px">' + (n > 1 ? 'THE HEIRLOOMS' : 'THE HEIRLOOM') + '</div>' + (list.length ? '<p>' + (n > 1 ? 'Two pieces' : 'One piece') + ' to hang over the new shop\'s door: never for sale, and ' + (n > 1 ? 'they draw' : 'it draws') + ' customers. The rest stays with your shop.</p><div class="handpick">' + pick + '</div>' : '<p>You have no Old-Blood piece, Relic, Mythic or grown piece in the shop to pass on: the forge goes on without an heirloom.</p>')
     + '<div class="oldword" style="margin-top:16px">YOUR SHOP</div><p>Your shop is kept in the line\'s record, with its save code. Copy the code now too, if you want to keep it somewhere safe.</p><p class="note" id="handNote"></p></div>',
     '<button class="seg" id="handCode">COPY THIS SHOP\'S CODE</button><button class="seg go" id="handGo">HAND ON THE FORGE</button><button class="seg" id="handBack">NOT YET</button>', true);
@@ -513,15 +519,20 @@ function showHandOn() {
     if (looms.length < Math.min(n, list.length)) { $('handNote').textContent = 'Choose ' + (n > 1 ? 'two heirlooms' : 'the heirloom') + ' first.'; return; }
     if (!confirm('Hand on the forge to ' + p.name + (over ? ', over the pass in Saltby' : ', in the Reach') + (looms.length ? ', with ' + names(looms.map(x => x.name)) + (looms.length > 1 ? ' as the heirlooms' : ' as the heirloom') : '') + '?\n\nYour shop goes into the line\'s record and ' + p.name + ' starts a new one in this slot.')) return;
     if (!confirm('This can\'t be undone. Hand on the forge?')) return;
-    save.lastSeen = Date.now();
-    const r = Leg.handOn(save, looms.map(x => x.id), Date.now(), handTo);
-    if (!r.ok) { $('handNote').textContent = 'Not handed on: ' + r.why + '.'; return; }
-    if (!storeRaw(r.save)) {
-      if (!confirm('This browser won\'t hold the old shop\'s save code in the record (it\'s full). Hand on without it? Copy the code first if you want to keep it.') || !storeRaw(Leg.withoutCodes(r.save))) { $('handNote').textContent = 'Not handed on: this browser won\'t store it.'; return; }
-    }
-    try { sessionStorage.setItem('darkclayforge.skipTitle', '1'); } catch (e) { /* none */ }
-    replacing = true; location.reload();
+    // who the heir is, and the shop they open (milestone 53)
+    $('look').hidden = true;
+    openCreator({ mode: 'heir', name: p.name, onCancel: showHandOn, onDone: who => handOnTo(looms, who) });
   };
+}
+function handOnTo(looms, who) {
+    save.lastSeen = Date.now();
+    const r = Leg.handOn(save, looms.map(x => x.id), Date.now(), handTo, who);
+    if (!r.ok) { toast('<b>Not handed on</b><br>' + esc(r.why) + '.'); return; }
+    if (!storeRaw(r.save)) {
+      if (!confirm('This browser won\'t hold the old shop\'s save code in the record (it\'s full). Hand on without it? Copy the code first if you want to keep it.') || !storeRaw(Leg.withoutCodes(r.save))) { toast('<b>Not handed on</b><br>This browser won\'t store it.'); return; }
+    }
+    try { sessionStorage.setItem('darkclayforge.titleDrop', '1'); } catch (e) { /* none */ }   // the title, the heir's shop's name dropping in
+    replacing = true; location.reload();
 }
 // the line's record, the heirlooms, and the new generation's welcome
 function renderLine() {
@@ -621,7 +632,7 @@ let floorShown = null;
 let cvw = null, cvP = null, iso = false, cvSig = '', cvFront = null;
 function counterView() {
   $('cview').hidden = false; $('cvActs').hidden = false; $('floor').hidden = true; $('dioBar').hidden = true;
-  if (!cvP) cvP = import('./counter.js?v=79').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
+  if (!cvP) cvP = import('./counter.js?v=80').then(m => { cvw = m.create($('cview'), { place: (k, i) => k === 'shelf' ? (i < save.slots ? slotOpen(i) : null) : wallPlaceOpen(i), workshop: () => toHome() }); cvw.show(save, Sh.priceAt); return cvw; }).catch(() => null);
   else if (cvw) cvw.show(save, Sh.priceAt);
 }
 // a place on the painted wall: its piece (take it down), or empty (hang one from the back room)
@@ -636,7 +647,7 @@ function toShop() {
   clearTimers(); S = null; rescueCheck(); show('shop'); coins(); $('navSold').hidden = true; renderShop();
   if (!iso) { counterView(); tip('shop', $('cview')); return; }
   tip('shop', $('floor'));
-  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=79').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
+  if (!dioP) { $('floor').classList.add('loading'); dioP = import('./diorama.js?v=80').then(m => m.create($('floor'), { onTap: dioTap, folk: false })).catch(() => null).then(d => {
     dio = d; $('floor').classList.remove('loading');
     if (d) { $('floor').classList.add('has3d'); $('dioBar').hidden = false; d.setRoom(viewRoom(), save); d.setShelf(standsFor()); d.setQueue(save.queue); renderDioBar(); }
     return d;
@@ -2402,7 +2413,7 @@ const branchShown = () => { const v = bview(); return Rm.shelfSpots(v.room).map(
 function toBranch() {
   if (!save.branch) { toShop(); return; }
   show('branch'); coins(); renderBranch();
-  if (!branchDioP) branchDioP = import('./diorama.js?v=79').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
+  if (!branchDioP) branchDioP = import('./diorama.js?v=80').then(m => m.create($('branchFloor'), { onTap: t => { if (t.slot != null) branchSlotOpen(t.slot); } })).catch(() => null).then(d => (branchDio = d));
   branchDioP.then(d => { if (d) { d.setRoom(save.branch.room, { staff: [] }); d.setShelf(branchShown()); d.setQueue([]); d.redraw(); } });
 }
 function renderBranch() {
@@ -2481,7 +2492,7 @@ function toVisit(shop, away) {
   $('visitBack').textContent = mine ? 'BACK TO MY FORGE' : 'START YOUR OWN FORGE';
   $('visitBack').onclick = () => { visiting = null; toHome(); if (away) { showAway(away); away = null; } };
   const ready = d3 => { if (!d3) { $('visitHint').textContent = 'This browser can\'t draw the shop in 3D: their wall is below.'; return; } d3.setRoom(shop.room, { staff: [] }); d3.setShelf(shop.stands); d3.setQueue([]); d3.redraw(); };
-  if (!visitDioP) visitDioP = import('./diorama.js?v=79').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
+  if (!visitDioP) visitDioP = import('./diorama.js?v=80').then(m => m.create($('visitFloor'), { onTap: visitTap })).catch(() => null).then(d => (visitDio = d));
   visitDioP.then(ready);
   visitNext = performance.now() + 1500;
 }
@@ -2569,36 +2580,134 @@ if (shared) {
     else { toast('<b>This shop link won\'t open</b><br>It may be cut short. Ask for it again.'); showAway(away); }
   });
 } else if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+// ---------- WHO OPENS THE SHOP (milestone 53): the creator, the shop's own name, the maker's people ----------
+// a save nothing has happened in yet: a new game (never an heir's, never one loaded with something made)
+function isFreshSave(s) { return !!s && !s.made && !s.sold && !s.who && !(s.cards || []).length && !((s.gen || 1) > 1); }
+// a new game's choice: the maker's name, the gentler Reach, who they are, their shop's station and store room
+function applyWho(s, c) {
+  if (c.name) s.maker = String(c.name).trim().slice(0, 24) || s.maker;
+  s.gentle = !!c.gentle; s.threatsFrom = Date.now();
+  const r = Who.start(s, c); if (!r.ok) return r;
+  Rm.fixRoom(s); Sh.fixShelf(s);
+  return r;
+}
+function FOLK_PIC(look) { return 'assets/folk/' + look + '.webp?f=2'; }   // (functions, not consts: toHome draws THE MAKER as the page loads)
+function shopArt(id) { return { forge: 'falchion', stretcher: 'jerkin', bowbench: 'shortbow', kettle: 'draught', glass: 'goblet' }[id]; }
+// the shop's own name on the page: the heading, the first room's button, the first hint
+function shopLook() {
+  const sh = SHOPS[Who.shopOf(save)];
+  $('homeTitle').textContent = Who.titleOf(save);
+  $('navHome').innerHTML = (Who.shopOf(save) === 'kettle' ? ICONS.cauldron : ICONS.anvil) + sh.room; $('navHome').classList.add('has-ico');
+  HINTS.home = sh.welcome;
+  document.title = Who.titleOf(save);
+}
+// THE MAKER: who they are, and what their people and their past brought
+function renderWho() {
+  const w = save.who || {}, pe = Who.peopleOf(save), bg = Who.backgroundOf(save), sh = SHOPS[Who.shopOf(save)];
+  $('whoBox').innerHTML = (w.look ? '<img class="whopic" src="' + FOLK_PIC(w.look) + '" alt="">' : '')
+    + '<div><span class="whohead"><b>' + esc(save.maker) + '</b>' + (pe ? ' · ' + pe.name : '') + (bg ? ' · ' + esc(bg.name.toLowerCase()) : '') + ' · <i>' + esc(Who.titleOf(save)) + '</i></span>'
+    + (pe ? '<span>' + esc(pe.name) + ': ' + esc(pe.line) + '.</span>' : '') + (bg ? '<span>Before: ' + esc(bg.line) + '.</span>' : '')
+    + (!pe ? '<span>Who are you? Choose your people (a portrait, and a small gift).</span><button class="seg" id="whoPick">CHOOSE YOUR PEOPLE</button>' : '') + '</div>';
+  if ($('whoPick')) $('whoPick').onclick = () => openCreator({ mode: 'people', name: save.maker, onDone: c => { save.who = { people: c.people, look: c.look, background: null }; store(save); renderMaker(); } });
+}
+// the creator: { mode: 'new' (a slot's new game) | 'heir' (the handing on) | 'people' (an older save's people), slot, name, gentle, onDone, onCancel }
+function openCreator(o) {
+  const looks = PEOPLES.human.looks;
+  cr = { step: 0, people: 'human', look: looks[0], background: 'smith', shop: 'forge', gentle: false, ...o };
+  if (o.people && PEOPLES[o.people]) cr.look = PEOPLES[o.people].looks[0];
+  $('creator').hidden = false; document.body.style.overflow = 'hidden'; renderCreator();
+}
+function closeCreator() { $('creator').hidden = true; cr = null; if ($('title').hidden) document.body.style.overflow = ''; }
+function renderCreator() {
+  const last = cr.mode === 'people' ? 0 : 2, step = cr.step, heir = cr.mode === 'heir';
+  const pick = (attr, id, on, inner) => '<button class="cpick' + (on ? ' on' : '') + '" data-' + attr + '="' + id + '" aria-pressed="' + on + '">' + inner + '</button>';
+  let body = '';
+  if (step === 0) {
+    body = '<h2>' + (heir ? 'Who is ' + esc(cr.name) + '?' : 'Who opens the shop?') + '</h2>'
+      + (cr.mode === 'new' ? '<label class="cname">YOUR MAKER\'S MARK<input id="crName" maxlength="24" autocomplete="off" spellcheck="false" value="' + esc(cr.name || '') + '" placeholder="the Maker"></label>' : '')
+      + '<div class="cgrid people">' + Object.entries(PEOPLES).map(([id, p]) => pick('people', id, cr.people === id, '<img src="' + FOLK_PIC(p.looks[0]) + '" alt=""><b>' + p.name + '</b><span>' + esc(p.line) + '</span>')).join('') + '</div>'
+      + (PEOPLES[cr.people].looks.length > 1 ? '<div class="clooks"><span>A LOOK</span>' + PEOPLES[cr.people].looks.map(l => pick('look', l, cr.look === l, '<img src="' + FOLK_PIC(l) + '" alt="">')).join('') + '</div>' : '');
+  } else if (step === 1) {
+    body = '<h2>What ' + (heir ? 'did ' + esc(cr.name.split(' ')[0]) + ' do' : 'did you do') + ' before?</h2><p class="clead">A small head start. It never ties you to a kind of shop: a miner can open a potion shop.</p>'
+      + '<div class="cgrid bgs">' + Object.entries(BACKGROUNDS).map(([id, b]) => pick('bg', id, cr.background === id, '<b>' + esc(b.name) + '</b><span>' + esc(b.line) + '.</span>')).join('') + '</div>';
+  } else {
+    body = '<h2>What shop ' + (heir ? 'will ' + esc(cr.name.split(' ')[0]) + ' open?' : 'will you open?') + '</h2><p class="clead">Its station is set up free, and it\'s the one you level through first. The others can be set up later, and the forge stands in the workshop either way.</p>'
+      + '<div class="cgrid shops">' + Object.entries(SHOPS).map(([id, sh]) => pick('shop', id, cr.shop === id, '<div class="cart">' + ART[shopArt(id)](id === 'forge' ? '#c9c5be' : '#a07850') + '</div><b>Darkclay ' + sh.word + '</b><em>' + STATIONS[id].word + '</em><span>' + esc(sh.line) + '</span>')).join('') + '</div>'
+      + (cr.mode === 'new' ? '<label class="tgentle"><input type="checkbox" id="crGentle"' + (cr.gentle ? ' checked' : '') + '> A gentler Reach: no thieves, monsters or dangers</label>' : '');
+  }
+  const word = SHOPS[cr.shop].word.toUpperCase();
+  $('creatorIn').innerHTML = '<div class="tk">' + (heir ? 'THE HEIR' : cr.mode === 'people' ? 'THE MAKER' : 'A NEW GAME') + (last ? ' · ' + (step + 1) + ' OF 3' : '') + '</div>' + body
+    + '<div class="cacts"><button class="seg" id="crBack">' + (step ? '◀ BACK' : 'CANCEL') + '</button>'
+    + '<button class="seg go" id="crNext">' + (step < last ? 'NEXT ▶' : cr.mode === 'people' ? 'THIS IS ME' : heir ? 'HAND ON THE SHOP' : 'OPEN DARKCLAY ' + word) + '</button></div>';
+  const keep = () => { if ($('crName')) cr.name = $('crName').value; if ($('crGentle')) cr.gentle = $('crGentle').checked; };
+  $('creatorIn').querySelectorAll('[data-people]').forEach(b => b.onclick = () => { keep(); cr.people = b.dataset.people; cr.look = PEOPLES[cr.people].looks[0]; renderCreator(); });
+  $('creatorIn').querySelectorAll('[data-look]').forEach(b => b.onclick = () => { keep(); cr.look = b.dataset.look; renderCreator(); });
+  $('creatorIn').querySelectorAll('[data-bg]').forEach(b => b.onclick = () => { cr.background = b.dataset.bg; renderCreator(); });
+  $('creatorIn').querySelectorAll('[data-shop]').forEach(b => b.onclick = () => { keep(); cr.shop = b.dataset.shop; renderCreator(); });
+  $('crBack').onclick = () => { keep(); if (cr.step) { cr.step--; renderCreator(); } else { const c = cr.onCancel; closeCreator(); if (c) c(); } };
+  $('crNext').onclick = () => {
+    keep(); if (cr.step < last) { cr.step++; renderCreator(); $('creator').scrollTop = 0; return; }
+    const c = { name: cr.name, people: cr.people, look: cr.look, background: cr.background, shop: cr.shop, gentle: cr.gentle }, done = cr.onDone;
+    closeCreator(); done(c);
+  };
+  $('creator').scrollTop = 0;
+}
+// a new game from the title: in this slot (the page goes on) or another (it opens again on that one), then the title, its name dropping
+function newGame(n, c) {
+  Snd.unlock();
+  if (n === activeSlot() && isFreshSave(save)) {
+    const r = applyWho(save, c); if (!r.ok) { toast(esc(r.why)); return; }
+    store(save); toHome(); showTitle(null, true); return;
+  }
+  save.lastSeen = Date.now(); store(save); replacing = true;
+  try { sessionStorage.setItem('darkclayforge.newWho', JSON.stringify(c)); sessionStorage.setItem('darkclayforge.titleDrop', '1'); } catch (e) { /* none */ }
+  setActiveSlot(n); location.reload();
+}
+// the title's name: "Darkclay Forge", and on a new shop the old word falls out and the shop's own drops in, with its station's puff
+function titleName(drop) {
+  const word = Who.shopWord(save), kind = SHOPS[Who.shopOf(save)].fx;
+  $('title').setAttribute('aria-label', Who.titleOf(save));
+  if (!drop) { $('tName').innerHTML = 'Darkclay <span class="tword">' + esc(word) + '</span>'; $('tFx').className = 'tfx'; return; }
+  $('tName').innerHTML = 'Darkclay <span class="twords"><span class="tword old">Forge</span><span class="tword new">' + esc(word) + '</span></span>';
+  $('tFx').className = 'tfx'; $('tFx').innerHTML = Array.from({ length: 18 }, (_, i) => '<i style="--a:' + (i * 20) + 'deg;--d:' + (40 + (i * 37) % 70) + 'px;--t:' + (i % 5) * 0.04 + 's"></i>').join('');
+  requestAnimationFrame(() => requestAnimationFrame(() => { $('tName').classList.add('dropping'); setTimeout(() => { $('tFx').className = 'tfx on fx-' + kind; try { Snd.play('level'); } catch (e) { /* no sound yet */ } }, 1150); }));
+  const skip = () => { $('tName').classList.remove('dropping'); titleName(false); $('title').removeEventListener('pointerdown', skip); };
+  $('tName').classList.remove('dropping'); setTimeout(() => $('title').addEventListener('pointerdown', skip, { once: true }), 50);
+}
 // ---------- THE TITLE: three slots, the version, the licence ----------
 let titleAway = null, newest = null;
-const ago = ms => { const d = (Date.now() - ms) / 1000; return d < 120 ? 'just now' : d < 7200 ? Math.round(d / 60) + ' min ago' : d < 172800 ? Math.round(d / 3600) + ' hours ago' : Math.round(d / 86400) + ' days ago'; };
-function showTitle(away) {
+function ago(ms) { const d = (Date.now() - ms) / 1000; return d < 120 ? 'just now' : d < 7200 ? Math.round(d / 60) + ' min ago' : d < 172800 ? Math.round(d / 3600) + ' hours ago' : Math.round(d / 86400) + ' days ago'; }
+function showTitle(away, drop) {
   titleAway = away || titleAway;
+  titleName(!!drop);
   save.lastSeen = Date.now(); store(save);
   const slots = peekSlots(), on = activeSlot();
   // each slot: the anvil emblem hot in its renown's colour (cold and dashed when empty), the maker, their renown, what they've done
   const HEAT = ['#8a8070', '#b8b0a2', '#8fc46a', '#6fb1ec', '#b48cf0', '#e8913a', '#e4505e'];
   $('tSlots').innerHTML = slots.map((p, i) => {
     const n = i + 1, here = n === on;
-    if (!p) return '<div class="tslot empty' + (here ? ' on' : '') + '"><div class="ttop">' + emblem('', true) + '<div class="tinfo"><div class="n">SLOT ' + n + (here ? ' · THIS ONE' : '') + '</div><b>Empty</b><div class="tren">A cold forge and sixty coins.</div></div></div>'
+    if (!p || p.fresh) return '<div class="tslot empty' + (here ? ' on' : '') + '"><div class="ttop">' + emblem('', true) + '<div class="tinfo"><div class="n">SLOT ' + n + (here ? ' · THIS ONE' : '') + '</div><b>Empty</b><div class="tren">A cold forge and sixty coins.</div></div></div>'
       + '<label class="tgentle"><input type="checkbox" data-tgentle="' + n + '"> A gentler Reach: no thieves, monsters or dangers</label>'
-      + '<div class="tacts"><button class="seg go" data-tplay="' + n + '">' + ICONS.flame + 'LIGHT THE FORGE</button></div></div>';
+      + '<div class="tacts"><button class="seg go" data-tnew="' + n + '">' + ICONS.flame + 'LIGHT THE FORGE</button></div></div>';
     const rung = RENOWN.reduce((a, r, k) => p.renown >= r.at ? k : a, 0);
     return '<div class="tslot' + (here ? ' on' : '') + '" style="--heat:' + HEAT[rung] + '"><div class="ttop">' + emblem(HEAT[rung]) + '<div class="tinfo"><div class="n">SLOT ' + n + (here ? ' · PLAYING' : '') + '</div><b>' + esc(p.maker) + '</b>'
+      + (p.shop && p.shop !== 'forge' && SHOPS[p.shop] ? '<div class="tshop">DARKCLAY ' + SHOPS[p.shop].word.toUpperCase() + '</div>' : '')
       + '<div class="tren">' + ICONS.renown + (p.nine ? Rg.legendIn(p.region).title : rung === Rg.REACH_RUNG ? Rg.regionOf({ region: p.region }).top : RENOWN[rung].word) + '</div></div></div>'
       + '<div class="tstats"><span title="Coins">' + ICONS.coin + p.coins.toLocaleString() + '</span><span title="Pieces made">' + ICONS.made + p.made + ' made</span><span title="Pieces sold">' + ICONS.sold + p.sold + ' sold</span>'
       + (p.lastSeen ? '<span title="Last played">' + ICONS.clock + ago(p.lastSeen) + '</span>' : '') + '</div>'
       + '<div class="tacts"><button class="seg go" data-tplay="' + n + '">' + ICONS.hammer + (here ? 'CONTINUE' : 'PLAY') + '</button><button class="seg del" data-tdel="' + n + '" aria-label="Delete slot ' + n + '">' + ICONS.sweep + 'DELETE</button></div></div>';
   }).join('');
   $('tSlots').querySelectorAll('[data-tplay]').forEach(b => b.onclick = () => playSlot(+b.dataset.tplay));
+  $('tSlots').querySelectorAll('[data-tnew]').forEach(b => b.onclick = () => { const n = +b.dataset.tnew, gb = $('tSlots').querySelector('[data-tgentle="' + n + '"]');
+    openCreator({ mode: 'new', slot: n, name: '', gentle: !!(gb && gb.checked), onDone: c => newGame(n, c) }); });
   $('tSlots').querySelectorAll('[data-tdel]').forEach(b => b.onclick = () => deleteSlot(+b.dataset.tdel));
   $('tVersion').textContent = 'VERSION ' + VERSION;
   renderUpdate();
   $('title').hidden = false; document.body.style.overflow = 'hidden';
-  const first = $('tSlots').querySelector('.tslot.on [data-tplay]'); if (first) first.focus({ preventScroll: true });
+  const first = $('tSlots').querySelector('.tslot.on [data-tplay], .tslot.on [data-tnew]'); if (first) first.focus({ preventScroll: true });
   checkUpdate();
 }
-function closeTitle() { $('title').hidden = true; document.body.style.overflow = ''; const a = titleAway; titleAway = null; if (a) showAway(a); }
+function closeTitle() { $('title').hidden = true; document.body.style.overflow = ''; const a = titleAway; titleAway = null; if (a) showAway(a); if (Leg.gen(save) > 1 && !save.heirWelcomed) showHeirWelcome(); }
 // another slot: this one written down, then the page opens again on that one (straight in, no title)
 function playSlot(n) {
   const gb = $('tSlots').querySelector('[data-tgentle="' + n + '"]');
@@ -2646,8 +2755,8 @@ if (!OFFICIAL.hosts.includes(location.hostname)) {
   $('copyBanner').hidden = false;
   $('copyBanner').innerHTML = 'This is an unofficial copy of Darkclay Forge. The real game, by its author, is at <a href="' + OFFICIAL.url + '">' + OFFICIAL.url + '</a>.';
 }
-let skipTitle = false; try { skipTitle = sessionStorage.getItem('darkclayforge.skipTitle') === '1'; sessionStorage.removeItem('darkclayforge.skipTitle'); } catch (e) { /* none */ }
-if (!shared && !visitLink) { if (skipTitle) showAway(awaySum); else showTitle(awaySum); }
-if (!shared && !visitLink && skipTitle && Leg.gen(save) > 1 && !save.heirWelcomed) showHeirWelcome();
+let skipTitle = false, dropTitle = false; try { skipTitle = sessionStorage.getItem('darkclayforge.skipTitle') === '1'; sessionStorage.removeItem('darkclayforge.skipTitle'); dropTitle = sessionStorage.getItem('darkclayforge.titleDrop') === '1'; sessionStorage.removeItem('darkclayforge.titleDrop'); } catch (e) { /* none */ }
+if (!shared && !visitLink) { if (dropTitle) showTitle(awaySum, true); else if (skipTitle) showAway(awaySum); else showTitle(awaySum); }
+if (!shared && !visitLink && skipTitle && !dropTitle && Leg.gen(save) > 1 && !save.heirWelcomed) showHeirWelcome();
 awaySum = null;
 requestAnimationFrame(frame);

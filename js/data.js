@@ -720,6 +720,50 @@ export const GROWN = { odds: 1 / 150, marked: 2, at: [0, 10, 25, 50], perHour: 1
   names: { weapon: ['Ironbite', 'Thornbite', 'Wolfsong', 'Greywake', 'Rootfang', 'Longtooth'], offhand: ['Oakheart', 'Stillwall', 'Greyward'],
     head: ['Crown of Moss', 'Barkbrow', 'Stillhead'], body: ['Second Skin', 'Barkcoat', 'Mosshide'], hands: ['Rootgrip', 'Greenhand'], feet: ['Longroad', 'Rootstep', 'Mossfoot'],
     ring: ['Little Root', 'Greenband', 'Seedring'], pack: ['Bottomless', 'Hoardbelly'], light: ['Glowroot', 'Stilllight', 'Old Ember'] } };
+// ---------- WHO OPENS THE SHOP (milestone 53, docs/CREATOR-PLAN.md) ----------
+// A new game's maker: their people (looks: the counter's folk pictures, assets/folk), with a small gift each; what they were before
+// (a small head start); and the kind of shop they open (its station set up free, its store room, the game's name). A save without
+// them is a forge shop, as every save before.
+// gift: band (that station's heat band, ×`x`), xp (every trade rises ×`x` faster), price (the suppliers' prices ×`x`), hurt (a runner
+// or a miner hurt ×`x` as often)
+export const PEOPLES = {
+  human: { name: 'Human', looks: ['folk_man', 'folk_wife', 'hunter_man', 'delver_woman'], gift: { xp: 1.05 }, line: 'every trade rises 5 % faster' },
+  dwarf: { name: 'Dwarf', looks: ['delver_dwarf', 'folk_dwarf'], gift: { band: 'forge', x: 1.05 }, line: 'the forge\'s band 5 % wider' },
+  horned: { name: 'Horned', looks: ['traveller_horn'], gift: { band: 'stretcher', x: 1.05 }, line: 'the stretcher\'s band 5 % wider' },
+  halfling: { name: 'Halfling', looks: ['folk_hedge'], gift: { band: 'bowbench', x: 1.05 }, line: 'the bench\'s band 5 % wider' },
+  lizard: { name: 'Lizardfolk', looks: ['delver_lizard'], gift: { band: 'kettle', x: 1.05 }, line: 'the kettle\'s band 5 % wider' },
+  shiril: { name: 'Shiril', looks: ['factor_shiril'], gift: { band: 'glass', x: 1.05 }, line: 'the glass\'s band 5 % wider' },
+  goblin: { name: 'Goblin', looks: ['traveller_gob', 'hunter_gob'], gift: { price: 0.95 }, line: 'the suppliers\' prices 5 % lower' },
+  orc: { name: 'Orc', looks: ['guard_orc'], gift: { hurt: 5 / 6 }, line: 'your runners and miners hurt a sixth less often' },
+};
+// station: its first patterns start at `level`; mats: more in the store room; coins; haggle: haggling starts at this trade; mine: when
+// the trapdoor opens, mining and smelting start at this trade; sword: the first runner hired comes with one; guard: the night
+// guard's wage ×
+export const BACKGROUNDS = {
+  smith: { name: 'A smith\'s hand', station: 'forge', level: 2, mats: { iron: 2 }, line: 'the forge\'s first patterns at trade 2; two more iron' },
+  tanner: { name: 'A tanner\'s child', station: 'stretcher', level: 2, mats: { deer: 2, gut: 2 }, line: 'the stretcher\'s first patterns at trade 2; hides and gut' },
+  woodcutter: { name: 'A woodcutter', station: 'bowbench', level: 2, mats: { yew: 3 }, line: 'the bench\'s first patterns at trade 2; yew staves' },
+  herbs: { name: 'A herb-gatherer', station: 'kettle', level: 2, mats: { mending: 4, honey: 1 }, line: 'the kettle\'s first brews at trade 2; herbs and honey' },
+  glassblower: { name: 'A glassblower\'s hand', station: 'glass', level: 2, mats: { clearsand: 3, potash: 2 }, line: 'the glass\'s first patterns at trade 2; sand and potash' },
+  miner: { name: 'A miner', mine: 3, mats: { ironstone: 6 }, line: 'when the trapdoor opens, mining and smelting start at trade 3; some ironstone' },
+  pedlar: { name: 'A pedlar', coins: 60, haggle: 2, line: '60 c more to start; your haggling starts at trade 2' },
+  soldier: { name: 'A soldier', sword: true, guard: 0.8, line: 'your first runner comes with a sword; the night guard\'s wage a fifth lower' },
+};
+// the kind of shop: word (the game's name: Darkclay <word>), room (the first room's name), mats (the store room to start), want (what
+// the town's first customers come in for, while the shop is new: until `sign.rung`, `sign.odds` of them)
+export const SHOPS = {
+  forge: { word: 'Forge', room: 'THE FORGE', mats: { iron: 5, bronze: 2, cord: 3, wrap: 1, ash: 1, wool: 1, strap: 1 }, want: 'weapon', fx: 'sparks',
+    line: 'Blades, axes, helms and rings, hammered out of hot metal.', welcome: 'Welcome to your forge. <i>Pick a pattern</i> to make your first piece: the dagger takes the least.' },
+  stretcher: { word: 'Tannery', room: 'THE STRETCHER', mats: { deer: 4, wool: 3, gut: 3, cord: 1 }, want: 'armour', fx: 'steam',
+    line: 'Jerkins, hoods, gloves and boots, stitched from hides.', welcome: 'Welcome to your tannery. <i>Pick a pattern</i> at the stretcher to make your first piece: a hood takes the least.' },
+  bowbench: { word: 'Bowyer', room: 'THE BENCH', mats: { yew: 4, gut: 2, horn: 2, goose: 2, arrowheads: 1 }, want: 'bow', fx: 'sawdust',
+    line: 'Bows, staves and arrows, bent from seasoned wood.', welcome: 'Welcome to your bowyer\'s. <i>Pick a pattern</i> at the bench to make your first piece: a sheaf of arrows takes the least.' },
+  kettle: { word: 'Alchemy', room: 'THE KETTLE', mats: { mending: 6, honey: 3, bottle: 9 }, want: 'brew', fx: 'bubbles',
+    line: 'Draughts, salves, oils and tonics, brewed a batch at a time.', welcome: 'Welcome to your alchemist\'s. <i>Pick a brew</i> at the kettle to make your first batch: a salve takes the least.' },
+  glass: { word: 'Glassworks', room: 'THE GLASS', mats: { clearsand: 6, potash: 4 }, want: 'glass', fx: 'glow',
+    line: 'Lenses, goblets, panes and bottles, blown from sand.', welcome: 'Welcome to your glassworks. <i>Pick a pattern</i> at the glass to make your first piece: a goblet takes the least.' },
+};
+export const SIGN = { rung: 2, odds: 0.5 };   // until KNOWN, half the town's customers come in for what the sign says
 // THE GROW-BED (milestone 52): a piece grown, not forged. Set up in the workshop from FAMED (`cost`), a second bed from RENOWNED
 // (`more`). A living cutting is planted toward a pattern it can be the main part of, and comes up `days` days later on the shop's
 // clock, open or away. Tended once each day it comes up better (`tier`: Common, Fine, Rare in a hundred, by the days it was tended);

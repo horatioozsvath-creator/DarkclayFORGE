@@ -469,7 +469,7 @@ canvas.dio { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 .blueprints .fi.unknown b { color: var(--bone-faint); }
 
 /* the title screen */
-.titlescreen { position: fixed; inset: 0; z-index: 90; overflow: auto; display: grid; place-items: center; padding: 20px 14px;
+.titlescreen { position: fixed; inset: 0; z-index: 90; overflow: auto; overflow-x: hidden; display: grid; place-items: center; padding: 20px 14px;
   background: radial-gradient(ellipse at 50% 30%, #3a1d10 0%, #1a100a 55%, #0b0807 95%); }
 .tin { width: min(100%, 880px); display: grid; gap: 14px; text-align: center; }
 .tk { font: 800 12px var(--sans); letter-spacing: .3em; color: var(--ember-hot); }
@@ -838,3 +838,56 @@ h1, .tname, .screenbar .t { font-family: var(--carve); font-weight: 900; letter-
 .bedwords { order: 3; text-align: center; animation: bedWords .6s 1.8s both; }
 @keyframes bedWords { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .bedsoil i, .bedrise, .bedwords { animation: none; } }
+
+/* WHO OPENS THE SHOP (milestone 53): the creator, the title's name dropping, the maker's people */
+.titlescreen.creator { z-index: 95; place-items: start center; }
+.cin { text-align: left; padding-bottom: 24px; }
+.cin h2 { margin: 0; font: 800 clamp(26px, 6vw, 38px)/1.1 var(--carve); color: var(--bone); text-align: center; }
+.cin .tk { text-align: center; }
+.clead { margin: 0 auto; max-width: 560px; text-align: center; color: var(--bone-dim); font: italic 500 15px/1.4 var(--display); }
+.cname { display: grid; gap: 6px; max-width: 360px; margin: 0 auto; width: 100%; font: 800 11px var(--sans); letter-spacing: .2em; color: var(--bone-faint); }
+.cname input { font: 600 18px var(--display); padding: 10px 12px; background: var(--panel); color: var(--bone); border: 1px solid var(--line); }
+.cgrid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr)); }
+.cgrid.people { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.cpick { display: grid; gap: 4px; align-content: start; text-align: left; padding: 10px; background: var(--panel); border: 1px solid var(--line); color: var(--bone-dim); cursor: pointer; font: inherit; }
+.cpick:hover { border-color: var(--bone-faint); }
+.cpick.on { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold), 0 0 20px rgba(232,196,100,.2); color: var(--bone); }
+.cpick b { font: 800 17px/1.15 var(--display); color: var(--bone); }
+.cpick span { font: 500 13px/1.35 var(--sans); }
+.cpick em { font: 800 10px var(--sans); letter-spacing: .2em; color: var(--ember-hot); font-style: normal; }
+.cpick img { width: 100%; height: 120px; object-fit: contain; object-position: center bottom; background: radial-gradient(ellipse at 50% 80%, rgba(255,150,70,.18), transparent 70%); }
+.cgrid.shops .cart { height: 70px; display: grid; place-items: center; }
+.cgrid.shops .cart svg { max-height: 70px; width: auto; }
+.clooks { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.clooks > span { font: 800 11px var(--sans); letter-spacing: .2em; color: var(--bone-faint); }
+.clooks .cpick { padding: 4px; width: 84px; }
+.clooks .cpick img { height: 84px; }
+.cin .tgentle { justify-content: center; }
+.cacts { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; position: sticky; bottom: 0; padding: 12px 0 4px; background: linear-gradient(transparent, #120b08 35%); }
+.tshop { font: 800 11px var(--sans); letter-spacing: .2em; color: var(--gold); }
+.whobox { display: flex; gap: 12px; align-items: center; margin: 4px 0 10px; text-align: left; }
+.whobox:empty { display: none; }
+.whobox > div { display: grid; gap: 3px; color: var(--bone-dim); font: 500 14px/1.35 var(--sans); }
+.whobox b { color: var(--bone); font: 800 17px var(--display); }
+.whobox .seg { justify-self: start; margin-top: 4px; }
+.whopic { width: 64px; height: 84px; object-fit: contain; object-position: center bottom; flex: none; }
+/* the title's name: the old word falls out, the shop's own drops in */
+.tname { position: relative; }
+.tword { display: inline-block; }
+.twords { display: inline-grid; justify-items: start; }
+.twords > .tword { grid-area: 1 / 1; }
+.tname .tword.new { visibility: hidden; }
+.tname.dropping .tword.old { animation: tFall .9s cubic-bezier(.5,0,.9,.5) .25s both; }
+.tname.dropping .tword.new { visibility: visible; animation: tDrop .8s cubic-bezier(.2,.9,.35,1.25) 1s both; }
+@keyframes tFall { 0% { transform: none; opacity: 1; } 25% { transform: translateY(-6px) rotate(-3deg); } 100% { transform: translateY(160px) rotate(14deg); opacity: 0; } }
+@keyframes tDrop { 0% { transform: translateY(-140px); opacity: 0; } 60% { opacity: 1; } 100% { transform: none; opacity: 1; } }
+.tfx { position: relative; height: 0; pointer-events: none; }
+.tfx i { position: absolute; left: 62%; top: -34px; width: 7px; height: 7px; border-radius: 50%; opacity: 0; background: var(--fx, #ffb45a); }
+.tfx.on i { animation: tPuff 1s ease-out var(--t) both; }
+@keyframes tPuff { 0% { opacity: 1; transform: rotate(var(--a)) translateX(0) scale(1); } 100% { opacity: 0; transform: rotate(var(--a)) translateX(var(--d)) scale(.3); } }
+.tfx.fx-sparks { --fx: #ffcf6a; } .tfx.fx-sparks i { width: 4px; height: 4px; box-shadow: 0 0 6px #ff9a3a; }
+.tfx.fx-steam { --fx: rgba(230,230,225,.7); } .tfx.fx-steam i { width: 14px; height: 14px; filter: blur(2px); }
+.tfx.fx-sawdust { --fx: #c9a26a; } .tfx.fx-sawdust i { border-radius: 1px; width: 5px; height: 3px; }
+.tfx.fx-bubbles { --fx: transparent; } .tfx.fx-bubbles i { border: 2px solid #9fd46a; width: 10px; height: 10px; }
+.tfx.fx-glow { --fx: #9fd8ff; } .tfx.fx-glow i { box-shadow: 0 0 10px #9fd8ff; }
+@media (prefers-reduced-motion: reduce) { .tname.dropping .tword.old { animation: none; visibility: hidden; } .tname.dropping .tword.new { animation: none; } .tfx.on i { animation: none; } }
