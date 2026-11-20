@@ -1,6 +1,6 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE CARD: a piece of gear drawn as a collector's card framed by its tier (Darkclay Zero, docs/THE-CARD.md).
-import { TIERS, MARKS, PATTERNS } from './data.js?v=76';
+import { TIERS, MARKS, PATTERNS, GROWN } from './data.js?v=77';
 
 const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
 // the picture of each kind of piece; m is the metal's tint
@@ -66,6 +66,13 @@ export function markWord(p) {
   const st = (PATTERNS[p.pattern] && PATTERNS[p.pattern].station) || 'forge';
   return (MARKS.words[st] || MARKS.words.forge)[i];
 }
+// a grown piece's line (milestone 51): IT GROWS, its stage, who carried it and how far (to its next stage)
+export function grownLine(p) {
+  const g = p && p.grown; if (!g || !GROWN.stages[g.stage - 1]) return '';
+  const next = GROWN.at[g.stage], by = typeof g.by === 'string' && g.by ? 'carried by ' + g.by.split(' ')[0] + ', ' : g.stage > 1 ? '' : 'not carried yet';
+  const far = by === 'not carried yet' ? '' : Math.floor(g.uses || 0) + (next != null ? ' of ' + next : '') + ' trips';
+  return '<div class="cd-grown"><b>❦ IT GROWS · ' + GROWN.stages[g.stage - 1] + '</b> ' + esc(by + far) + '</div>';
+}
 // card(piece, { short: the top only, price: show the worth on a corner })
 export function card(p, o = {}) {
   const t = TIER[p.tier] || TIER.common, art = ART[p.art] || ART.falchion, tint = /^#[0-9a-f]{6}$/i.test(p.tint || '') ? p.tint : '#c9c5be';
@@ -75,11 +82,11 @@ export function card(p, o = {}) {
   const aff = (p.affixes || []).map(a => gild.includes(a[0]) ? '<div class="cd-af gilded"><b>' + esc(a[0]) + ' ✦</b> ' + esc(a[1]) + ' <i>GILDED</i></div>'
     : '<div class="cd-af"><b style="color:' + t.c + '">' + esc(a[0]) + '</b> ' + esc(a[1]) + '</div>').join('');
   const made = '<div class="cd-sec">THE MAKING</div><div class="cd-made">' + (p.made || []).map(m => '<span>' + esc(m) + '</span>').join('') + '</div>';
-  return '<div class="cd' + (o.short ? ' cd-short' : '') + (t.foil ? ' cd-foil' : '') + (mk ? ' cd-marked mk-' + mk : '') + '" style="--tc:' + t.c + ';--tg:' + t.glow + (mk ? ';--mc:' + MARKS.kinds[mk].c : '') + '">' +
+  return '<div class="cd' + (o.short ? ' cd-short' : '') + (t.foil ? ' cd-foil' : '') + (mk ? ' cd-marked mk-' + mk : '') + (p.grown ? ' cd-alive' : '') + '" style="--tc:' + t.c + ';--tg:' + t.glow + (mk ? ';--mc:' + MARKS.kinds[mk].c : '') + '">' +
     '<div class="cd-in">' +
     '<div class="cd-top"><span class="cd-tier">' + t.name.toUpperCase() + (p.flawless ? ' · FLAWLESS' : '') + '</span><span class="cd-kind">' + esc(p.kind) + '</span></div>' +
     '<div class="cd-name">' + esc(p.name) + '</div>' +
-    (mk ? '<div class="cd-markword">✦ ' + esc(markWord(p).toUpperCase()) + '</div>' : '') +
+    (mk ? '<div class="cd-markword">✦ ' + esc(markWord(p).toUpperCase()) + '</div>' : '') + grownLine(p) +
     (Array.isArray(p.power) ? '<div class="cd-power"><b>' + esc(p.power[0]) + '</b> · ' + esc(p.power[1]) + '</div>' : '') +
     (Array.isArray(p.powers) ? p.powers.map(w => '<div class="cd-power"><b>' + esc(w[0]) + '</b> · ' + esc(w[1]) + '</div>').join('') : '') +
     '<div class="cd-art">' + art(tint) + (p.dice ? '<span class="cd-dice">' + esc(p.dice) + '</span>' : '') + (p.count > 0 ? '<span class="cd-dice cd-count">×' + esc(p.count) + '</span>' : '') + '</div>' +

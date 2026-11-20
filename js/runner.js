@@ -1,12 +1,12 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE RUNNER'S GEAR AND THE ROAD'S DANGER, with no page access: pieces you made, carried by the runner (off the shelves while they're
 // carried), potions used up on the road, the chance of harm on the hard roads, and the hunt for a gang. Spared on a gentler Reach.
-import { GEAR, ROUTES, TIERS, MONSTERS } from './data.js?v=76';
-import { rung } from './growth.js?v=76';
-import { threatsOn } from './bank.js?v=76';
-import { levelOf } from './rules.js?v=76';
-import { roadX, huntKind } from './monsters.js?v=76';
-import * as Rg from './region.js?v=76';
+import { GEAR, ROUTES, TIERS, MONSTERS } from './data.js?v=77';
+import { rung } from './growth.js?v=77';
+import { threatsOn } from './bank.js?v=77';
+import { levelOf, growBy } from './rules.js?v=77';
+import { roadX, huntKind } from './monsters.js?v=77';
+import * as Rg from './region.js?v=77';
 
 const D = 24 * 3600000;
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
@@ -43,7 +43,16 @@ export function riskLevel(save, p, route, now) {
 }
 export const hurtNow = (p, now) => !!(p.hurt && now < p.hurt);
 // ---------- what they carry: off the shelves while they're carried; a potion is one bottle from a batch ----------
+// a grown heirloom (milestone 51) can be taken down from over the door and carried, to grow in this generation's hands; it goes back
+// over the door, never to the back room or a shelf
+export const carriableLooms = save => (save.heirlooms || []).filter(c => c.grown && slotOf(c));
+export function stow(save, c) { if (c.heirloom) save.heirlooms = (save.heirlooms || []).concat(c); else save.cards.unshift(c); }
 export function equip(save, p, cardId) {
+  const loom = !save.cards.some(x => x.id === cardId) && carriableLooms(save).find(x => x.id === cardId);
+  if (loom) {
+    const k = slotOf(loom), g = gearOf(p); if (g[k]) stow(save, g[k]);
+    g[k] = loom; save.heirlooms = save.heirlooms.filter(x => x !== loom); return { ok: true, slot: k };
+  }
   const c = save.cards.find(x => x.id === cardId); if (!c) return { why: 'not found' };
   if (c.sample) return { why: 'a flyer\'s copy is for the shelf' };
   if (isPotion(c)) {
@@ -53,13 +62,13 @@ export function equip(save, p, cardId) {
     return { ok: true, potion: true };
   }
   const k = slotOf(c); if (!k) return { why: 'not something to carry' };
-  const g = gearOf(p); if (g[k]) save.cards.unshift(g[k]);   // the one it replaces back in the back room
+  const g = gearOf(p); if (g[k]) stow(save, g[k]);   // the one it replaces back in the back room (an heirloom over the door)
   g[k] = c; save.cards = save.cards.filter(x => x !== c);
   return { ok: true, slot: k };
 }
 export function unequip(save, p, slot) {
   const g = gearOf(p); if (!g[slot]) return { why: 'nothing there' };
-  save.cards.unshift(g[slot]); delete g[slot]; return { ok: true };
+  stow(save, g[slot]); delete g[slot]; return { ok: true };
 }
 // a bottle taken back: one bottle of its batch, back in the back room
 export function takePotion(save, p, i) { const x = potionsOf(p)[i]; if (!x) return { why: 'nothing there' }; potionsOf(p).splice(i, 1); if (x.card) save.cards.unshift(x.card); return { ok: true }; }
@@ -82,14 +91,14 @@ export function road(save, p, route, rng, now) {
     const days = (GEAR.hurtDays[0] + rng() * (GEAR.hurtDays[1] - GEAR.hurtDays[0])) * (poultice ? GEAR.poultice : 1); p.hurt = now + days * D; out.days = Math.max(1, Math.round(days));
     out.bill = Math.min(save.coins, Math.round(GEAR.healer * (1 + rung(save)) * (poultice ? GEAR.poultice : 1))); save.coins -= out.bill;
     if (poultice) out.poultice = true;
-    const g = gearOf(p), armour = ['head', 'body', 'hands', 'feet'].filter(k => g[k] && TIER_N[g[k].tier] < TIER_N.relic);
+    const g = gearOf(p), armour = ['head', 'body', 'hands', 'feet'].filter(k => g[k] && TIER_N[g[k].tier] < TIER_N.relic && !g[k].heirloom && !g[k].grown);   // never an heirloom, or a piece that grows (milestone 51)
     if (armour.length) { const k = armour[Math.floor(rng() * armour.length)]; out.broke = g[k].name; delete g[k]; }
   }
   return out;
 }
 // killed: gone from the staff, remembered; the Watch brings back what they carried (not the potions)
 export function lose(save, p, route, now) {
-  const g = gearOf(p); Object.values(g).forEach(c => save.cards.unshift(c));
+  const g = gearOf(p); Object.values(g).forEach(c => stow(save, c));
   save.staff = (save.staff || []).filter(x => x !== p);
   save.memorials = (save.memorials || []).concat({ name: p.name, at: now, where: Rg.routes(save)[route].from });
 }
@@ -116,4 +125,10 @@ export function beastOdds(save, p) {
   const h = MONSTERS.hunt, k = huntKind(save); if (!k) return 0;
   const tonic = potionsOf(p).some(x => x.pattern === 'tonic'), w = gearOf(p).weapon, silver = save.monster.id === 'wight' && w && w.metal === 'silver';
   return Math.min(h.max, k.odds + h.fight * strength(p).fight + h.level * (levelOf(p.xp || 0).level - 1) + (tonic ? h.tonic : 0) + (silver ? h.silver : 0));
+}
+// what they carry grows (milestone 51): `amount` (a Reach trip's worth) on each grown piece. Returns what grew: [{ who, piece, stage, ... }]
+export function growGear(p, amount, rng) {
+  const out = [];
+  Object.values(gearOf(p)).forEach(c => { if (c && c.grown) growBy(c, p.name, amount, rng).forEach(e => out.push({ who: p.name, ...e })); });
+  return out;
 }

@@ -4,13 +4,13 @@
 // open one), Common or Fine, never Rare: slower than your own hand, and no pockets. Their workings wear the gallery's shoring as
 // yours do; a roof that comes in on them, or something out of the old workings (gallery 4), can hurt them, as the road hurts a
 // runner. Armour, a weapon, a lantern and a night guard keep them safer. None of the danger on a gentler Reach or in the week of grace.
-import { MINERS, MATS, GEAR } from './data.js?v=76';
-import { levelOf, yieldOf } from './rules.js?v=76';
-import * as Mine from './mine.js?v=76';
-import * as Run from './runner.js?v=76';
-import { rung } from './growth.js?v=76';
-import { threatsOn } from './bank.js?v=76';
-import * as Rg from './region.js?v=76';
+import { MINERS, MATS, GEAR, GROWN } from './data.js?v=77';
+import { levelOf, yieldOf } from './rules.js?v=77';
+import * as Mine from './mine.js?v=77';
+import * as Run from './runner.js?v=77';
+import { rung } from './growth.js?v=77';
+import { threatsOn } from './bank.js?v=77';
+import * as Rg from './region.js?v=77';
 
 const M = MINERS, D = 24 * 3600000;
 export const minersOf = save => (save.staff || []).filter(p => p.role === 'miner');
@@ -66,6 +66,7 @@ export function dig(save, p, s, rng, now) {
   if (sh) { out.worn = sh.worn; if (sh.fell) { out.fell = s.gallery; if (!out.hurt && rng() < k.fall) harm(save, p, rng, now, out); } }
   p.xp = (p.xp || 0) + (p.trait === 'quick' ? 1.5 : 1);
   p.hauls = (p.hauls || 0) + 1;
+  const grew = Run.growGear(p, GROWN.haul, rng); if (grew.length) out.grew = grew;   // what they carry grows at the face too (milestone 51)
   return out;
 }
 // the shop's clock runs on by dt seconds: a haul each time their minutes come round. Unpaid, hurt or with nowhere to dig, they wait.

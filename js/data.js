@@ -709,6 +709,17 @@ export const LUCK = { on: true };
 // THE BLOOD WAKES (milestone 50): a Rare roll from a working with WHITE HEAT and no crack, at this trade or more in the pattern,
 // comes out Old-Blood this often, no master's rework needed
 export const WAKE = { odds: 0.05, level: 4 };
+// GROWN PIECES (milestone 51): now and then a piece of gear the staff can carry comes out alive (about one working in 150, as a mark's
+// odds lean, twice as often with a mark), and grows as it's carried. Its growth is counted in a Reach trip's worth: a road counts its
+// hours over `perHour` (a Reach trip is one, a trip below four), a miner's haul `haul`. At each stage's count: GROWN (every affix to
+// its best), NAMED (one more affix, and a name from the one who carried it), FULL-GROWN (a tier up, to Old-Blood at most; an Old-Blood
+// piece or better takes one more affix instead). `charm`: on the wall or over the door, each stage past the first draws this much more
+export const GROWN = { odds: 1 / 150, marked: 2, at: [0, 10, 25, 50], perHour: 1 / 3, haul: 0.25, charm: 1,
+  stages: ['QUICK', 'GROWN', 'NAMED', 'FULL-GROWN'],
+  // the name a piece takes at NAMED: "<the carrier's first name>'s <one of these>", by what it is
+  names: { weapon: ['Ironbite', 'Thornbite', 'Wolfsong', 'Greywake', 'Rootfang', 'Longtooth'], offhand: ['Oakheart', 'Stillwall', 'Greyward'],
+    head: ['Crown of Moss', 'Barkbrow', 'Stillhead'], body: ['Second Skin', 'Barkcoat', 'Mosshide'], hands: ['Rootgrip', 'Greenhand'], feet: ['Longroad', 'Rootstep', 'Mossfoot'],
+    ring: ['Little Root', 'Greenband', 'Seedring'], pack: ['Bottomless', 'Hoardbelly'], light: ['Glowroot', 'Stilllight', 'Old Ember'] } };
 export const MARKS = {
   odds: 1 / 60, clean: 1.5, cracked: 0.5, perTrade: 0.05, least: 0.5,
   order: ['veined', 'starfall', 'ghost', 'ember'],

@@ -1,18 +1,18 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The staff and the clock, with no page access: hiring, wages, the runner's trips, and the shop while the page is closed.
 // Time comes in as plain milliseconds (Date.now() on the page, fixed numbers in the tests).
-import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=76';
-import { levelOf, makePiece, partOptions } from './rules.js?v=76';
-import { awayStep } from './shop.js?v=76';
-import { wageMult, capBonus, rung } from './growth.js?v=76';
-import * as Trail from './trail.js?v=76';
-import { TRAIL, MONSTERS } from './data.js?v=76';
-import * as Run from './runner.js?v=76';
-import * as Mon from './monsters.js?v=76';
-import * as Ap from './apprentice.js?v=76';
-import * as Rg from './region.js?v=76';
-import * as Mine from './mine.js?v=76';
-import * as Mi from './miner.js?v=76';
+import { ROLES, TRAITS, NAMES, ROUTES, RUNNER_CAP, RENOWN, AWAY_CAP_H, MATS, FOUND, PATTERNS, ROOM_SIZES, RELICS, BLUEPRINT_DEEP, MYTHICS } from './data.js?v=77';
+import { levelOf, makePiece, partOptions } from './rules.js?v=77';
+import { awayStep } from './shop.js?v=77';
+import { wageMult, capBonus, rung } from './growth.js?v=77';
+import * as Trail from './trail.js?v=77';
+import { TRAIL, MONSTERS, GROWN } from './data.js?v=77';
+import * as Run from './runner.js?v=77';
+import * as Mon from './monsters.js?v=77';
+import * as Ap from './apprentice.js?v=77';
+import * as Rg from './region.js?v=77';
+import * as Mine from './mine.js?v=77';
+import * as Mi from './miner.js?v=77';
 
 const H = 3600000;
 function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -73,7 +73,7 @@ export function hire(save, c) {
 }
 export function letGo(save, id) {
   const p = (save.staff || []).find(x => x.id === id);   // what they carried comes back to the back room (the potions go with them)
-  if (p) { Object.values(p.gear || {}).forEach(c => save.cards.unshift(c)); if (p.trip && ROUTES[p.trip.route].hunt && save.robbery) save.robbery.hunting = false; if (p.trip && ROUTES[p.trip.route].beast && save.monster) save.monster.hunting = false; }
+  if (p) { Object.values(p.gear || {}).forEach(c => Run.stow(save, c)); if (p.trip && ROUTES[p.trip.route].hunt && save.robbery) save.robbery.hunting = false; if (p.trip && ROUTES[p.trip.route].beast && save.monster) save.monster.hunting = false; }
   save.staff = (save.staff || []).filter(p => p.id !== id); if (!save.staff.length) { save.owed = 0; save.unpaid = false; } }
 
 // ---------- wages ----------
@@ -156,14 +156,14 @@ export function resolveTrips(save, now, rng) {
       const hu = Run.hunt(save, p, rng, at, odds || 0), d = Run.road(save, p, route, rng, at); if (save.robbery) save.robbery.hunting = false;
       p.trip = null;
       if (d.died) Run.lose(save, p, route, at); else gain(p, 1 + Math.ceil(ROUTES[route].h));
-      out.push({ who: p.name, route, at, mats: {}, hunt: hu, road: d }); continue;
+      out.push({ who: p.name, route, at, mats: {}, hunt: hu, road: d, grew: d.died ? [] : Run.growGear(p, ROUTES[route].h * GROWN.perHour, rng) }); continue;
     }
     // the beast (milestone 34): the road's danger first (as dangerous as the kind), then, if they live, the hunt
     if (ROUTES[route].beast) {
       const d = Run.road(save, p, route, rng, at), b = d.died ? Mon.hunt(save, () => 1, at, 0) : Mon.hunt(save, rng, at, odds || 0, p.trip.heard);
       p.trip = null;
       if (d.died) Run.lose(save, p, route, at); else gain(p, 1 + Math.ceil(ROUTES[route].h));
-      out.push({ who: p.name, route, at, mats: {}, beast: b, road: d }); continue;
+      out.push({ who: p.name, route, at, mats: {}, beast: b, road: d, grew: d.died ? [] : Run.growGear(p, ROUTES[route].h * GROWN.perHour, rng) }); continue;
     }
     const h = haul(save, p, route, rng, at), d = Run.road(save, p, route, rng, at);
     if (d.died) { p.trip = null; Run.lose(save, p, route, at); out.push({ who: p.name, route, at, mats: {}, road: d }); continue; }
@@ -174,7 +174,7 @@ export function resolveTrips(save, now, rng) {
     if (h.shard) Trail.give(save, h.shard);
     gain(p, 1 + Math.ceil(ROUTES[route].h));
     p.trip = null;
-    out.push({ who: p.name, route, at, ...h, road: d });
+    out.push({ who: p.name, route, at, ...h, road: d, grew: Run.growGear(p, ROUTES[route].h * GROWN.perHour, rng) });
   }
   return out;
 }

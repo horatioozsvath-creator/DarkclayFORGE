@@ -107,7 +107,7 @@ function makeOne(hour) {
   const p = R.makePiece({ patternId: c.id, picks: c.picks, result: res, picked: null, maker: 'Bot', rng, now: t });
   save.cards.unshift(p); made++; save.benchAt = t;
   if (p.mark) { luckBy.marks[p.mark] = (luckBy.marks[p.mark] || 0) + 1; Sh.noteMark(save, p); }
-  if (p.gilded) luckBy.gilded += p.gilded.length; if (p.flawless) luckBy.flawless++; if (p.woke) luckBy.woke++;
+  if (p.gilded) luckBy.gilded += p.gilded.length; if (p.flawless) luckBy.flawless++; if (p.woke) luckBy.woke++; if (p.grown) luckBy.grown++;
   if (WEARING) { const st = R.stationOf(c.id).id; Wear.addWear(save, st, 'work', t); if (Wear.isBroken(save, st, t)) { broke++; const r = Wear.rebuild(save, st, t); if (r.ok) wearSpent += r.cost; } }
   (save.trades[c.id] = save.trades[c.id] || { xp: 0 }).xp += Math.round(R.xpFor(res) * G.xpMult(save));
   const tag = 'fair';
@@ -130,14 +130,16 @@ const shafts = { shored: 0, oak: 0, coins: 0, falls: 0, pumped: 0, wet: 0, pocke
 // bare (no gear), and keeps the galleries shored for them
 // LUCK=0: no marks, no gilded affixes, no Collector (milestone 49): the game as release 74 was
 R.setLuck(process.env.LUCK !== '0');
-const luckBy = { marks: {}, gilded: 0, flawless: 0, collector: 0, collectorC: 0, woke: 0 };
+const luckBy = { marks: {}, gilded: 0, flawless: 0, collector: 0, collectorC: 0, woke: 0, grown: 0, stages: [0, 0, 0, 0, 0], rose: 0 };
+// grown pieces that reached a stage (milestone 51), from trips home and hauls dug
+const tallyGrew = list => (list || []).forEach(x => (x.grew || []).forEach(e => { luckBy.stages[e.stage]++; if (e.rose) luckBy.rose++; }));
 const MINERS_N = +process.env.MINERS || 0, dugBy = { hauls: 0, mats: {}, hurt: 0, beasts: 0, falls: 0, lost: 0, idle: 0 };
 function hireMiner() {
   if (!MINING || !MINERS_N || !Mine.isOpen(save) || Mi.minersOf(save).length >= MINERS_N || !St.canHireRole(save, 'miner')) return;
   const c = St.candidates(save, Math.floor(t / H)).find(x => x.role === 'miner');
   if (c && save.coins > St.hireFee(c) + 800 && St.hire(save, c)) note('hired a miner: ' + c.name);
 }
-function tallyDug(list) { for (const r of list) { dugBy.hauls++; if (!r.lost) dugBy.mats[r.mat] = (dugBy.mats[r.mat] || 0) + r.n; else dugBy.lost++; if (r.hurt) dugBy.hurt++; if (r.beast) dugBy.beasts++; if (r.fell) dugBy.falls++; } }
+function tallyDug(list) { tallyGrew(list); for (const r of list) { dugBy.hauls++; if (!r.lost) dugBy.mats[r.mat] = (dugBy.mats[r.mat] || 0) + r.n; else dugBy.lost++; if (r.hurt) dugBy.hurt++; if (r.beast) dugBy.beasts++; if (r.fell) dugBy.falls++; } }
 // what a seam's working is worth with the smelting it takes after: an ore's bars spread over the workings, else what comes up
 const seamWorth = (x, hour) => {
   const n = R.yieldOf(Mine.digOf(save), 1, [x.i]).n, sm = R.partOptions('smelt')[0].opts.find(o => o.id === x.ore);
@@ -363,7 +365,7 @@ function kit(r) {
   // never a piece FILL THE SHELVES keeps back (a Relic, a Mythic, one ready for its Relic): a Relic tonic carried is drunk (milestone 35)
   for (const c of Sh.inBack(save).filter(c => !c.sample && !Sh.keepBack(save, c) && Run.canCarry(c)).sort((a, b) => b.worth - a.worth)) {
     if (Run.isPotion(c)) { if (Run.potionsOf(r).length < 2) Run.equip(save, r, c.id); }
-    else if (!Run.gearOf(r)[Run.slotOf(c)]) Run.equip(save, r, c.id);
+    else if (!Run.gearOf(r)[Run.slotOf(c)] || (c.grown && !Run.gearOf(r)[Run.slotOf(c)].grown)) Run.equip(save, r, c.id);   // a grown piece swapped in (milestone 51)
   }
 }
 // the guild fair: the bot enters its best piece
@@ -443,14 +445,14 @@ for (let d = 1; d <= days; d++) {
     if (!mineOne(hour)) makeOne(hour);
     const c = St.clerkOf(save), clerk = c && !save.unpaid ? St.clerkTerms(c) : null;
     tally(Sh.shopStep(save, 50, rng, t, false, clerk));
-    St.payWages(save, 50); St.resolveTrips(save, t, rng); { const bm = Ap.step(save, 50, rng, t); benched += bm.length; bm.forEach(r => apIds.add(r.piece.id)); } tallyDug(Mi.step(save, 50, rng, t));
+    St.payWages(save, 50); tallyGrew(St.resolveTrips(save, t, rng)); { const bm = Ap.step(save, 50, rng, t); benched += bm.length; bm.forEach(r => apIds.add(r.piece.id)); } tallyDug(Mi.step(save, 50, rng, t));
     t += 50000; save.lastSeen = t;
     if (s % 600 === 0) { fair(); watchDuty(); security(); upkeep(); runBank(d); runBranch(d); if (!BRANCHES || save.branch || !Br.canBuy({ ...save, coins: 1e9 }).ok) spend(hour); tryOldBlood(hour); courtRework(hour); hireApprentice(d); hireMiner(); if (Mi.minersOf(save).length && !NOSHORE) tendMine(hour); restock(); fillOrder(); relicWork(d); nineWork(d); runHall(d); trailWatch(d); if (save.order && save.order.mythic && !save.order.seen) { save.order.seen = 1; courtAsked++; } }   // saving up for the second shop once it may be bought
     if (save.branch) tally(Br.step(save, 50, rng, t));
     if (Sh.rescue(save, hour)) note('scrap bin');
   }
   // the night: away for 14 hours
-  const from = save.lastSeen, a = St.catchUp(save, t + 14 * H, rng); if (a) tallyDug(a.dug || []); if (a) (a.made || []).forEach(c => apIds.add(c.id)); if (a) tally(a.sold);
+  const from = save.lastSeen, a = St.catchUp(save, t + 14 * H, rng); if (a) tallyDug(a.dug || []); if (a) tallyGrew(a.trips); if (a) (a.made || []).forEach(c => apIds.add(c.id)); if (a) tally(a.sold);
   if (THIEVING) { const th = Th.night(save, from, t + 14 * H, rng, a ? a.coins : 0); if (th) { if (th.robbed) { robbed++; lostWorth += th.took.reduce((x, c) => x + c.worth, 0); lostTill += th.till; note('ROBBED by ' + th.gang + ': ' + th.took.map(c => c.name).join(', ') + (th.till ? ', ' + th.till + ' c' : '')); } else if (th.caught) caught++; else turned++; } }
   if (save.branch) tally(Br.away(save, from, t + 14 * H, rng, St.awayCap(save)).sold); t += 14 * H; save.lastSeen = t;
   const day = (save.earned || 0) - start;
@@ -480,7 +482,7 @@ if (process.env.WHY) for (const id of Rg.nineOf(save)) console.log('  nine ' + i
   'parts', [0, 1, 2].filter(i => Trail.hasPart(save, id, i)).length, 'relic', MYTHICS[id].relic, (save.relicsMade || []).includes(MYTHICS[id].relic) ? 'made' : 'not', save.cards.some(c => c.relic === MYTHICS[id].relic && c.tier === 'relic') ? 'held' : 'gone', 'src', MYTHICS[id].shard);
 if (BANKING) console.log('bank: borrowed on day', loanDay, ' interest paid', interestPaid, ' owed now', Bank.bankOf(save).loan, ' second shop from day', branchDay);
 console.log('EARNED', save.earned, 'coins', save.coins);
-if (R.luckOn()) console.log('luck: woke', luckBy.woke, ' marks', JSON.stringify(luckBy.marks), ' gilded affixes', luckBy.gilded, ' flawless', luckBy.flawless, ' sold to the Collector', luckBy.collector, 'for', luckBy.collectorC, 'c');
+if (R.luckOn()) console.log('luck: woke', luckBy.woke, ' grown', luckBy.grown, 'stages', luckBy.stages.slice(2).join('/'), 'rose', luckBy.rose, ' marks', JSON.stringify(luckBy.marks), ' gilded affixes', luckBy.gilded, ' flawless', luckBy.flawless, ' sold to the Collector', luckBy.collector, 'for', luckBy.collectorC, 'c');
 if (MINERS_N) console.log('miners: hauls', dugBy.hauls, ' brought', JSON.stringify(dugBy.mats), ' hurt', dugBy.hurt, ' beasts', dugBy.beasts, ' falls on them', dugBy.falls, ' hauls dropped', dugBy.lost);
 if (MINING) console.log('mine: dug', dug, ' smelted', smelted, ' galleries', Mine.galleries(save), ' mining trade', Mine.level(save), ' smelting trade', R.levelOf((save.trades.smelt || {}).xp || 0).level, ' brought up', JSON.stringify(mineBars), ' worth', Object.entries(mineBars).reduce((a, [m, n]) => a + Sh.priceOf(m, 0, save) * n, 0), 'c');
 if (MINING) console.log('shafts:', JSON.stringify(shafts), ' bottom: relic finds', deepFinds.length, JSON.stringify(deepFinds), ' runners down the mine', shaftTrips, ' relic materials bought', relicBought);

@@ -3,14 +3,14 @@
 // The heir's shop is built fresh, with only what the line keeps: the book (patterns found, tries, clues), the blueprints, the found
 // tiles, the heir's trades (their own, up to trade 5; trade 2 in the rest), their trait for good and one heirloom over the door. The
 // old shop goes into the line's record, with its save code (its own record left out, so nothing nests).
-import { LEGACY, PATTERNS, HALL, MYTHICS, TIERS, RENOWN } from './data.js?v=76';
-import { scatter } from './trail.js?v=76';
-import { isNine, renownOf } from './growth.js?v=76';
-import { levelOf, xpToNext } from './rules.js?v=76';
-import { apprenticeOf, TOP_XP } from './apprentice.js?v=76';
-import { fresh, toCode } from './save.js?v=76';
-import * as Rg from './region.js?v=76';
-import { inherit as inheritMine, depthOf } from './mine.js?v=76';
+import { LEGACY, PATTERNS, HALL, MYTHICS, TIERS, RENOWN } from './data.js?v=77';
+import { scatter } from './trail.js?v=77';
+import { isNine, renownOf } from './growth.js?v=77';
+import { levelOf, xpToNext } from './rules.js?v=77';
+import { apprenticeOf, TOP_XP } from './apprentice.js?v=77';
+import { fresh, toCode } from './save.js?v=77';
+import * as Rg from './region.js?v=77';
+import { inherit as inheritMine, depthOf } from './mine.js?v=77';
 
 const DAY = 86400000;
 export const gen = save => save.gen || 1;
@@ -35,7 +35,8 @@ export function canHandOn(save, now) {
   return { ok: true, heir: p };
 }
 // what can pass on as the heirloom: an Old-Blood piece, a Relic or a Mythic of the maker's own, best first
-export const heirlooms = save => (save.cards || []).filter(c => HALL.tiers.includes(c.tier) && !c.sample)
+// a grown piece of any tier too (milestone 51): it can be carried in the next generation's hands, and grows on
+export const heirlooms = save => (save.cards || []).filter(c => (HALL.tiers.includes(c.tier) || c.grown) && !c.sample)
   .sort((a, b) => HALL.tiers.indexOf(b.tier) - HALL.tiers.indexOf(a.tier) || (b.worth || 0) - (a.worth || 0));
 // the xp a trade level takes
 export const xpFor = lvl => { let x = 0; for (let l = 1; l < lvl; l++) x += xpToNext(l); return x; };

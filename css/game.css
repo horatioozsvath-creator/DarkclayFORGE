@@ -115,6 +115,16 @@ button, input { font-family: inherit; }
 @keyframes mkTwinkle { 50% { opacity: .45; } }
 @keyframes mkEmber { 50% { opacity: .55; } }
 @media (prefers-reduced-motion: reduce) { .mk-starfall .cd-art::after, .mk-ember .cd-art::after { animation: none; } }
+/* grown pieces (milestone 51): a sprig in the corner of the picture, and its line under the name */
+.cd-grown { font: 600 .66em var(--sans); letter-spacing: .06em; color: #b9d98a; margin: -.1em 0 .35em; }
+.cd-grown b { font-weight: 800; letter-spacing: .16em; color: #9fd46a; text-shadow: 0 0 8px rgba(120,200,80,.45); }
+.cd-alive .cd-art::before { content: ''; position: absolute; left: 6px; bottom: 4px; width: 2.4em; height: 2.4em; pointer-events: none; z-index: 1;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M6 38 Q10 22 22 14 Q30 9 36 4' fill='none' stroke='%237fbf4a' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M14 24 Q6 20 7 12 Q15 14 14 24Z M22 15 Q24 6 32 6 Q30 14 22 15Z M10 31 Q18 32 20 24 Q12 23 10 31Z' fill='%239fd46a' stroke='%23305a1c' stroke-width='1'/%3E%3C/svg%3E") no-repeat center / contain;
+  filter: drop-shadow(0 0 4px rgba(140,220,90,.55)); animation: grBreathe 4s ease-in-out infinite; }
+@keyframes grBreathe { 50% { transform: scale(1.08) rotate(-3deg); } }
+@media (prefers-reduced-motion: reduce) { .cd-alive .cd-art::before { animation: none; } }
+.cd-alive { box-shadow: 0 0 calc(60px * var(--tg)) color-mix(in srgb, var(--tc) 70%, transparent), 0 0 14px rgba(140,220,90,.35), 0 8px 24px rgba(0,0,0,.6); }
+.cd-marked.cd-alive { box-shadow: 0 0 calc(60px * var(--tg)) color-mix(in srgb, var(--tc) 70%, transparent), 0 0 18px color-mix(in srgb, var(--mc) 55%, transparent), 0 0 10px rgba(140,220,90,.3), 0 8px 24px rgba(0,0,0,.6); }
 .cd-marked { box-shadow: 0 0 calc(60px * var(--tg)) color-mix(in srgb, var(--tc) 70%, transparent), 0 0 18px color-mix(in srgb, var(--mc) 55%, transparent), 0 8px 24px rgba(0,0,0,.6); }
 .cd-af.gilded b { color: #ffd25a; } .cd-af.gilded i { font: 800 .72em var(--sans); font-style: normal; letter-spacing: .18em; color: #ffd25a; }
 .cd-made { display: flex; flex-wrap: wrap; gap: .25em .8em; font: 600 .88em/1.35 var(--sans); color: var(--bone-dim); }

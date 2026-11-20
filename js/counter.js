@@ -4,12 +4,12 @@
 // cut out to stand in front of the customers), with what changes laid over it in 2D: your cards on the painted shelves (each card's
 // face skewed onto its place), the customers as pictures at their standing spots, and the places and the doorway to tap.
 // The pure parts (fit, the skew, who stands where) are exported for the tests; create() needs a page.
-import { faceCanvas, CW, CH } from './cardface.js?v=76';
-import { LOOKS, POOLS, REGULARS } from './folk.js?v=76';
-import { FURNITURE, TIERS } from './data.js?v=76';
-import { shelfSpots } from './room.js?v=76';
-import { isBroken } from './wear.js?v=76';
-import { threatsOn } from './bank.js?v=76';
+import { faceCanvas, CW, CH } from './cardface.js?v=77';
+import { LOOKS, POOLS, REGULARS } from './folk.js?v=77';
+import { FURNITURE, TIERS } from './data.js?v=77';
+import { shelfSpots } from './room.js?v=77';
+import { isBroken } from './wear.js?v=77';
+import { threatsOn } from './bank.js?v=77';
 
 export const VIEWS = ['left', 'counter', 'right', 'back'];
 export const VIEW_WORD = { left: 'LEFT WALL', counter: 'THE COUNTER', right: 'RIGHT WALL', back: 'THE BACK ROOM' };

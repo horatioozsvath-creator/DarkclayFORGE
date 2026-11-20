@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // Growth, with no page access: tools, the maker's level and perks, renown, the display wall.
-import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS, HALL_RENOWN, HALL_CHARM, MYTHICS, NINE, LEGACY } from './data.js?v=76';
-import { levelOf, MAX_LEVEL } from './rules.js?v=76';
-import * as Rg from './region.js?v=76';
+import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS, HALL_RENOWN, HALL_CHARM, MYTHICS, NINE, LEGACY, GROWN } from './data.js?v=77';
+import { levelOf, MAX_LEVEL } from './rules.js?v=77';
+import * as Rg from './region.js?v=77';
 
 // ---------- tools ----------
 export const has = (save, id) => (save.tools || []).includes(id);
@@ -74,7 +74,7 @@ export function fixWall(save) {
   save.wall = (save.wall || []).filter(id => ids.has(id)).slice(0, wallSlots(save));
 }
 // a pane hung on the wall goes in the window: twice the charm
-export const wallCharm = save => (save.wall || []).reduce((a, id) => { const c = save.cards.find(x => x.id === id); return a + (c && !c.sample ? (TIERS.findIndex(t => t.id === c.tier) + 1) * ((PATTERNS[c.pattern] || {}).windowed ? 2 : 1) : 0); }, 0);
+export const wallCharm = save => (save.wall || []).reduce((a, id) => { const c = save.cards.find(x => x.id === id); return a + (c && !c.sample ? (TIERS.findIndex(t => t.id === c.tier) + 1) * ((PATTERNS[c.pattern] || {}).windowed ? 2 : 1) + grownCharm(c) : 0); }, 0);
 export function hang(save, id) {
   const card = save.cards.find(c => c.id === id);
   if (!card || card.sample || onHall(save, id) || onWall(save, id) || (save.shelf || []).some(e => e && e.id === id) || ((save.branch || {}).shelf || []).some(e => e && e.id === id)) return false;   // a flyer's copy never hangs
@@ -92,7 +92,9 @@ export const wageMult = save => (perked(save, 'wages') ? 0.8 : 1) * (heirTrait(s
 export const heirTrait = save => (save && save.heirTrait && LEGACY.trait[save.heirTrait]) || {};
 export const xpMult = save => heirTrait(save).xp || 1;
 // the heirloom (milestone 37): over the shop door, never for sale; charm as it would bring in the Hall, no renown (the heir earns that)
-export const heirloomCharm = save => !save ? 0 : (save.heirlooms || (save.heirloom ? [save.heirloom] : [])).reduce((a, c) => a + (HALL_CHARM[c.tier] || 0), 0);
+export const heirloomCharm = save => !save ? 0 : (save.heirlooms || (save.heirloom ? [save.heirloom] : [])).reduce((a, c) => a + (HALL_CHARM[c.tier] || 0) + grownCharm(c), 0);
+// a grown piece on the wall or over the door draws a little more for each stage past the first (milestone 51)
+export const grownCharm = c => c && c.grown ? GROWN.charm * Math.max(0, (c.grown.stage || 1) - 1) : 0;
 export const capBonus = save => perked(save, 'hours') ? 2 : 0;
 // on the slower curve (milestone 7): the mood at Haggling 3 (about twenty haggles), the purse at 4 (about as many as Haggling 6 took before)
 export const readLevels = save => perked(save, 'read') ? { mood: 1, purse: 2 } : { mood: 3, purse: 4 };

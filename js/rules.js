@@ -1,8 +1,8 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The rules of the working, with no page access (so they run under node for the tests).
 // Ported from the Darkclay Zero mockup "The Working" (decision 277). Every function that needs chance takes rng: () => [0,1).
-import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, WORKS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS, LUCK, MARKS, WAKE } from './data.js?v=76';
-import * as Rg from './region.js?v=76';
+import { TRUE_HEAT, CLEAN_BLOW, KINDS, KC, TIERS, FORGE, STATIONS, WORKS, METALS, PATTERNS, AFFIXES, FOUND, SPEED_WORDS, BARS, OLD_BLOOD, RELIC_WORK, RELICS, MYTHICS, MYTHIC_WORK, PART_WORK, MATS, LUCK, MARKS, WAKE, GROWN, GEAR } from './data.js?v=77';
+import * as Rg from './region.js?v=77';
 
 // ---------- trades by practice ----------
 export const MAX_LEVEL = 10;
@@ -356,8 +356,9 @@ export function finish(S, how) {
   // a successful working turns up a found tile: Fine or better and no crack, or WHITE HEAT reached
   const clean = !instant && !dropped && tier >= 1 && (S.cracks === 0 || S.earned);
   const mark = instant || flawed ? null : rollMark(S);   // a mark in the metal (milestone 49)
+  const grown = !instant && !flawed && canGrow(S.cfg.patternId) && S.rng() < growOdds(S, mark);   // it came out alive (milestone 51)
   return { tier, flawed, dropped, instant, odds: o, worked: instant ? 0 : Math.round(S.worked), strikes: S.strikes, heats: S.heats, cracks: S.cracks,
-    whiteHeat: !instant && S.whiteHeat, earned, clean, frost: !instant && S.frost, mark, ...(woke ? { woke: true } : {}),
+    whiteHeat: !instant && S.whiteHeat, earned, clean, frost: !instant && S.frost, mark, ...(woke ? { woke: true } : {}), ...(grown ? { grown: true } : {}),
     masterShort: S.master && !instant ? (dropped ? 'dropped' : S.boils ? 'boiled' : 'nowhite') : undefined };
 }
 
@@ -383,6 +384,11 @@ function rollMark(S) {
   for (const id of k) { r -= MARKS.kinds[id].weight; if (r < 0) return id; }
   return k[k.length - 1];
 }
+// GROWN PIECES (milestone 51): only gear the staff can carry (not a bottle, a brew, a window glass), with the luck on: only then are
+// the dice thrown. The odds lean as a mark's do (cleaner, higher trade), about one working in 150, twice that with a mark.
+export const gearSlotOf = patternId => Object.keys(GEAR.slots).find(k => GEAR.slots[k].includes(patternId)) || null;
+export const canGrow = patternId => LUCK.on && !PATTERNS[patternId].makes && !!gearSlotOf(patternId);
+export const growOdds = (S, mark) => GROWN.odds * markOdds(S) / MARKS.odds * (mark ? GROWN.marked : 1);
 // a mark's name at the piece's station ("Ember-hearted" at the forge, "Ember-warm" on a hide)
 export function markName(mark, patternId) {
   const i = MARKS.order.indexOf(mark); if (i < 0) return '';
@@ -506,7 +512,7 @@ export function makePiece({ patternId, picks, result, picked, maker, rng, now, k
     made, lore: p.lore[result.tier], worth, flawed: result.flawed, maker, count: p.batch || undefined,
     src: { picks: (picks || []).slice(), worked, strikes: result.strikes || 0, heats: result.heats || 0, cracks: result.cracks || 0,
       whiteHeat: !!result.whiteHeat, frost: !!result.frost, instant: !!result.instant, reworked },
-    ...(mark ? { mark } : {}), ...(result.woke ? { woke: true } : {}), ...(given ? { giftGiven: true } : {}), ...(gilded.length ? { gilded } : {}), ...(flawless ? { flawless: true } : {}) };
+    ...(mark ? { mark } : {}), ...(result.woke ? { woke: true } : {}), ...(result.grown ? { grown: { stage: 1, uses: 0 } } : {}), ...(given ? { giftGiven: true } : {}), ...(gilded.length ? { gilded } : {}), ...(flawless ? { flawless: true } : {}) };
 }
 
 // How an older piece was made, for one from before cards kept it (milestone 1 and 2): its metal, plain parts, WORKED from its making line.
@@ -547,7 +553,71 @@ export function remakePiece({ card, res, picked, rng, now }) {
   const result = { tier: res.tier, flawed: res.flawed, worked: src.worked + res.worked, strikes: src.strikes + res.strikes, heats: src.heats + res.heats,
     cracks: src.cracks + res.cracks, whiteHeat: src.whiteHeat || res.whiteHeat, frost: src.frost || res.frost, instant: false,
     mark: card.mark || null, gifted: !!card.giftGiven, woke: !!card.woke };   // a mark stays with the piece through every rework; its gift is given once
-  const piece = makePiece({ patternId: card.pattern, picks: src.picks, result, picked, maker: makerOf(card), rng, now, keep: card.affixes, keepGilded: card.gilded || [], reworked: (src.reworked || 0) + 1 });
+  const piece = makePiece({ patternId: card.pattern, picks: src.picks, result, picked, maker: makerOf(card), rng, now, keep: tierAffixes(card), keepGilded: card.gilded || [], reworked: (src.reworked || 0) + 1 });
   piece.id = card.id; piece.at = card.at;
+  if (card.grown) { piece.grown = JSON.parse(JSON.stringify(card.grown)); applyGrown(piece, rng); }   // a grown piece stays grown, its growth kept (milestone 51)
   return piece;
+}
+
+// ---------- grown pieces (milestone 51) ----------
+// the affixes a grown piece carries over its tier's count (NAMED's, FULL-GROWN's): kept apart through a rework, as a mark's gift is
+const extrasOf = card => (card.grown && card.grown.extra) || [];
+const tierAffixes = card => (card.affixes || []).filter(a => !extrasOf(card).includes(a[0]));
+export const grownStage = card => (card && card.grown && card.grown.stage) || 0;
+export const grownWord = card => GROWN.stages[grownStage(card) - 1] || '';
+// how far to its next stage: { uses, next } (next null when it's FULL-GROWN)
+export const grownNext = card => ({ uses: Math.floor(card.grown.uses || 0), next: GROWN.at[card.grown.stage] == null ? null : GROWN.at[card.grown.stage] });
+// what its stage gives, put on (again) after it's been made or reworked: from GROWN, every affix at its best; its extra affixes; its name
+export function applyGrown(card, rng) {
+  const g = card.grown, st = g.stage, was = !!card.flawless;
+  if (st >= 3) extrasOf(card).forEach(w => { if (!card.affixes.some(a => a[0] === w) && AFFIX_BY_WORD[w]) { const a = rollAffix(AFFIX_BY_WORD[w], rng, true); card.affixes.push([a[0], a[1]]); } });
+  if (st >= 2) {
+    card.affixes = card.affixes.map(a => { const id = AFFIX_BY_WORD[a[0]]; if (!id) return a; const b = rollAffix(id, rng, true); return [b[0], b[1]]; });
+    card.gilded = card.affixes.filter(a => AFFIX_BY_WORD[a[0]]).map(a => a[0]);
+    if (!card.gilded.length) delete card.gilded;
+  }
+  const flawless = (card.gilded || []).length >= 3;
+  if (flawless !== was) { card.worth = Math.max(1, Math.round(card.worth * (flawless ? MARKS.flawless : 1 / MARKS.flawless))); if (flawless) card.flawless = true; else delete card.flawless; }
+  if (g.name && !card.relic && !card.mythic) card.name = g.name;
+  return card;
+}
+// one more affix from the pattern's pool, at its best, over the tier's count: its word, or null when the pool has none left
+function growAffix(card, rng) {
+  const have = card.affixes.map(a => AFFIX_BY_WORD[a[0]]).filter(Boolean), left = PATTERNS[card.pattern].affixes.filter(id => !have.includes(id));
+  if (!left.length) return null;
+  const a = rollAffix(left[Math.floor(rng() * left.length)], rng, true);
+  card.grown.extra = extrasOf(card).concat(a[0]); return a[0];
+}
+// carried: `amount` (a Reach trip's worth) by `who`. Each stage it reaches does its work; returns what happened, a list of
+// { stage, word, name, affix?, rose? } (empty, most of the time). Dice only for a grown piece that reaches a stage.
+export function growBy(card, who, amount, rng) {
+  const g = card && card.grown; if (!g || !(amount > 0)) return [];
+  g.uses = Math.round(((g.uses || 0) + amount) * 100) / 100; if (who) g.by = who;
+  const out = [];
+  while (g.stage < GROWN.stages.length && g.uses >= GROWN.at[g.stage]) {
+    g.stage++;
+    const e = { stage: g.stage, word: GROWN.stages[g.stage - 1] };
+    if (g.stage === 3) {
+      e.affix = growAffix(card, rng);
+      const names = GROWN.names[gearSlotOf(card.pattern)] || GROWN.names.weapon, first = String(g.by || 'their').split(' ')[0];
+      g.was = card.name; g.name = first + '\'s ' + names[Math.floor(rng() * names.length)];
+    }
+    if (g.stage === 4) {
+      const t = TIERS.findIndex(x => x.id === card.tier);
+      if (t >= 0 && t < OLD_BLOOD.tier && !card.relic && !card.mythic) { riseTier(card, t + 1, rng); e.rose = TIERS[t + 1].name; }
+      else e.affix = growAffix(card, rng);
+    }
+    applyGrown(card, rng);
+    e.name = card.name; out.push(e);
+  }
+  return out;
+}
+// FULL-GROWN: the piece a tier up in place (its id, its making, its affixes kept, the tier's new one rolled), not back in the fire
+function riseTier(card, tier, rng) {
+  const src = srcOf(card);
+  const result = { tier, flawed: card.flawed, worked: src.worked, strikes: src.strikes, heats: src.heats, cracks: src.cracks, whiteHeat: src.whiteHeat, frost: src.frost, instant: src.instant,
+    mark: card.mark || null, gifted: !!card.giftGiven, woke: !!card.woke };
+  const up = makePiece({ patternId: card.pattern, picks: src.picks, result, picked: null, maker: makerOf(card), rng, now: card.at, keep: tierAffixes(card), keepGilded: card.gilded || [], reworked: src.reworked || 0 });
+  const keep = { id: card.id, at: card.at, grown: card.grown, made: card.made, ...(card.heirloom ? { heirloom: true, from: card.from } : {}) };
+  Object.keys(card).forEach(k => delete card[k]); Object.assign(card, up, keep);
 }
