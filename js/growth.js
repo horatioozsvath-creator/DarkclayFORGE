@@ -1,9 +1,9 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // Growth, with no page access: tools, the maker's level and perks, renown, the display wall.
-import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS, HALL_RENOWN, HALL_CHARM, MYTHICS, NINE, LEGACY, GROWN } from './data.js?v=83';
-import { levelOf, MAX_LEVEL } from './rules.js?v=83';
-import * as Rg from './region.js?v=83';
-import * as Who from './who.js?v=83';
+import { TOOLS, PERKS, RENOWN, FAMED_RUNG, PURSE_STEP, WALL_RENOWN, WALL_SLOTS, PATTERNS, TIERS, HALL_RENOWN, HALL_CHARM, MYTHICS, NINE, LEGACY, GROWN } from './data.js?v=84';
+import { levelOf, MAX_LEVEL } from './rules.js?v=84';
+import * as Rg from './region.js?v=84';
+import * as Who from './who.js?v=84';
 
 // ---------- tools ----------
 export const has = (save, id) => (save.tools || []).includes(id);

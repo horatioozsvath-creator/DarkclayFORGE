@@ -90,7 +90,7 @@ test('the Relic working on every one of the hold\'s: a batch of warming draught 
   }
 });
 
-test('until the Nine of the Hearth (milestone 57), the Reach\'s Nine still stand in up there, and every Nine grows from its own region\'s Relics', () => {
-  assert.deepEqual(Rg.nineOf(hold()), Rg.mythicsIn('reach'));
+test('every Nine grows from its own region\'s Relics: the Nine of the Hearth from the hold\'s (milestone 57)', () => {
+  assert.deepEqual(Rg.nineOf(hold()).map(id => MYTHICS[id].relic).sort(), Rg.relicsIn(NORTH).slice().sort());
   for (const m of Object.values(MYTHICS)) assert.equal(RELICS[m.relic].region, m.region, m.name);
 });

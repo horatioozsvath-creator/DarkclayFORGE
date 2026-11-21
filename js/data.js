@@ -59,6 +59,28 @@ export const MYTHICS = {
     powers: [['Past the weather', 'fog and storm don\'t hide what it\'s turned on'], ['An hour ahead', 'it shows the sea as it will be in an hour'], ['The lost ship', 'it finds what the sea has hidden']], lore: 'The lighthouse keeper\'s glass. He saw the wave an hour out, and Isel had the bell rung.' },
   sealofthetide: { name: 'The Seal of the Tide', relic: 'blackcaulk', shard: 'deep', region: 'greyshore', parts: [['forge', 'an iron pot'], ['bowbench', 'a driftwood paddle'], ['glass', 'a black bottle']],
     powers: [['Never leaks', 'what it seals, the sea can\'t open'], ['Kept', 'what\'s sealed in it never spoils'], ['The queen\'s barge', 'a boat proofed with it can\'t sink']], lore: 'The pitch that sealed Isel\'s barge. It\'s on the bottom still, whole and dry, and something inside is waiting.' },
+  // THE NINE OF THE HEARTH (milestone 57, docs/NORTH-PLAN.md): the High Snow's legend. Aud the Hearthkeeper kept the fire alight through
+  // the Long Winter, when the ice took the lower halls; nine pieces were sworn to her hearth, and they went down into the ice with the
+  // halls. Each grows from one of the hold's Relics (milestone 56). shard: below the old halls ('deep'), an order from the Thanes' Moot
+  // ('court'), or the ice-foot the day the thaw gives back ('star')
+  highgateaxe: { name: 'The Axe of the High Gate', relic: 'frostwarden', shard: 'court', region: 'north', parts: [['glass', 'a glacier-glass inlay'], ['stretcher', 'an elk-hide grip'], ['kettle', 'a bear-fat temper']],
+    powers: [['The high gate holds', 'no one crosses the pass it guards'], ['It cuts the ice', 'no ice is too old or too hard for it'], ['The dead stay down', 'what walked out of the ice goes back at its stroke']], lore: 'Aud\'s gate-captain cut the last steps to the hold with it, and held them while the halls went under.' },
+  audsring: { name: 'Aud\'s Ring', relic: 'thanering', shard: 'star', region: 'north', parts: [['glass', 'an ice-amber stone'], ['kettle', 'a hearth-ash polish'], ['bowbench', 'an antler ring-box']],
+    powers: [['Heard at the Moot', 'the one who wears it is listened to, and believed'], ['Sworn on it', 'it finds the others of the Hearth'], ['Warm to the hand', 'it is never cold, not even in the ice']], lore: 'Aud\'s own. The thanes swore to her on it, and the oath held through the Long Winter.' },
+  oathaxe: { name: 'The Oath-Axe', relic: 'mootaxe', shard: 'deep', region: 'north', parts: [['stretcher', 'an elk-hide haft-wrap'], ['kettle', 'a pine-pitch seal'], ['bowbench', 'an ash haft']],
+    powers: [['Peace kept', 'no blade is drawn in the hall where it hangs'], ['Oaths bind', 'what is sworn on it is kept'], ['The Moot gathers', 'thanes who quarrel come to terms before it']], lore: 'It hung over the Moot-seat in the old halls. The thanes left it there when the ice came, so the oaths would keep.' },
+  longdarkhood: { name: 'The Hood of the Long Dark', relic: 'vikhood', shard: 'deep', region: 'north', parts: [['forge', 'a frost-iron clasp'], ['glass', 'smoked-glass eyes'], ['kettle', 'a bear-fat dressing']],
+    powers: [['Breath of the deep', 'bad air and cold can\'t reach the one who wears it'], ['Sees in the dark', 'the darkest gallery shows plain'], ['Comes back up', 'the one who wears it always finds the way out']], lore: 'Aud wore it down into the lower halls to bring the last of the miners up. She came up last.' },
+  glacierwalkers: { name: 'The Glacier-Walkers', relic: 'fellstride', shard: 'star', region: 'north', parts: [['forge', 'frost-iron crampons'], ['stretcher', 'a white-bear binding'], ['kettle', 'a pine-pitch proofing']],
+    powers: [['Over the glacier', 'the snow holds up the one who wears them'], ['No track', 'the snow closes behind them'], ['The far grass', 'they find the way to summer, whatever the snow']], lore: 'The herder who led the hold\'s flocks over the glacier in the Long Winter wore them, and every flock lived.' },
+  lastpassbow: { name: 'The Bow of the Last Pass', relic: 'passbow', shard: 'court', region: 'north', parts: [['forge', 'frost-iron nocks'], ['stretcher', 'a gut string, elk-wrapped'], ['glass', 'a sighting glass']],
+    powers: [['Wind-true', 'no gale off the glacier turns its arrow'], ['The pass is shut', 'no raider crosses while it\'s strung'], ['Far and cold', 'its arrow carries as far as the eye can see snow']], lore: 'Aud\'s pass-watch held the last pass with it while the hold drew in, and no raider came over in the Long Winter.' },
+  hearthdraught: { name: 'The Hearth-Draught', relic: 'bakkesember', shard: 'star', region: 'north', parts: [['forge', 'a frost-iron flask'], ['glass', 'a glacier-glass stopper'], ['bowbench', 'an antler cup']],
+    powers: [['The Hearth inside', 'no cold can kill the one who drank it'], ['A winter in a swallow', 'one sip, and the long dark goes by'], ['Fire kept', 'the one who drank it can light any hearth']], lore: 'Aud brewed it from the Hearth\'s own ash. Every one who drank it lived through the Long Winter.' },
+  audseyes: { name: 'Aud\'s Eyes', relic: 'snowseer', shard: 'deep', region: 'north', parts: [['forge', 'a silver rim'], ['stretcher', 'a white-bear strap'], ['kettle', 'a smoking-oil']],
+    powers: [['Under the snow', 'the old roads show through it, and the hidden drops'], ['The ice is glass', 'it sees through the ice to what it holds'], ['The way home', 'the hold\'s light shows through it from any snowfield']], lore: 'Aud looked through them to find the way the halls went down, and to bring the hold out the other side.' },
+  hearthfire: { name: 'The Hearth-Fire', relic: 'hearthlamp', shard: 'court', region: 'north', parts: [['forge', 'a frost-iron frame'], ['stretcher', 'an elk-hide hood'], ['bowbench', 'an ash carrying-pole']],
+    powers: [['It never goes out', 'no wind, no water and no dark will put it out'], ['The Hearth\'s own', 'it was lit from the Hearth, and it lights it again'], ['The dead keep off', 'nothing out of the ice comes near its light']], lore: 'The lamp Aud carried. When the halls went under she lit the great hearth from it, and the Hearth has never gone out since.' },
 };
 export const TRAIL = { rung: 6, deep: 0.35, court: 0.4, courtLeast: 2, star: 2, starBelow: 0.08 };   // courtLeast: the Court's shard orders ask a Rare or better (milestone 34: was Old-Blood); star: the shards a fallen star brings (milestone 35: was 1); starBelow: the odds a trip below finds one of the star's instead (milestone 35)
 // milestone 18: the Court asks for each Mythic once (half the orders while one is waiting), paying twice its worth; all Nine made is
@@ -1470,7 +1492,7 @@ export const REGIONS = {
       where: { deep: 'below the deep doors (a runner\'s trip)', court: 'an order from the Court', star: 'the day a star falls on the Reach (IN TOWN), or now and then below the deep doors' },
       courtShard: 'The Court would see the best you make. It has something of Veric\'s to give in return.', courtPosted: 'The Court left an order, and a promise.',
       courtBuy: 'The Court has heard what you made. It would buy {name}, once, for twice its worth. Keep it, and the Court won\'t ask again.', courtAsked: 'The Court asked for {name}, once.',
-      trail: 'The Nine of Veric: nine pieces of legend, each a Relic reforged.', ofLine: '', nine: 'the Nine of Veric', place: 'the Reach',
+      trail: 'The Nine of Veric: nine pieces of legend, each a Relic reforged.', ofLine: '', nine: 'the Nine of Veric', place: 'the Reach', away: 'in the Reach',
       lost: 'The Nine were lost again after their day: a fire at the Court, a theft on the high road, one gone into the river. Their shards lie scattered, and not where the old stories put them.' } },
   greyshore: { id: 'greyshore', name: 'the Greyshore', town: 'Saltby', top: 'OF THE SHORE',
     // the coast's legend (milestone 42): Isel the Tide-Queen and her Nine. Their shards: below the drowned town, an order from the Harbour
@@ -1490,7 +1512,8 @@ export const REGIONS = {
       arrive: [
         'The road over the pass is three days of rock and wind, and then the grey sea, and Saltby under it: a harbour, a quay, a town of fishers and salvagers.',
         'Nobody here has heard of {lineOf}, or of the Nine of Veric. The Reach is a long way off. The shop on Rope Lane is small, the shelves are bare, and the purse holds {purse} coins.',
-        'But the book is on its hook, the blueprints are in the drawer, and your hands remember what you learned at the bench. And they tell a story on the quay of a queen, a wave, and nine pieces that went down with her.'] },
+        'But the book is on its hook, the blueprints are in the drawer, and your hands remember what you learned at the bench. And they tell a story on the quay of a queen, a wave, and nine pieces that went down with her.'],
+      arriveWord: 'OVER THE PASS', go: ', over the pass in Saltby', under: 'under the sea', win: 'the coast', away: 'over the pass', back: 'back over the pass' },
     line: 'A grey harbour town over the pass: fishers, sailors and salvagers, and a drowned town out past the bar.',
     rescue: '<b>The chandler\'s scrap box.</b> Old Merrin leaves you a bar and a cord, enough for a dagger.',
     suppliers: [
@@ -1723,10 +1746,29 @@ export const REGIONS = {
     },
   },
   // THE HIGH SNOW (milestone 54, docs/NORTH-PLAN.md): Hearthold, a hold cut into the mountain round a hearth that has never gone out.
-  // Hidden: nothing sends a save up here until the climb (milestone 57). Iron is cheap and wood is dear; winter shuts the high road.
-  // Its folk, stories, patterns, Relics and Nine come in milestones 55–57: until then the Reach's stand in, as the coast's did
-  // hidden: left out of what the other regions are told (where a thing is sold or dug) until the climb opens (milestone 57)
-  north: { id: 'north', name: 'the High Snow', town: 'Hearthold', top: 'OF THE SNOW', where: ', up in the snow', hidden: true, kicker: 'THE HOLD AND THE MULE TRACK',
+  // Open from milestone 57 (the climb at the handing on). Iron is cheap and wood is dear; winter shuts the high road. Its folk and
+  // patterns came in milestone 55, its Relics in 56, its Nine in 57. (A region marked hidden: true is left out of what the others are told)
+  north: { id: 'north', name: 'the High Snow', town: 'Hearthold', top: 'OF THE SNOW', where: ', up in the snow', kicker: 'THE HOLD AND THE MULE TRACK',
+    // the hold's legend (milestone 57): Aud the Hearthkeeper and the Nine of the Hearth. Their shards: below the old halls, an order from
+    // the Thanes' Moot, or at the ice-foot the day the thaw gives back (the 'thawgives' day, in place of the fallen star)
+    legend: { word: 'THE NINE OF THE HEARTH', title: 'MAKER OF THE HEARTH', maker: 'Maker of the Hearth', of: 'Aud', shard: 'shard of the Hearth', shards: 'shards of the Hearth', court: 'The Thanes\' Moot',
+      starGo: 'GO UP TO THE ICE-FOOT', starAt: 'In the meltwater at the ice-foot, cold as the glacier', starNone: 'the thaw gave nothing back today', shardWhy: 'its shard of the Hearth',
+      where: { deep: 'below the old halls (a runner\'s trip)', court: 'an order from the Thanes\' Moot', star: 'the ice-foot, the day the thaw gives back (IN TOWN), or now and then below the old halls' },
+      courtShard: 'The Moot would see the best you make. It has something of Aud\'s to give in return.', courtPosted: 'The Thanes\' Moot left an order, and a promise.',
+      courtBuy: 'The Thanes\' Moot has heard what you made. It would buy {name}, once, for twice its worth. Keep it, and the Moot won\'t ask again.', courtAsked: 'The Thanes\' Moot asked for {name}, once.',
+      trail: 'The Nine of the Hearth: Aud the Hearthkeeper\'s nine pieces, each a Relic reforged.', ofLine: ' · OF THE HIGH SNOW', nine: 'the Nine of the Hearth', place: 'the High Snow',
+      lost: 'The Nine of the Hearth were lost again after their day: one into a crevasse, one to raiders on the pass, one back into the ice. Their shards lie scattered, and not where the old stories put them.',
+      ending: [
+        'The last of the Nine cools on the anvil. They were sworn to Aud the Hearthkeeper, and they went down into the ice with the lower halls in the Long Winter. Now they are whole again, and every one carries your mark.',
+        'By the next snow the word is in every hold. The Thanes\' Moot sends its speaker. The ice in the old halls goes quiet. Herders who have never held a hammer come down off the fell only to see the hands that did it.',
+        'Your mark is <b>Maker of the Hearth</b>. The Hall shines twice as bright for it, and every link to your shop carries the Nine of the Hearth.',
+        'The forge is still warm. There is always more to make.'],
+      arrive: [
+        'The mule track up from the Reach is four days of switchbacks and snow, and then the gate, and Hearthold behind it: a hold cut into the mountain round a hearth that has never gone out.',
+        'Nobody up here has heard of {lineOf}, or of the Nines below. The Reach is a long way down. The shop on the Smiths\' Stair is small, the shelves are bare, and the purse holds {purse} coins.',
+        'But the book is on its hook, the blueprints are in the drawer, and your hands remember what you learned at the bench. And they tell a story by the Hearth of a keeper, a long winter, and nine pieces that went down into the ice.'],
+      // the handing on (milestone 57): how the heir's road reads, to here and away
+      arriveWord: 'UP INTO THE SNOW', go: ', up in the snow in Hearthold', under: 'under the ice', win: 'the hold', away: 'up in the snow', back: 'back down from the snow' },
     line: 'A hold cut into the mountain above the snowline, round a hearth that has never gone out, and the lost halls under the ice.',
     rescue: '<b>The Hold Stores\' scrap bin.</b> Old Thora leaves you a bar and a cord, enough for a dagger.',
     suppliers: [
@@ -1822,6 +1864,8 @@ export const REGIONS = {
       { id: 'moot', name: 'The Thanes\' Moot', line: 'The thanes ride in from the far holds for the Moot, with their households.', effect: 'Thanes and pilgrims with deep purses.', gap: 0.85, weights: { factor: 3, traveller: 2, steward: 2 }, purse: 1.1 },
       { id: 'shift', name: 'The Deep Shift comes up', line: 'The miners are up from the deep galleries after a month below, and paid.', effect: 'Guards and miners crowd in, carrying more.', gap: 0.9, weights: { guard: 2, delver: 3 }, purse: 1.15 },
       // deep winter: snow to the eaves and the high road shut (the coast's gale, the Reach's storm)
+      // the thaw gives back (milestone 57): the hold's fallen star; shards: true marks the day a shard of the Hearth may lie out there
+      { id: 'thawgives', name: 'The thaw gives back', line: 'The glacier let go of a slab in the night, and things from the old halls lie in the meltwater at the ice-foot.', effect: 'Fewer customers: half the hold is up at the ice-foot. A shard of the Hearth may lie there.', gap: 1.3, weight: 4, shards: true },
       { id: 'deepwinter', name: 'Deep winter', line: 'Snow to the eaves, and the high road shut. Only the hold\'s own are about.', effect: 'Fewer customers: the high road is shut.', gap: 1.6, weight: 3 },
     ],
     seasons: [

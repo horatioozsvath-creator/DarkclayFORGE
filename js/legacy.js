@@ -3,15 +3,15 @@
 // The heir's shop is built fresh, with only what the line keeps: the book (patterns found, tries, clues), the blueprints, the found
 // tiles, the heir's trades (their own, up to trade 5; trade 2 in the rest), their trait for good and one heirloom over the door. The
 // old shop goes into the line's record, with its save code (its own record left out, so nothing nests).
-import { LEGACY, PATTERNS, HALL, MYTHICS, TIERS, RENOWN } from './data.js?v=83';
-import { scatter } from './trail.js?v=83';
-import { isNine, renownOf } from './growth.js?v=83';
-import { levelOf, xpToNext } from './rules.js?v=83';
-import { apprenticeOf, TOP_XP } from './apprentice.js?v=83';
-import { fresh, toCode } from './save.js?v=83';
-import * as Rg from './region.js?v=83';
-import { inherit as inheritMine, depthOf } from './mine.js?v=83';
-import * as Who from './who.js?v=83';
+import { LEGACY, PATTERNS, HALL, MYTHICS, TIERS, RENOWN } from './data.js?v=84';
+import { scatter } from './trail.js?v=84';
+import { isNine, renownOf } from './growth.js?v=84';
+import { levelOf, xpToNext } from './rules.js?v=84';
+import { apprenticeOf, TOP_XP } from './apprentice.js?v=84';
+import { fresh, toCode } from './save.js?v=84';
+import * as Rg from './region.js?v=84';
+import { inherit as inheritMine, depthOf } from './mine.js?v=84';
+import * as Who from './who.js?v=84';
 
 const DAY = 86400000;
 export const gen = save => save.gen || 1;

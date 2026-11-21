@@ -22,15 +22,15 @@ const coast = (o = {}) => shop({ region: COAST, ...o });
 const sold = (save, mat) => { for (let h = 0; h < 48; h++) if (Sh.sells(mat, h, save)) return true; return false; };
 const NEW = Object.keys(MATS).filter(k => MATS[k].north);
 
-test('a third region, hidden: Hearthold in the High Snow; no heir goes there yet, and nothing else tells of it', () => {
+test('a third region: Hearthold in the High Snow (hidden until milestone 57: now the heir can climb, and the others are told of it)', () => {
   assert.equal(Rg.regionId(hold()), NORTH); assert.equal(Rg.townName(hold()), 'Hearthold'); assert.equal(Rg.nameOf(hold()), 'the High Snow');
-  assert.equal(Rg.rungWord(hold(), 6), 'OF THE SNOW'); assert.ok(REGIONS.north.hidden);
+  assert.equal(Rg.rungWord(hold(), 6), 'OF THE SNOW'); assert.ok(!REGIONS.north.hidden);
   const old = shop({ renown: 5000, curve: 2, mythicsMade: Rg.mythicsIn('reach'), nineAt: NOW - DAY, staff: [{ id: 'a1', role: 'apprentice', name: 'Pip', trait: 'bright', xp: 0, hiredAt: NOW - 20 * DAY, skill: {} }] });
-  assert.equal(Rg.regionId(Leg.handOn(old, [], NOW).save), 'reach', 'an heir stays in the Reach, as before');
-  // where a thing is dug, in the Reach: not up in the snow, yet; up there, Aud's Delving
-  assert.ok(!Src.sourcesOf('ironstone').some(x => /Delving/.test(x.word)));
+  assert.equal(Rg.regionId(Leg.handOn(old, [], NOW).save), 'reach', 'an heir stays in the Reach unless sent');
+  // where a thing is dug, from the Reach: Aud's Delving too, now; and the snow's own things, sold up there
+  assert.ok(Src.sourcesOf('ironstone').some(x => /Aud's Delving/.test(x.word)));
   assert.ok(Src.sourcesOf('ironstone', hold()).some(x => /Aud's Delving/.test(x.word)));
-  for (const m of NEW) assert.ok(!Src.sourcesOf(m).some(x => x.kind === 'away'), m + ': the Reach isn\'t told it\'s sold up there');
+  for (const m of NEW) assert.ok(Src.sourcesOf(m).some(x => x.kind === 'away' && /High Snow, up in the snow/.test(x.word)), m + ': the Reach is told it\'s sold up there');
 });
 
 test('the Hold Stores, the Furrier, the Woodcutters, the Caravan and the Snow Carrier: everything the Reach sells, and the snow\'s own', () => {
@@ -129,8 +129,9 @@ test('Aud\'s Delving: the hold\'s own mine; the deep galleries freeze over and a
   assert.ok(Src.sourcesOf('coal', hold()).some(x => x.kind === 'dug') && Src.sourcesOf('coal', hold()).some(x => x.kind === 'sold'));
 });
 
-test('until the hold\'s own Nine (milestone 57), the Reach\'s stand in: a shop up there is no Maker of the Nine for having none', () => {
-  assert.deepEqual(Rg.nineOf(hold()), Rg.mythicsIn('reach'));   // (the hold's own Relics came in milestone 56: tests/m56.test.mjs)
-  assert.ok(!G.isNine(hold())); assert.ok(G.isNine(hold({ mythicsMade: Rg.mythicsIn('reach') })));
+test('each region\'s Nine count apart: up in the snow only the Nine of the Hearth make a Maker of the Hearth (the Reach\'s stood in until milestone 57)', () => {
+  assert.equal(Rg.nineOf(hold()).length, 9); assert.ok(Rg.nineOf(hold()).every(id => !Rg.mythicsIn('reach').includes(id) && !Rg.mythicsIn(COAST).includes(id)));
+  assert.ok(!G.isNine(hold())); assert.ok(!G.isNine(hold({ mythicsMade: Rg.mythicsIn('reach') })), 'the Reach\'s don\'t count up there');
+  assert.ok(G.isNine(hold({ mythicsMade: Rg.mythicsIn(NORTH) })));
   assert.ok(Rg.mythicsIn(COAST).every(id => !Rg.mythicsIn('reach').includes(id)), 'the coast\'s own, as they were');
 });
