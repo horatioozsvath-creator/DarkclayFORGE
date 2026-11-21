@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE REGIONS (milestone 39), with no page access: where a save works (save.region; none is the Reach) and the region's own tables.
 // The Reach's are data.js's own tables, so a Reach save plays exactly as before; another region names only what differs (REGIONS).
-import { REGIONS, SUPPLIERS, CUSTOMERS, SELLERS, ROUTES, THIEVES, MONSTERS, TOWN_HOT, TOWN_COLD, TOWN_EVENTS, SEASONS, RENOWN, REACH_RUNG, MATS, PATTERNS, RELICS, MYTHICS } from './data.js?v=82';
+import { REGIONS, SUPPLIERS, CUSTOMERS, SELLERS, ROUTES, THIEVES, MONSTERS, TOWN_HOT, TOWN_COLD, TOWN_EVENTS, SEASONS, RENOWN, REACH_RUNG, MATS, PATTERNS, RELICS, MYTHICS } from './data.js?v=83';
 
 export const REACH = 'reach', COAST = 'greyshore', NORTH = 'north';
 // where a material or a pattern belongs (milestone 54: a third region): the coast's (coast: true), the High Snow's (north: true), or the Reach's
@@ -93,9 +93,11 @@ export const relicRegion = id => idOf(RELICS[id] && RELICS[id].region);
 const orReach = (id, f) => { const l = f(idOf(id)); return l.length ? l : f(REACH); };
 export const relicsIn = id => once('relics:' + idOf(id), () => orReach(id, r => Object.keys(RELICS).filter(k => relicRegion(k) === r)));
 // the Relic a piece of this pattern can become: one whose blueprint is held and not made (this region's first), else this region's own
+// (milestone 56: another region's Relic only once its blueprint came with the line, held or made, so a Reach axe never points to the
+// hold's Moot Axe, whose blueprint is found only below the old halls)
 export function relicOf(save, pattern) {
-  const all = Object.keys(RELICS).filter(k => RELICS[k].pattern === pattern); if (!all.length) return undefined;
   const here = k => relicRegion(k) === regionId(save), bp = (save && save.blueprints) || [], made = (save && save.relicsMade) || [];
+  const all = Object.keys(RELICS).filter(k => RELICS[k].pattern === pattern && (here(k) || bp.includes(k) || made.includes(k))); if (!all.length) return undefined;
   const open = all.filter(k => bp.includes(k) && !made.includes(k));
   return open.find(here) || open[0] || all.find(here) || all[0];
 }

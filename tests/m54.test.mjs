@@ -129,8 +129,8 @@ test('Aud\'s Delving: the hold\'s own mine; the deep galleries freeze over and a
   assert.ok(Src.sourcesOf('coal', hold()).some(x => x.kind === 'dug') && Src.sourcesOf('coal', hold()).some(x => x.kind === 'sold'));
 });
 
-test('until the hold\'s own Nine (milestones 56–57), the Reach\'s stand in: a shop up there is no Maker of the Nine for having none', () => {
-  assert.deepEqual(Rg.nineOf(hold()), Rg.mythicsIn('reach')); assert.deepEqual(Rg.relicsIn(NORTH), Rg.relicsIn('reach'));
+test('until the hold\'s own Nine (milestone 57), the Reach\'s stand in: a shop up there is no Maker of the Nine for having none', () => {
+  assert.deepEqual(Rg.nineOf(hold()), Rg.mythicsIn('reach'));   // (the hold's own Relics came in milestone 56: tests/m56.test.mjs)
   assert.ok(!G.isNine(hold())); assert.ok(G.isNine(hold({ mythicsMade: Rg.mythicsIn('reach') })));
   assert.ok(Rg.mythicsIn(COAST).every(id => !Rg.mythicsIn('reach').includes(id)), 'the coast\'s own, as they were');
 });

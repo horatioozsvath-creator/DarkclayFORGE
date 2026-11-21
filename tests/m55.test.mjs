@@ -98,7 +98,7 @@ test('Hearthold\'s six families: their orders, their clues, their looks at the c
   const c = coast({ trades: masterOf(['falchion', 'dagger']) }); Sh.postOrder(c, seeded(3), NOW); assert.ok(!N.regulars.some(x => x.who === c.order.who));
 });
 
-test('ten stories: five first ones leave a gift (the Reach\'s gifts\' looks, in the hold\'s words); the five great ones wait for the hold\'s Relics', () => {
+test('ten stories: five first ones leave a gift (the Reach\'s gifts\' looks, in the hold\'s words); the five great ones end in the hold\'s Relics', () => {
   const first = N.stories.filter(x => !x.after), great = N.stories.filter(x => x.after);
   assert.equal(first.length, 5); assert.equal(great.length, 5);
   for (const st of first) { const f = FURNITURE[st.gift]; assert.ok(f && f.gift && FURNITURE[f.look] && FURNITURE[f.look].model === f.model, st.id); }
@@ -116,11 +116,11 @@ test('ten stories: five first ones leave a gift (the Reach\'s gifts\' looks, in 
     const e = Sh.deliver(s, card.id, NOW); assert.ok(e, 'step ' + i); if (i === 2) assert.equal(e.story.gift, 'vikslamps');
   });
   assert.ok(s.room.items.some(it => it.kind === 'vikslamps')); assert.ok(dressingOf(s, NOW).over.includes('kettycandles'), 'drawn as Ketty\'s candles');
-  // the great stories end in blueprints of the hold's Relics, which come in milestone 56: until then they don't come
-  for (const st of great) assert.ok(!RELICS[st.blueprint], st.id);
+  // the great stories end in blueprints of the hold's Relics (milestone 56): they come in once the first is told, from RENOWNED
+  for (const st of great) assert.ok(RELICS[st.blueprint] && RELICS[st.blueprint].region === NORTH, st.id);
   const late = hold({ renown: 99999, trades: masterOf(Object.keys(PATTERNS)), book: { found: Object.keys(PATTERNS), tries: [], clues: [] },
     stories: Object.fromEntries(first.map(x => [x.id, { step: x.steps.length, next: 0 }])) });
-  assert.ok(!Sh.storiesReady(late, NOW).some(x => x.after), 'no great story yet');
+  assert.deepEqual(Sh.storiesReady(late, NOW).map(x => x.id).sort(), great.map(x => x.id).sort(), 'the great stories come in');
   assert.deepEqual(Sh.storiesOf(shop()).map(x => x.id), STORIES.map(x => x.id), 'the Reach\'s stories as they were');
 });
 

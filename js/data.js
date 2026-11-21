@@ -198,6 +198,26 @@ export const RELICS = {
     lore: 'From the drowned town\'s lighthouse. Its keeper saw the wave an hour before it came, and rang the bell.' },
   blackcaulk: { name: 'The Black Caulk', pattern: 'pitch', mat: 'moonmead', power: ['Never leaks', 'what it seals, the sea can\'t open'], source: 'deep', region: 'greyshore',
     lore: 'The pitch that sealed the old town\'s boats. Divers still find them on the bottom, whole and dry inside.' },
+  // the High Snow's nine (milestone 56, docs/NORTH-PLAN.md): five from Hearthold's families' great stories, four from below the old
+  // halls; one for each of the hold's five patterns, and four across the stations. Each grows into one of the Nine of the Hearth (milestone 57)
+  frostwarden: { name: 'The Frostwarden', pattern: 'iceaxe', mat: 'heartstone', power: ['The high gate holds', 'no one crosses the pass it guards'], source: 'stenhus', region: 'north',
+    lore: 'The first gate-captain\'s axe. It cut the steps to the high gate, and the frozen dead have never once come up them.' },
+  thanering: { name: 'The Thane\'s Ring', pattern: 'ring', mat: 'moonsilver', power: ['Heard at the Moot', 'the one who wears it is listened to, and believed'], source: 'hallvard', region: 'north',
+    lore: 'The Hallvards\' ring, lost in the ice with a thane who went down after his son. Made again from the pattern in the hall\'s rolls.' },
+  vikhood: { name: 'The Gallery Hood', pattern: 'furhood', mat: 'wyrmhide', power: ['Breath of the deep', 'bad air and cold can\'t reach the one who wears it'], source: 'vik', region: 'north',
+    lore: 'Sewn from the pattern Hild Vik\'s husband kept in his lamp-bag. Every miner who wore one like it came back up.' },
+  fellstride: { name: 'The Fellstride', pattern: 'snowshoes', mat: 'ghostyew', power: ['Over the glacier', 'the snow holds up the one who wears them, and the crevasses close'], source: 'fellsson', region: 'north',
+    lore: 'The Fellsson frame, cut into a byre door. A herder walked over the glacier on a pair like them, and found the summer grass beyond.' },
+  bakkesember: { name: 'The Keepers\' Ember', pattern: 'warming', mat: 'moonmead', power: ['The Hearth inside', 'one swallow, and no cold can kill the one who drank it'], source: 'bakke', region: 'north',
+    lore: 'The Hearth\'s keepers brew it once a generation, from a recipe kept under the hearthstone. Only one bottle is ever right.' },
+  snowseer: { name: 'The Snow-Seer\'s Glass', pattern: 'goggles', mat: 'starcore', power: ['Under the snow', 'the old roads show through it, and the hidden drops'], source: 'deep', region: 'north',
+    lore: 'Found on a guide frozen in the old halls\' gate, still looking out. He had brought a hundred pilgrims over the glacier.' },
+  hearthlamp: { name: 'The Hearthkeeper\'s Lamp', pattern: 'lantern', mat: 'heartstone', power: ['It never goes out', 'no wind, no water and no dark will put it out'], source: 'deep', region: 'north',
+    lore: 'Aud carried it down to the lower halls to bring the last of them up. It was lit from the Hearth, and it is lit still.' },
+  mootaxe: { name: 'The Moot Axe', pattern: 'axe', mat: 'heartstone', power: ['Peace kept', 'no blade is drawn in the hall where it hangs'], source: 'deep', region: 'north',
+    lore: 'It hung over the old halls\' Moot-seat, where the thanes swore. Its pattern came up cut in the ice of the seat itself.' },
+  passbow: { name: 'The Pass-Bow', pattern: 'shortbow', mat: 'ghostyew', power: ['Wind-true', 'no gale off the glacier turns its arrow'], source: 'deep', region: 'north',
+    lore: 'The pass-watch\'s bow, from before the Long Winter. It shot the last raider off the high pass, and the pass has had no other name since.' },
 };
 export const BLUEPRINT_DEEP = 0.22;   // the odds a trip below the deep doors brings back a blueprint (any still to be found, one for a trade you're good at first)
 // the last rework, Rare to Old-Blood: a master of the trade, a piece with a rare part or WHITE HEAT in its making, three times the
@@ -1893,6 +1913,10 @@ export const REGIONS = {
         { patterns: ['tonic'], least: 3, line: 'I\'m old, and the long dark keeps me awake. Brew me something worth sleeping for.', thanks: 'I dreamed of summer. First time in fifty years.' },
         { patterns: ['warming'], least: 3, line: 'The Hearth\'s keepers want a draught for the Hearth-feast. Your very best.', thanks: 'The keepers\' own recipe, from under the Hearth. They said to give it to the one who can make it.' } ] },
     ],
+    // where the hold's Relics' blueprints come from (milestone 56), in the hold's words
+    bpWhere: { stenhus: 'Captain Stenhus\'s great story (after her first, when the shop is RENOWNED)', vik: 'Hild Vik\'s great story (after her first, when the shop is RENOWNED)',
+      fellsson: 'Orm Fellsson\'s great story (after his first, when the shop is RENOWNED)', hallvard: 'Lady Hallvard\'s great story (after her first, when the shop is RENOWNED)',
+      bakke: 'Yrsa Bakke\'s great story (after her first, when the shop is RENOWNED; a kettle)', deep: 'below the old halls, now and then (a runner\'s road from RENOWNED)' },
     // a generation on in the snow (from the line's second up here): the families' grandchildren
     lineFolk: {
       stenhus: { first: ['Sigrid', 'Ulf', 'Torunn', 'Haldor'], who: '{first} Stenhus, of the hold\'s guard', line: 'For the guard. My grandmother swore by this forge.',
