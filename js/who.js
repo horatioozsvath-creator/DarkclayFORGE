@@ -2,8 +2,8 @@
 // WHO OPENS THE SHOP (milestone 53, docs/CREATOR-PLAN.md), with no page access: the maker's people and look, what they were before,
 // and the kind of shop they open. save.who = { people, look, background }; save.shop = a station's id. A save without them is a
 // forge shop with no gift and no head start, as every save before: every gift below is 1 (or nothing) for it.
-import { PEOPLES, BACKGROUNDS, SHOPS, SIGN, STATIONS, PATTERNS } from './data.js?v=81';
-import { xpToNext } from './rules.js?v=81';
+import { PEOPLES, BACKGROUNDS, SHOPS, SIGN, STATIONS, PATTERNS } from './data.js?v=82';
+import { xpToNext } from './rules.js?v=82';
 
 const levelXp = lvl => { let x = 0; for (let l = 1; l < lvl; l++) x += xpToNext(l); return x; };   // as legacy.js xpFor
 export const shopOf = save => (save && SHOPS[save.shop]) ? save.shop : 'forge';

@@ -314,6 +314,26 @@
   [
    "^\\w+ Penhale\\b(?!')",
    "marrow"
+  ],
+  [
+   "\\bStenhus\\b",
+   "vance"
+  ],
+  [
+   "^\\w+ Vik\\b",
+   "ketty"
+  ],
+  [
+   "\\bFellsson\\b",
+   "bram"
+  ],
+  [
+   "^Lady \\w+ Hallvard(?!'s)",
+   "corrow"
+  ],
+  [
+   "^\\w+ Bakke\\b(?!')",
+   "marrow"
   ]
  ]
 }

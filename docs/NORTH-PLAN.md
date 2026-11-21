@@ -1,6 +1,6 @@
 # Up into the snow: a plan for a third region (milestones 54–58)
 
-Status: decided (2026-11-20). Milestone 54 (Hearthold, hidden) built in release 81 (docs/MILESTONE-54.md). Every choice was taken as written (the first option of each), and the art is
+Status: decided (2026-11-20). Milestone 54 (Hearthold, hidden) built in release 81 (docs/MILESTONE-54.md). Milestone 55 (the hold's folk and finds, hidden) built in release 82 (docs/MILESTONE-55.md). Every choice was taken as written (the first option of each), and the art is
 rendered from Darkclay Zero's private models and published with the release, with the user's yes (choice 6, option 1). Renumbered
 54–58 on 2026-11-20: the character creator (docs/CREATOR-PLAN.md) is milestone 53, built in release 80. Builds on release 80 now: the
 heir chooses Hearthold at the handing on, as the coast, and goes through the creator there.

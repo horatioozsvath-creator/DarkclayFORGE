@@ -29,5 +29,5 @@ test('the coast\'s backdrops: the same views, shapes, shelves and overlays as th
 
 test('a coastal save draws the coast\'s pictures; the Reach and the second shop (no region) draw the Reach\'s', () => {
   assert.equal(dirOf({ region: 'greyshore' }, 1), 'assets/backdrops/sea/s1/');
-  assert.equal(dirOf({}, 1), 'assets/backdrops/s1/'); assert.equal(dirOf({ region: 'reach' }, 2), 'assets/backdrops/s2/');
+  assert.equal(dirOf({}, 1), 'assets/backdrops/s1/'); assert.equal(dirOf({ region: 'north' }, 1), 'assets/backdrops/s1/', 'the High Snow: the Reach\'s until its own (milestone 58)'); assert.equal(dirOf({ region: 'reach' }, 2), 'assets/backdrops/s2/');
 });

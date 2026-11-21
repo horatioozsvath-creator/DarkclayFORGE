@@ -4,12 +4,12 @@
 // cut out to stand in front of the customers), with what changes laid over it in 2D: your cards on the painted shelves (each card's
 // face skewed onto its place), the customers as pictures at their standing spots, and the places and the doorway to tap.
 // The pure parts (fit, the skew, who stands where) are exported for the tests; create() needs a page.
-import { faceCanvas, CW, CH } from './cardface.js?v=81';
-import { LOOKS, POOLS, REGULARS } from './folk.js?v=81';
-import { FURNITURE, TIERS } from './data.js?v=81';
-import { shelfSpots } from './room.js?v=81';
-import { isBroken } from './wear.js?v=81';
-import { threatsOn } from './bank.js?v=81';
+import { faceCanvas, CW, CH } from './cardface.js?v=82';
+import { LOOKS, POOLS, REGULARS } from './folk.js?v=82';
+import { FURNITURE, TIERS } from './data.js?v=82';
+import { shelfSpots } from './room.js?v=82';
+import { isBroken } from './wear.js?v=82';
+import { threatsOn } from './bank.js?v=82';
 
 export const VIEWS = ['left', 'counter', 'right', 'back'];
 export const VIEW_WORD = { left: 'LEFT WALL', counter: 'THE COUNTER', right: 'RIGHT WALL', back: 'THE BACK ROOM' };
@@ -90,7 +90,8 @@ export const standing = (queue, spots) => (queue || []).slice(0, spots).map((c, 
 // ---------- the view on the page ----------
 const datas = {};
 // a shop on the coast has its own pictures (milestone 43: tools/backdrops.py SEA=1, assets/backdrops/sea/)
-export const dirOf = (save, size) => BACKDROPS + (save && save.region && save.region !== 'reach' ? 'sea/' : '') + 's' + size + '/';
+// the coast's own painted backdrops; the High Snow has the Reach's until its own are rendered (milestone 58)
+export const dirOf = (save, size) => BACKDROPS + (save && save.region === 'greyshore' ? 'sea/' : '') + 's' + size + '/';
 const load = dir => datas[dir] || (datas[dir] = fetch(dir + 'backdrops.json' + BACKDROPS_V).then(r => r.json()).then(d => {
   // how many shelf places the left wall has (every view shows some of them)
   d.K = 1 + Math.max(...Object.values(d).flatMap(v => Object.values(v).flatMap(r => (r.units || []).map(u => u.k))));

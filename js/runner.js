@@ -1,13 +1,13 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // THE RUNNER'S GEAR AND THE ROAD'S DANGER, with no page access: pieces you made, carried by the runner (off the shelves while they're
 // carried), potions used up on the road, the chance of harm on the hard roads, and the hunt for a gang. Spared on a gentler Reach.
-import { GEAR, ROUTES, TIERS, MONSTERS } from './data.js?v=81';
-import { rung } from './growth.js?v=81';
-import { threatsOn } from './bank.js?v=81';
-import { levelOf, growBy } from './rules.js?v=81';
-import { roadX, huntKind } from './monsters.js?v=81';
-import * as Rg from './region.js?v=81';
-import * as Who from './who.js?v=81';
+import { GEAR, ROUTES, TIERS, MONSTERS } from './data.js?v=82';
+import { rung } from './growth.js?v=82';
+import { threatsOn } from './bank.js?v=82';
+import { levelOf, growBy } from './rules.js?v=82';
+import { roadX, huntKind } from './monsters.js?v=82';
+import * as Rg from './region.js?v=82';
+import * as Who from './who.js?v=82';
 
 const D = 24 * 3600000;
 const TIER_N = Object.fromEntries(TIERS.map((t, i) => [t.id, i]));
@@ -17,6 +17,8 @@ export const gearOf = p => p.gear || (p.gear = {});
 export const potionsOf = p => p.potions || (p.potions = []);
 const powerOf = c => c ? Math.max(0, GEAR.power[c.tier] - (c.flawed ? 1 : 0)) : 0;
 const oiled = p => potionsOf(p).some(x => x.pattern === 'oil');
+// a warming draught carried (milestone 55): the cold kept out, the road's hurt a quarter less
+const warmCut = p => potionsOf(p).some(x => x.pattern === 'warming') ? 1 - GEAR.warm : 1;
 export function strength(p) {
   const g = gearOf(p);
   const guard = ['head', 'body', 'hands', 'feet', 'offhand'].reduce((a, k) => a + powerOf(g[k]), 0) + powerOf(g.ring) / 2;   // a shield in the off hand guards (milestone 33)
@@ -31,7 +33,7 @@ const dangerOf = (save, route) => route === 'beast' ? (huntKind(save) || {}).dan
 export function risk(save, p, route, now) {
   const d = dangerOf(save, route); if (!d || !threatsOn(save, now)) return { hurt: 0, die: 0 };
   const s = strength(p), f = 6 / (6 + s.guard + s.fight / 2), x = route === 'beast' ? 1 : roadX(save, now);   // a monster about: every road twice as dangerous
-  return { hurt: Math.min(0.9, d.hurt * f * x * lightCut(p) * Who.hurtGift(save)), die: d.die * f * f * x };   // an Orc's gift (milestone 53)
+  return { hurt: Math.min(0.9, d.hurt * f * x * lightCut(p) * warmCut(p) * Who.hurtGift(save)), die: d.die * f * f * x };   // an Orc's gift (milestone 53)
 }
 // the road's risk level, as the runner is kitted now, and bare: { word, cls, hurt, die, bare, cut } (cut: how much the gear takes off)
 export function riskLevel(save, p, route, now) {
@@ -81,7 +83,7 @@ export function road(save, p, route, rng, now) {
   if (!dangerOf(save, route) || !threatsOn(save, now)) return out;
   const use = name => { const i = potionsOf(p).findIndex(x => x.pattern === name); if (i < 0) return false; out.used.push(potionsOf(p)[i].name); potionsOf(p).splice(i, 1); return true; };
   const r = risk(save, p, route, now);
-  use('tonic'); use('oil');   // used up on any hard road
+  use('tonic'); use('oil'); use('warming');   // used up on any hard road
   let died = rng() < r.die, hurt = !died && rng() < r.hurt;
   if (died && use('draught')) { died = false; hurt = true; }
   if (hurt && use('salve')) hurt = false;

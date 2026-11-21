@@ -1,7 +1,7 @@
 // Darkclay Forge. Copyright (c) 2026 the author (github.com/horatioozsvath-creator). All rights reserved: see LICENSE.
 // The stage: the fire, the anvil, the piece taking shape, the hammer and the heat meter, drawn on a 1280 × 720 canvas.
-import { FORGE, KC } from './data.js?v=81';
-import { trueZone } from './rules.js?v=81';
+import { FORGE, KC } from './data.js?v=82';
+import { trueZone } from './rules.js?v=82';
 
 // two layouts: wide (a desktop, a phone on its side) and tall (a phone held upright), the same drawing moved and scaled
 export const LAYOUTS = {
@@ -30,6 +30,8 @@ const SHAPES = {
   mace: { to: [[-200, -12], [-40, -12], [80, -60], [170, -70], [230, -40], [230, 40], [170, 70], [80, 60], [-40, 12], [-200, 12]] },
   warhammer: { to: [[-200, -12], [-20, -12], [60, -70], [160, -70], [200, -60], [200, 60], [160, 70], [60, 70], [-20, 12], [-200, 12]] },
   harpoon: { to: [[-260, -8], [-60, -8], [120, -10], [170, -40], [300, 0], [300, 2], [170, 40], [120, 10], [-60, 8], [-260, 8]] },
+  // the High Snow's ice axe (milestone 55): a pick on one side, an adze on the other
+  iceaxe: { to: [[-160, -10], [-20, -10], [60, -12], [80, -90], [120, -12], [260, 4], [120, 14], [80, 60], [60, 14], [-160, 10]] },
   // smelting (milestone 45): the ore runs together into a bloom
   smelt: { to: [[-110, -20], [-60, -60], [0, -74], [60, -60], [110, -20], [110, 20], [60, 40], [0, 46], [-60, 40], [-110, 20]] },
 };
@@ -143,6 +145,7 @@ const HIDE = [[-200, -150], [-100, -158], [0, -150], [100, -158], [200, -150], [
 const CUTS = {
   jerkin: [[-150, -130], [-60, -150], [0, -112], [60, -150], [150, -130], [122, 150], [60, 150], [0, 150], [-60, 150], [-122, 150]],
   hood: [[-112, 140], [-122, -40], [0, -150], [122, -40], [112, 140], [60, 118], [30, 108], [0, 104], [-30, 108], [-60, 118]],
+  furhood: [[-112, 140], [-122, -40], [0, -150], [122, -40], [112, 140], [60, 118], [30, 108], [0, 104], [-30, 108], [-60, 118]],
   gloves: [[-140, -140], [-60, -152], [0, -140], [60, -152], [140, -140], [152, 40], [120, 150], [0, 150], [-120, 150], [-152, 40]],
   boots: [[-110, -150], [0, -150], [20, -150], [40, -150], [62, -150], [62, 60], [182, 92], [182, 150], [0, 150], [-110, 150]],
 };
@@ -251,6 +254,11 @@ function drawBench(g, S, view, L, heat, now, c) {
     g.strokeStyle = '#0e0b09'; g.lineWidth = w + 8; g.beginPath(); g.moveTo(-340, 0); g.quadraticCurveTo(0, (1 - t) * -40, 340, 0); g.stroke();
     g.strokeStyle = wood; g.lineWidth = w; g.stroke();
     if (t > 0.6) { g.fillStyle = '#6e6b70'; g.fillRect(-350, -w / 2 - 2, 30, w + 4); }
+  } else if (id === 'snowshoes') {   // snowshoes (milestone 55): a straight stave bent round into its frame, laced when it's made
+    const rx = 220 - t * 90, ry = 14 + t * 100;
+    g.strokeStyle = '#0e0b09'; g.lineWidth = 30; g.beginPath(); g.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2); g.stroke();
+    g.strokeStyle = wood; g.lineWidth = 22; g.stroke();
+    if (t > 0.6) { g.strokeStyle = '#c8b48a'; g.lineWidth = 3; for (let i = -2; i <= 2; i++) { g.beginPath(); g.moveTo(i * rx / 3, -ry * 0.9); g.lineTo(i * rx / 3, ry * 0.9); g.stroke(); g.beginPath(); g.moveTo(-rx * 0.9, i * ry / 3); g.lineTo(rx * 0.9, i * ry / 3); g.stroke(); } }
   } else {   // a bow: bent toward its line, strung when it's made
     const bend = t * (id === 'longbow' ? 110 : 130), half = id === 'longbow' ? 360 : 300;
     if (t < 1 && !inSteam) { g.save(); g.setLineDash([10, 8]); g.strokeStyle = 'rgba(232,196,100,.5)'; g.lineWidth = 3; g.beginPath(); g.moveTo(-half, -(id === 'longbow' ? 110 : 130) * 0.2); g.quadraticCurveTo(0, -20 - (id === 'longbow' ? 110 : 130), half, -(id === 'longbow' ? 110 : 130) * 0.2); g.stroke(); g.restore(); }
@@ -342,6 +350,7 @@ function drawKettle(g, S, view, L, heat, now, c) {
 // the gather: each point of the shape, pulled in to a round blob along its own direction, so the blowing swells outward
 const blobOf = to => to.map(([x, y]) => { const a = Math.atan2(y, x); return [Math.cos(a) * 70, Math.sin(a) * 60]; });
 const GLASSES = {
+  goggles: [[-150, -50], [-90, -60], [-30, -40], [0, -30], [30, -40], [90, -60], [150, -50], [150, 40], [60, 50], [0, 20], [-60, 50], [-150, 40]],
   lens: Array.from({ length: 12 }, (_, i) => { const a = i / 12 * Math.PI * 2; return [Math.cos(a) * 30, Math.sin(a) * 110]; }),
   goblet: [[-90, -110], [-40, -110], [40, -110], [90, -110], [80, -20], [20, 20], [16, 90], [70, 110], [-70, 110], [-16, 90], [-20, 20], [-80, -20]],
   pane: [[-150, -100], [-50, -100], [50, -100], [150, -100], [150, 0], [150, 100], [50, 100], [-50, 100], [-150, 100], [-150, 0], [-150, -60], [-150, -80]],

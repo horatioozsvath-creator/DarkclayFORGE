@@ -5,12 +5,12 @@
 // comes up, plainer (a miss takes nothing away). What comes up is rolled as it's lifted out: the tier at the bed's odds, a mark far
 // likelier than at the anvil, a Rare tended every day now and then woken to Old-Blood, and every piece from the bed grown (milestone 51).
 // save.growbed: set up; save.beds: [{ mat, pattern, at, tended: [the days tended], told }] or null, one a bed.
-import { GROWBED as B, PATTERNS, MATS, TIERS } from './data.js?v=81';
-import { makePiece, partOptions, canGrow, luckOn, markKind } from './rules.js?v=81';
-import { rung } from './growth.js?v=81';
-import { knows, noteMark } from './shop.js?v=81';
-import { owns, firstFree } from './room.js?v=81';
-import * as Rg from './region.js?v=81';
+import { GROWBED as B, PATTERNS, MATS, TIERS } from './data.js?v=82';
+import { makePiece, partOptions, canGrow, luckOn, markKind } from './rules.js?v=82';
+import { rung } from './growth.js?v=82';
+import { knows, noteMark } from './shop.js?v=82';
+import { owns, firstFree } from './room.js?v=82';
+import * as Rg from './region.js?v=82';
 
 const D = 24 * 3600000, OLD_BLOOD = 3;
 // how many beds: none till it's set up, one, a second from RENOWNED once it's been bought

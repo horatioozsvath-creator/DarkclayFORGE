@@ -62,7 +62,7 @@ test('found only on the coast: its tries, asks, clues and board; in the Reach no
 });
 
 test('the board speaks the coast\'s words for the Reach\'s hidden patterns too', () => {
-  const reachHidden = Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden && !PATTERNS[id].coast);
+  const reachHidden = Object.keys(PATTERNS).filter(id => PATTERNS[id].hidden && !PATTERNS[id].coast && !PATTERNS[id].north);   // (the High Snow's own carry theirs, milestone 55)
   for (const id of reachHidden) assert.ok(G.boards[id] && G.boards[id] !== PATTERNS[id].hidden.board, id);
   for (let d = 0; d < 400; d++) { const b = Disc.boardClue(coast(), d); if (b) assert.ok(!/deep doors|delvers|far valley|carters/.test(b.line), b.line); }
   assert.equal(Rg.boardOf(shop(), 'spear'), PATTERNS.spear.hidden.board, 'the Reach\'s as it was');

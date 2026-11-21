@@ -69,14 +69,16 @@ export const TRAIL = { rung: 6, deep: 0.35, court: 0.4, courtLeast: 2, star: 2, 
 // Hurt: off 2–4 days and a healer's bill; one piece of armour broken (never a Relic or Mythic). Potions, two at most, used up: a salve
 // heals a wound on the road (not hurt), a draught keeps a dying runner alive (hurt instead), a tonic and an oil help on any hard road.
 export const GEAR = {
-  slots: { weapon: ['falchion', 'dagger', 'axe', 'staff', 'shortbow', 'longbow', 'spear', 'mace', 'shortsword', 'warhammer', 'sling', 'club', 'wand', 'crossbow', 'harpoon', 'trident'], offhand: ['shield'], head: ['helm', 'hood'], body: ['jerkin', 'cloak', 'oilskin'], hands: ['gloves'], feet: ['boots'], ring: ['ring', 'beads'], pack: ['satchel'], light: ['lantern'] },
+  slots: { weapon: ['falchion', 'dagger', 'axe', 'staff', 'shortbow', 'longbow', 'spear', 'mace', 'shortsword', 'warhammer', 'sling', 'club', 'wand', 'crossbow', 'harpoon', 'trident', 'iceaxe'], offhand: ['shield'], head: ['helm', 'hood', 'furhood'], body: ['jerkin', 'cloak', 'oilskin'], hands: ['gloves'], feet: ['boots', 'snowshoes'], ring: ['ring', 'beads'], pack: ['satchel'], light: ['lantern'] },
   slotWord: { weapon: 'WEAPON', head: 'HEAD', body: 'BODY', hands: 'HANDS', feet: 'FEET', ring: 'RING', pack: 'PACK', offhand: 'OFF HAND', light: 'LIGHT' },
   // a satchel: a runner brings home this much more (common things) for each step of its power; a poultice: a hurt mends in this share of the days, the healer's bill halved
   pack: 0.1, poultice: 0.5,
   // a lantern carried (milestone 33): the road's hurt this much less for each step of its power, at most half
   light: 0.1, lightMax: 0.5,
   power: { common: 1, fine: 2, rare: 3, oldblood: 5, relic: 8, mythic: 12 },
-  potions: ['salve', 'draught', 'tonic', 'oil', 'poultice'], carry: 2,
+  potions: ['salve', 'draught', 'tonic', 'oil', 'poultice', 'warming'], carry: 2,
+  // a warming draught (milestone 55): used up on a hard road, it keeps the cold out, the road's hurt this much less
+  warm: 0.25,
   // every road has its danger (release 41: the short roads a little too); its risk level by hurt + 8 × killed: LOW, MODERATE, HIGH, DEADLY
   danger: { yard: { hurt: 0.002, die: 0 }, ford: { hurt: 0.008, die: 0 }, reach: { hurt: 0.025, die: 0 }, deep: { hurt: 0.06, die: 0.002 }, below: { hurt: 0.12, die: 0.007 }, shaft: { hurt: 0.06, die: 0.003 }, gang: { hurt: 0.18, die: 0.01 } },
   levels: [[0.01, 'LOW'], [0.04, 'MODERATE'], [0.1, 'HIGH'], [Infinity, 'DEADLY']],
@@ -657,6 +659,51 @@ Object.assign(PATTERNS, {
       hints: { head: 'the clearest sand', haft: 'the coast\'s own flux: kelp ash', binding: 'a brass tube' },
       asks: ['"A spyglass, for the boat. Clear glass, a brass tube."', '"Every master wants a glass. Kelp ash for the flux, they say, and brass."'],
       board: 'POSTED: The harbour-master wants spyglasses: clear glass fluxed with kelp ash, in a brass tube.' } },
+  // THE HIGH SNOW'S (milestone 55, docs/NORTH-PLAN.md): found only up in the snow (north: true), made anywhere once found. Each is
+  // found with something only Hearthold sells (antler, elk hide, bear fat, soapstone), and each part's first option is sold in the Reach
+  iceaxe: { name: 'Ice axe', trade: 'Ice axes', kind: 'ICE AXE · ONE HAND', art: 'iceaxe', dice: [1, 6], dmg: [3, 8], speed: 1.1, reach: 1.4, skill: 'AXEWORK', value: 52, bars: 2, want: 'weapon', north: true,
+    parts: [{ part: 'Head', metals: FORGE_METALS },
+      { part: 'Haft', opts: [{ name: 'Ash', mat: 'ash' }, { name: 'Rowan', mat: 'rowan', val: 1.05 }, { name: 'Bog oak', mat: 'bogoak', rare: true }] },
+      { part: 'Grip', opts: [{ name: 'Leather wrap', mat: 'wrap' }, { name: 'Cord', mat: 'cord' }, { name: 'Antler', mat: 'antler', val: 1.15 }] }],
+    affixes: weaponAffixes, lore: ['A pick on one side, an adze on the other: it cuts the step and holds the slope.', 'The pick bites the ice and doesn\'t let go.', 'Up the glacier and down into the halls, and it never once slipped.', 'Aud\'s own was like this, they say: it cut the hearth\'s first stone.'],
+    hidden: { look: 'A TOOL · A WEAPON · FOR THE ICE', gate: { trades: ['axe', 'spear'], level: 3 }, try: { head: ['iron', 'steel'], haft: ['ash'], binding: ['antler'] },
+      hints: { head: 'a hard metal for the pick: iron or steel', haft: 'a short ash haft', binding: 'an antler grip, that won\'t freeze to the hand' },
+      asks: ['"An ice axe, if you make them. A pick and an adze, on ash, an antler grip."', '"You don\'t make ice axes? Up here? Iron head, ash haft, antler for the grip."'],
+      board: 'POSTED: The thaw-pickers want ice axes: an iron pick-and-adze on an ash haft, with an antler grip.' } },
+  furhood: { name: 'Fur hood', trade: 'Fur hoods', kind: 'FUR HOOD · HEAD', art: 'furhood', armour: 1, weight: 1, value: 30, bars: 2, want: 'helm', station: 'stretcher', north: true,
+    parts: [{ part: 'Hide', metals: HIDES_ALL },
+      { part: 'Fur', opts: [{ name: 'Wool', mat: 'wool' }, { name: 'Winter fox', mat: 'winterfox', rare: true }, { name: 'Elk fur', mat: 'elkhide', val: 1.15 }, { name: 'White bear fur', mat: 'whitebear', rare: true }] },
+      { part: 'Thread', opts: THREAD }],
+    affixes: wearAffixes, lore: ['Fur inside, hide out, and the wind finds nothing.', 'It sits close round the face and keeps the breath warm.', 'Through the long dark and out the other side.', 'A thane wore one like it to the Moot in the worst winter, and spoke for three hours.'],
+    hidden: { look: 'SOMETHING TO WEAR · AGAINST THE COLD', gate: { trades: ['hood', 'cloak'], level: 3 }, try: { head: ['deer', 'goat'], haft: ['elkhide'], binding: ['gut', 'cord'] },
+      hints: { head: 'a supple hide', haft: 'fur to line it: elk hide, with the hair on', binding: 'a thread that holds in the cold' },
+      asks: ['"A fur hood. A hide, lined with elk fur, sewn tight."', '"You don\'t make fur hoods? Line a hood with elk, and the ears stay on."'],
+      board: 'POSTED: The pass-watchers want fur hoods: a hide lined with elk fur, sewn with gut.' } },
+  snowshoes: { name: 'Snowshoes', trade: 'Snowshoes', kind: 'SNOWSHOES · FEET', art: 'snowshoes', armour: 1, weight: 1, value: 40, bars: 2, want: 'armour', station: 'bowbench', north: true,
+    parts: [{ part: 'Frame', metals: WOODS },
+      { part: 'Harness', opts: [{ name: 'Strap', mat: 'strap' }, { name: 'Deer hide', mat: 'deer' }, { name: 'Elk hide', mat: 'elkhide', val: 1.15 }] },
+      { part: 'Lacing', opts: [{ name: 'Gut', mat: 'gut' }, { name: 'Cord', mat: 'cord' }, { name: 'Wyvern sinew', mat: 'sinew', rare: true }] }],
+    affixes: wearAffixes, lore: ['Bent wood and gut, and the snow holds you up.', 'Laced tight: they don\'t sag, they don\'t catch.', 'A herder walked the whole high pasture on these, and back, in a day.', 'The tracks they leave are gone by morning. So is whoever wore them.'],
+    hidden: { look: 'SOMETHING TO WEAR · FOR THE SNOW', gate: { trades: ['shortbow', 'staff'], level: 3 }, try: { head: ['birch', 'yew'], haft: ['elkhide'], binding: ['gut'] },
+      hints: { head: 'a wood that bends: birch or yew', haft: 'an elk-hide harness for the boot', binding: 'gut, for the lacing' },
+      asks: ['"Snowshoes. A bent birch frame, an elk-hide harness, laced with gut."', '"Do you make snowshoes? Birch, gut and a bit of elk hide."'],
+      board: 'POSTED: The herders want snowshoes for the high pasture: bent birch frames, elk-hide harness, gut lacing.' } },
+  warming: { name: 'Warming draught', trade: 'Warming draughts', kind: 'WARMING DRAUGHT · A BATCH', art: 'warming', potency: 10, value: 18, bars: 2, batch: 3, want: 'brew', station: 'kettle', north: true,
+    parts: [{ part: 'Herb', metals: HERBS }, { part: 'Water', opts: WATER },
+      { part: 'Binder', opts: [{ name: 'Honey', mat: 'honey' }, { name: 'Tallow', mat: 'tallow' }, { name: 'Bear fat', mat: 'bearfat', val: 1.2 }, { name: 'Ice-amber', mat: 'iceamber', rare: true }] }],
+    affixes: brewAffixes, lore: ['A dram before the road, and the cold stays outside you.', 'It burns going down and keeps burning.', 'The pass-watchers drink it at the change of the watch, and none has frozen at his post.', 'One swallow, and the snow feels like a summer field.'],
+    hidden: { look: 'FROM THE KETTLE · AGAINST THE COLD', gate: { trades: ['draught', 'tonic'], level: 3 }, try: { head: ['emberroot'], haft: ['springwater'], binding: ['bearfat'] },
+      hints: { head: 'a fierce root: emberroot', haft: 'clean spring water', binding: 'bear fat, to hold the heat in' },
+      asks: ['"A warming draught, for the road. Emberroot and bear fat, they say."', '"Do you brew against the cold? Emberroot, spring water, bear fat."'],
+      board: 'POSTED: The pass-watchers want warming draughts: emberroot in spring water, bound with bear fat.' } },
+  goggles: { name: 'Snow-goggles', trade: 'Snow-goggles', kind: 'SNOW-GOGGLES · A GLASS', art: 'goggles', clarity: 7, value: 38, bars: 2, want: 'glass', station: 'glass', north: true,
+    parts: [{ part: 'Glass', metals: SANDS }, { part: 'Flux', opts: FLUX },
+      { part: 'Rim', opts: [{ name: 'Bronze', mat: 'bronze' }, { name: 'Iron', mat: 'iron' }, { name: 'Silver', mat: 'silver', rare: true }, { name: 'Antler', mat: 'antler', val: 1.15 }] }],
+    affixes: glassAffixes, lore: ['Smoked glass, and the snow stops burning your eyes.', 'Ground thin and smoked even: the glare goes, the road stays.', 'A guide wore these across the glacier for forty years and never once went snow-blind.', 'Through them the snowfields show the old roads under them.'],
+    hidden: { look: 'GLASS · AGAINST THE GLARE', gate: { trades: ['lens'], level: 3 }, try: { head: ['clearsand', 'riversand'], haft: ['soapstone'], binding: ['bronze', 'iron'] },
+      hints: { head: 'a clear sand', haft: 'the hold\'s own flux: soapstone', binding: 'a metal rim: bronze or iron' },
+      asks: ['"Snow-goggles. Smoked glass, soapstone in the melt, a bronze rim."', '"The glare off the glacier takes your eyes. Do you make snow-goggles?"'],
+      board: 'POSTED: The glacier guides want snow-goggles: smoked glass fluxed with soapstone, in a bronze rim.' } },
 });
 // the mine's (milestone 45): digging at the face and smelting at the forge make no piece, only materials (makes: from the seam's ore,
 // or the ore's bar). mine: shown only once the trapdoor is open. bars: 0, a seam takes nothing from the store room
@@ -684,9 +731,9 @@ export const TRY_ROLES = {
 export const TRY_LINE = { forge: 'Put a head, a haft and a binding together', stretcher: 'Put a hide, a lining, strap or forged part and a thread together', bowbench: 'Put a wood, a grip, stone or forged part and a binding together',
   kettle: 'Put a herb, a water or cloth and a binder together', glass: 'Put a sand, a flux or forged part and a colour or backing together' };
 export const TRY_FAMILY = { metal: ['iron', 'bronze', 'steel', 'silver', 'darkclay', 'blackwater', 'starmetal', 'brass'], wood: ['ash', 'rowan', 'birch', 'yew', 'oak', 'oldyew', 'bogoak'],
-  leather: ['wrap', 'strap', 'sharkhide', 'deer', 'goat'], cord: ['cord', 'gut', 'silk', 'linen', 'wool', 'sinew', 'silverthread'], horn: ['horn', 'bone', 'whalebone'],
+  leather: ['wrap', 'strap', 'sharkhide', 'deer', 'goat', 'elkhide'], cord: ['cord', 'gut', 'silk', 'linen', 'wool', 'sinew', 'silverthread'], horn: ['horn', 'bone', 'whalebone', 'antler'],
   // the other stations' (milestone 32)
-  herb: HERBS, water: ['springwater', 'moonwater'], binder: ['honey', 'wax', 'tallow'], sand: SANDS, flux: ['potash', 'lime', 'kelpash'], pitch: ['tar'], colour: ['cobalt', 'starglass'], stone: ['gem', 'heartstone'],
+  herb: HERBS, water: ['springwater', 'moonwater'], binder: ['honey', 'wax', 'tallow', 'bearfat'], sand: SANDS, flux: ['potash', 'lime', 'kelpash', 'soapstone'], pitch: ['tar'], colour: ['cobalt', 'starglass'], stone: ['gem', 'heartstone'],
   // milestone 33: parts forged for the other stations
   forged: ['arrowheads', 'ferrule', 'boss', 'lath', 'lampframe'] };
 export const STUDY_RENOWN = 3, FIND_RENOWN = 5;   // renown for a pattern found by trying, or learned from an old piece
@@ -1311,6 +1358,12 @@ export const FURNITURE = {
   quaypennant: { name: 'The harbour watch\'s pennant', fp: [1, 1], charm: 4, model: 'banner', scale: 0.6, room: 'shop', fixed: true, gift: true, look: 'watchbanner', line: 'The watch flies your mark on the quay.' },
   herringbarrels: { name: 'Gil Hobb\'s herring', fp: [1, 1], charm: 3, model: 'barrels', room: 'shop', fixed: true, gift: true, look: 'bramsbarrels', line: 'The first of the year\'s herring, salted.' },
   figurehead: { name: 'The Penrose figurehead', fp: [1, 1], charm: 6, model: 'statue', scale: 0.5, room: 'shop', fixed: true, gift: true, look: 'corrowstatue', line: 'Off the first Penrose ship, carved in oak.' },
+  // the High Snow's (milestone 55): the Reach's gifts' models and pictures again
+  vikslamps: { name: 'Hild Vik\'s lamps', fp: [1, 1], charm: 4, model: 'candlestand', room: 'shop', fixed: true, gift: true, look: 'kettycandles', line: 'She lit them at the gallery mouth every shift he was below.' },
+  guardbanner: { name: 'The hold guard\'s banner', fp: [1, 1], charm: 4, model: 'banner', scale: 0.6, room: 'shop', fixed: true, gift: true, look: 'watchbanner', line: 'The guard flies your mark over the gate.' },
+  cheesecasks: { name: 'Orm Fellsson\'s cheeses', fp: [1, 1], charm: 3, model: 'barrels', room: 'shop', fixed: true, gift: true, look: 'bramsbarrels', line: 'A summer on the high pasture, in casks.' },
+  hearthstone: { name: 'The Hallvard hearth-stone', fp: [1, 1], charm: 6, model: 'statue', scale: 0.5, room: 'shop', fixed: true, gift: true, look: 'corrowstatue', line: 'Carved from the first Hallvard hearth, when the hold was young.' },
+  lichenrail: { name: 'Yrsa Bakke\'s lichen', fp: [2, 1], charm: 4, model: 'herbrail', room: 'shop', fixed: true, gift: true, look: 'marrowrail', line: 'It dries best by a maker\'s fire.' },
   kelprail: { name: 'Ama Penhale\'s kelp', fp: [2, 1], charm: 4, model: 'herbrail', room: 'shop', fixed: true, gift: true, look: 'marrowrail', line: 'It dries better by your fire.' },
 };
 export const SHELF_COSTS = [800, 1800, 3600, 6400, 10000, 14400];   // the 3rd shelf to the 8th
@@ -1677,17 +1730,17 @@ export const REGIONS = {
     // iron is cheap in mining country; wood is dear above the line; what comes up from the Reach costs half as much again
     dear: { iron: 0.8, steel: 0.85, ash: 1.3, rowan: 1.3, birch: 1.3, oak: 1.3, yew: 1.5, oldyew: 1.5, linen: 1.5, blacksand: 1.5, seasand: 1.5, sharkhide: 1.5, heartwood: 1.5 },
     customers: {
-      folk: { weight: 30, wants: ['dagger', 'ring', 'any', 'dagger', 'boots', 'cloak', 'gloves', 'salve', 'brew', 'armour', 'hood', 'beads', 'sling'],
+      folk: { weight: 30, wants: ['dagger', 'ring', 'any', 'dagger', 'boots', 'cloak', 'gloves', 'salve', 'brew', 'armour', 'hood', 'beads', 'sling', 'furhood', 'snowshoes', 'warming'],
         names: ['a herder', 'a goatwife from the high pasture', 'a charcoal burner', 'a boy with his savings', 'a widow from the lower hold', 'a snow-shoveller'] },
-      guard: { weight: 25, wants: ['falchion', 'axe', 'helm', 'weapon', 'spear', 'shield', 'mace', 'dagger', 'jerkin', 'armour', 'cloak', 'lantern', 'oil', 'brew', 'arrows', 'crossbow'],
+      guard: { weight: 25, wants: ['falchion', 'axe', 'helm', 'weapon', 'spear', 'shield', 'mace', 'dagger', 'jerkin', 'armour', 'cloak', 'lantern', 'oil', 'brew', 'arrows', 'crossbow', 'iceaxe', 'furhood', 'warming'],
         names: ['a man of the hold\'s guard', 'a gate-warden', 'a thane\'s housecarl', 'a pass-watcher'] },
-      traveller: { weight: 20, wants: ['any', 'ring', 'weapon', 'dagger', 'boots', 'cloak', 'armour', 'brew', 'tonic', 'satchel', 'lantern', 'goblet', 'poultice', 'hood'],
+      traveller: { weight: 20, wants: ['any', 'ring', 'weapon', 'dagger', 'boots', 'cloak', 'armour', 'brew', 'tonic', 'satchel', 'lantern', 'goblet', 'poultice', 'hood', 'snowshoes', 'goggles', 'warming', 'furhood'],
         names: ['a caravan master', 'a messenger up from the Reach', 'a herder down from the summer pasture', 'a drover on the mule track'] },
-      delver: { weight: 15, wants: ['weapon', 'helm', 'lantern', 'warhammer', 'axe', 'any', 'armour', 'boots', 'draught', 'brew', 'satchel', 'poultice', 'shortsword', 'shield', 'lens', 'crossbow', 'gloves', 'lantern'],
+      delver: { weight: 15, wants: ['weapon', 'helm', 'lantern', 'warhammer', 'axe', 'any', 'armour', 'boots', 'draught', 'brew', 'satchel', 'poultice', 'shortsword', 'shield', 'lens', 'crossbow', 'gloves', 'lantern', 'iceaxe', 'iceaxe', 'goggles', 'warming'],
         names: ['a miner off the iron gallery', 'a thaw-picker from the old halls', 'one of the Deep Shift', 'a lamp-carrier back from the ice'] },
-      hunter: { weight: 12, wants: ['spear', 'spear', 'shortbow', 'arrows', 'arrows', 'boots', 'gloves', 'cloak', 'salve', 'satchel', 'sling', 'any', 'crossbow'],
+      hunter: { weight: 12, wants: ['spear', 'spear', 'shortbow', 'arrows', 'arrows', 'boots', 'gloves', 'cloak', 'salve', 'satchel', 'sling', 'any', 'crossbow', 'snowshoes', 'snowshoes', 'furhood', 'iceaxe', 'warming'],
         names: ['an elk-hunter', 'a trapper off the fell', 'a bear-hunter', 'a snow-fowler'] },
-      factor: { weight: 7, wants: ['ring', 'glass', 'goblet', 'lens', 'mirror', 'lantern', 'ink', 'beads', 'brew', 'any', 'wand'], names: ['a pilgrim to the Hearth', 'a keeper of the Hearth', 'a pilgrim from over the sea'] },
+      factor: { weight: 7, wants: ['ring', 'glass', 'goblet', 'lens', 'mirror', 'lantern', 'ink', 'beads', 'brew', 'any', 'wand', 'goggles'], names: ['a pilgrim to the Hearth', 'a keeper of the Hearth', 'a pilgrim from over the sea'] },
       collector: { names: ['a collector of maker\'s marks', 'a thane who collects blades'] },
       steward: { wants: ['any', 'falchion', 'helm', 'ring', 'cloak', 'goblet', 'lens', 'staff', 'jerkin'], names: ['a thane', 'a thane\'s lady', 'the Moot\'s speaker', 'a jarl from the far passes'] },
     },
@@ -1727,12 +1780,13 @@ export const REGIONS = {
     hot: [
       { id: 'guard', line: 'The thane is arming the hold\'s guard.', patterns: ['helm', 'axe'] },
       { id: 'raiders', line: 'Raiders in the passes: every herder wants a blade.', patterns: ['falchion', 'dagger', 'spear'] },
-      { id: 'cold', line: 'The cold\'s come early.', patterns: ['cloak', 'hood', 'boots', 'gloves'] },
-      { id: 'elk', line: 'The elk are moving: the hunters are going out.', patterns: ['spear', 'arrows', 'shortbow', 'satchel'] },
+      { id: 'cold', line: 'The cold\'s come early.', patterns: ['cloak', 'hood', 'boots', 'gloves', 'furhood', 'warming'] },
+      { id: 'elk', line: 'The elk are moving: the hunters are going out.', patterns: ['spear', 'arrows', 'shortbow', 'satchel', 'snowshoes'] },
       { id: 'cough', line: 'A winter cough in the lower hold.', patterns: ['draught', 'salve', 'tonic'] },
       { id: 'deep', line: 'The Deep Shift opens a new gallery.', patterns: ['lantern', 'helm', 'warhammer'] },
       { id: 'pilgrims', line: 'Pilgrims have come up to the Hearth.', patterns: ['ring', 'goblet', 'beads'] },
-      { id: 'thaw', line: 'The thaw-pickers are going into the old halls.', patterns: ['lantern', 'satchel', 'boots', 'draught'] },
+      { id: 'thaw', line: 'The thaw-pickers are going into the old halls.', patterns: ['lantern', 'satchel', 'boots', 'draught', 'iceaxe'] },
+      { id: 'glare', line: 'Sun on the new snow: the glare off the glacier is blinding.', patterns: ['goggles', 'lens'] },
     ],
     cold: [
       { id: 'windows', line: 'Nobody up here wants big windows: the cold comes through.', patterns: ['pane'] },
@@ -1751,10 +1805,10 @@ export const REGIONS = {
       { id: 'deepwinter', name: 'Deep winter', line: 'Snow to the eaves, and the high road shut. Only the hold\'s own are about.', effect: 'Fewer customers: the high road is shut.', gap: 1.6, weight: 3 },
     ],
     seasons: [
-      { id: 'spring', name: 'The thaw', line: 'The ice lets go of the old halls, and the passes open.', patterns: ['boots', 'lantern', 'satchel', 'spear', 'axe'], gap: 1 },
+      { id: 'spring', name: 'The thaw', line: 'The ice lets go of the old halls, and the passes open.', patterns: ['boots', 'lantern', 'satchel', 'spear', 'axe', 'iceaxe', 'goggles'], gap: 1 },
       { id: 'summer', name: 'Summer', line: 'The herders are up on the high pasture and the caravans come through.', patterns: ['ring', 'goblet', 'dagger', 'draught', 'beads'], gap: 0.9 },
       { id: 'autumn', name: 'The herders\' return', line: 'The flocks come down, the elk move, and the hold lays in for winter.', patterns: ['spear', 'cloak', 'falchion', 'salve', 'arrows'], gap: 1 },
-      { id: 'winter', name: 'The long dark', line: 'The sun barely clears the peaks. Everyone wants to keep warm.', patterns: ['hood', 'cloak', 'boots', 'gloves', 'tonic', 'salve'], gap: 1.2 },
+      { id: 'winter', name: 'The long dark', line: 'The sun barely clears the peaks. Everyone wants to keep warm.', patterns: ['hood', 'cloak', 'boots', 'gloves', 'tonic', 'salve', 'furhood', 'snowshoes', 'warming'], gap: 1.2 },
     ],
     gossip: [
       'A herder swears he saw a light under the glacier, moving.',
@@ -1769,5 +1823,111 @@ export const REGIONS = {
     news: { kept: 'The gate-warden\'s been made captain of the guard, they say, for holding the pass.', robbed: 'The Hold Stores were broken into by the same lot that robbed you.',
       branch: 'They talk of your shop down in the Reach, at the Landing, too.', street: 'the Smiths\' Stair', inn: 'the Hearthside' },
     rivals: ['Ulla Ironhand of the lower hold', 'the Brekke brothers', 'Old Kettil the armourer', 'a smith from the thane\'s hall', 'a journeyman up from the Reach'],
+    // HEARTHOLD'S FOLK (milestone 55): six families who have never heard of the line. Their clues are for patterns still to find (the
+    // hold's own among them). Five first stories (a gift each: the Reach's gifts' models) and five great ones, each ending in a blueprint
+    // of the hold's Relics (milestone 56: until those exist, a great story doesn't come)
+    regulars: [
+      { who: 'Sergeant Ragna Stenhus, of the hold\'s guard', wants: ['axe', 'spear', 'helm', 'jerkin', 'shield', 'falchion', 'crossbow', 'iceaxe', 'furhood'], line: 'For the hold\'s guard. The pass eats blades.', fig: '#7a8aa0',
+        clues: { iceaxe: '"The pass-watch carry ice axes: an iron pick on an ash haft, an antler grip so it doesn\'t freeze to you."', shield: '"The gate wants shields against the raiders. A hide face, an iron boss, a leather rim."', spear: '"A spear\'s only a knife that\'s learned patience. Iron, ash, a cord binding."' } },
+      { who: 'Lady Asa Hallvard, a thane\'s widow', wants: ['ring', 'goblet', 'falchion', 'staff', 'lens', 'mirror', 'lantern', 'goggles', 'beads'], least: 1, line: 'Something fit for the Moot to see.', fig: '#a07ab8',
+        clues: { goggles: '"My guides want snow-goggles. Clear glass with soapstone in the melt, smoked, in a bronze rim."', lantern: '"A lantern for the hall: clear glass in a forged frame, a bronze cap."', mirror: '"A looking-glass. Clear sand, potash, a silver backing. Nothing less."' } },
+      { who: 'Orm Fellsson, a herder', wants: ['dagger', 'spear', 'boots', 'gloves', 'cloak', 'satchel', 'snowshoes', 'furhood'], line: 'For my herd-boys. Knives that don\'t snap in the cold.', fig: '#8a9a6a',
+        clues: { snowshoes: '"Snowshoes are only a bent birch frame, an elk-hide harness and gut lacing. My grandfather made his own."', furhood: '"Line a hood with elk fur, hair inward, sew it with gut. The wind can\'t find you."', satchel: '"My boys want satchels for the pasture. Deer hide, a strap, waxed cord."' } },
+      { who: 'Hild Vik, a miner\'s widow', wants: ['ring', 'lantern'], metal: 'silver', line: 'A silver ring for the ice to keep.', fig: '#a08a6a',
+        clues: { lantern: '"He took a lantern down every shift. Clear glass, a forged frame. It came back up. Not him."', beads: '"Blue beads, the kind the caravan sells. River sand, lime and cobalt."' } },
+      { who: 'Yrsa Bakke, the herbwife', wants: ['tonic', 'draught', 'salve', 'poultice', 'ink', 'warming'], line: 'My kettle\'s split in the frost. Brew for me this once.', fig: '#8a9a6a',
+        clues: { warming: '"A warming draught is emberroot in spring water, bound with bear fat. The pass-watch live on it."', poultice: '"A poultice: mending herbs on linen, sealed with honey. Not a salve, mind."', ink: '"Ink is a root boiled black. Emberroot, spring water, a little wax to hold it."' } },
+      { who: 'Leif Tarn, a goat-boy', wants: ['dagger', 'sling', 'club'], line: 'A knife. My own. I\'ve saved my summer\'s pay for it.', fig: '#a08a6a',
+        clues: { club: '"The miners\' lads carry oak clubs with bone set in the head. Strap grips."', sling: '"A sling, for the crows on the pasture. Just a hide cup and some cord."' } },
+    ],
+    stories: [
+      { id: 'vik', fam: 'vik', who: 'Hild Vik, a miner\'s widow', fig: '#a08a6a', gift: 'vikslamps', renown: 10, steps: [
+        { patterns: ['ring'], metal: 'silver', least: 0, line: 'A silver ring for the ice to keep. The iron gallery came down on him.', thanks: 'I dropped it down the old shaft at the thaw. It rang a long time.' },
+        { patterns: ['dagger'], least: 0, line: 'My boy\'s going down with the Deep Shift. A knife for his belt.', thanks: 'He cut a man free of a fallen prop with it, his first week.' },
+        { patterns: ['lantern', 'furhood'], least: 1, line: 'He\'s going down to the frozen level now. Keep a light by him, and the cold off.', thanks: 'Take these. I lit them at the gallery mouth every shift his father was below. Light them for your shop.' } ] },
+      { id: 'stenhus', fam: 'stenhus', who: 'Sergeant Ragna Stenhus, of the hold\'s guard', fig: '#7a8aa0', gift: 'guardbanner', renown: 15, steps: [
+        { patterns: ['axe'], least: 0, line: 'For the hold\'s guard. The pass eats blades.', thanks: 'Held the high gate with it against the Pass Wolves.' },
+        { patterns: ['helm', 'jerkin'], least: 1, line: 'New lads up from the herds. Cover them. Good work, not pretty.', thanks: 'Not a scratch on them after the brawl at the Moot.' },
+        { patterns: ['spear', 'iceaxe'], least: 2, line: 'The thane wants one from you, for the gate-captain. Your best.', thanks: 'The guard flies your mark over the gate now. Hang this where the hold can see it.' } ] },
+      { id: 'fellsson', fam: 'fellsson', who: 'Orm Fellsson, a herder', fig: '#8a9a6a', gift: 'cheesecasks', renown: 10, steps: [
+        { patterns: ['dagger'], least: 0, line: 'For my herd-boys. Knives that don\'t snap in the cold.', thanks: 'They fight over who carries it up to the pasture.' },
+        { patterns: ['boots', 'gloves'], least: 0, line: 'The flocks go up next week. Feet and hands go first, up there.', thanks: 'Not a frostbitten toe all summer.' },
+        { patterns: ['snowshoes', 'spear'], least: 1, line: 'A white bear\'s been at the high flocks. I\'m going up after it.', thanks: 'Casks of the summer\'s cheese, from the high pasture. Yours.' } ] },
+      { id: 'hallvard', fam: 'hallvard', who: 'Lady Asa Hallvard, a thane\'s widow', fig: '#a07ab8', gift: 'hearthstone', renown: 25, steps: [
+        { patterns: ['ring'], least: 1, line: 'Something fit for the Moot to see.', thanks: 'It was remarked on at the Moot. I said where it came from.' },
+        { patterns: ['falchion', 'goggles', 'staff'], least: 2, line: 'A gift for the jarl from the far passes. It must not shame the hold.', thanks: 'The jarl asked your name.' },
+        { patterns: ['ring', 'goblet', 'lens'], least: 2, line: 'My son sits in his father\'s seat at the Moot. The finest thing you can make, for the hall.', thanks: 'The first Hallvard hearth-stone. It belongs by a maker\'s fire.' } ] },
+      { id: 'bakke', fam: 'bakke', who: 'Yrsa Bakke, the herbwife', fig: '#8a9a6a', gift: 'lichenrail', renown: 10, steps: [
+        { patterns: ['draught'], least: 0, line: 'My kettle\'s split in the frost. Brew for me this once.', thanks: 'The winter cough in the lower hold broke on it.' },
+        { patterns: ['salve'], least: 1, line: 'The smelters\' boys burn their hands at the ore. Something kind.', thanks: 'They come to me laughing now. Unheard of.' },
+        { patterns: ['tonic', 'warming'], least: 2, line: 'Old Kettil the armourer can\'t sleep for the cold in his bones. Something worth his last winters.', thanks: 'Hang my lichen in your shop. It dries best by a maker\'s fire.' } ] },
+      // the great stories: from RENOWNED, after the first; five steps and a blueprint of the hold's Relics at the end (milestone 56)
+      { id: 'stenhus2', fam: 'stenhus', after: 'stenhus', rung: 5, who: 'Captain Ragna Stenhus', fig: '#7a8aa0', blueprint: 'frostwarden', renown: 40, steps: [
+        { patterns: ['helm', 'furhood'], least: 2, line: 'They made me captain. The guard needs helms fit for the high gate.', thanks: 'The gate\'s never looked so sure of itself.' },
+        { patterns: ['axe', 'iceaxe'], least: 2, line: 'Raiders burned the lower byres. My sergeants need blades.', thanks: 'The byres are rebuilt. The raiders aren\'t.' },
+        { patterns: ['jerkin', 'snowshoes'], least: 2, line: 'Winter on the pass-wall. Keep my lads alive.', thanks: 'Not one lost to the cold.' },
+        { patterns: ['spear', 'shield'], least: 3, line: 'The frozen dead are walking on the snowfields again. Your best, and better.', thanks: 'They didn\'t reach the gate. Your work held.' },
+        { patterns: ['iceaxe'], least: 3, line: 'One more. For the high gate itself, to hang over it.', thanks: 'The first gate-captain\'s pattern, from the guardhouse chest. Make it real.' } ] },
+      { id: 'vik2', fam: 'vik', after: 'vik', rung: 5, who: 'Hild Vik, a grandmother now', fig: '#a08a6a', blueprint: 'vikhood', renown: 40, steps: [
+        { patterns: ['ring'], least: 1, line: 'My boy\'s wed. A ring for his bride, from the same hands as mine.', thanks: 'She cried. Good tears.' },
+        { patterns: ['dagger'], least: 2, line: 'A grandson! A little knife, for when he\'s grown.', thanks: 'It\'s in the chest, waiting for him.' },
+        { patterns: ['furhood', 'cloak'], least: 2, line: 'My boy leads the Deep Shift now. Keep the cold off him, again.', thanks: 'He came up from the frozen level whole.' },
+        { patterns: ['lantern', 'ring'], least: 3, line: 'The gallery lamp\'s gone dim. Something that won\'t go out down there.', thanks: 'It burned the whole shift, and the next.' },
+        { patterns: ['furhood'], least: 3, line: 'One last thing. A hood like his, to wear to the gallery mouth when my time comes.', thanks: 'The pattern of my husband\'s hood, sewn inside his lamp-bag. You should have it.' } ] },
+      { id: 'fellsson2', fam: 'fellsson', after: 'fellsson', rung: 5, who: 'Orm Fellsson, master of the high pasture', fig: '#8a9a6a', blueprint: 'fellstride', renown: 40, steps: [
+        { patterns: ['boots', 'gloves'], least: 2, line: 'I run the whole high pasture now. Gear for my best herders.', thanks: 'They wintered on the fell and came down singing.' },
+        { patterns: ['snowshoes', 'spear'], least: 2, line: 'The white bear\'s back, and bigger. Something that keeps us on top of the snow.', thanks: 'Not a goat lost all season.' },
+        { patterns: ['furhood', 'cloak'], least: 2, line: 'The long dark on the fell. Keep my lads warm.', thanks: 'They came down with all their fingers.' },
+        { patterns: ['dagger', 'snowshoes'], least: 3, line: 'My son takes the flocks up alone this year. Give him your best.', thanks: 'He came down taller than he went.' },
+        { patterns: ['snowshoes'], least: 3, line: 'The longest walk there is: over the glacier to the summer grass beyond. I\'m going myself, one last time.', thanks: 'My grandfather\'s frame-pattern, cut into the byre door. Make it, and the snow will carry anyone.' } ] },
+      { id: 'hallvard2', fam: 'hallvard', after: 'hallvard', rung: 5, who: 'Lady Asa Hallvard, dowager', fig: '#a07ab8', blueprint: 'thanering', renown: 40, steps: [
+        { patterns: ['goblet', 'ring'], least: 2, line: 'My granddaughter\'s naming-feast. Something to drink her health from.', thanks: 'The thane\'s wife asked who made it. I lied, to keep you to myself.' },
+        { patterns: ['goggles', 'lens'], least: 2, line: 'My eyes are going, and I would still see the passes from my window.', thanks: 'I saw the caravan crest the pass, from my own window.' },
+        { patterns: ['falchion', 'staff'], least: 3, line: 'My grandson speaks at the Moot for the first time. He must carry your work.', thanks: 'He spoke with it at his side. The Moot listened.' },
+        { patterns: ['goblet'], least: 3, line: 'The Hallvard cup cracked in the frost. It has never cracked, not in three hundred winters.', thanks: 'It\'s back at the head of the hall, where it belongs.' },
+        { patterns: ['ring'], least: 3, line: 'The thane\'s ring went into the ice with my husband\'s father. Make it again, better.', thanks: 'The pattern of the old ring. Make the true one, and the hall is yours to sit in.' } ] },
+      { id: 'bakke2', fam: 'bakke', after: 'bakke', rung: 5, who: 'Yrsa Bakke, healer of the hold', fig: '#8a9a6a', blueprint: 'bakkesember', renown: 40, steps: [
+        { patterns: ['draught'], least: 2, line: 'The winter cough is back, and worse. I can\'t brew fast enough.', thanks: 'The lower hold is quiet again. Good quiet.' },
+        { patterns: ['salve'], least: 2, line: 'A fire in the smelting shed. Burns on half the stair.', thanks: 'Every one of them healed clean.' },
+        { patterns: ['warming', 'salve'], least: 2, line: 'The pass-watch are freezing at their posts. And their hands are worse.', thanks: 'Stenhus says the guardhouse smells of my garden now.' },
+        { patterns: ['tonic'], least: 3, line: 'I\'m old, and the long dark keeps me awake. Brew me something worth sleeping for.', thanks: 'I dreamed of summer. First time in fifty years.' },
+        { patterns: ['warming'], least: 3, line: 'The Hearth\'s keepers want a draught for the Hearth-feast. Your very best.', thanks: 'The keepers\' own recipe, from under the Hearth. They said to give it to the one who can make it.' } ] },
+    ],
+    // a generation on in the snow (from the line's second up here): the families' grandchildren
+    lineFolk: {
+      stenhus: { first: ['Sigrid', 'Ulf', 'Torunn', 'Haldor'], who: '{first} Stenhus, of the hold\'s guard', line: 'For the guard. My grandmother swore by this forge.',
+        remember: 'My grandmother held the high gate with a blade from {master}. It hangs in the guardhouse still.' },
+      hallvard: { first: ['Ingrid', 'Ragnhild', 'Asa', 'Gudrid'], who: 'Lady {first} Hallvard', line: 'Something fit for the Moot, as Grandmother had.',
+        remember: 'Grandmother wore a ring from {master} to every Moot. I would have one too.' },
+      fellsson: { first: ['Arne', 'Bjorn', 'Orm', 'Eyvind'], who: '{first} Fellsson, a herder', line: 'For my herd-boys. My grandfather swore by your knives.',
+        remember: 'My grandfather walked the glacier on snowshoes from {master}. They hang over our door.' },
+      vik: { first: ['Hild', 'Solveig', 'Tora', 'Gunnhild'], who: '{first} Vik', line: 'A silver ring, as my grandmother had.',
+        remember: 'My grandmother bought a silver ring here, from {master}. The ice has the other one.' },
+      bakke: { first: ['Yrsa', 'Thyra', 'Embla', 'Ragna'], who: '{first} Bakke, the herbwife', line: 'Grandmother\'s kettle is mine now, and split like hers. Brew for me.',
+        remember: 'Grandmother said {master} was the only maker who\'d brew for her. I hope it runs in the trade.' },
+      tarn: { first: ['Leif', 'Odd', 'Kari', 'Finn'], who: '{first} Tarn, a goat-boy', line: 'A knife. My own. My grandfather had his from here.',
+        remember: 'My grandfather saved his summer\'s pay for a knife from {master}. He used it till it was a sliver.' },
+    },
+    folkOf: { 'Sergeant Ragna Stenhus, of the hold\'s guard': 'stenhus', 'Lady Asa Hallvard, a thane\'s widow': 'hallvard', 'Orm Fellsson, a herder': 'fellsson', 'Hild Vik, a miner\'s widow': 'vik',
+      'Yrsa Bakke, the herbwife': 'bakke', 'Leif Tarn, a goat-boy': 'tarn' },
+    // the board's posts for the Reach's hidden patterns, in the hold's words (the hold's own carry theirs)
+    boards: {
+      spear: 'POSTED: The hold\'s guard wants spears for the pass: an iron head lashed with cord to an ash haft.',
+      mace: 'POSTED: The thane\'s housecarls want maces: an iron head on a rowan haft, a strap grip.',
+      shortsword: 'POSTED: The gate-wardens want short swords: steel, a horn grip, a leather wrap.',
+      warhammer: 'POSTED: The Deep Shift wants hammers that break the ice off a seam: an iron head on an oak haft, a strap grip.',
+      cloak: 'POSTED: The caravan masters want cloaks for the pass: goatskin, wool-lined, sewn with silk.',
+      satchel: 'POSTED: The thaw-pickers want satchels to bring things up from the old halls: deer hide, a strap, waxed cord.',
+      sling: 'POSTED: The goat-boys want slings for the crows on the pasture: a hide cup, cord, a leather loop.',
+      shield: 'POSTED: The hold\'s guard wants shields against the raiders: a hide face, a forged boss, a leather rim.',
+      club: 'POSTED: The miners\' lads want oak clubs with bone set in the head, and strap grips.',
+      wand: 'POSTED: The Hearth\'s keepers want wands for the blessing of the fire: yew or birch, a gem set in, bound in silk.',
+      crossbow: 'POSTED: The pass-watch wants crossbows to keep the raiders off: a stock, a forged lath, a gut string.',
+      poultice: 'POSTED: The Hearth\'s keepers want poultices for the winter cough: mending herbs on linen, sealed with honey.',
+      ink: 'POSTED: The Moot\'s scribes want ink for the rolls: a dark root boiled in spring water, waxed thick.',
+      mirror: 'POSTED: The guard advise a silver-backed mirror by every door in the lower hold. The glassmakers should make them.',
+      beads: 'POSTED: The herders\' wives want blue beads against the evil eye: river sand, lime and cobalt.',
+      lantern: 'POSTED: The Deep Shift wants lanterns for the frozen level: clear glass in a forged frame, a bronze or iron cap.',
+    },
   },
 };
